@@ -136,7 +136,10 @@ function render(payload) {
 function renderCard(result, chartUrl) {
   const hasTrade = result.setup_type !== "No Trade";
   const chart = chartUrl
-    ? `<img class="chart-preview" src="${chartUrl}?v=${Date.now()}" alt="${result.ticker} annotated chart" data-chart="${chartUrl}" data-title="${result.ticker} chart" />`
+    ? `<div class="chart-wrap">
+        <img class="chart-preview" src="${chartUrl}?v=${Date.now()}" alt="${result.ticker} annotated chart" data-chart="${chartUrl}" data-title="${result.ticker} chart" />
+        <div class="chart-caption">Click chart to open full size</div>
+      </div>`
     : `<div class="chart-missing">No chart generated</div>`;
 
   return `
@@ -146,17 +149,20 @@ function renderCard(result, chartUrl) {
           <strong>${escapeHtml(result.ticker)}</strong>
           <span class="badge ${hasTrade ? "trade" : ""}">${escapeHtml(result.setup_type)}</span>
         </div>
-        <span class="badge">Score ${formatNumber(result.score, 2)}</span>
+        <div class="score-box">
+          <strong>${formatNumber(result.score, 2)}</strong>
+          <span>score</span>
+        </div>
       </header>
-      <div class="metrics">
-        ${metric("Price", result.current_price)}
-        ${metric("R/R", `${formatNumber(result.risk_reward, 2)}x`)}
-        ${metric("Buy Zone", zone(result.buy_zone))}
-        ${metric("Stop", result.stop_loss)}
-        ${metric("Targets", `${formatNumber(result.target_1, 2)} / ${formatNumber(result.target_2, 2)}`)}
-      </div>
       <div class="result-body">
-        <div>
+        <div class="decision">
+          <div class="primary-stats">
+            ${stat("Price", result.current_price)}
+            ${stat("R/R", `${formatNumber(result.risk_reward, 2)}x`)}
+            ${stat("Buy Zone", zone(result.buy_zone))}
+            ${stat("Stop", result.stop_loss, "stop")}
+            ${stat("Targets", `${formatNumber(result.target_1, 2)} / ${formatNumber(result.target_2, 2)}`, "target")}
+          </div>
           <p class="reason">${escapeHtml(result.reason)}</p>
           <div class="levels">
             ${detailLevel("Fib 61.8", result.fibonacci?.fib_618)}
@@ -171,8 +177,8 @@ function renderCard(result, chartUrl) {
   `;
 }
 
-function metric(label, value) {
-  return `<div class="metric"><span>${label}</span><strong>${valueText(value)}</strong></div>`;
+function stat(label, value, tone = "") {
+  return `<div class="stat ${tone}"><span>${label}</span><strong>${valueText(value)}</strong></div>`;
 }
 
 function detailLevel(label, value) {
