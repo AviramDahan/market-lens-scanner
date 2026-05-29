@@ -28,14 +28,22 @@ async def ui() -> FileResponse:
 @app.post("/scan", response_model=ScanResponse)
 async def scan(request: ScanRequest) -> ScanResponse:
     tickers = [t.upper() for t in request.tickers]
-    results, errors, _ = scan_tickers(tickers, min_rr=request.min_rr)
+    results, errors, _ = scan_tickers(
+        tickers,
+        min_rr=request.min_rr,
+        analysis_period=request.analysis_period,
+    )
     return ScanResponse(results=results, errors=errors)
 
 
 @app.post("/ui/scan")
 async def scan_with_charts(request: ScanRequest) -> dict:
     tickers = [t.upper() for t in request.tickers]
-    results, errors, details = scan_tickers(tickers, min_rr=request.min_rr)
+    results, errors, details = scan_tickers(
+        tickers,
+        min_rr=request.min_rr,
+        analysis_period=request.analysis_period,
+    )
     charts = {}
     for detail in details:
         path = write_scan_chart(detail, CHART_DIR)
@@ -44,6 +52,7 @@ async def scan_with_charts(request: ScanRequest) -> dict:
         "results": [result.model_dump() for result in results],
         "errors": errors,
         "charts": charts,
+        "analysis_period": request.analysis_period,
     }
 
 

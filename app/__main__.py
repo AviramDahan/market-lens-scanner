@@ -6,6 +6,7 @@ Usage:
   python -m app scan --verbose               # show all indicator values
   python -m app scan --json                  # raw JSON output
   python -m app scan AAPL --charts           # save annotated chart images
+  python -m app scan AAPL --period 1y        # choose analysis range
 """
 
 import argparse
@@ -32,6 +33,12 @@ def main() -> None:
     scan_cmd.add_argument("--min-rr", type=float, default=None, help="Minimum risk/reward ratio")
     scan_cmd.add_argument("--verbose", "-v", action="store_true", help="Show all indicator values")
     scan_cmd.add_argument("--json", action="store_true", help="Output raw JSON")
+    scan_cmd.add_argument(
+        "--period",
+        choices=["3mo", "6mo", "1y", "2y"],
+        default=None,
+        help="Analysis range for daily data",
+    )
     scan_cmd.add_argument("--charts", action="store_true", help="Save annotated chart PNGs")
     scan_cmd.add_argument(
         "--chart-dir",
@@ -46,14 +53,19 @@ def main() -> None:
 
         tickers = [t.upper() for t in args.tickers] if args.tickers else [t.upper() for t in cfg.get("tickers", [])]
         min_rr = args.min_rr if args.min_rr is not None else float(cfg.get("min_rr", 2.0))
+        analysis_period = args.period or str(cfg.get("analysis_period", "6mo"))
 
         if not tickers:
             print("Error: no tickers provided and config.yaml is empty.", file=sys.stderr)
             sys.exit(1)
 
         print("TODAY'S SCAN", file=sys.stderr)
-        print(f"Scanning {len(tickers)} ticker(s)  |  min_rr={min_rr}", file=sys.stderr)
-        results, errors, details = scan_tickers(tickers, min_rr=min_rr)
+        print(f"Scanning {len(tickers)} ticker(s)  |  min_rr={min_rr}  |  period={analysis_period}", file=sys.stderr)
+        results, errors, details = scan_tickers(
+            tickers,
+            min_rr=min_rr,
+            analysis_period=analysis_period,
+        )
         chart_paths = _write_charts(details, args.chart_dir) if args.charts else {}
 
         if args.json:
@@ -61,6 +73,7 @@ def main() -> None:
                 "results": [r.model_dump() for r in results],
                 "errors": errors,
                 "charts": chart_paths,
+                "analysis_period": analysis_period,
             }
             print(json.dumps(output, indent=2))
         elif args.verbose:

@@ -1,6 +1,7 @@
 const form = document.querySelector("#scanForm");
 const tickersInput = document.querySelector("#tickers");
 const minRrInput = document.querySelector("#minRr");
+const analysisPeriodInput = document.querySelector("#analysisPeriod");
 const scanButton = document.querySelector("#scanButton");
 const resultsEl = document.querySelector("#results");
 const messageEl = document.querySelector("#message");
@@ -31,6 +32,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const tickers = parseTickers(tickersInput.value);
   const minRr = Number(minRrInput.value || 2);
+  const analysisPeriod = analysisPeriodInput.value || "6mo";
 
   if (tickers.length === 0) {
     showMessage("Enter at least one ticker.");
@@ -39,13 +41,13 @@ form.addEventListener("submit", async (event) => {
 
   setLoading(true);
   showMessage("");
-  runMeta.textContent = `Scanning ${tickers.join(", ")}...`;
+  runMeta.textContent = `Scanning ${tickers.join(", ")} over ${periodLabel(analysisPeriod)}...`;
 
   try {
     const response = await fetch("/ui/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tickers, min_rr: minRr }),
+      body: JSON.stringify({ tickers, min_rr: minRr, analysis_period: analysisPeriod }),
     });
 
     if (!response.ok) {
@@ -96,6 +98,7 @@ function render(payload) {
   });
   const errors = payload.errors || {};
   const charts = payload.charts || {};
+  const analysisPeriod = payload.analysis_period || analysisPeriodInput.value || "6mo";
   const mode = filterEl.value;
   const filtered = results.filter((result) => {
     if (mode === "setups") return result.setup_type !== "No Trade";
@@ -108,7 +111,7 @@ function render(payload) {
   setupCount.textContent = String(setups);
   errorCount.textContent = String(Object.keys(errors).length);
   runMeta.textContent = results.length
-    ? `${results.length} result${results.length === 1 ? "" : "s"} · ${setups} setup${setups === 1 ? "" : "s"}`
+    ? `${results.length} result${results.length === 1 ? "" : "s"} - ${setups} setup${setups === 1 ? "" : "s"} - ${periodLabel(analysisPeriod)}`
     : "No completed scans";
 
   if (Object.keys(errors).length) {
@@ -175,6 +178,15 @@ function renderCard(result, chartUrl) {
       </div>
     </article>
   `;
+}
+
+function periodLabel(period) {
+  return {
+    "3mo": "3 months",
+    "6mo": "6 months",
+    "1y": "1 year",
+    "2y": "2 years",
+  }[period] || period;
 }
 
 function stat(label, value, tone = "") {

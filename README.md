@@ -13,6 +13,7 @@ liquidity sweeps.
 - FastAPI web UI for scanning ticker lists
 - CLI scanner for terminal use
 - Annotated PNG charts for each ticker
+- Analysis range selector for 3 months, 6 months, 1 year, or 2 years
 - Buy zone, stop, targets, risk/reward, score, and setup reason
 - Docker-ready deployment
 - Render blueprint for public hosting
@@ -55,6 +56,7 @@ python -m app scan AAPL MSFT NVDA
 python -m app scan AAPL --verbose
 python -m app scan AAPL --json
 python -m app scan AAPL MSFT --charts
+python -m app scan AAPL --period 1y
 ```
 
 On Windows:
@@ -76,6 +78,7 @@ tickers:
   - NVDA
 
 min_rr: 2.0
+analysis_period: 6mo
 ```
 
 CLI arguments and UI inputs override this file.
@@ -85,7 +88,7 @@ CLI arguments and UI inputs override this file.
 ```bash
 curl -X POST http://localhost:8000/scan \
   -H "Content-Type: application/json" \
-  -d '{"tickers": ["AAPL", "MSFT"], "min_rr": 2.0}'
+  -d '{"tickers": ["AAPL", "MSFT"], "min_rr": 2.0, "analysis_period": "6mo"}'
 ```
 
 Useful endpoints:

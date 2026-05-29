@@ -11,7 +11,13 @@ def write_scan_chart(detail: ScanDetail, output_dir: Path | str = "charts") -> P
     from matplotlib.patches import Rectangle
 
     result = detail.result
-    daily = detail.daily.tail(90).copy()
+    chart_bars = {
+        "3mo": 70,
+        "6mo": 110,
+        "1y": 180,
+        "2y": 260,
+    }.get(detail.analysis_period, 110)
+    daily = detail.daily.tail(chart_bars).copy()
     daily.index = pd.to_datetime(daily.index).tz_localize(None)
     x = mdates.date2num(daily.index.to_pydatetime())
     candle_width = 0.62

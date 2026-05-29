@@ -12,12 +12,16 @@ YFINANCE_CACHE_DIR = Path(__file__).parent.parent / ".yfinance-cache"
 YFINANCE_CACHE_DIR.mkdir(exist_ok=True)
 yf.set_tz_cache_location(str(YFINANCE_CACHE_DIR))
 
-DAILY_PERIOD = "6mo"
-HOURLY_PERIOD = "30d"
 WEEKLY_PERIOD = "5y"
-MIN_DAILY_ROWS = 60
+MIN_DAILY_ROWS = 50
 MIN_HOURLY_ROWS = 100
 MIN_WEEKLY_ROWS = 200
+HOURLY_PERIOD_BY_ANALYSIS_PERIOD = {
+    "3mo": "30d",
+    "6mo": "60d",
+    "1y": "60d",
+    "2y": "60d",
+}
 
 
 @dataclass
@@ -28,11 +32,13 @@ class TickerData:
     weekly: pd.DataFrame
 
 
-def fetch_ticker(ticker: str) -> TickerData:
-    daily = _fetch_frame(ticker, "1d", DAILY_PERIOD)
+def fetch_ticker(ticker: str, analysis_period: str = "6mo") -> TickerData:
+    hourly_period = HOURLY_PERIOD_BY_ANALYSIS_PERIOD.get(analysis_period, "60d")
+
+    daily = _fetch_frame(ticker, "1d", analysis_period)
     daily = _validate_frame(daily, ticker, "1d", MIN_DAILY_ROWS)
 
-    hourly = _fetch_frame(ticker, "1h", HOURLY_PERIOD)
+    hourly = _fetch_frame(ticker, "1h", hourly_period)
     hourly = _validate_frame(hourly, ticker, "1h", MIN_HOURLY_ROWS)
 
     weekly = _fetch_frame(ticker, "1wk", WEEKLY_PERIOD)

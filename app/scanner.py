@@ -25,6 +25,7 @@ class ScanDetail:
     result: ScanResult
     daily: "pd.DataFrame"
     hourly: "pd.DataFrame"
+    analysis_period: str
     atr: float
     vwap: float
     ema_20: float
@@ -37,18 +38,23 @@ class ScanDetail:
     relative_strength: float
 
 
-def scan_ticker(ticker: str, min_rr: float = 2.0) -> ScanResult:
-    return scan_ticker_detail(ticker, min_rr).result
+def scan_ticker(
+    ticker: str,
+    min_rr: float = 2.0,
+    analysis_period: str = "6mo",
+) -> ScanResult:
+    return scan_ticker_detail(ticker, min_rr, analysis_period=analysis_period).result
 
 
 def scan_ticker_detail(
     ticker: str,
     min_rr: float = 2.0,
+    analysis_period: str = "6mo",
     spy_returns: "pd.Series | None" = None,
 ) -> ScanDetail:
     import pandas as pd
 
-    data = fetch_ticker(ticker)
+    data = fetch_ticker(ticker, analysis_period=analysis_period)
 
     current_price = float(data.daily["Close"].iloc[-1])
     atr = compute_atr(data.daily)
@@ -63,7 +69,7 @@ def scan_ticker_detail(
 
     if spy_returns is None:
         try:
-            spy_returns = fetch_spy_returns()
+            spy_returns = fetch_spy_returns(period=analysis_period)
         except Exception:
             spy_returns = pd.Series(dtype=float)
     relative_strength = compute_relative_strength(data.daily, spy_returns)
@@ -106,6 +112,7 @@ def scan_ticker_detail(
         result=result,
         daily=data.daily,
         hourly=data.hourly,
+        analysis_period=analysis_period,
         atr=atr,
         vwap=vwap,
         ema_20=ema_20,
@@ -122,6 +129,7 @@ def scan_ticker_detail(
 def scan_tickers(
     tickers: list[str],
     min_rr: float = 2.0,
+    analysis_period: str = "6mo",
     verbose: bool = False,
 ) -> tuple[list[ScanResult], dict[str, str], list[ScanDetail]]:
     import pandas as pd
@@ -131,13 +139,18 @@ def scan_tickers(
     errors: dict[str, str] = {}
 
     try:
-        spy_returns: pd.Series = fetch_spy_returns()
+        spy_returns: pd.Series = fetch_spy_returns(period=analysis_period)
     except Exception:
         spy_returns = pd.Series(dtype=float)
 
     for ticker in tickers:
         try:
-            detail = scan_ticker_detail(ticker, min_rr, spy_returns=spy_returns)
+            detail = scan_ticker_detail(
+                ticker,
+                min_rr,
+                analysis_period=analysis_period,
+                spy_returns=spy_returns,
+            )
             results.append(detail.result)
             details.append(detail)
             logger.info("Scanned %s -> %s", ticker, detail.result.setup_type)

@@ -29,6 +29,16 @@
               <input id="minRr" type="number" min="0.1" max="20" step="0.1" value="2.0" />
             </div>
 
+            <div class="row field">
+              <label for="analysisPeriod">Analysis range</label>
+              <select id="analysisPeriod">
+                <option value="3mo">3 months</option>
+                <option value="6mo" selected>6 months</option>
+                <option value="1y">1 year</option>
+                <option value="2y">2 years</option>
+              </select>
+            </div>
+
             <div class="quick-list" aria-label="Quick ticker presets">
               <button type="button" data-preset="AAPL MSFT NVDA">Mega cap</button>
               <button type="button" data-preset="LMT RTX NOC">Defense</button>
