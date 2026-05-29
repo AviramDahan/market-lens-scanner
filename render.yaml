@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: market-lens-scanner
+    env: docker
+    plan: starter
+    autoDeployTrigger: commit
+    healthCheckPath: /health

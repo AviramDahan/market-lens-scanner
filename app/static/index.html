@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Market Lens</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <aside class="panel">
+          <div class="brand">
+            <div>
+              <h1>Market Lens</h1>
+              <p>Swing trade scanner</p>
+            </div>
+            <span id="health" class="status">checking</span>
+          </div>
+
+          <form id="scanForm" class="scan-form">
+            <label for="tickers">Tickers</label>
+            <textarea id="tickers" spellcheck="false" rows="4">AAPL MSFT NVDA</textarea>
+
+            <div class="row">
+              <label for="minRr">Min R/R</label>
+              <input id="minRr" type="number" min="0.1" max="20" step="0.1" value="2.0" />
+            </div>
+
+            <div class="quick-list" aria-label="Quick ticker presets">
+              <button type="button" data-preset="AAPL MSFT NVDA">Mega cap</button>
+              <button type="button" data-preset="LMT RTX NOC">Defense</button>
+              <button type="button" data-preset="SPY QQQ IWM">ETFs</button>
+            </div>
+
+            <button id="scanButton" class="primary" type="submit">Scan</button>
+          </form>
+
+          <div class="summary">
+            <div>
+              <span id="scanCount">0</span>
+              <small>scanned</small>
+            </div>
+            <div>
+              <span id="setupCount">0</span>
+              <small>setups</small>
+            </div>
+            <div>
+              <span id="errorCount">0</span>
+              <small>errors</small>
+            </div>
+          </div>
+        </aside>
+
+        <section class="content">
+          <div class="toolbar">
+            <div>
+              <h2>Scan Results</h2>
+              <p id="runMeta">Ready</p>
+            </div>
+            <select id="filter">
+              <option value="all">All results</option>
+              <option value="setups">Setups only</option>
+              <option value="no-trade">No trade</option>
+            </select>
+          </div>
+
+          <div id="message" class="message hidden"></div>
+          <div id="results" class="results empty">
+            <div class="empty-state">Run a scan to see ranked setups and annotated charts.</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="chartDialog">
+      <div class="dialog-head">
+        <strong id="dialogTitle">Chart</strong>
+        <button id="closeDialog" type="button" aria-label="Close chart">Close</button>
+      </div>
+      <img id="dialogImage" alt="Annotated scan chart" />
+    </dialog>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
