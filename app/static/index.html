@@ -28,10 +28,16 @@
             </div>
 
             <div class="field ticker-picker-field">
-              <label for="tickerPicker">Companies</label>
-              <select id="tickerPicker" multiple size="7" disabled>
-                <option>Select a market universe first</option>
-              </select>
+              <div class="picker-head">
+                <label>Companies</label>
+                <div>
+                  <button id="selectAllTickersButton" class="mini" type="button" disabled>Select all</button>
+                  <button id="clearTickersButton" class="mini" type="button" disabled>Clear</button>
+                </div>
+              </div>
+              <div id="tickerPicker" class="ticker-picker disabled">
+                <div class="picker-empty">Select a market universe first</div>
+              </div>
               <button id="addTickersButton" class="secondary" type="button" disabled>Add selected</button>
             </div>
 

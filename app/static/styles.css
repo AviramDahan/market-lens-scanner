@@ -147,15 +147,6 @@ textarea {
   min-height: 104px;
 }
 
-select[multiple] {
-  min-height: 176px;
-  padding: 8px;
-}
-
-select[multiple] option {
-  padding: 7px 8px;
-}
-
 textarea:focus,
 input:focus,
 select:focus {
@@ -170,6 +161,66 @@ select:focus {
 
 .ticker-picker-field {
   gap: 10px;
+}
+
+.picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.picker-head div {
+  display: flex;
+  gap: 6px;
+}
+
+.ticker-picker {
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+.ticker-picker.disabled {
+  background: #f8fafc;
+  color: var(--muted);
+}
+
+.ticker-choice {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ticker-choice:hover {
+  background: #f6f9fd;
+}
+
+.ticker-choice input {
+  width: 16px;
+  height: 16px;
+}
+
+.ticker-choice span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-empty {
+  color: var(--muted);
+  padding: 12px;
 }
 
 button {
@@ -198,6 +249,18 @@ button:hover {
   color: var(--blue);
   border-color: #b9cce6;
   font-weight: 800;
+}
+
+.mini {
+  padding: 7px 9px;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mini[disabled] {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .secondary[disabled] {

@@ -3,6 +3,8 @@ const universeInput = document.querySelector("#universe");
 const universeMeta = document.querySelector("#universeMeta");
 const tickerPicker = document.querySelector("#tickerPicker");
 const addTickersButton = document.querySelector("#addTickersButton");
+const selectAllTickersButton = document.querySelector("#selectAllTickersButton");
+const clearTickersButton = document.querySelector("#clearTickersButton");
 const tickersInput = document.querySelector("#tickers");
 const minRrInput = document.querySelector("#minRr");
 const analysisPeriodInput = document.querySelector("#analysisPeriod");
@@ -39,13 +41,27 @@ universeInput.addEventListener("change", () => {
 });
 
 addTickersButton.addEventListener("click", () => {
-  const selectedTickers = Array.from(tickerPicker.selectedOptions).map((option) => option.value);
+  const selectedTickers = getCheckedTickerInputs().map((input) => input.value);
   const currentTickers = parseTickers(tickersInput.value);
   const merged = [...new Set([...currentTickers, ...selectedTickers])];
   tickersInput.value = merged.join(" ");
   universeMeta.textContent = selectedTickers.length
     ? `Added ${selectedTickers.length} ticker${selectedTickers.length === 1 ? "" : "s"}.`
     : "Select one or more companies to add.";
+});
+
+selectAllTickersButton.addEventListener("click", () => {
+  tickerPicker.querySelectorAll("input[type='checkbox']").forEach((input) => {
+    input.checked = true;
+  });
+  updatePickerCount();
+});
+
+clearTickersButton.addEventListener("click", () => {
+  tickerPicker.querySelectorAll("input[type='checkbox']").forEach((input) => {
+    input.checked = false;
+  });
+  updatePickerCount();
 });
 
 document.querySelectorAll("[data-view]").forEach((button) => {
@@ -136,18 +152,40 @@ async function loadWatchlists() {
 }
 
 function renderTickerPicker(watchlist) {
-  tickerPicker.disabled = false;
+  tickerPicker.classList.remove("disabled");
   addTickersButton.disabled = false;
+  selectAllTickersButton.disabled = false;
+  clearTickersButton.disabled = false;
   const companies = watchlist.companies || watchlist.tickers.map((ticker) => ({ ticker, name: ticker }));
   tickerPicker.innerHTML = companies.map((company) => {
-    return `<option value="${escapeHtml(company.ticker)}">${escapeHtml(company.ticker)} (${escapeHtml(company.name)})</option>`;
+    return `
+      <label class="ticker-choice">
+        <input type="checkbox" value="${escapeHtml(company.ticker)}" />
+        <span>${escapeHtml(company.ticker)} (${escapeHtml(company.name)})</span>
+      </label>
+    `;
   }).join("");
+  tickerPicker.querySelectorAll("input[type='checkbox']").forEach((input) => {
+    input.addEventListener("change", updatePickerCount);
+  });
+  updatePickerCount();
 }
 
 function resetTickerPicker() {
-  tickerPicker.disabled = true;
+  tickerPicker.classList.add("disabled");
   addTickersButton.disabled = true;
-  tickerPicker.innerHTML = `<option>Select a market universe first</option>`;
+  selectAllTickersButton.disabled = true;
+  clearTickersButton.disabled = true;
+  tickerPicker.innerHTML = `<div class="picker-empty">Select a market universe first</div>`;
+}
+
+function getCheckedTickerInputs() {
+  return Array.from(tickerPicker.querySelectorAll("input[type='checkbox']:checked"));
+}
+
+function updatePickerCount() {
+  const count = getCheckedTickerInputs().length;
+  addTickersButton.textContent = count ? `Add selected (${count})` : "Add selected";
 }
 
 async function loadSavedSetups() {
