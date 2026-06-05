@@ -169,6 +169,52 @@ select:focus {
   gap: 8px;
 }
 
+.ticker-basket {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.ticker-basket.empty {
+  align-items: center;
+  background: #f8fafc;
+}
+
+.basket-empty {
+  color: var(--muted);
+}
+
+.ticker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #b9cce6;
+  border-radius: 999px;
+  background: var(--soft-blue);
+  color: var(--blue);
+  font-weight: 850;
+  padding: 7px 8px 7px 11px;
+}
+
+.ticker-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--blue);
+  padding: 0;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .picker-head {
   display: flex;
   align-items: center;

@@ -8,6 +8,7 @@ const clearTickersButton = document.querySelector("#clearTickersButton");
 const manualTickerInput = document.querySelector("#manualTicker");
 const addManualTickerButton = document.querySelector("#addManualTickerButton");
 const clearBasketButton = document.querySelector("#clearBasketButton");
+const tickerBasket = document.querySelector("#tickerBasket");
 const tickersInput = document.querySelector("#tickers");
 const minRrInput = document.querySelector("#minRr");
 const analysisPeriodInput = document.querySelector("#analysisPeriod");
@@ -61,8 +62,15 @@ manualTickerInput.addEventListener("keydown", (event) => {
 });
 
 clearBasketButton.addEventListener("click", () => {
-  tickersInput.value = "";
+  setBasketTickers([]);
   universeMeta.textContent = "Ticker list cleared.";
+});
+
+tickerBasket.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-ticker]");
+  if (!button) return;
+  const ticker = button.dataset.removeTicker;
+  setBasketTickers(parseTickers(tickersInput.value).filter((item) => item !== ticker));
 });
 
 selectAllTickersButton.addEventListener("click", () => {
@@ -238,7 +246,29 @@ function addManualTickers() {
 function addTickersToBasket(tickers) {
   const currentTickers = parseTickers(tickersInput.value);
   const merged = [...new Set([...currentTickers, ...tickers])];
-  tickersInput.value = merged.join(" ");
+  setBasketTickers(merged);
+}
+
+function setBasketTickers(tickers) {
+  tickersInput.value = tickers.join(" ");
+  renderTickerBasket(tickers);
+}
+
+function renderTickerBasket(tickers) {
+  if (!tickers.length) {
+    tickerBasket.className = "ticker-basket empty";
+    tickerBasket.innerHTML = `<span class="basket-empty">No tickers selected</span>`;
+    return;
+  }
+  tickerBasket.className = "ticker-basket";
+  tickerBasket.innerHTML = tickers.map((ticker) => {
+    return `
+      <span class="ticker-chip">
+        ${escapeHtml(ticker)}
+        <button type="button" aria-label="Remove ${escapeHtml(ticker)}" data-remove-ticker="${escapeHtml(ticker)}">x</button>
+      </span>
+    `;
+  }).join("");
 }
 
 function setLoading(isLoading) {

@@ -44,17 +44,20 @@
             <div class="field">
               <label for="manualTicker">Manual Tickers</label>
               <div class="manual-add">
-                <input id="manualTicker" type="text" spellcheck="false" placeholder="AAPL or AAPL, MSFT, TSLA" />
+                <input id="manualTicker" type="text" spellcheck="false" placeholder="example: MSFT" />
                 <button id="addManualTickerButton" class="secondary" type="button">Add</button>
               </div>
             </div>
 
             <div class="field">
               <div class="picker-head">
-                <label for="tickers">Tickers</label>
+                <label>Scan Basket</label>
                 <button id="clearBasketButton" class="mini" type="button">Clear all</button>
               </div>
-              <textarea id="tickers" spellcheck="false" rows="3" placeholder="Add companies from the selector or type tickers manually"></textarea>
+              <div id="tickerBasket" class="ticker-basket empty">
+                <span class="basket-empty">No tickers selected</span>
+              </div>
+              <input id="tickers" type="hidden" />
             </div>
 
             <div class="row field">
