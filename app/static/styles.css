@@ -118,10 +118,40 @@ small,
 
 .user-box {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
+}
+
+.auth-status {
+  min-width: 0;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.auth-status.signed-in {
+  background: var(--soft-green);
+  border-color: #b8dfcc;
+  color: var(--green);
+}
+
+.auth-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.auth-actions .mini {
+  grid-column: 1 / -1;
 }
 
 .field {

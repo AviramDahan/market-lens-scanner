@@ -19,10 +19,16 @@
           </div>
 
           <div class="user-box">
-            <label for="userName">User</label>
-            <div class="manual-add">
-              <input id="userName" type="text" spellcheck="false" placeholder="example: Aviram" />
-              <button id="saveUserButton" class="secondary" type="button">Save</button>
+            <div class="picker-head">
+              <label>Account</label>
+              <span id="authStatus" class="auth-status">Guest</span>
+            </div>
+            <input id="authEmail" type="email" autocomplete="email" placeholder="email@example.com" />
+            <input id="authPassword" type="password" autocomplete="current-password" placeholder="password" />
+            <div class="auth-actions">
+              <button id="signInButton" class="secondary" type="button">Sign in</button>
+              <button id="signUpButton" class="secondary" type="button">Sign up</button>
+              <button id="signOutButton" class="mini hidden" type="button">Sign out</button>
             </div>
           </div>
 
@@ -145,6 +151,7 @@
       <img id="dialogImage" alt="Annotated scan chart" />
     </dialog>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/static/app.js"></script>
   </body>
 </html>

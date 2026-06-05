@@ -6,10 +6,22 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import psycopg
+from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
+
 from app.data import fetch_last_price
 from app.models import ScanResult
 
 PROJECT_ROOT = Path(__file__).parent.parent
+
+
+def _database_url() -> str | None:
+    return os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DATABASE_URL")
+
+
+def using_external_storage() -> bool:
+    return bool(_database_url())
 
 
 def _db_path() -> Path:
@@ -32,6 +44,9 @@ def _connect() -> sqlite3.Connection:
 
 
 def init_storage() -> None:
+    if _database_url():
+        return
+
     with _connect() as conn:
         conn.execute(
             """
@@ -75,9 +90,28 @@ def save_setup(
     source: str = "auto",
     user_label: str | None = None,
     session_id: str | None = None,
+    user_id: str | None = None,
 ) -> dict[str, Any] | None:
     if result.setup_type == "No Trade":
         return None
+
+    if _database_url():
+        if source == "manual":
+            if not user_id:
+                raise ValueError("user_id is required for manual setup saves")
+            return _pg_save_user_setup(
+                result,
+                analysis_period=analysis_period,
+                chart_url=chart_url,
+                user_id=user_id,
+            )
+        return _pg_save_global_setup(
+            result,
+            analysis_period=analysis_period,
+            chart_url=chart_url,
+            found_by=user_id,
+            found_by_name=user_label,
+        )
 
     init_storage()
     now = _now()
@@ -148,7 +182,15 @@ def list_setups(
     status: str | None = None,
     source: str | None = None,
     session_id: str | None = None,
+    user_id: str | None = None,
 ) -> list[dict[str, Any]]:
+    if _database_url():
+        if source == "manual":
+            if not user_id:
+                return []
+            return _pg_list_user_setups(limit=limit, status=status, user_id=user_id)
+        return _pg_list_global_setups(limit=limit, status=status)
+
     init_storage()
     limit = max(1, min(limit, 200))
     where = []
@@ -178,7 +220,10 @@ def list_setups(
     return [_row_to_dict(row) for row in rows]
 
 
-def refresh_setup(setup_id: int) -> dict[str, Any]:
+def refresh_setup(setup_id: int | str, user_id: str | None = None) -> dict[str, Any]:
+    if _database_url():
+        return _pg_refresh_setup(str(setup_id), user_id=user_id)
+
     init_storage()
     with _connect() as conn:
         row = conn.execute("SELECT * FROM saved_setups WHERE id = ?", (setup_id,)).fetchone()
@@ -216,6 +261,281 @@ def evaluate_status(price: float, result_data: dict[str, Any]) -> str:
     return "OPEN"
 
 
+def _pg_connect() -> psycopg.Connection:
+    database_url = _database_url()
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured")
+    return psycopg.connect(database_url, row_factory=dict_row)
+
+
+def _pg_save_global_setup(
+    result: ScanResult,
+    *,
+    analysis_period: str,
+    chart_url: str | None,
+    found_by: str | None,
+    found_by_name: str | None,
+) -> dict[str, Any]:
+    result_data = result.model_dump()
+    status = evaluate_status(result.current_price, result_data)
+    fingerprint = _fingerprint(result_data, analysis_period, "auto", None)
+    hit_at = _now() if status != "OPEN" else None
+
+    with _pg_connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO public.global_setups (
+                    fingerprint, ticker, setup_type, analysis_period, status, score,
+                    current_price, found_price, stop_loss, target_1, target_2,
+                    risk_reward, chart_url, result_json, found_by, found_by_name,
+                    status_checked_at, hit_at
+                )
+                VALUES (
+                    %(fingerprint)s, %(ticker)s, %(setup_type)s, %(analysis_period)s,
+                    %(status)s, %(score)s, %(current_price)s, %(found_price)s,
+                    %(stop_loss)s, %(target_1)s, %(target_2)s, %(risk_reward)s,
+                    %(chart_url)s, %(result_json)s, %(found_by)s, %(found_by_name)s,
+                    now(), %(hit_at)s
+                )
+                ON CONFLICT (fingerprint) DO UPDATE SET
+                    last_seen_at = now(),
+                    scan_count = public.global_setups.scan_count + 1,
+                    current_price = excluded.current_price,
+                    chart_url = coalesce(excluded.chart_url, public.global_setups.chart_url),
+                    status = excluded.status,
+                    status_checked_at = now(),
+                    hit_at = coalesce(public.global_setups.hit_at, excluded.hit_at)
+                RETURNING *
+                """,
+                {
+                    "fingerprint": fingerprint,
+                    "ticker": result.ticker,
+                    "setup_type": result.setup_type,
+                    "analysis_period": analysis_period,
+                    "status": status,
+                    "score": result.score,
+                    "current_price": result.current_price,
+                    "found_price": result.current_price,
+                    "stop_loss": result.stop_loss,
+                    "target_1": result.target_1,
+                    "target_2": result.target_2,
+                    "risk_reward": result.risk_reward,
+                    "chart_url": chart_url,
+                    "result_json": Jsonb(result_data),
+                    "found_by": found_by,
+                    "found_by_name": _clean_text(found_by_name),
+                    "hit_at": hit_at,
+                },
+            )
+            row = cur.fetchone()
+    return _pg_global_row_to_dict(row)
+
+
+def _pg_save_user_setup(
+    result: ScanResult,
+    *,
+    analysis_period: str,
+    chart_url: str | None,
+    user_id: str,
+) -> dict[str, Any]:
+    global_setup = _pg_save_global_setup(
+        result,
+        analysis_period=analysis_period,
+        chart_url=chart_url,
+        found_by=user_id,
+        found_by_name=None,
+    )
+    result_data = result.model_dump()
+    status = evaluate_status(result.current_price, result_data)
+    hit_at = _now() if status != "OPEN" else None
+
+    with _pg_connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO public.user_saved_setups (
+                    user_id, global_setup_id, ticker, setup_type, analysis_period,
+                    status, score, saved_price, current_price, stop_loss, target_1,
+                    target_2, risk_reward, chart_url, result_json, status_checked_at, hit_at
+                )
+                VALUES (
+                    %(user_id)s, %(global_setup_id)s, %(ticker)s, %(setup_type)s,
+                    %(analysis_period)s, %(status)s, %(score)s, %(saved_price)s,
+                    %(current_price)s, %(stop_loss)s, %(target_1)s, %(target_2)s,
+                    %(risk_reward)s, %(chart_url)s, %(result_json)s, now(), %(hit_at)s
+                )
+                ON CONFLICT (user_id, global_setup_id) DO UPDATE SET
+                    current_price = excluded.current_price,
+                    status = excluded.status,
+                    chart_url = coalesce(excluded.chart_url, public.user_saved_setups.chart_url),
+                    status_checked_at = now(),
+                    hit_at = coalesce(public.user_saved_setups.hit_at, excluded.hit_at)
+                RETURNING *
+                """,
+                {
+                    "user_id": user_id,
+                    "global_setup_id": global_setup["id"],
+                    "ticker": result.ticker,
+                    "setup_type": result.setup_type,
+                    "analysis_period": analysis_period,
+                    "status": status,
+                    "score": result.score,
+                    "saved_price": result.current_price,
+                    "current_price": result.current_price,
+                    "stop_loss": result.stop_loss,
+                    "target_1": result.target_1,
+                    "target_2": result.target_2,
+                    "risk_reward": result.risk_reward,
+                    "chart_url": chart_url,
+                    "result_json": Jsonb(result_data),
+                    "hit_at": hit_at,
+                },
+            )
+            row = cur.fetchone()
+    return _pg_user_row_to_dict(row)
+
+
+def _pg_list_global_setups(limit: int, status: str | None = None) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, 200))
+    where = "WHERE status = %(status)s" if status else ""
+    params = {"limit": limit, "status": status}
+    with _pg_connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT *
+                FROM public.global_setups
+                {where}
+                ORDER BY created_at DESC
+                LIMIT %(limit)s
+                """,
+                params,
+            )
+            rows = cur.fetchall()
+    return [_pg_global_row_to_dict(row) for row in rows]
+
+
+def _pg_list_user_setups(limit: int, user_id: str, status: str | None = None) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, 200))
+    where_status = "AND status = %(status)s" if status else ""
+    with _pg_connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT *
+                FROM public.user_saved_setups
+                WHERE user_id = %(user_id)s
+                {where_status}
+                ORDER BY created_at DESC
+                LIMIT %(limit)s
+                """,
+                {"user_id": user_id, "status": status, "limit": limit},
+            )
+            rows = cur.fetchall()
+    return [_pg_user_row_to_dict(row) for row in rows]
+
+
+def _pg_refresh_setup(setup_id: str, user_id: str | None = None) -> dict[str, Any]:
+    with _pg_connect() as conn:
+        with conn.cursor() as cur:
+            if user_id:
+                cur.execute(
+                    "SELECT * FROM public.user_saved_setups WHERE id = %(id)s AND user_id = %(user_id)s",
+                    {"id": setup_id, "user_id": user_id},
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise KeyError(setup_id)
+                price = fetch_last_price(row["ticker"])
+                status = evaluate_status(price, row["result_json"])
+                hit_at = row["hit_at"] or (_now() if status != "OPEN" else None)
+                cur.execute(
+                    """
+                    UPDATE public.user_saved_setups
+                    SET current_price = %(price)s, status = %(status)s,
+                        status_checked_at = now(), hit_at = %(hit_at)s
+                    WHERE id = %(id)s AND user_id = %(user_id)s
+                    RETURNING *
+                    """,
+                    {"price": price, "status": status, "hit_at": hit_at, "id": setup_id, "user_id": user_id},
+                )
+                return _pg_user_row_to_dict(cur.fetchone())
+
+            cur.execute("SELECT * FROM public.global_setups WHERE id = %(id)s", {"id": setup_id})
+            row = cur.fetchone()
+            if row is None:
+                raise KeyError(setup_id)
+            price = fetch_last_price(row["ticker"])
+            status = evaluate_status(price, row["result_json"])
+            hit_at = row["hit_at"] or (_now() if status != "OPEN" else None)
+            cur.execute(
+                """
+                UPDATE public.global_setups
+                SET current_price = %(price)s, status = %(status)s,
+                    status_checked_at = now(), hit_at = %(hit_at)s
+                WHERE id = %(id)s
+                RETURNING *
+                """,
+                {"price": price, "status": status, "hit_at": hit_at, "id": setup_id},
+            )
+            return _pg_global_row_to_dict(cur.fetchone())
+
+
+def _pg_global_row_to_dict(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": str(row["id"]),
+        "ticker": row["ticker"],
+        "setup_type": row["setup_type"],
+        "analysis_period": row["analysis_period"],
+        "source": "auto",
+        "user_label": row.get("found_by_name"),
+        "session_id": None,
+        "status": row["status"],
+        "score": row["score"],
+        "current_price": row["current_price"],
+        "saved_price": row["found_price"],
+        "stop_loss": row["stop_loss"],
+        "target_1": row["target_1"],
+        "target_2": row["target_2"],
+        "risk_reward": row["risk_reward"],
+        "chart_url": row["chart_url"],
+        "result": row["result_json"],
+        "scan_count": row["scan_count"],
+        "created_at": _iso(row["created_at"]),
+        "last_seen_at": _iso(row["last_seen_at"]),
+        "status_checked_at": _iso(row["status_checked_at"]),
+        "hit_at": _iso(row["hit_at"]),
+    }
+
+
+def _pg_user_row_to_dict(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": str(row["id"]),
+        "ticker": row["ticker"],
+        "setup_type": row["setup_type"],
+        "analysis_period": row["analysis_period"],
+        "source": "manual",
+        "user_label": None,
+        "session_id": None,
+        "status": row["status"],
+        "score": row["score"],
+        "current_price": row["current_price"],
+        "saved_price": row["saved_price"],
+        "stop_loss": row["stop_loss"],
+        "target_1": row["target_1"],
+        "target_2": row["target_2"],
+        "risk_reward": row["risk_reward"],
+        "chart_url": row["chart_url"],
+        "result": row["result_json"],
+        "scan_count": 1,
+        "created_at": _iso(row["created_at"]),
+        "last_seen_at": _iso(row["created_at"]),
+        "status_checked_at": _iso(row["status_checked_at"]),
+        "hit_at": _iso(row["hit_at"]),
+    }
+
+
 def _fingerprint(
     result_data: dict[str, Any],
     analysis_period: str,
@@ -244,6 +564,14 @@ def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
 
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def _iso(value: Any) -> str | None:
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
 
 
 def _clean_text(value: str | None) -> str | None:

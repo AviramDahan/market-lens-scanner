@@ -1,6 +1,10 @@
 const form = document.querySelector("#scanForm");
-const userNameInput = document.querySelector("#userName");
-const saveUserButton = document.querySelector("#saveUserButton");
+const authStatus = document.querySelector("#authStatus");
+const authEmailInput = document.querySelector("#authEmail");
+const authPasswordInput = document.querySelector("#authPassword");
+const signInButton = document.querySelector("#signInButton");
+const signUpButton = document.querySelector("#signUpButton");
+const signOutButton = document.querySelector("#signOutButton");
 const universeInput = document.querySelector("#universe");
 const universeMeta = document.querySelector("#universeMeta");
 const tickerPicker = document.querySelector("#tickerPicker");
@@ -33,20 +37,14 @@ let lastPayload = { results: [], errors: {}, charts: {}, saved_setups: [] };
 let currentView = "scan";
 let savedSetups = [];
 let watchlists = [];
+let supabaseClient = null;
+let authSession = null;
+let authUser = null;
 const sessionId = getSessionId();
-let userName = getUserName();
 
-userNameInput.value = userName;
-
-saveUserButton.addEventListener("click", () => {
-  userName = cleanUserName(userNameInput.value);
-  localStorage.setItem("marketLensUserName", userName);
-  userNameInput.value = userName;
-  universeMeta.textContent = userName ? `User saved as ${userName}.` : "User name cleared.";
-  if (currentView === "my" || currentView === "global") {
-    loadSavedSetups();
-  }
-});
+signInButton.addEventListener("click", signIn);
+signUpButton.addEventListener("click", signUp);
+signOutButton.addEventListener("click", signOut);
 
 universeInput.addEventListener("change", () => {
   const selected = watchlists.find((watchlist) => watchlist.id === universeInput.value);
@@ -142,12 +140,12 @@ form.addEventListener("submit", async (event) => {
   try {
     const response = await fetch("/ui/scan", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify({
         tickers,
         min_rr: minRr,
         analysis_period: analysisPeriod,
-        user_label: userName,
+        user_label: currentUserLabel(),
         session_id: sessionId,
       }),
     });
@@ -165,6 +163,116 @@ form.addEventListener("submit", async (event) => {
     setLoading(false);
   }
 });
+
+async function initAuth() {
+  try {
+    const response = await fetch("/auth/config");
+    const config = await response.json();
+    if (!config.enabled || !window.supabase) {
+      updateAuthUi("Auth not configured");
+      return;
+    }
+
+    supabaseClient = window.supabase.createClient(config.supabase_url, config.publishable_key);
+    const sessionPayload = await supabaseClient.auth.getSession();
+    authSession = sessionPayload.data.session;
+    authUser = authSession?.user || null;
+    updateAuthUi();
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      authSession = session;
+      authUser = session?.user || null;
+      updateAuthUi();
+      if (currentView === "my") {
+        loadSavedSetups();
+      }
+    });
+  } catch {
+    updateAuthUi("Auth unavailable");
+  }
+}
+
+async function signIn() {
+  if (!supabaseClient) {
+    showMessage("Account login is not configured yet.");
+    return;
+  }
+  const email = authEmailInput.value.trim();
+  const password = authPasswordInput.value;
+  if (!email || !password) {
+    showMessage("Enter email and password.");
+    return;
+  }
+  setAuthBusy(true);
+  try {
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    showMessage("");
+  } catch (error) {
+    showMessage(error.message || "Sign in failed.");
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function signUp() {
+  if (!supabaseClient) {
+    showMessage("Account signup is not configured yet.");
+    return;
+  }
+  const email = authEmailInput.value.trim();
+  const password = authPasswordInput.value;
+  if (!email || password.length < 6) {
+    showMessage("Use an email and a password with at least 6 characters.");
+    return;
+  }
+  setAuthBusy(true);
+  try {
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) throw error;
+    showMessage("Account created. Check your email if confirmation is required.");
+  } catch (error) {
+    showMessage(error.message || "Sign up failed.");
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function signOut() {
+  if (!supabaseClient) return;
+  setAuthBusy(true);
+  try {
+    await supabaseClient.auth.signOut();
+    showMessage("");
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+function updateAuthUi(fallbackText = "") {
+  const signedIn = Boolean(authUser);
+  authStatus.textContent = signedIn ? authUser.email : (fallbackText || "Guest");
+  authStatus.classList.toggle("signed-in", signedIn);
+  authEmailInput.classList.toggle("hidden", signedIn);
+  authPasswordInput.classList.toggle("hidden", signedIn);
+  signInButton.classList.toggle("hidden", signedIn);
+  signUpButton.classList.toggle("hidden", signedIn);
+  signOutButton.classList.toggle("hidden", !signedIn);
+}
+
+function setAuthBusy(isBusy) {
+  signInButton.disabled = isBusy;
+  signUpButton.disabled = isBusy;
+  signOutButton.disabled = isBusy;
+}
+
+function getAuthHeaders() {
+  return authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {};
+}
+
+function currentUserLabel() {
+  return authUser?.email || "";
+}
 
 async function checkHealth() {
   try {
@@ -235,19 +343,32 @@ function updatePickerCount() {
 async function loadSavedSetups() {
   setLoadingSaved(true);
   showMessage("");
+  if (currentView === "my" && supabaseClient && !authUser) {
+    savedSetups = [];
+    scanCount.textContent = "0";
+    setupCount.textContent = "0";
+    errorCount.textContent = "0";
+    runMeta.textContent = "Sign in to see your saved setups";
+    resultsEl.className = "results empty";
+    resultsEl.innerHTML = `<div class="empty-state">Sign in to save and track personal setups.</div>`;
+    setLoadingSaved(false);
+    return;
+  }
   const status = savedStatusEl.value;
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (currentView === "my") {
     params.set("source", "manual");
-    params.set("session_id", sessionId);
+    if (!supabaseClient) {
+      params.set("session_id", sessionId);
+    }
   }
   if (currentView === "global") {
     params.set("source", "auto");
   }
   const query = params.toString() ? `?${params.toString()}` : "";
   try {
-    const response = await fetch(`/setups${query}`);
+    const response = await fetch(`/setups${query}`, { headers: getAuthHeaders() });
     if (!response.ok) throw new Error(`Saved setups failed (${response.status})`);
     const payload = await response.json();
     savedSetups = payload.setups || [];
@@ -489,6 +610,10 @@ function bindResultActions(results, charts, analysisPeriod) {
   resultsEl.querySelectorAll("[data-chart]").forEach(bindChartOpen);
   resultsEl.querySelectorAll("[data-save]").forEach((button) => {
     button.addEventListener("click", async () => {
+      if (supabaseClient && !authUser) {
+        showMessage("Sign in to save personal setups.");
+        return;
+      }
       const ticker = button.dataset.save;
       const result = results.find((item) => item.ticker === ticker);
       if (!result) return;
@@ -497,12 +622,12 @@ function bindResultActions(results, charts, analysisPeriod) {
       try {
         const response = await fetch("/setups", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({
             result,
             analysis_period: analysisPeriod,
             chart_url: charts[result.ticker],
-            user_label: userName,
+            user_label: currentUserLabel(),
             session_id: sessionId,
           }),
         });
@@ -524,7 +649,10 @@ function bindSavedActions() {
       button.disabled = true;
       button.textContent = "Refreshing...";
       try {
-        const response = await fetch(`/setups/${button.dataset.refresh}/refresh`, { method: "POST" });
+        const response = await fetch(`/setups/${button.dataset.refresh}/refresh`, {
+          method: "POST",
+          headers: currentView === "my" ? getAuthHeaders() : {},
+        });
         if (!response.ok) throw new Error(`Refresh failed (${response.status})`);
         await loadSavedSetups();
       } catch (error) {
@@ -601,14 +729,6 @@ function getSessionId() {
   return value;
 }
 
-function getUserName() {
-  return cleanUserName(localStorage.getItem("marketLensUserName") || "");
-}
-
-function cleanUserName(value) {
-  return String(value || "").trim().slice(0, 80);
-}
-
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -618,5 +738,6 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+initAuth();
 loadWatchlists();
 checkHealth();
