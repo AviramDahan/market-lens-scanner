@@ -214,8 +214,36 @@ button:hover {
   margin-bottom: 18px;
 }
 
-.toolbar select {
-  max-width: 180px;
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.toolbar-actions select {
+  max-width: 170px;
+}
+
+.view-tabs {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.view-tabs button {
+  border: 0;
+  border-radius: 0;
+  padding: 10px 13px;
+}
+
+.view-tabs button.active {
+  background: var(--soft-blue);
+  color: var(--blue);
+  font-weight: 800;
 }
 
 .message {
@@ -279,6 +307,22 @@ button:hover {
 .badge.trade {
   background: var(--soft-green);
   color: var(--green);
+}
+
+.badge.status-open {
+  background: var(--soft-blue);
+  color: var(--blue);
+}
+
+.badge.status-target1,
+.badge.status-target2 {
+  background: var(--soft-green);
+  color: var(--green);
+}
+
+.badge.status-stopped {
+  background: #fff0ee;
+  color: var(--red);
 }
 
 .score-box {
@@ -365,6 +409,34 @@ button:hover {
 
 .level strong {
   font-size: 15px;
+}
+
+.saved-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.saved-meta span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #fff;
+}
+
+.quiet {
+  justify-self: start;
+  background: #fff;
+  color: var(--blue);
+  border-color: #b9cce6;
+  font-weight: 800;
+}
+
+.quiet[disabled] {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .chart-wrap {
@@ -454,8 +526,18 @@ dialog::backdrop {
     flex-direction: column;
   }
 
-  .toolbar select {
+  .toolbar-actions {
+    justify-content: stretch;
+  }
+
+  .toolbar-actions select,
+  .view-tabs {
     max-width: none;
+    width: 100%;
+  }
+
+  .view-tabs button {
+    flex: 1;
   }
 
   .score-box {

@@ -14,6 +14,8 @@ liquidity sweeps.
 - CLI scanner for terminal use
 - Annotated PNG charts for each ticker
 - Analysis range selector for 3 months, 6 months, 1 year, or 2 years
+- Shared saved setup watchlist with automatic and manual saves
+- Setup status tracking against target 1, target 2, and stop loss
 - Buy zone, stop, targets, risk/reward, score, and setup reason
 - Docker-ready deployment
 - Render blueprint for public hosting
@@ -98,6 +100,27 @@ Useful endpoints:
 - `GET /config` - active config
 - `POST /scan` - JSON scanner API
 - `POST /ui/scan` - scanner API with chart image generation
+- `GET /setups` - shared saved setup watchlist
+- `POST /setups` - manually save a setup
+- `POST /setups/{setup_id}/refresh` - refresh setup status against live price
+
+## Saved Setups
+
+When the UI scan finds a trade setup, Market Lens automatically saves it to a
+shared watchlist. Users can also press `Save setup` on a result card. Saved
+setups are stored in SQLite under `data/setups.sqlite` by default and can be
+reviewed from the `Saved` tab in the UI.
+
+The saved setup status is:
+
+- `OPEN` - price has not reached the first target or stop
+- `TARGET1` - price reached target 1
+- `TARGET2` - price reached target 2
+- `STOPPED` - price touched or moved below stop loss
+
+For production hosting, set `MARKET_LENS_DATA_DIR` or `MARKET_LENS_DB_PATH` to a
+persistent disk or database-backed volume. On ephemeral hosting plans, saved
+setups may reset after a restart or deploy.
 
 ## Docker
 

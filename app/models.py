@@ -68,3 +68,11 @@ class ScanRequest(BaseModel):
 class ScanResponse(BaseModel):
     results: list[ScanResult]
     errors: dict[str, str] = {}
+
+
+class SaveSetupRequest(BaseModel):
+    result: ScanResult
+    analysis_period: str = Field(default="6mo", pattern="^(3mo|6mo|1y|2y)$")
+    chart_url: str | None = None
+    user_label: str | None = Field(default=None, max_length=80)
+    session_id: str | None = Field(default=None, max_length=80)

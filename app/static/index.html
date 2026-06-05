@@ -70,11 +70,24 @@
               <h2>Scan Results</h2>
               <p id="runMeta">Ready</p>
             </div>
-            <select id="filter">
-              <option value="all">All results</option>
-              <option value="setups">Setups only</option>
-              <option value="no-trade">No trade</option>
-            </select>
+            <div class="toolbar-actions">
+              <div class="view-tabs" aria-label="Result view">
+                <button type="button" class="active" data-view="scan">Results</button>
+                <button type="button" data-view="saved">Saved</button>
+              </div>
+              <select id="filter">
+                <option value="all">All results</option>
+                <option value="setups">Setups only</option>
+                <option value="no-trade">No trade</option>
+              </select>
+              <select id="savedStatus" class="hidden">
+                <option value="">All saved</option>
+                <option value="OPEN">Open</option>
+                <option value="TARGET1">Target 1</option>
+                <option value="TARGET2">Target 2</option>
+                <option value="STOPPED">Stopped</option>
+              </select>
+            </div>
           </div>
 
           <div id="message" class="message hidden"></div>

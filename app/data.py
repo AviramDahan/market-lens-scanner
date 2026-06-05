@@ -52,6 +52,11 @@ def fetch_spy_returns(period: str = "3mo") -> "pd.Series":
     return df["Close"].pct_change().dropna()
 
 
+def fetch_last_price(ticker: str) -> float:
+    df = _fetch_frame(ticker, "1d", "5d")
+    return float(df["Close"].iloc[-1])
+
+
 def _fetch_frame(ticker: str, interval: str, period: str) -> pd.DataFrame:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
