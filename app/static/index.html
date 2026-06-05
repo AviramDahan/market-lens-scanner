@@ -24,12 +24,20 @@
               <select id="universe">
                 <option value="custom">Custom tickers</option>
               </select>
-              <small id="universeMeta" class="universe-meta">Choose a curated list or type your own tickers.</small>
+              <small id="universeMeta" class="universe-meta">Choose a universe, select companies, then add them.</small>
+            </div>
+
+            <div class="field ticker-picker-field">
+              <label for="tickerPicker">Companies</label>
+              <select id="tickerPicker" multiple size="7" disabled>
+                <option>Select a market universe first</option>
+              </select>
+              <button id="addTickersButton" class="secondary" type="button" disabled>Add selected</button>
             </div>
 
             <div class="field">
               <label for="tickers">Tickers</label>
-              <textarea id="tickers" spellcheck="false" rows="3">AAPL MSFT NVDA</textarea>
+              <textarea id="tickers" spellcheck="false" rows="3" placeholder="Add companies from the selector or type tickers manually"></textarea>
             </div>
 
             <div class="row field">
@@ -45,12 +53,6 @@
                 <option value="1y">1 year</option>
                 <option value="2y">2 years</option>
               </select>
-            </div>
-
-            <div class="quick-list" aria-label="Quick ticker presets">
-              <button type="button" data-preset="AAPL MSFT NVDA">Mega cap</button>
-              <button type="button" data-preset="LMT RTX NOC">Defense</button>
-              <button type="button" data-preset="SPY QQQ IWM">ETFs</button>
             </div>
 
             <button id="scanButton" class="primary" type="submit">Scan</button>

@@ -147,6 +147,15 @@ textarea {
   min-height: 104px;
 }
 
+select[multiple] {
+  min-height: 176px;
+  padding: 8px;
+}
+
+select[multiple] option {
+  padding: 7px 8px;
+}
+
 textarea:focus,
 input:focus,
 select:focus {
@@ -159,10 +168,8 @@ select:focus {
   align-items: center;
 }
 
-.quick-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
+.ticker-picker-field {
+  gap: 10px;
 }
 
 button {
@@ -184,6 +191,18 @@ button:hover {
   border-color: var(--blue);
   color: #fff;
   font-weight: 800;
+}
+
+.secondary {
+  background: #fff;
+  color: var(--blue);
+  border-color: #b9cce6;
+  font-weight: 800;
+}
+
+.secondary[disabled] {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .primary[disabled] {
@@ -509,9 +528,6 @@ dialog::backdrop {
     position: static;
   }
 
-  .quick-list {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 @media (max-width: 660px) {
@@ -550,8 +566,7 @@ dialog::backdrop {
 
   .primary-stats,
   .levels,
-  .summary,
-  .quick-list {
+  .summary {
     grid-template-columns: 1fr;
   }
 

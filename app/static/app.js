@@ -1,6 +1,8 @@
 const form = document.querySelector("#scanForm");
 const universeInput = document.querySelector("#universe");
 const universeMeta = document.querySelector("#universeMeta");
+const tickerPicker = document.querySelector("#tickerPicker");
+const addTickersButton = document.querySelector("#addTickersButton");
 const tickersInput = document.querySelector("#tickers");
 const minRrInput = document.querySelector("#minRr");
 const analysisPeriodInput = document.querySelector("#analysisPeriod");
@@ -25,22 +27,25 @@ let savedSetups = [];
 let watchlists = [];
 const sessionId = getSessionId();
 
-document.querySelectorAll("[data-preset]").forEach((button) => {
-  button.addEventListener("click", () => {
-    universeInput.value = "custom";
-    universeMeta.textContent = "Custom preset loaded.";
-    tickersInput.value = button.dataset.preset;
-  });
-});
-
 universeInput.addEventListener("change", () => {
   const selected = watchlists.find((watchlist) => watchlist.id === universeInput.value);
   if (!selected) {
-    universeMeta.textContent = "Choose a curated list or type your own tickers.";
+    resetTickerPicker();
+    universeMeta.textContent = "Choose a universe, select companies, then add them.";
     return;
   }
-  tickersInput.value = selected.tickers.join(" ");
+  renderTickerPicker(selected);
   universeMeta.textContent = `${selected.count} liquid names - ${selected.description}`;
+});
+
+addTickersButton.addEventListener("click", () => {
+  const selectedTickers = Array.from(tickerPicker.selectedOptions).map((option) => option.value);
+  const currentTickers = parseTickers(tickersInput.value);
+  const merged = [...new Set([...currentTickers, ...selectedTickers])];
+  tickersInput.value = merged.join(" ");
+  universeMeta.textContent = selectedTickers.length
+    ? `Added ${selectedTickers.length} ticker${selectedTickers.length === 1 ? "" : "s"}.`
+    : "Select one or more companies to add.";
 });
 
 document.querySelectorAll("[data-view]").forEach((button) => {
@@ -128,6 +133,21 @@ async function loadWatchlists() {
   } catch {
     universeMeta.textContent = "Curated lists are unavailable right now.";
   }
+}
+
+function renderTickerPicker(watchlist) {
+  tickerPicker.disabled = false;
+  addTickersButton.disabled = false;
+  const companies = watchlist.companies || watchlist.tickers.map((ticker) => ({ ticker, name: ticker }));
+  tickerPicker.innerHTML = companies.map((company) => {
+    return `<option value="${escapeHtml(company.ticker)}">${escapeHtml(company.ticker)} (${escapeHtml(company.name)})</option>`;
+  }).join("");
+}
+
+function resetTickerPicker() {
+  tickerPicker.disabled = true;
+  addTickersButton.disabled = true;
+  tickerPicker.innerHTML = `<option>Select a market universe first</option>`;
 }
 
 async function loadSavedSetups() {
