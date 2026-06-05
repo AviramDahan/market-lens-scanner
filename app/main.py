@@ -9,6 +9,7 @@ from app.config import load_config
 from app.models import SaveSetupRequest, ScanRequest, ScanResponse
 from app.scanner import scan_tickers
 from app.storage import init_storage, list_setups, refresh_setup, save_setup
+from app.watchlists import list_watchlists
 
 app = FastAPI(title="Market Lens", version="0.1.0", description="Swing trade scanner")
 
@@ -102,6 +103,11 @@ async def refresh_saved_setup(setup_id: int) -> dict:
 @app.get("/config")
 async def get_config() -> dict:
     return load_config()
+
+
+@app.get("/watchlists")
+async def get_watchlists() -> dict:
+    return {"watchlists": list_watchlists()}
 
 
 @app.get("/health")

@@ -20,6 +20,14 @@
 
           <form id="scanForm" class="scan-form">
             <div class="field">
+              <label for="universe">Market Universe</label>
+              <select id="universe">
+                <option value="custom">Custom tickers</option>
+              </select>
+              <small id="universeMeta" class="universe-meta">Choose a curated list or type your own tickers.</small>
+            </div>
+
+            <div class="field">
               <label for="tickers">Tickers</label>
               <textarea id="tickers" spellcheck="false" rows="3">AAPL MSFT NVDA</textarea>
             </div>

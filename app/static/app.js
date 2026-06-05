@@ -1,4 +1,6 @@
 const form = document.querySelector("#scanForm");
+const universeInput = document.querySelector("#universe");
+const universeMeta = document.querySelector("#universeMeta");
 const tickersInput = document.querySelector("#tickers");
 const minRrInput = document.querySelector("#minRr");
 const analysisPeriodInput = document.querySelector("#analysisPeriod");
@@ -20,12 +22,25 @@ const closeDialog = document.querySelector("#closeDialog");
 let lastPayload = { results: [], errors: {}, charts: {}, saved_setups: [] };
 let currentView = "scan";
 let savedSetups = [];
+let watchlists = [];
 const sessionId = getSessionId();
 
 document.querySelectorAll("[data-preset]").forEach((button) => {
   button.addEventListener("click", () => {
+    universeInput.value = "custom";
+    universeMeta.textContent = "Custom preset loaded.";
     tickersInput.value = button.dataset.preset;
   });
+});
+
+universeInput.addEventListener("change", () => {
+  const selected = watchlists.find((watchlist) => watchlist.id === universeInput.value);
+  if (!selected) {
+    universeMeta.textContent = "Choose a curated list or type your own tickers.";
+    return;
+  }
+  tickersInput.value = selected.tickers.join(" ");
+  universeMeta.textContent = `${selected.count} liquid names - ${selected.description}`;
 });
 
 document.querySelectorAll("[data-view]").forEach((button) => {
@@ -95,6 +110,23 @@ async function checkHealth() {
   } catch {
     healthEl.textContent = "offline";
     healthEl.classList.remove("ok");
+  }
+}
+
+async function loadWatchlists() {
+  try {
+    const response = await fetch("/watchlists");
+    if (!response.ok) throw new Error("Watchlists unavailable");
+    const payload = await response.json();
+    watchlists = payload.watchlists || [];
+    universeInput.innerHTML = [
+      `<option value="custom">Custom tickers</option>`,
+      ...watchlists.map((watchlist) => {
+        return `<option value="${escapeHtml(watchlist.id)}">${escapeHtml(watchlist.name)} (${watchlist.count})</option>`;
+      }),
+    ].join("");
+  } catch {
+    universeMeta.textContent = "Curated lists are unavailable right now.";
   }
 }
 
@@ -427,4 +459,5 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+loadWatchlists();
 checkHealth();

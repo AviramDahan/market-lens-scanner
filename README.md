@@ -16,6 +16,7 @@ liquidity sweeps.
 - Analysis range selector for 3 months, 6 months, 1 year, or 2 years
 - Shared saved setup watchlist with automatic and manual saves
 - Setup status tracking against target 1, target 2, and stop loss
+- Curated market universes for quality sector-based scans
 - Buy zone, stop, targets, risk/reward, score, and setup reason
 - Docker-ready deployment
 - Render blueprint for public hosting
@@ -103,6 +104,7 @@ Useful endpoints:
 - `GET /setups` - shared saved setup watchlist
 - `POST /setups` - manually save a setup
 - `POST /setups/{setup_id}/refresh` - refresh setup status against live price
+- `GET /watchlists` - curated market universes for the UI scanner
 
 ## Saved Setups
 
