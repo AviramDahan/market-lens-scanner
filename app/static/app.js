@@ -5,6 +5,9 @@ const tickerPicker = document.querySelector("#tickerPicker");
 const addTickersButton = document.querySelector("#addTickersButton");
 const selectAllTickersButton = document.querySelector("#selectAllTickersButton");
 const clearTickersButton = document.querySelector("#clearTickersButton");
+const manualTickerInput = document.querySelector("#manualTicker");
+const addManualTickerButton = document.querySelector("#addManualTickerButton");
+const clearBasketButton = document.querySelector("#clearBasketButton");
 const tickersInput = document.querySelector("#tickers");
 const minRrInput = document.querySelector("#minRr");
 const analysisPeriodInput = document.querySelector("#analysisPeriod");
@@ -42,12 +45,24 @@ universeInput.addEventListener("change", () => {
 
 addTickersButton.addEventListener("click", () => {
   const selectedTickers = getCheckedTickerInputs().map((input) => input.value);
-  const currentTickers = parseTickers(tickersInput.value);
-  const merged = [...new Set([...currentTickers, ...selectedTickers])];
-  tickersInput.value = merged.join(" ");
+  addTickersToBasket(selectedTickers);
   universeMeta.textContent = selectedTickers.length
     ? `Added ${selectedTickers.length} ticker${selectedTickers.length === 1 ? "" : "s"}.`
     : "Select one or more companies to add.";
+});
+
+addManualTickerButton.addEventListener("click", addManualTickers);
+
+manualTickerInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    addManualTickers();
+  }
+});
+
+clearBasketButton.addEventListener("click", () => {
+  tickersInput.value = "";
+  universeMeta.textContent = "Ticker list cleared.";
 });
 
 selectAllTickersButton.addEventListener("click", () => {
@@ -209,6 +224,21 @@ async function loadSavedSetups() {
 
 function parseTickers(value) {
   return [...new Set(value.toUpperCase().split(/[\s,]+/).map((ticker) => ticker.trim()).filter(Boolean))];
+}
+
+function addManualTickers() {
+  const manualTickers = parseTickers(manualTickerInput.value);
+  addTickersToBasket(manualTickers);
+  manualTickerInput.value = "";
+  universeMeta.textContent = manualTickers.length
+    ? `Added ${manualTickers.length} manual ticker${manualTickers.length === 1 ? "" : "s"}.`
+    : "Type one or more tickers to add.";
+}
+
+function addTickersToBasket(tickers) {
+  const currentTickers = parseTickers(tickersInput.value);
+  const merged = [...new Set([...currentTickers, ...tickers])];
+  tickersInput.value = merged.join(" ");
 }
 
 function setLoading(isLoading) {

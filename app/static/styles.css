@@ -163,6 +163,12 @@ select:focus {
   gap: 10px;
 }
 
+.manual-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
 .picker-head {
   display: flex;
   align-items: center;
@@ -629,7 +635,8 @@ dialog::backdrop {
 
   .primary-stats,
   .levels,
-  .summary {
+  .summary,
+  .manual-add {
     grid-template-columns: 1fr;
   }
 
