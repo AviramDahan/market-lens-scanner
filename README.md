@@ -15,6 +15,8 @@ liquidity sweeps.
 - Annotated PNG charts for each ticker
 - Analysis range selector for 3 months, 6 months, 1 year, or 2 years
 - Shared saved setup watchlist with automatic and manual saves
+- Lightweight local user identity with personal saved setups
+- Global setups tab for trade setups discovered by public scans
 - Setup status tracking against target 1, target 2, and stop loss
 - Curated market universes for quality sector-based scans
 - Buy zone, stop, targets, risk/reward, score, and setup reason
@@ -108,10 +110,11 @@ Useful endpoints:
 
 ## Saved Setups
 
-When the UI scan finds a trade setup, Market Lens automatically saves it to a
-shared watchlist. Users can also press `Save setup` on a result card. Saved
-setups are stored in SQLite under `data/setups.sqlite` by default and can be
-reviewed from the `Saved` tab in the UI.
+When the UI scan finds a trade setup, Market Lens automatically records it in
+`Global Setups`. Users can also press `Save setup` on a result card to save it
+to their own `My Setups` tab. The app uses a local browser session id and an
+optional display name for lightweight user separation. Saved setups are stored
+in SQLite under `data/setups.sqlite` by default.
 
 The saved setup status is:
 

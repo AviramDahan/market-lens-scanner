@@ -63,6 +63,8 @@ class ScanRequest(BaseModel):
     tickers: list[str] = Field(min_length=1)
     min_rr: float = Field(default=2.0, gt=0)
     analysis_period: str = Field(default="6mo", pattern="^(3mo|6mo|1y|2y)$")
+    user_label: str | None = Field(default=None, max_length=80)
+    session_id: str | None = Field(default=None, max_length=80)
 
 
 class ScanResponse(BaseModel):

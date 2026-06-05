@@ -57,6 +57,8 @@ async def scan_with_charts(request: ScanRequest) -> dict:
             analysis_period=request.analysis_period,
             chart_url=charts[detail.result.ticker],
             source="auto",
+            user_label=request.user_label,
+            session_id=request.session_id,
         )
         if saved_setup:
             saved.append(saved_setup)
@@ -73,8 +75,17 @@ async def scan_with_charts(request: ScanRequest) -> dict:
 async def get_saved_setups(
     limit: int = Query(default=80, ge=1, le=200),
     status: str | None = Query(default=None, pattern="^(OPEN|TARGET1|TARGET2|STOPPED)$"),
+    source: str | None = Query(default=None, pattern="^(auto|manual)$"),
+    session_id: str | None = Query(default=None, max_length=80),
 ) -> dict:
-    return {"setups": list_setups(limit=limit, status=status)}
+    return {
+        "setups": list_setups(
+            limit=limit,
+            status=status,
+            source=source,
+            session_id=session_id,
+        )
+    }
 
 
 @app.post("/setups")

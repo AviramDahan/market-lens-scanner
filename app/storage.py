@@ -83,7 +83,7 @@ def save_setup(
     now = _now()
     result_data = result.model_dump()
     status = evaluate_status(result.current_price, result_data)
-    fingerprint = _fingerprint(result_data, analysis_period)
+    fingerprint = _fingerprint(result_data, analysis_period, source, session_id)
     result_json = json.dumps(result_data, sort_keys=True)
     hit_at = now if status != "OPEN" else None
 
@@ -143,29 +143,38 @@ def save_setup(
     return _row_to_dict(row)
 
 
-def list_setups(limit: int = 80, status: str | None = None) -> list[dict[str, Any]]:
+def list_setups(
+    limit: int = 80,
+    status: str | None = None,
+    source: str | None = None,
+    session_id: str | None = None,
+) -> list[dict[str, Any]]:
     init_storage()
     limit = max(1, min(limit, 200))
+    where = []
+    params: list[Any] = []
+    if status:
+        where.append("status = ?")
+        params.append(status)
+    if source:
+        where.append("source = ?")
+        params.append(source)
+    if session_id:
+        where.append("session_id = ?")
+        params.append(_clean_text(session_id))
+    where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+    params.append(limit)
+
     with _connect() as conn:
-        if status:
-            rows = conn.execute(
-                """
-                SELECT * FROM saved_setups
-                WHERE status = ?
-                ORDER BY created_at DESC
-                LIMIT ?
-                """,
-                (status, limit),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                """
-                SELECT * FROM saved_setups
-                ORDER BY created_at DESC
-                LIMIT ?
-                """,
-                (limit,),
-            ).fetchall()
+        rows = conn.execute(
+            f"""
+            SELECT * FROM saved_setups
+            {where_sql}
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            params,
+        ).fetchall()
     return [_row_to_dict(row) for row in rows]
 
 
@@ -207,8 +216,15 @@ def evaluate_status(price: float, result_data: dict[str, Any]) -> str:
     return "OPEN"
 
 
-def _fingerprint(result_data: dict[str, Any], analysis_period: str) -> str:
+def _fingerprint(
+    result_data: dict[str, Any],
+    analysis_period: str,
+    source: str = "auto",
+    session_id: str | None = None,
+) -> str:
     payload = {
+        "source": source,
+        "session_id": _clean_text(session_id) if source == "manual" else "global",
         "ticker": result_data.get("ticker"),
         "setup_type": result_data.get("setup_type"),
         "analysis_period": analysis_period,

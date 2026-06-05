@@ -1,4 +1,6 @@
 const form = document.querySelector("#scanForm");
+const userNameInput = document.querySelector("#userName");
+const saveUserButton = document.querySelector("#saveUserButton");
 const universeInput = document.querySelector("#universe");
 const universeMeta = document.querySelector("#universeMeta");
 const tickerPicker = document.querySelector("#tickerPicker");
@@ -32,6 +34,19 @@ let currentView = "scan";
 let savedSetups = [];
 let watchlists = [];
 const sessionId = getSessionId();
+let userName = getUserName();
+
+userNameInput.value = userName;
+
+saveUserButton.addEventListener("click", () => {
+  userName = cleanUserName(userNameInput.value);
+  localStorage.setItem("marketLensUserName", userName);
+  userNameInput.value = userName;
+  universeMeta.textContent = userName ? `User saved as ${userName}.` : "User name cleared.";
+  if (currentView === "my" || currentView === "global") {
+    loadSavedSetups();
+  }
+});
 
 universeInput.addEventListener("change", () => {
   const selected = watchlists.find((watchlist) => watchlist.id === universeInput.value);
@@ -94,8 +109,8 @@ document.querySelectorAll("[data-view]").forEach((button) => {
       viewButton.classList.toggle("active", viewButton.dataset.view === currentView);
     });
     filterEl.classList.toggle("hidden", currentView !== "scan");
-    savedStatusEl.classList.toggle("hidden", currentView !== "saved");
-    if (currentView === "saved") {
+    savedStatusEl.classList.toggle("hidden", currentView !== "my" && currentView !== "global");
+    if (currentView === "my" || currentView === "global") {
       await loadSavedSetups();
     } else {
       render(lastPayload);
@@ -128,7 +143,13 @@ form.addEventListener("submit", async (event) => {
     const response = await fetch("/ui/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tickers, min_rr: minRr, analysis_period: analysisPeriod }),
+      body: JSON.stringify({
+        tickers,
+        min_rr: minRr,
+        analysis_period: analysisPeriod,
+        user_label: userName,
+        session_id: sessionId,
+      }),
     });
 
     if (!response.ok) {
@@ -215,7 +236,16 @@ async function loadSavedSetups() {
   setLoadingSaved(true);
   showMessage("");
   const status = savedStatusEl.value;
-  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (currentView === "my") {
+    params.set("source", "manual");
+    params.set("session_id", sessionId);
+  }
+  if (currentView === "global") {
+    params.set("source", "auto");
+  }
+  const query = params.toString() ? `?${params.toString()}` : "";
   try {
     const response = await fetch(`/setups${query}`);
     if (!response.ok) throw new Error(`Saved setups failed (${response.status})`);
@@ -290,7 +320,7 @@ function syncViewControls() {
     viewButton.classList.toggle("active", viewButton.dataset.view === currentView);
   });
   filterEl.classList.toggle("hidden", currentView !== "scan");
-  savedStatusEl.classList.toggle("hidden", currentView !== "saved");
+  savedStatusEl.classList.toggle("hidden", currentView !== "my" && currentView !== "global");
 }
 
 function render(payload) {
@@ -322,7 +352,7 @@ function render(payload) {
 
   showMessage("");
   if (saved.length) {
-    showMessage(`${saved.length} setup${saved.length === 1 ? "" : "s"} saved to the shared watchlist.`);
+    showMessage(`${saved.length} setup${saved.length === 1 ? "" : "s"} added to Global Setups.`);
   }
   if (Object.keys(errors).length) {
     showMessage(Object.entries(errors).map(([ticker, error]) => `${ticker}: ${error}`).join(" | "));
@@ -348,11 +378,12 @@ function renderSavedSetups() {
   scanCount.textContent = String(setups.length);
   setupCount.textContent = String(openCount);
   errorCount.textContent = String(stoppedCount);
-  runMeta.textContent = `${setups.length} saved - ${openCount} open - ${targetCount} target hit`;
+  const label = currentView === "my" ? "my setups" : "global setups";
+  runMeta.textContent = `${setups.length} ${label} - ${openCount} open - ${targetCount} target hit`;
 
   if (!setups.length) {
     resultsEl.className = "results empty";
-    resultsEl.innerHTML = `<div class="empty-state">No saved setups yet.</div>`;
+    resultsEl.innerHTML = `<div class="empty-state">${currentView === "my" ? "No personal setups saved yet." : "No global setups found yet."}</div>`;
     return;
   }
 
@@ -442,7 +473,8 @@ function renderSavedCard(setup) {
           <p class="reason">${escapeHtml(result.reason)}</p>
           <div class="saved-meta">
             <span>${escapeHtml(periodLabel(setup.analysis_period))}</span>
-            <span>${escapeHtml(setup.source)}</span>
+            <span>${escapeHtml(setup.source === "manual" ? "saved" : "found")}</span>
+            ${setup.user_label ? `<span>${escapeHtml(setup.user_label)}</span>` : ""}
             <span>${setup.scan_count} scan${setup.scan_count === 1 ? "" : "s"}</span>
           </div>
           <button class="quiet" type="button" data-refresh="${setup.id}">Refresh status</button>
@@ -470,6 +502,7 @@ function bindResultActions(results, charts, analysisPeriod) {
             result,
             analysis_period: analysisPeriod,
             chart_url: charts[result.ticker],
+            user_label: userName,
             session_id: sessionId,
           }),
         });
@@ -566,6 +599,14 @@ function getSessionId() {
     localStorage.setItem(key, value);
   }
   return value;
+}
+
+function getUserName() {
+  return cleanUserName(localStorage.getItem("marketLensUserName") || "");
+}
+
+function cleanUserName(value) {
+  return String(value || "").trim().slice(0, 80);
 }
 
 function escapeHtml(value) {

@@ -18,6 +18,14 @@
             <span id="health" class="status">checking</span>
           </div>
 
+          <div class="user-box">
+            <label for="userName">User</label>
+            <div class="manual-add">
+              <input id="userName" type="text" spellcheck="false" placeholder="example: Aviram" />
+              <button id="saveUserButton" class="secondary" type="button">Save</button>
+            </div>
+          </div>
+
           <form id="scanForm" class="scan-form">
             <div class="field">
               <label for="universe">Market Universe</label>
@@ -103,7 +111,8 @@
             <div class="toolbar-actions">
               <div class="view-tabs" aria-label="Result view">
                 <button type="button" class="active" data-view="scan">Results</button>
-                <button type="button" data-view="saved">Saved</button>
+                <button type="button" data-view="my">My Setups</button>
+                <button type="button" data-view="global">Global Setups</button>
               </div>
               <select id="filter">
                 <option value="all">All results</option>
@@ -111,7 +120,7 @@
                 <option value="no-trade">No trade</option>
               </select>
               <select id="savedStatus" class="hidden">
-                <option value="">All saved</option>
+                <option value="">All setups</option>
                 <option value="OPEN">Open</option>
                 <option value="TARGET1">Target 1</option>
                 <option value="TARGET2">Target 2</option>
