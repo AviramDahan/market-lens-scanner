@@ -127,6 +127,17 @@ For production hosting, set `MARKET_LENS_DATA_DIR` or `MARKET_LENS_DB_PATH` to a
 persistent disk or database-backed volume. On ephemeral hosting plans, saved
 setups may reset after a restart or deploy.
 
+## Supabase
+
+The production auth/database schema is in `supabase_schema.sql`. It creates:
+
+- `profiles` - authenticated user profile rows
+- `global_setups` - setups discovered by scans
+- `user_saved_setups` - setups saved by each user
+
+The schema enables Row Level Security for user-owned rows and allows public
+read access to global setups.
+
 ## Docker
 
 ```bash
