@@ -605,7 +605,7 @@ def write_summary(
     for result in results:
         decision = decisions.get(result.ticker)
         if decision:
-            lines.append(f"- {result.ticker}: {decision.action} — {decision.feedback}")
+            lines.append(f"- {result.ticker}: {decision.action} - {decision.feedback}")
     summary_path.write_text("\n".join(lines), encoding="utf-8")
 
 
