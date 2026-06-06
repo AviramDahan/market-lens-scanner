@@ -1,0 +1,60 @@
+name: Market Lens Paper Agent
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 09:30 Israel time during the one-month tracking window.
+    - cron: "30 6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-lens-paper-agent
+  cancel-in-progress: false
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m playwright install --with-deps chromium
+
+      - name: Run Market Lens UI agent
+        env:
+          MARKET_LENS_URL: https://market-lens-scanner.onrender.com/?v=latest
+          MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}
+          MARKET_LENS_PASSWORD: ${{ secrets.MARKET_LENS_PASSWORD }}
+          MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+          MARKET_LENS_RUN_DIR: agent_results
+          MARKET_LENS_UNIVERSE: technology
+          MARKET_LENS_TICKERS: ""
+          MARKET_LENS_ANALYSIS_PERIOD: 6mo
+          MARKET_LENS_MIN_RR: "2"
+          MARKET_LENS_HEADLESS: "true"
+        run: python agent/market_lens_ui_agent.py
+
+      - name: Commit agent results
+        run: |
+          git config user.name "market-lens-agent"
+          git config user.email "market-lens-agent@users.noreply.github.com"
+          git add agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx agent_results
+          if git diff --cached --quiet; then
+            echo "No agent result changes to commit."
+          else
+            git commit -m "Update Market Lens paper agent results"
+            git push
+          fi

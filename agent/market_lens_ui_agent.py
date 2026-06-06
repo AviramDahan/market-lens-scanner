@@ -14,7 +14,7 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sy
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUN_DIR = ROOT / "agent_runs"
+RUN_DIR = Path(os.getenv("MARKET_LENS_RUN_DIR", ROOT / "agent_runs"))
 SCREENSHOT_DIR = RUN_DIR / "screenshots"
 SUMMARY_DIR = RUN_DIR / "summaries"
 

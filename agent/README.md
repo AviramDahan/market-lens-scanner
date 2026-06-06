@@ -55,6 +55,25 @@ Outputs:
 - `agent_runs/screenshots/*.png`
 - `agent_runs/summaries/*.md`
 
+## Cloud Schedule on GitHub
+
+The repository includes `.github/workflows/market-lens-agent.yml`.
+
+It runs the agent in GitHub Actions and commits the updated paper-trading
+tracker and run outputs back to the repository:
+
+- tracker: `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx`
+- screenshots and summaries: `agent_results/`
+
+Add these repository secrets in GitHub:
+
+- `MARKET_LENS_EMAIL`
+- `MARKET_LENS_PASSWORD`
+
+Then open GitHub Actions and run `Market Lens Paper Agent` manually once. The
+workflow is also scheduled for 09:30 Israel time during the current tracking
+window.
+
 ## Conservative Decision Rules
 
 - `No Trade` results are skipped.
