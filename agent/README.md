@@ -35,6 +35,10 @@ Universe through the UI. The app ranks quality large/liquid names by relative
 strength, trend quality, liquidity, and ATR%, then caps sector concentration
 before the agent scans the selected tickers.
 
+Open simulated positions are always added to the scan basket, even if they are
+not selected by the current Smart Universe run. This keeps stop and target
+tracking active for existing paper trades.
+
 Install dependencies and browser runtime:
 
 ```powershell

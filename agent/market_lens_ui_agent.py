@@ -156,8 +156,9 @@ def login(page: Page, settings: Settings) -> str:
 def configure_scan(page: Page, settings: Settings) -> None:
     page.locator('[data-testid="min-rr-input"]').fill(str(settings.min_rr))
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
+    open_tickers = read_open_position_tickers(settings.excel_path)
     if settings.tickers:
-        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(settings.tickers))
+        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(unique_tickers(settings.tickers + open_tickers)))
         page.locator('[data-testid="add-manual-ticker"]').click()
         return
     page.locator('[data-testid="universe-select"]').select_option(settings.universe)
@@ -167,6 +168,9 @@ def configure_scan(page: Page, settings: Settings) -> None:
     )
     page.locator('[data-testid="select-all-tickers"]').click()
     page.locator('[data-testid="add-selected-tickers"]').click()
+    if open_tickers:
+        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(open_tickers))
+        page.locator('[data-testid="add-manual-ticker"]').click()
 
 
 def run_scan(page: Page) -> list[SetupResult]:
@@ -389,6 +393,8 @@ def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
             "target_1": float(row[6] or 0),
             "target_2": float(row[7] or 0),
             "status": row[8],
+            "unrealized_usd": float(row[9] or 0),
+            "unrealized_ils": float(row[10] or 0),
             "exposure_ils": float(row[11] or 0),
             "risk_ils": float(row[12] or 0),
             "notes": str(row[13] or ""),
@@ -406,6 +412,22 @@ def compute_cash(wb: Any, starting_capital: float) -> float:
         cash_out += float(row[9] or 0)
         cash_in += float(row[10] or 0)
     return round(starting_capital - cash_out + cash_in, 2)
+
+
+def read_open_position_tickers(excel_path: Path) -> list[str]:
+    try:
+        wb = load_workbook(excel_path, read_only=True, data_only=True)
+        ws = wb["Open Positions"]
+    except Exception:
+        return []
+    try:
+        tickers = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[0]:
+                tickers.append(str(row[0]).upper())
+        return tickers
+    finally:
+        wb.close()
 
 
 def append_watchlist_row(wb: Any, timestamp: str, result: SetupResult, decision: Decision) -> None:
@@ -620,6 +642,17 @@ def next_row(ws: Any) -> int:
 
 def parse_tickers(value: str) -> list[str]:
     return [item.upper() for item in re.split(r"[\s,]+", value.strip()) if item]
+
+
+def unique_tickers(tickers: list[str]) -> list[str]:
+    seen = set()
+    result = []
+    for ticker in tickers:
+        normalized = ticker.upper()
+        if normalized and normalized not in seen:
+            seen.add(normalized)
+            result.append(normalized)
+    return result
 
 
 def parse_float(value: Any) -> float:
