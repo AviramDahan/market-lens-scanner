@@ -138,47 +138,59 @@ function renderEquity(curve, summary) {
   const canvas = document.getElementById("equityChart");
   const context = canvas.getContext("2d");
   const rect = canvas.getBoundingClientRect();
+  const chartHeight = 280;
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-  canvas.height = Math.max(1, Math.floor(260 * dpr));
+  canvas.height = Math.max(1, Math.floor(chartHeight * dpr));
   context.scale(dpr, dpr);
-  context.clearRect(0, 0, rect.width, 260);
+  context.clearRect(0, 0, rect.width, chartHeight);
 
   const points = curve.length ? curve : [{ equity_ils: summary.starting_capital_ils, pnl_ils: 0 }];
   const values = points.map((point) => Number(point.equity_ils || 0));
-  const min = Math.min(...values, summary.starting_capital_ils);
-  const max = Math.max(...values, summary.starting_capital_ils);
-  const range = Math.max(1, max - min);
-  const pad = { left: 54, right: 20, top: 22, bottom: 36 };
+  const domain = equityDomain(values, Number(summary.starting_capital_ils || 0));
+  const pad = { left: 76, right: 24, top: 24, bottom: 36 };
   const width = rect.width - pad.left - pad.right;
-  const height = 260 - pad.top - pad.bottom;
+  const height = chartHeight - pad.top - pad.bottom;
+  const yFor = (value) => pad.top + height - ((value - domain.min) / domain.range) * height;
 
   context.strokeStyle = "#dfe5ee";
   context.lineWidth = 1;
-  context.beginPath();
-  for (let i = 0; i <= 4; i += 1) {
-    const y = pad.top + (height / 4) * i;
-    context.moveTo(pad.left, y);
-    context.lineTo(pad.left + width, y);
-  }
-  context.stroke();
-
   context.fillStyle = "#667085";
   context.font = "12px Segoe UI, Arial";
   context.textAlign = "right";
-  [min, (min + max) / 2, max].forEach((value) => {
-    const y = pad.top + height - ((value - min) / range) * height;
-    context.fillText(shortMoney(value), pad.left - 10, y + 4);
+  context.textBaseline = "middle";
+  domain.ticks.forEach((value) => {
+    const y = yFor(value);
+    context.beginPath();
+    context.moveTo(pad.left, y);
+    context.lineTo(pad.left + width, y);
+    context.stroke();
+    context.fillText(formatAxisMoney(value, domain.range), pad.left - 12, y);
   });
+
+  const baseline = Number(summary.starting_capital_ils || 0);
+  if (baseline >= domain.min && baseline <= domain.max) {
+    const y = yFor(baseline);
+    context.save();
+    context.setLineDash([5, 5]);
+    context.strokeStyle = "#a8b3c2";
+    context.beginPath();
+    context.moveTo(pad.left, y);
+    context.lineTo(pad.left + width, y);
+    context.stroke();
+    context.restore();
+  }
 
   const coords = points.map((point, index) => {
     const x = pad.left + (points.length === 1 ? width : (width / (points.length - 1)) * index);
-    const y = pad.top + height - ((Number(point.equity_ils || 0) - min) / range) * height;
+    const y = yFor(Number(point.equity_ils || 0));
     return { x, y };
   });
 
   context.strokeStyle = summary.total_pnl_ils >= 0 ? "#14795c" : "#bd3d35";
   context.lineWidth = 3;
+  context.lineCap = "round";
+  context.lineJoin = "round";
   context.beginPath();
   coords.forEach((point, index) => {
     if (index === 0) context.moveTo(point.x, point.y);
@@ -196,7 +208,8 @@ function renderEquity(curve, summary) {
   const pnlBadge = document.getElementById("pnlBadge");
   pnlBadge.textContent = formatPct(summary.total_pnl_pct);
   pnlBadge.className = `badge ${summary.total_pnl_ils >= 0 ? "good" : "bad"}`;
-  document.getElementById("equityMeta").textContent = `${points.length - 1} tracked runs`;
+  const runCount = Math.max(0, points.length - 1);
+  document.getElementById("equityMeta").textContent = `${runCount} tracked ${runCount === 1 ? "run" : "runs"}`;
 }
 
 function renderScreenshot(run) {
@@ -326,7 +339,7 @@ function tickerLabel(item) {
 }
 
 function tickerMeta(item, fallback = "") {
-  return [item.sector || "Unknown", fallback].filter(Boolean).join(" · ");
+  return [item.sector || "Unknown", fallback].filter(Boolean).join(" - ");
 }
 
 function renderPotential(item) {
@@ -346,7 +359,7 @@ function renderPotential(item) {
 
 function tradePotentialText(trade) {
   if (trade.action !== "BUY_SIMULATED") return formatDate(trade.timestamp);
-  return `${formatDate(trade.timestamp)} · potential ${money.format(trade.potential_profit_plan_ils || 0)}`;
+  return `${formatDate(trade.timestamp)} - potential ${money.format(trade.potential_profit_plan_ils || 0)}`;
 }
 
 function actionBadgeClass(action) {
@@ -369,10 +382,26 @@ function formatPct(value) {
   return `${sign}${number.toFixed(2)}%`;
 }
 
-function shortMoney(value) {
+function equityDomain(values, baseline) {
+  const validValues = values.filter((value) => Number.isFinite(value));
+  const rawMin = Math.min(...validValues, baseline);
+  const rawMax = Math.max(...validValues, baseline);
+  const rawRange = Math.max(0, rawMax - rawMin);
+  const minVisibleRange = Math.max(1000, Math.abs(baseline || rawMax || 1) * 0.02);
+  const visibleRange = Math.max(rawRange * 1.3, minVisibleRange);
+  const center = rawRange > 0 ? (rawMin + rawMax) / 2 : baseline || rawMax || 0;
+  const min = center - visibleRange / 2;
+  const max = center + visibleRange / 2;
+  const range = Math.max(1, max - min);
+  const ticks = Array.from({ length: 5 }, (_, index) => min + (range / 4) * index);
+  return { min, max, range, ticks };
+}
+
+function formatAxisMoney(value, range) {
   const number = Number(value || 0);
   if (Math.abs(number) >= 1000) {
-    return `$${Math.round(number / 1000)}k`;
+    const decimals = range < 10000 ? 1 : 0;
+    return `$${(number / 1000).toFixed(decimals)}k`;
   }
   return `$${Math.round(number)}`;
 }
