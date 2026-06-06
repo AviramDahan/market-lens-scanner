@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard
 from app.auth import get_current_user_required
 from app.charts import write_scan_chart
 from app.config import load_config
@@ -18,16 +19,47 @@ app = FastAPI(title="Market Lens", version="0.1.0", description="Swing trade sca
 PROJECT_ROOT = Path(__file__).parent.parent
 STATIC_DIR = Path(__file__).parent / "static"
 CHART_DIR = PROJECT_ROOT / "charts"
+AGENT_RESULTS_DIR = PROJECT_ROOT / "agent_results"
+AGENT_TRACKER_DIR = PROJECT_ROOT / "agent_tracker"
 CHART_DIR.mkdir(exist_ok=True)
+AGENT_RESULTS_DIR.mkdir(exist_ok=True)
 init_storage()
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/charts", StaticFiles(directory=CHART_DIR), name="charts")
+app.mount("/agent-results", StaticFiles(directory=AGENT_RESULTS_DIR), name="agent-results")
 
 
 @app.get("/", include_in_schema=False)
 async def ui() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/agent", include_in_schema=False)
+async def agent_ui() -> FileResponse:
+    return FileResponse(STATIC_DIR / "agent.html")
+
+
+@app.get("/agent/", include_in_schema=False)
+async def agent_ui_trailing() -> FileResponse:
+    return FileResponse(STATIC_DIR / "agent.html")
+
+
+@app.get("/agent/data")
+async def get_agent_dashboard() -> dict:
+    return build_agent_dashboard(PROJECT_ROOT)
+
+
+@app.get("/agent/tracker")
+async def get_agent_tracker() -> FileResponse:
+    tracker_path = AGENT_TRACKER_DIR / TRACKER_NAME
+    if not tracker_path.exists():
+        raise HTTPException(status_code=404, detail="Agent tracker not found")
+    return FileResponse(
+        tracker_path,
+        filename=TRACKER_NAME,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 
 @app.post("/scan", response_model=ScanResponse)

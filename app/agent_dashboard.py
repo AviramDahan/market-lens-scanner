@@ -1,0 +1,341 @@
+from __future__ import annotations
+
+from collections import defaultdict, deque
+from pathlib import Path
+from typing import Any
+
+from openpyxl import load_workbook
+
+
+TRACKER_NAME = "market_lens_agent_portfolio_budget_100k.xlsx"
+
+
+def build_agent_dashboard(project_root: Path) -> dict[str, Any]:
+    tracker_path = project_root / "agent_tracker" / TRACKER_NAME
+    results_dir = project_root / "agent_results"
+    screenshot_dir = results_dir / "screenshots"
+    summary_dir = results_dir / "summaries"
+
+    if not tracker_path.exists():
+        return {
+            "status": "missing_tracker",
+            "error": f"{tracker_path} was not found.",
+            "tracker_url": "/agent/tracker",
+        }
+
+    wb = load_workbook(tracker_path, data_only=True)
+    settings = read_settings(wb)
+    starting_capital = to_float(settings.get("starting_capital_ils"), 100_000.0)
+
+    updates = read_updates(wb)
+    open_positions = read_open_positions(wb)
+    trades = read_trades(wb)
+    setup_rows = read_setup_rows(wb)
+    realized = compute_realized_pnl(trades)
+    latest_update = updates[-1] if updates else {}
+
+    cash = to_float(latest_update.get("cash_ils"), compute_cash(trades, starting_capital))
+    exposure = to_float(
+        latest_update.get("exposure_ils"),
+        sum(to_float(position.get("exposure_ils")) for position in open_positions),
+    )
+    open_risk = to_float(
+        latest_update.get("open_risk_ils"),
+        sum(to_float(position.get("open_risk_ils")) for position in open_positions),
+    )
+    equity = round(cash + exposure, 2)
+    total_pnl = round(equity - starting_capital, 2)
+    total_pnl_pct = round(total_pnl / starting_capital * 100, 2) if starting_capital else 0
+
+    latest_summary_path = resolve_latest_file(summary_dir, ".md")
+    latest_summary = latest_summary_path.read_text(encoding="utf-8") if latest_summary_path else ""
+    latest_screenshot = resolve_asset_url(
+        latest_update.get("screenshot") or resolve_latest_file(screenshot_dir, ".png")
+    )
+
+    latest_run_timestamp = latest_update.get("timestamp")
+    latest_setups = [
+        row for row in setup_rows if latest_run_timestamp and row.get("run_date") == latest_run_timestamp
+    ]
+    if not latest_setups:
+        latest_setups = setup_rows[-25:]
+
+    action_counts: dict[str, int] = defaultdict(int)
+    for setup in latest_setups:
+        action_counts[str(setup.get("action") or "UNKNOWN")] += 1
+
+    return {
+        "status": "ok",
+        "tracker_url": "/agent/tracker",
+        "github_actions_url": "https://github.com/AviramDahan/market-lens-scanner/actions/workflows/market-lens-agent.yml",
+        "summary": {
+            "starting_capital_ils": starting_capital,
+            "cash_ils": cash,
+            "exposure_ils": exposure,
+            "equity_ils": equity,
+            "total_pnl_ils": total_pnl,
+            "total_pnl_pct": total_pnl_pct,
+            "realized_pnl_ils": round(realized["total"], 2),
+            "unrealized_pnl_ils": round(
+                sum(to_float(position.get("unrealized_pnl_ils")) for position in open_positions),
+                2,
+            ),
+            "open_risk_ils": round(open_risk, 2),
+            "open_positions": len(open_positions),
+            "closed_trades": len(realized["closed"]),
+            "wins": realized["wins"],
+            "losses": realized["losses"],
+            "win_rate": round(realized["wins"] / len(realized["closed"]) * 100, 2)
+            if realized["closed"]
+            else 0,
+        },
+        "latest_run": {
+            "timestamp": latest_update.get("timestamp"),
+            "run_id": latest_update.get("run_id"),
+            "tickers": latest_update.get("tickers", []),
+            "valid_setups": latest_update.get("valid_setups", 0),
+            "actions_summary": latest_update.get("actions_summary", ""),
+            "screenshot_url": latest_screenshot,
+            "summary_url": resolve_asset_url(latest_summary_path),
+            "summary_text": latest_summary,
+            "action_counts": dict(sorted(action_counts.items())),
+        },
+        "equity_curve": build_equity_curve(updates, starting_capital),
+        "open_positions": open_positions,
+        "recent_trades": trades[-30:],
+        "closed_trades": realized["closed"][-30:],
+        "latest_setups": latest_setups,
+        "recent_runs": updates[-20:],
+    }
+
+
+def read_settings(wb: Any) -> dict[str, Any]:
+    ws = wb["Settings"]
+    values = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if row[0]:
+            values[str(row[0])] = row[1]
+    return values
+
+
+def read_updates(wb: Any) -> list[dict[str, Any]]:
+    rows = []
+    ws = wb["Update Log"]
+    for row in data_rows(ws):
+        rows.append(
+            {
+                "timestamp": row[0],
+                "run_id": row[1],
+                "tickers": split_tickers(row[2]),
+                "valid_setups": to_int(row[3]),
+                "actions_summary": row[4] or "",
+                "cash_ils": round(to_float(row[5]), 2),
+                "exposure_ils": round(to_float(row[6]), 2),
+                "open_risk_ils": round(to_float(row[7]), 2),
+                "open_positions": to_int(row[8]),
+                "summary": row[9] or "",
+                "screenshot": row[10] or "",
+            }
+        )
+    return rows
+
+
+def read_open_positions(wb: Any) -> list[dict[str, Any]]:
+    rows = []
+    ws = wb["Open Positions"]
+    for row in data_rows(ws):
+        entry = to_float(row[2])
+        current = to_float(row[3], entry)
+        target_1 = to_float(row[6])
+        progress = 0.0
+        if target_1 > entry:
+            progress = max(0.0, min(100.0, (current - entry) / (target_1 - entry) * 100))
+        rows.append(
+            {
+                "ticker": row[0],
+                "entry_date": row[1],
+                "entry_price_usd": round(entry, 2),
+                "current_price_usd": round(current, 2),
+                "quantity": to_int(row[4]),
+                "stop_loss": round(to_float(row[5]), 2),
+                "target_1": round(target_1, 2),
+                "target_2": round(to_float(row[7]), 2),
+                "status": row[8] or "OPEN",
+                "unrealized_pnl_usd": round(to_float(row[9]), 2),
+                "unrealized_pnl_ils": round(to_float(row[10]), 2),
+                "exposure_ils": round(to_float(row[11]), 2),
+                "open_risk_ils": round(to_float(row[12]), 2),
+                "notes": row[13] or "",
+                "screenshot_url": resolve_asset_url(row[14]),
+                "progress_to_target_1": round(progress, 2),
+            }
+        )
+    return rows
+
+
+def read_trades(wb: Any) -> list[dict[str, Any]]:
+    rows = []
+    ws = wb["Trade Log"]
+    for row in data_rows(ws):
+        rows.append(
+            {
+                "timestamp": row[0],
+                "action": row[1],
+                "ticker": row[2],
+                "entry_price_usd": round(to_float(row[3]), 2) if row[3] is not None else None,
+                "exit_price_usd": round(to_float(row[4]), 2) if row[4] is not None else None,
+                "quantity": to_int(row[5]),
+                "usd_ils": to_float(row[6], 3.7),
+                "buy_value_ils": round(to_float(row[7]), 2),
+                "sell_value_ils": round(to_float(row[8]), 2),
+                "cash_out_ils": round(to_float(row[9]), 2),
+                "cash_in_ils": round(to_float(row[10]), 2),
+                "stop_loss": round(to_float(row[11]), 2),
+                "target_1": round(to_float(row[12]), 2),
+                "target_2": round(to_float(row[13]), 2),
+                "risk_ils": round(to_float(row[14]), 2),
+                "reason": row[15] or "",
+                "screenshot_url": resolve_asset_url(row[16]),
+            }
+        )
+    return rows
+
+
+def read_setup_rows(wb: Any) -> list[dict[str, Any]]:
+    rows = []
+    ws = wb["Setup Watchlist"]
+    for row in data_rows(ws):
+        rows.append(
+            {
+                "run_date": row[0],
+                "ticker": row[1],
+                "setup_type": row[2],
+                "score": round(to_float(row[3]), 2),
+                "current_price_usd": round(to_float(row[4]), 2),
+                "buy_zone_low": round(to_float(row[5]), 2) if row[5] is not None else None,
+                "buy_zone_high": round(to_float(row[6]), 2) if row[6] is not None else None,
+                "stop_loss": round(to_float(row[7]), 2) if row[7] is not None else None,
+                "target_1": round(to_float(row[8]), 2) if row[8] is not None else None,
+                "target_2": round(to_float(row[9]), 2) if row[9] is not None else None,
+                "risk_reward": round(to_float(row[10]), 2),
+                "reason": row[11] or "",
+                "action": row[12] or "",
+                "feedback": row[13] or "",
+            }
+        )
+    return rows
+
+
+def compute_cash(trades: list[dict[str, Any]], starting_capital: float) -> float:
+    cash = starting_capital
+    for trade in trades:
+        cash -= to_float(trade.get("cash_out_ils"))
+        cash += to_float(trade.get("cash_in_ils"))
+    return round(cash, 2)
+
+
+def compute_realized_pnl(trades: list[dict[str, Any]]) -> dict[str, Any]:
+    lots: dict[str, deque[dict[str, float]]] = defaultdict(deque)
+    closed = []
+    total = 0.0
+    wins = 0
+    losses = 0
+
+    for trade in trades:
+        ticker = str(trade.get("ticker") or "")
+        quantity = to_int(trade.get("quantity"))
+        action = str(trade.get("action") or "")
+        if quantity <= 0 or not ticker:
+            continue
+
+        if action == "BUY_SIMULATED":
+            cost = to_float(trade.get("cash_out_ils"), trade.get("buy_value_ils"))
+            lots[ticker].append({"quantity": quantity, "unit_cost": cost / quantity if quantity else 0})
+            continue
+
+        if action not in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            continue
+
+        remaining = quantity
+        cost_basis = 0.0
+        while remaining > 0 and lots[ticker]:
+            lot = lots[ticker][0]
+            used = min(remaining, int(lot["quantity"]))
+            cost_basis += used * lot["unit_cost"]
+            lot["quantity"] -= used
+            remaining -= used
+            if lot["quantity"] <= 0:
+                lots[ticker].popleft()
+
+        cash_in = to_float(trade.get("cash_in_ils"), trade.get("sell_value_ils"))
+        pnl = round(cash_in - cost_basis, 2)
+        total += pnl
+        wins += 1 if pnl > 0 else 0
+        losses += 1 if pnl < 0 else 0
+        closed.append({**trade, "cost_basis_ils": round(cost_basis, 2), "pnl_ils": pnl})
+
+    return {"total": total, "closed": closed, "wins": wins, "losses": losses}
+
+
+def build_equity_curve(updates: list[dict[str, Any]], starting_capital: float) -> list[dict[str, Any]]:
+    curve = [{"timestamp": "Start", "equity_ils": round(starting_capital, 2), "pnl_ils": 0.0}]
+    for update in updates:
+        equity = to_float(update.get("cash_ils")) + to_float(update.get("exposure_ils"))
+        curve.append(
+            {
+                "timestamp": update.get("timestamp"),
+                "equity_ils": round(equity, 2),
+                "pnl_ils": round(equity - starting_capital, 2),
+            }
+        )
+    return curve
+
+
+def data_rows(ws: Any) -> list[tuple[Any, ...]]:
+    rows = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if any(value is not None for value in row):
+            rows.append(row)
+    return rows
+
+
+def resolve_latest_file(directory: Path, suffix: str) -> Path | None:
+    if not directory.exists():
+        return None
+    files = sorted(
+        [path for path in directory.iterdir() if path.is_file() and path.suffix.lower() == suffix],
+        key=lambda path: path.stat().st_mtime,
+    )
+    return files[-1] if files else None
+
+
+def resolve_asset_url(value: Any) -> str:
+    if not value:
+        return ""
+    text = str(value).replace("\\", "/")
+    marker = "agent_results/"
+    if marker in text:
+        return "/agent-results/" + text.split(marker, 1)[1]
+    return text
+
+
+def split_tickers(value: Any) -> list[str]:
+    return [ticker for ticker in str(value or "").replace(",", " ").split() if ticker]
+
+
+def to_float(value: Any, default: Any = 0.0) -> float:
+    try:
+        if value is None or value == "":
+            return float(default or 0.0)
+        return float(value)
+    except (TypeError, ValueError):
+        return float(default or 0.0)
+
+
+def to_int(value: Any, default: int = 0) -> int:
+    try:
+        if value is None or value == "":
+            return default
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default

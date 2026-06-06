@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Market Lens Agent</title>
+    <link rel="stylesheet" href="/static/agent.css" />
+  </head>
+  <body>
+    <main class="agent-shell">
+      <header class="agent-topbar">
+        <div>
+          <p class="eyebrow">Market Lens</p>
+          <h1>Agent Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <a class="icon-button secondary" href="/" title="Scanner">
+            <i data-lucide="search"></i>
+            <span>Scanner</span>
+          </a>
+          <a id="actionsLink" class="icon-button secondary" href="#" target="_blank" rel="noreferrer" title="GitHub Actions">
+            <i data-lucide="workflow"></i>
+            <span>Actions</span>
+          </a>
+          <a id="trackerLink" class="icon-button primary" href="/agent/tracker" title="Download tracker">
+            <i data-lucide="download"></i>
+            <span>Tracker</span>
+          </a>
+        </div>
+      </header>
+
+      <section class="run-strip">
+        <div>
+          <span class="label">Last run</span>
+          <strong id="lastRun">Loading</strong>
+        </div>
+        <div>
+          <span class="label">Run status</span>
+          <strong id="runStatus">Checking</strong>
+        </div>
+        <div>
+          <span class="label">Tickers scanned</span>
+          <strong id="tickerCount">0</strong>
+        </div>
+        <div>
+          <span class="label">Valid setups</span>
+          <strong id="validSetups">0</strong>
+        </div>
+      </section>
+
+      <section class="metric-grid" id="metricGrid"></section>
+
+      <section class="agent-layout">
+        <div class="panel wide">
+          <div class="panel-head">
+            <div>
+              <h2>Portfolio Equity</h2>
+              <p id="equityMeta">Waiting for data</p>
+            </div>
+            <span id="pnlBadge" class="badge neutral">0.00%</span>
+          </div>
+          <canvas id="equityChart" height="260"></canvas>
+        </div>
+
+        <div class="panel screenshot-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Latest Screen</h2>
+              <p id="screenshotMeta">Agent capture</p>
+            </div>
+            <a id="screenshotLink" class="icon-only" href="#" target="_blank" rel="noreferrer" title="Open screenshot">
+              <i data-lucide="external-link"></i>
+            </a>
+          </div>
+          <div id="screenshotFrame" class="screenshot-frame"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Open Positions</h2>
+            <p id="positionMeta">No open positions</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Status</th>
+                <th>Qty</th>
+                <th>Entry</th>
+                <th>Current</th>
+                <th>Stop</th>
+                <th>Targets</th>
+                <th>Unrealized</th>
+                <th>Exposure</th>
+                <th>Risk</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody id="positionsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="agent-layout lower">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Latest Actions</h2>
+              <p id="actionMeta">Last scan decisions</p>
+            </div>
+          </div>
+          <div id="actionsList" class="actions-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Trade Log</h2>
+              <p id="tradeMeta">Recent agent trades</p>
+            </div>
+          </div>
+          <div id="tradeList" class="trade-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Latest Summary</h2>
+            <p id="summaryMeta">Agent written update</p>
+          </div>
+        </div>
+        <pre id="summaryText" class="summary-text">Loading</pre>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="/static/agent.js"></script>
+  </body>
+</html>

@@ -29,6 +29,7 @@ they can scan tickers, view global setups, or save personal setups.
   trend quality, volume confirmation, event risk, and trade plan
 - Grade-based quality assessment with strengths and warnings
 - UI trading agent for one-month paper portfolio tracking in Excel
+- Agent dashboard at `/agent` for portfolio, actions, screenshots, and P/L tracking
 - Docker-ready deployment
 - Render blueprint for public hosting
 
@@ -123,6 +124,9 @@ Useful endpoints:
 - `GET /health` - health check
 - `GET /config` - active config
 - `GET /auth/config` - Supabase client configuration for the UI
+- `GET /agent` - paper-trading agent dashboard
+- `GET /agent/data` - agent dashboard JSON from the Excel tracker
+- `GET /agent/tracker` - download the current agent Excel tracker
 - `POST /scan` - JSON scanner API, authenticated in production
 - `POST /ui/scan` - scanner API with chart image generation, authenticated in production
 - `GET /setups` - global or user saved setups, authenticated in production
@@ -185,6 +189,16 @@ Agent outputs:
 - Updated Excel tracker
 - `agent_runs/screenshots/*.png`
 - `agent_runs/summaries/*.md`
+
+The deployed app also exposes a read-only agent dashboard:
+
+```text
+https://market-lens-scanner.onrender.com/agent
+```
+
+It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
+`agent_results/` from the repository, so each successful GitHub Actions run can
+publish the latest paper portfolio state back into the public app.
 
 Configure it with `.env` based on `.env.example`, then run:
 
