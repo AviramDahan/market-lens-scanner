@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.auth import get_current_user_optional
+from app.auth import get_current_user_required
 from app.charts import write_scan_chart
 from app.config import load_config
 from app.models import SaveSetupRequest, ScanRequest, ScanResponse
@@ -31,7 +31,10 @@ async def ui() -> FileResponse:
 
 
 @app.post("/scan", response_model=ScanResponse)
-async def scan(request: ScanRequest) -> ScanResponse:
+async def scan(
+    request: ScanRequest,
+    user: dict = Depends(get_current_user_required),
+) -> ScanResponse:
     tickers = [t.upper() for t in request.tickers]
     results, errors, _ = scan_tickers(
         tickers,
@@ -44,7 +47,7 @@ async def scan(request: ScanRequest) -> ScanResponse:
 @app.post("/ui/scan")
 async def scan_with_charts(
     request: ScanRequest,
-    user: dict | None = Depends(get_current_user_optional),
+    user: dict = Depends(get_current_user_required),
 ) -> dict:
     tickers = [t.upper() for t in request.tickers]
     results, errors, details = scan_tickers(
@@ -54,8 +57,8 @@ async def scan_with_charts(
     )
     charts = {}
     saved = []
-    user_id = user.get("id") if user else None
-    user_label = user.get("email") if user else request.user_label
+    user_id = user.get("id")
+    user_label = user.get("email") or request.user_label
     for detail in details:
         path = write_scan_chart(detail, CHART_DIR)
         charts[detail.result.ticker] = f"/charts/{path.name}"
@@ -85,9 +88,9 @@ async def get_saved_setups(
     status: str | None = Query(default=None, pattern="^(OPEN|TARGET1|TARGET2|STOPPED)$"),
     source: str | None = Query(default=None, pattern="^(auto|manual)$"),
     session_id: str | None = Query(default=None, max_length=80),
-    user: dict | None = Depends(get_current_user_optional),
+    user: dict = Depends(get_current_user_required),
 ) -> dict:
-    user_id = user.get("id") if user else None
+    user_id = user.get("id")
     return {
         "setups": list_setups(
             limit=limit,
@@ -102,9 +105,9 @@ async def get_saved_setups(
 @app.post("/setups")
 async def create_saved_setup(
     request: SaveSetupRequest,
-    user: dict | None = Depends(get_current_user_optional),
+    user: dict = Depends(get_current_user_required),
 ) -> dict:
-    if using_external_storage() and user is None:
+    if using_external_storage() and not user.get("id"):
         raise HTTPException(status_code=401, detail="Sign in required to save setups.")
 
     saved = save_setup(
@@ -112,9 +115,9 @@ async def create_saved_setup(
         analysis_period=request.analysis_period,
         chart_url=request.chart_url,
         source="manual",
-        user_label=user.get("email") if user else request.user_label,
+        user_label=user.get("email") or request.user_label,
         session_id=request.session_id,
-        user_id=user.get("id") if user else None,
+        user_id=user.get("id"),
     )
     if saved is None:
         raise HTTPException(status_code=400, detail="Only trade setups can be saved.")
@@ -124,10 +127,10 @@ async def create_saved_setup(
 @app.post("/setups/{setup_id}/refresh")
 async def refresh_saved_setup(
     setup_id: str,
-    user: dict | None = Depends(get_current_user_optional),
+    user: dict = Depends(get_current_user_required),
 ) -> dict:
     try:
-        return {"setup": refresh_setup(setup_id, user_id=user.get("id") if user else None)}
+        return {"setup": refresh_setup(setup_id, user_id=user.get("id"))}
     except KeyError:
         raise HTTPException(status_code=404, detail="Saved setup not found") from None
 

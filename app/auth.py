@@ -2,7 +2,11 @@ import os
 from typing import Any
 
 import httpx
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
+
+
+def auth_is_configured() -> bool:
+    return bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_PUBLISHABLE_KEY"))
 
 
 async def get_current_user_optional(
@@ -37,8 +41,10 @@ async def get_current_user_optional(
 
 
 async def get_current_user_required(
-    user: dict[str, Any] | None = None,
+    user: dict[str, Any] | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
+    if not auth_is_configured():
+        return {"id": None, "email": "local-dev"}
     if user is None:
         raise HTTPException(status_code=401, detail="Sign in required.")
     return user

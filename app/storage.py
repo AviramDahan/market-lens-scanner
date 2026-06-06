@@ -445,22 +445,21 @@ def _pg_refresh_setup(setup_id: str, user_id: str | None = None) -> dict[str, An
                     {"id": setup_id, "user_id": user_id},
                 )
                 row = cur.fetchone()
-                if row is None:
-                    raise KeyError(setup_id)
-                price = fetch_last_price(row["ticker"])
-                status = evaluate_status(price, row["result_json"])
-                hit_at = row["hit_at"] or (_now() if status != "OPEN" else None)
-                cur.execute(
-                    """
-                    UPDATE public.user_saved_setups
-                    SET current_price = %(price)s, status = %(status)s,
-                        status_checked_at = now(), hit_at = %(hit_at)s
-                    WHERE id = %(id)s AND user_id = %(user_id)s
-                    RETURNING *
-                    """,
-                    {"price": price, "status": status, "hit_at": hit_at, "id": setup_id, "user_id": user_id},
-                )
-                return _pg_user_row_to_dict(cur.fetchone())
+                if row is not None:
+                    price = fetch_last_price(row["ticker"])
+                    status = evaluate_status(price, row["result_json"])
+                    hit_at = row["hit_at"] or (_now() if status != "OPEN" else None)
+                    cur.execute(
+                        """
+                        UPDATE public.user_saved_setups
+                        SET current_price = %(price)s, status = %(status)s,
+                            status_checked_at = now(), hit_at = %(hit_at)s
+                        WHERE id = %(id)s AND user_id = %(user_id)s
+                        RETURNING *
+                        """,
+                        {"price": price, "status": status, "hit_at": hit_at, "id": setup_id, "user_id": user_id},
+                    )
+                    return _pg_user_row_to_dict(cur.fetchone())
 
             cur.execute("SELECT * FROM public.global_setups WHERE id = %(id)s", {"id": setup_id})
             row = cur.fetchone()

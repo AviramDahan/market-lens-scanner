@@ -40,6 +40,7 @@ let watchlists = [];
 let supabaseClient = null;
 let authSession = null;
 let authUser = null;
+let authConfigured = false;
 const sessionId = getSessionId();
 
 signInButton.addEventListener("click", signIn);
@@ -108,6 +109,10 @@ document.querySelectorAll("[data-view]").forEach((button) => {
     });
     filterEl.classList.toggle("hidden", currentView !== "scan");
     savedStatusEl.classList.toggle("hidden", currentView !== "my" && currentView !== "global");
+    if (isLocked()) {
+      renderLockedState();
+      return;
+    }
     if (currentView === "my" || currentView === "global") {
       await loadSavedSetups();
     } else {
@@ -122,6 +127,10 @@ closeDialog.addEventListener("click", () => dialog.close());
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (isLocked()) {
+    renderLockedState();
+    return;
+  }
   const tickers = parseTickers(tickersInput.value);
   const minRr = Number(minRrInput.value || 2);
   const analysisPeriod = analysisPeriodInput.value || "6mo";
@@ -168,7 +177,8 @@ async function initAuth() {
   try {
     const response = await fetch("/auth/config");
     const config = await response.json();
-    if (!config.enabled || !window.supabase) {
+    authConfigured = Boolean(config.enabled && window.supabase);
+    if (!authConfigured) {
       updateAuthUi("Auth not configured");
       return;
     }
@@ -251,13 +261,14 @@ async function signOut() {
 
 function updateAuthUi(fallbackText = "") {
   const signedIn = Boolean(authUser);
-  authStatus.textContent = signedIn ? authUser.email : (fallbackText || "Guest");
+  authStatus.textContent = signedIn ? authUser.email : (fallbackText || "Sign in required");
   authStatus.classList.toggle("signed-in", signedIn);
   authEmailInput.classList.toggle("hidden", signedIn);
   authPasswordInput.classList.toggle("hidden", signedIn);
   signInButton.classList.toggle("hidden", signedIn);
   signUpButton.classList.toggle("hidden", signedIn);
   signOutButton.classList.toggle("hidden", !signedIn);
+  applyProductGate();
 }
 
 function setAuthBusy(isBusy) {
@@ -272,6 +283,37 @@ function getAuthHeaders() {
 
 function currentUserLabel() {
   return authUser?.email || "";
+}
+
+function isLocked() {
+  return authConfigured && !authUser;
+}
+
+function applyProductGate() {
+  const locked = isLocked();
+  form.classList.toggle("locked", locked);
+  scanButton.disabled = locked;
+  scanButton.textContent = locked ? "Sign in to scan" : "Scan";
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    button.disabled = locked && button.dataset.view !== "scan";
+  });
+  if (locked) {
+    renderLockedState();
+  } else if (!lastPayload.results.length && currentView === "scan") {
+    runMeta.textContent = "Ready";
+    resultsEl.className = "results empty";
+    resultsEl.innerHTML = `<div class="empty-state">Run a scan to see ranked setups and annotated charts.</div>`;
+  }
+}
+
+function renderLockedState() {
+  scanCount.textContent = "0";
+  setupCount.textContent = "0";
+  errorCount.textContent = "0";
+  runMeta.textContent = "Sign in required";
+  showMessage("Create an account or sign in to use Market Lens.");
+  resultsEl.className = "results empty";
+  resultsEl.innerHTML = `<div class="empty-state">Sign in to scan tickers, save setups, and view shared setups.</div>`;
 }
 
 async function checkHealth() {
@@ -343,14 +385,8 @@ function updatePickerCount() {
 async function loadSavedSetups() {
   setLoadingSaved(true);
   showMessage("");
-  if (currentView === "my" && supabaseClient && !authUser) {
-    savedSetups = [];
-    scanCount.textContent = "0";
-    setupCount.textContent = "0";
-    errorCount.textContent = "0";
-    runMeta.textContent = "Sign in to see your saved setups";
-    resultsEl.className = "results empty";
-    resultsEl.innerHTML = `<div class="empty-state">Sign in to save and track personal setups.</div>`;
+  if (isLocked()) {
+    renderLockedState();
     setLoadingSaved(false);
     return;
   }
@@ -423,8 +459,8 @@ function renderTickerBasket(tickers) {
 }
 
 function setLoading(isLoading) {
-  scanButton.disabled = isLoading;
-  scanButton.textContent = isLoading ? "Scanning..." : "Scan";
+  scanButton.disabled = isLoading || isLocked();
+  scanButton.textContent = isLocked() ? "Sign in to scan" : (isLoading ? "Scanning..." : "Scan");
 }
 
 function setLoadingSaved(isLoading) {
@@ -611,7 +647,7 @@ function bindResultActions(results, charts, analysisPeriod) {
   resultsEl.querySelectorAll("[data-save]").forEach((button) => {
     button.addEventListener("click", async () => {
       if (supabaseClient && !authUser) {
-        showMessage("Sign in to save personal setups.");
+        renderLockedState();
         return;
       }
       const ticker = button.dataset.save;
@@ -651,7 +687,7 @@ function bindSavedActions() {
       try {
         const response = await fetch(`/setups/${button.dataset.refresh}/refresh`, {
           method: "POST",
-          headers: currentView === "my" ? getAuthHeaders() : {},
+          headers: getAuthHeaders(),
         });
         if (!response.ok) throw new Error(`Refresh failed (${response.status})`);
         await loadSavedSetups();
