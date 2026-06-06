@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 import re
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUN_DIR = Path(os.getenv("MARKET_LENS_RUN_DIR", ROOT / "agent_runs"))
 SCREENSHOT_DIR = RUN_DIR / "screenshots"
 SUMMARY_DIR = RUN_DIR / "summaries"
+APP_READY_SELECTOR = '[data-testid="auth-email"], #authStatus'
 
 
 @dataclass
@@ -78,7 +80,7 @@ def main() -> None:
         browser = playwright.chromium.launch(headless=settings.headless)
         page = browser.new_page(viewport={"width": 1440, "height": 1200})
         try:
-            page.goto(settings.url, wait_until="networkidle", timeout=90_000)
+            open_app(page, settings.url)
             login_status = login(page, settings)
             configure_scan(page, settings)
             results = run_scan(page)
@@ -139,20 +141,49 @@ def required_env(name: str) -> str:
     return value
 
 
+def open_app(page: Page, url: str) -> None:
+    deadline = time.monotonic() + 180
+    last_error = ""
+    while time.monotonic() < deadline:
+        try:
+            page.goto(url, wait_until="domcontentloaded", timeout=90_000)
+            page.wait_for_selector(APP_READY_SELECTOR, timeout=30_000)
+            return
+        except PlaywrightTimeoutError as exc:
+            last_error = str(exc)
+            page.wait_for_timeout(10_000)
+    raise RuntimeError(f"Market Lens app did not become ready after Render wake-up wait. {last_error}")
+
+
 def login(page: Page, settings: Settings) -> str:
-    page.wait_for_selector('[data-testid="auth-email"], #authStatus', timeout=30_000)
+    page.wait_for_selector(APP_READY_SELECTOR, timeout=30_000)
+    page.wait_for_function(
+        "() => Boolean(window.supabase) && document.querySelector('#authStatus')?.textContent?.trim().length > 0",
+        timeout=60_000,
+    )
     auth_status = page.locator("#authStatus").inner_text(timeout=10_000)
     if settings.email.lower() in auth_status.lower():
         return "already signed in"
-    page.locator('[data-testid="auth-email"]').fill(settings.email)
-    page.locator('[data-testid="auth-password"]').fill(settings.password)
-    page.locator('[data-testid="sign-in-button"]').click()
-    page.wait_for_function(
-        "email => document.querySelector('#authStatus')?.textContent?.toLowerCase().includes(email.toLowerCase())",
-        arg=settings.email,
-        timeout=45_000,
-    )
-    return "signed in"
+
+    last_message = ""
+    for attempt in range(1, 4):
+        page.locator('[data-testid="auth-email"]').fill(settings.email)
+        page.locator('[data-testid="auth-password"]').fill(settings.password)
+        page.locator('[data-testid="sign-in-button"]').click()
+        try:
+            page.wait_for_function(
+                "email => document.querySelector('#authStatus')?.textContent?.toLowerCase().includes(email.toLowerCase())",
+                arg=settings.email,
+                timeout=45_000,
+            )
+            return "signed in"
+        except PlaywrightTimeoutError:
+            last_message = page.locator("#message").inner_text(timeout=10_000)
+            if attempt < 3:
+                page.wait_for_timeout(5_000 * attempt)
+
+    auth_status = page.locator("#authStatus").inner_text(timeout=10_000)
+    raise RuntimeError(f"Login did not complete. Status: {auth_status}. Message: {last_message}")
 
 
 def configure_scan(page: Page, settings: Settings) -> None:
