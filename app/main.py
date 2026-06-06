@@ -47,8 +47,8 @@ async def agent_ui_trailing() -> FileResponse:
 
 
 @app.get("/agent/data")
-async def get_agent_dashboard() -> dict:
-    return build_agent_dashboard(PROJECT_ROOT)
+async def get_agent_dashboard(date: str | None = Query(default=None)) -> dict:
+    return build_agent_dashboard(PROJECT_ROOT, selected_date=date)
 
 
 @app.get("/agent/tracker")

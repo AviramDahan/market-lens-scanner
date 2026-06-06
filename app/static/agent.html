@@ -14,13 +14,17 @@
           <h1>Agent Dashboard</h1>
         </div>
         <div class="top-actions">
+          <label class="date-control" title="View portfolio snapshot by date">
+            <span>Snapshot</span>
+            <input id="historyDate" type="date" />
+          </label>
+          <button id="latestSnapshot" class="icon-button secondary" type="button" title="Latest snapshot">
+            <i data-lucide="rotate-ccw"></i>
+            <span>Latest</span>
+          </button>
           <a class="icon-button secondary" href="/" title="Scanner">
             <i data-lucide="search"></i>
             <span>Scanner</span>
-          </a>
-          <a id="actionsLink" class="icon-button secondary" href="#" target="_blank" rel="noreferrer" title="GitHub Actions">
-            <i data-lucide="workflow"></i>
-            <span>Actions</span>
           </a>
           <a id="trackerLink" class="icon-button primary" href="/agent/tracker" title="Download tracker">
             <i data-lucide="download"></i>
@@ -97,6 +101,7 @@
                 <th>Unrealized</th>
                 <th>Exposure</th>
                 <th>Risk</th>
+                <th>Potential</th>
                 <th>Progress</th>
               </tr>
             </thead>

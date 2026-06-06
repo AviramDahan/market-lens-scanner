@@ -15,16 +15,28 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadDashboard();
+  const params = new URLSearchParams(window.location.search);
+  const selectedDate = params.get("date") || "";
+  const historyDate = document.getElementById("historyDate");
+  historyDate.value = selectedDate;
+  historyDate.addEventListener("change", () => loadDashboard(historyDate.value));
+  document.getElementById("latestSnapshot").addEventListener("click", () => {
+    historyDate.value = "";
+    loadDashboard("");
+  });
+  loadDashboard(selectedDate);
 });
 
-async function loadDashboard() {
+async function loadDashboard(selectedDate = "") {
   try {
-    const response = await fetch("/agent/data");
+    const params = new URLSearchParams();
+    if (selectedDate) params.set("date", selectedDate);
+    const response = await fetch(`/agent/data${params.toString() ? `?${params}` : ""}`);
     if (!response.ok) {
       throw new Error(`Agent data failed: ${response.status}`);
     }
     state.data = await response.json();
+    syncDateUrl(selectedDate);
     renderDashboard(state.data);
   } catch (error) {
     document.getElementById("runStatus").textContent = "Error";
@@ -39,12 +51,17 @@ function renderDashboard(data) {
     return;
   }
 
-  document.getElementById("actionsLink").href = data.github_actions_url;
   money = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: data.summary.currency || "USD",
     maximumFractionDigits: 0,
   });
+  const historyDate = document.getElementById("historyDate");
+  historyDate.value = data.snapshot.selected_date || "";
+  if (data.snapshot.available_dates.length) {
+    historyDate.max = data.snapshot.available_dates[data.snapshot.available_dates.length - 1];
+  }
+  document.getElementById("latestSnapshot").disabled = !data.snapshot.selected_date;
   document.getElementById("trackerLink").href = data.tracker_url;
   document.getElementById("lastRun").textContent = formatDate(data.latest_run.timestamp);
   document.getElementById("runStatus").textContent = "OK";
@@ -199,7 +216,7 @@ function renderPositions(positions) {
   document.getElementById("positionMeta").textContent = `${positions.length} open positions`;
   const body = document.getElementById("positionsBody");
   if (!positions.length) {
-    body.innerHTML = `<tr><td colspan="11" class="empty-state">No open positions</td></tr>`;
+    body.innerHTML = `<tr><td colspan="12" class="empty-state">No open positions</td></tr>`;
     return;
   }
 
@@ -209,8 +226,8 @@ function renderPositions(positions) {
         <tr>
           <td>
             <div class="ticker-cell">
-              <strong>${escapeHtml(position.ticker)}</strong>
-              <span class="meta">${escapeHtml(formatDate(position.entry_date))}</span>
+              <strong>${escapeHtml(tickerLabel(position))}</strong>
+              <span class="meta">${escapeHtml(tickerMeta(position, formatDate(position.entry_date)))}</span>
             </div>
           </td>
           <td><span class="badge neutral">${escapeHtml(position.status)}</span></td>
@@ -222,6 +239,7 @@ function renderPositions(positions) {
           <td class="${position.unrealized_pnl_ils >= 0 ? "money-pos" : "money-neg"}">${formatSignedMoney(position.unrealized_pnl_ils)}</td>
           <td>${money.format(position.exposure_ils)}</td>
           <td>${money.format(position.open_risk_ils)}</td>
+          <td>${renderPotential(position)}</td>
           <td>
             <div class="progress" title="${position.progress_to_target_1}% to target 1">
               <span style="width:${Math.max(0, Math.min(100, position.progress_to_target_1))}%"></span>
@@ -244,7 +262,10 @@ function renderActions(setups) {
     .map(
       (setup) => `
         <div class="action-row">
-          <strong>${escapeHtml(setup.ticker)}</strong>
+          <div class="ticker-cell">
+            <strong>${escapeHtml(tickerLabel(setup))}</strong>
+            <span class="meta">${escapeHtml(setup.sector || "Unknown")}</span>
+          </div>
           <span class="${actionBadgeClass(setup.action)}">${escapeHtml(setup.action || "UNKNOWN")}</span>
           <div>
             <strong>${escapeHtml(setup.setup_type || "")}</strong>
@@ -271,11 +292,14 @@ function renderTrades(trades, closedTrades) {
       const cash = trade.action === "BUY_SIMULATED" ? trade.cash_out_ils : trade.cash_in_ils;
       return `
         <div class="trade-row">
-          <strong>${escapeHtml(trade.ticker)}</strong>
+          <div class="ticker-cell">
+            <strong>${escapeHtml(tickerLabel(trade))}</strong>
+            <span class="meta">${escapeHtml(tickerMeta(trade, formatDate(trade.timestamp)))}</span>
+          </div>
           <span class="${actionBadgeClass(trade.action)}">${escapeHtml(trade.action)}</span>
           <div>
             <strong>${trade.quantity} shares / ${money.format(cash)}</strong>
-            <p>${escapeHtml(formatDate(trade.timestamp))}</p>
+            <p>${escapeHtml(tradePotentialText(trade))}</p>
           </div>
         </div>
       `;
@@ -286,6 +310,43 @@ function renderTrades(trades, closedTrades) {
 function renderSummary(run) {
   document.getElementById("summaryText").textContent = run.summary_text || "No summary available.";
   document.getElementById("summaryMeta").textContent = run.run_id ? `Run ${run.run_id}` : "Agent written update";
+}
+
+function syncDateUrl(selectedDate) {
+  const url = new URL(window.location.href);
+  if (selectedDate) url.searchParams.set("date", selectedDate);
+  else url.searchParams.delete("date");
+  window.history.replaceState({}, "", url);
+}
+
+function tickerLabel(item) {
+  const ticker = item.ticker || "";
+  const name = item.company_name || ticker;
+  return name && name !== ticker ? `${ticker} (${name})` : ticker;
+}
+
+function tickerMeta(item, fallback = "") {
+  return [item.sector || "Unknown", fallback].filter(Boolean).join(" · ");
+}
+
+function renderPotential(item) {
+  const plan = Number(item.potential_profit_plan_ils || 0);
+  const t1 = Number(item.potential_profit_t1_ils || 0);
+  const t2 = Number(item.potential_profit_t2_ils || 0);
+  const rr = Number(item.reward_to_risk_plan || 0);
+  if (!plan && !t1 && !t2) return '<span class="meta">No upside</span>';
+  return `
+    <div class="potential-cell">
+      <strong class="money-pos">${money.format(plan)}</strong>
+      <span class="meta">T1 ${money.format(t1)} / T2 ${money.format(t2)}</span>
+      <small>${rr ? `${rr.toFixed(2)}x plan R/R` : "Plan: 50% T1 / 50% T2"}</small>
+    </div>
+  `;
+}
+
+function tradePotentialText(trade) {
+  if (trade.action !== "BUY_SIMULATED") return formatDate(trade.timestamp);
+  return `${formatDate(trade.timestamp)} · potential ${money.format(trade.potential_profit_plan_ils || 0)}`;
 }
 
 function actionBadgeClass(action) {
