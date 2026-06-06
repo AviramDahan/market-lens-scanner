@@ -139,7 +139,7 @@ Every scan result is enriched with an additional professional context layer:
 - `trend_quality` - MA20, MA50, MA200 alignment and trend slope
 - `volume_confirmation` - accumulation/distribution, volume ratio, and pullback volume behavior
 - `event_risk` - near earnings and recent large gap warnings when available
-- `trade_plan` - entry trigger, invalidation, stop, targets, risk per share, and sample sizing
+- `trade_plan` - entry trigger, invalidation, stop, and targets
 - `professional_assessment` - A/B/C/D grade, quality score, decision, warnings, and strengths
 
 This layer adjusts the displayed score for trade setups so a technically valid

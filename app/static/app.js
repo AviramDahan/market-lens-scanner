@@ -690,8 +690,6 @@ function renderProfessionalBlock(result) {
           <strong>${escapeHtml(plan.entry_trigger)}</strong>
           <span>Invalidation</span>
           <strong>${escapeHtml(plan.invalidation)}</strong>
-          <span>Risk sizing</span>
-          <strong>${escapeHtml(String(plan.shares_for_1000_risk))} shares per $1,000 risk</strong>
         </div>
       ` : ""}
       ${warnings.length ? `<div class="pro-notes warn">${warnings.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>` : ""}

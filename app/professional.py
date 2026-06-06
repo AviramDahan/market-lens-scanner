@@ -228,8 +228,6 @@ def build_trade_plan(result: ScanResult, daily: pd.DataFrame) -> TradePlanInfo |
         return None
     prev_high = float(daily["High"].iloc[-2]) if len(daily) >= 2 else result.current_price
     trigger_price = max(result.current_price, prev_high)
-    risk_per_share = max(0.0, trigger_price - result.stop_loss)
-    shares = int(1000 / risk_per_share) if risk_per_share > 0 else 0
     if "Breakout" in result.setup_type:
         trigger = f"Close above {trigger_price:.2f} or reclaim of broken resistance."
     elif "VWAP" in result.setup_type:
@@ -243,8 +241,6 @@ def build_trade_plan(result: ScanResult, daily: pd.DataFrame) -> TradePlanInfo |
         stop_loss=result.stop_loss,
         target_1=result.target_1,
         target_2=result.target_2,
-        risk_per_share=round(risk_per_share, 4),
-        shares_for_1000_risk=shares,
     )
 
 
@@ -371,4 +367,3 @@ def _days_until(date_text: str | None) -> int | None:
     if target.tzinfo is None:
         target = target.replace(tzinfo=UTC)
     return (target.date() - datetime.now(UTC).date()).days
-

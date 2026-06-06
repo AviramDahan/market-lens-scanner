@@ -104,8 +104,6 @@ class TradePlanInfo(BaseModel):
     stop_loss: float
     target_1: float
     target_2: float
-    risk_per_share: float
-    shares_for_1000_risk: int
 
 
 class ProfessionalAssessment(BaseModel):
