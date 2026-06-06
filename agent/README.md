@@ -43,6 +43,12 @@ python -m playwright install chromium
 python agent\market_lens_ui_agent.py
 ```
 
+On Windows you can also run:
+
+```powershell
+.\agent\run_agent.ps1
+```
+
 Outputs:
 
 - Updated Excel tracker
@@ -60,4 +66,3 @@ Outputs:
 
 The agent manages a simulated 100,000 ILS paper portfolio using the limits in
 the Excel `Settings` sheet.
-
