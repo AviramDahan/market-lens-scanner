@@ -578,10 +578,13 @@ function renderCard(result, chartUrl, analysisPeriod) {
           <div class="primary-stats">
             ${stat("Price", result.current_price)}
             ${stat("R/R", `${formatNumber(result.risk_reward, 2)}x`)}
+            ${stat("Grade", result.professional_assessment?.grade || "-")}
+            ${stat("Quality", result.professional_assessment ? `${formatNumber(result.professional_assessment.quality_score * 100, 0)}%` : "-")}
             ${stat("Buy Zone", zone(result.buy_zone))}
             ${stat("Stop", result.stop_loss, "stop")}
             ${stat("Targets", `${formatNumber(result.target_1, 2)} / ${formatNumber(result.target_2, 2)}`, "target")}
           </div>
+          ${renderProfessionalBlock(result)}
           <p class="reason">${escapeHtml(result.reason)}</p>
           <div class="levels">
             ${detailLevel("Fib 61.8", result.fibonacci?.fib_618)}
@@ -624,9 +627,12 @@ function renderSavedCard(setup) {
           <div class="primary-stats">
             ${stat("Saved", setup.saved_price)}
             ${stat("Current", setup.current_price)}
+            ${stat("Grade", result.professional_assessment?.grade || "-")}
+            ${stat("Quality", result.professional_assessment ? `${formatNumber(result.professional_assessment.quality_score * 100, 0)}%` : "-")}
             ${stat("Stop", setup.stop_loss, "stop")}
             ${stat("Targets", `${formatNumber(setup.target_1, 2)} / ${formatNumber(setup.target_2, 2)}`, "target")}
           </div>
+          ${renderProfessionalBlock(result)}
           <p class="reason">${escapeHtml(result.reason)}</p>
           <div class="saved-meta">
             <span>${escapeHtml(periodLabel(setup.analysis_period))}</span>
@@ -639,6 +645,50 @@ function renderSavedCard(setup) {
         ${chart}
       </div>
     </article>
+  `;
+}
+
+function renderProfessionalBlock(result) {
+  const assessment = result.professional_assessment;
+  const plan = result.trade_plan;
+  const warnings = assessment?.warnings || [];
+  const strengths = assessment?.strengths || [];
+  return `
+    <div class="pro-panel">
+      <div class="pro-head">
+        <strong>${escapeHtml(assessment?.decision || "Professional context")}</strong>
+        <span>${escapeHtml(result.market_regime?.label || "Regime unknown")}</span>
+      </div>
+      <div class="pro-grid">
+        ${proMetric("Relative Strength", result.relative_strength_info?.label, result.relative_strength_info?.score)}
+        ${proMetric("Trend Quality", result.trend_quality?.label, result.trend_quality?.score)}
+        ${proMetric("Liquidity", result.liquidity?.label, result.liquidity?.score)}
+        ${proMetric("Volume", result.volume_confirmation?.label, result.volume_confirmation?.score)}
+      </div>
+      ${plan ? `
+        <div class="trade-plan">
+          <span>Trigger</span>
+          <strong>${escapeHtml(plan.entry_trigger)}</strong>
+          <span>Invalidation</span>
+          <strong>${escapeHtml(plan.invalidation)}</strong>
+          <span>Risk sizing</span>
+          <strong>${escapeHtml(String(plan.shares_for_1000_risk))} shares per $1,000 risk</strong>
+        </div>
+      ` : ""}
+      ${warnings.length ? `<div class="pro-notes warn">${warnings.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>` : ""}
+      ${strengths.length ? `<div class="pro-notes">${strengths.slice(0, 2).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>` : ""}
+    </div>
+  `;
+}
+
+function proMetric(label, value, score) {
+  const pct = typeof score === "number" ? `${formatNumber(score * 100, 0)}%` : "-";
+  return `
+    <div class="pro-metric">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value || "-")}</strong>
+      <small>${escapeHtml(pct)}</small>
+    </div>
   `;
 }
 

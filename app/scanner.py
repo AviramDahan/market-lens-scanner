@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 
-from app.data import fetch_spy_returns, fetch_ticker
+from app.data import fetch_daily_frame, fetch_next_earnings_date, fetch_spy_returns, fetch_ticker
 from app.fibonacci import detect_swing_low_confluence, get_best_fib
 from app.indicators import (
     classify_volume_price_scenario,
@@ -15,6 +15,7 @@ from app.indicators import (
     filter_hvn,
 )
 from app.models import ScanResult, VolumeProfile
+from app.professional import enrich_professional_context
 from app.setups import detect_setup
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ class ScanDetail:
     market_structure: str
     vp_scenario: str
     relative_strength: float
+    benchmarks: dict[str, "pd.DataFrame"]
 
 
 def scan_ticker(
@@ -51,6 +53,7 @@ def scan_ticker_detail(
     min_rr: float = 2.0,
     analysis_period: str = "6mo",
     spy_returns: "pd.Series | None" = None,
+    benchmarks: dict[str, "pd.DataFrame"] | None = None,
 ) -> ScanDetail:
     import pandas as pd
 
@@ -73,6 +76,8 @@ def scan_ticker_detail(
         except Exception:
             spy_returns = pd.Series(dtype=float)
     relative_strength = compute_relative_strength(data.daily, spy_returns)
+    if benchmarks is None:
+        benchmarks = fetch_benchmarks(analysis_period)
 
     hourly_closes = data.hourly["Close"].iloc[-5:]
     hourly_lows = data.hourly["Low"].iloc[-5:]
@@ -106,6 +111,12 @@ def scan_ticker_detail(
         relative_strength=relative_strength,
         daily=data.daily,
     )
+    result = enrich_professional_context(
+        result,
+        daily=data.daily,
+        benchmarks=benchmarks,
+        earnings_date=fetch_next_earnings_date(ticker),
+    )
     vp_from_date = data.hourly.index[0].strftime("%Y-%m-%d")
     vp_to_date = data.hourly.index[-1].strftime("%Y-%m-%d")
     return ScanDetail(
@@ -123,7 +134,18 @@ def scan_ticker_detail(
         market_structure=market_structure,
         vp_scenario=vp_scenario,
         relative_strength=relative_strength,
+        benchmarks=benchmarks,
     )
+
+
+def fetch_benchmarks(analysis_period: str = "6mo") -> dict[str, "pd.DataFrame"]:
+    benchmarks = {}
+    for symbol in ("SPY", "QQQ", "IWM"):
+        try:
+            benchmarks[symbol] = fetch_daily_frame(symbol, period=analysis_period)
+        except Exception:
+            continue
+    return benchmarks
 
 
 def scan_tickers(
@@ -142,6 +164,7 @@ def scan_tickers(
         spy_returns: pd.Series = fetch_spy_returns(period=analysis_period)
     except Exception:
         spy_returns = pd.Series(dtype=float)
+    benchmarks = fetch_benchmarks(analysis_period)
 
     for ticker in tickers:
         try:
@@ -150,6 +173,7 @@ def scan_tickers(
                 min_rr,
                 analysis_period=analysis_period,
                 spy_returns=spy_returns,
+                benchmarks=benchmarks,
             )
             results.append(detail.result)
             details.append(detail)

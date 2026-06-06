@@ -540,6 +540,96 @@ button:hover {
   line-height: 1.6;
 }
 
+.pro-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 14px;
+}
+
+.pro-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pro-head strong {
+  font-size: 15px;
+}
+
+.pro-head span {
+  border: 1px solid #b9cce6;
+  border-radius: 999px;
+  background: var(--soft-blue);
+  color: var(--blue);
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pro-metric {
+  border-top: 1px solid var(--line);
+  padding-top: 9px;
+}
+
+.pro-metric span,
+.trade-plan span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.pro-metric strong,
+.trade-plan strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.pro-metric small {
+  display: block;
+  margin-top: 3px;
+}
+
+.trade-plan {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 11px;
+}
+
+.pro-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.pro-notes span {
+  border: 1px solid #cdd9e8;
+  border-radius: 999px;
+  background: #fff;
+  color: #344054;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.pro-notes.warn span {
+  border-color: #efd28a;
+  background: var(--soft-warn);
+  color: #725100;
+}
+
 .primary-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -724,6 +814,7 @@ dialog::backdrop {
 
   .primary-stats,
   .levels,
+  .pro-grid,
   .summary,
   .manual-add {
     grid-template-columns: 1fr;

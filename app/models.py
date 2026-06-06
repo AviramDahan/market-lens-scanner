@@ -43,6 +43,79 @@ class BreakoutRetestInfo(BaseModel):
     is_holding: bool              # price >= resistance_level - 0.5 * ATR
 
 
+class MarketRegimeInfo(BaseModel):
+    label: str
+    score: float = Field(ge=0.0, le=1.0)
+    spy_trend: str
+    qqq_trend: str
+    iwm_trend: str
+    risk_note: str
+
+
+class RelativeStrengthInfo(BaseModel):
+    score: float = Field(ge=0.0, le=1.0)
+    vs_spy: float
+    vs_qqq: float
+    vs_iwm: float
+    label: str
+
+
+class LiquidityInfo(BaseModel):
+    score: float = Field(ge=0.0, le=1.0)
+    avg_volume_20d: float
+    avg_dollar_volume_20d: float
+    price_ok: bool
+    volume_ok: bool
+    label: str
+
+
+class TrendQualityInfo(BaseModel):
+    score: float = Field(ge=0.0, le=1.0)
+    label: str
+    above_ma20: bool
+    above_ma50: bool
+    above_ma200: bool
+    ma20_above_ma50: bool
+    ma50_above_ma200: bool
+    slope_20d: float
+
+
+class VolumeConfirmationInfo(BaseModel):
+    score: float = Field(ge=0.0, le=1.0)
+    label: str
+    recent_volume_ratio: float
+    pullback_volume_contracting: bool
+    accumulation_days_20d: int
+    distribution_days_20d: int
+
+
+class EventRiskInfo(BaseModel):
+    label: str
+    earnings_date: str | None = None
+    days_to_earnings: int | None = None
+    has_near_earnings: bool = False
+    recent_gap_pct: float = 0.0
+
+
+class TradePlanInfo(BaseModel):
+    entry_trigger: str
+    trigger_price: float
+    invalidation: str
+    stop_loss: float
+    target_1: float
+    target_2: float
+    risk_per_share: float
+    shares_for_1000_risk: int
+
+
+class ProfessionalAssessment(BaseModel):
+    quality_score: float = Field(ge=0.0, le=1.0)
+    grade: str
+    decision: str
+    warnings: list[str] = []
+    strengths: list[str] = []
+
+
 class ScanResult(BaseModel):
     ticker: str
     setup_type: str
@@ -57,6 +130,14 @@ class ScanResult(BaseModel):
     fibonacci: FibonacciInfo | None = None
     volume_supported_swing_low: VolumeSupportedSwingLow | None = None
     breakout_retest: BreakoutRetestInfo | None = None
+    market_regime: MarketRegimeInfo | None = None
+    relative_strength_info: RelativeStrengthInfo | None = None
+    liquidity: LiquidityInfo | None = None
+    trend_quality: TrendQualityInfo | None = None
+    volume_confirmation: VolumeConfirmationInfo | None = None
+    event_risk: EventRiskInfo | None = None
+    trade_plan: TradePlanInfo | None = None
+    professional_assessment: ProfessionalAssessment | None = None
 
 
 class ScanRequest(BaseModel):

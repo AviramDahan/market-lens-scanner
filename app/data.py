@@ -52,6 +52,45 @@ def fetch_spy_returns(period: str = "3mo") -> "pd.Series":
     return df["Close"].pct_change().dropna()
 
 
+def fetch_daily_frame(ticker: str, period: str = "6mo") -> pd.DataFrame:
+    return _validate_frame(_fetch_frame(ticker, "1d", period), ticker, "1d", MIN_DAILY_ROWS)
+
+
+def fetch_next_earnings_date(ticker: str) -> str | None:
+    try:
+        calendar = yf.Ticker(ticker).calendar
+    except Exception:
+        return None
+    if calendar is None:
+        return None
+
+    candidates = []
+    if isinstance(calendar, dict):
+        raw = calendar.get("Earnings Date") or calendar.get("EarningsDate")
+        if isinstance(raw, list):
+            candidates.extend(raw)
+        elif raw is not None:
+            candidates.append(raw)
+    elif hasattr(calendar, "loc"):
+        try:
+            raw = calendar.loc["Earnings Date"]
+            if hasattr(raw, "tolist"):
+                candidates.extend(raw.tolist())
+            else:
+                candidates.append(raw)
+        except Exception:
+            return None
+
+    for candidate in candidates:
+        if candidate is None:
+            continue
+        try:
+            return pd.Timestamp(candidate).isoformat()
+        except Exception:
+            continue
+    return None
+
+
 def fetch_last_price(ticker: str) -> float:
     df = _fetch_frame(ticker, "1d", "5d")
     return float(df["Close"].iloc[-1])
