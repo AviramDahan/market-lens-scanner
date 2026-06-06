@@ -1,25 +1,33 @@
 # Market Lens
 
-Market Lens is a local and web-based swing-trade scanner for US stock tickers.
-It downloads market data, evaluates objective technical setups, and returns
-ranked results with annotated chart images.
+Market Lens is an authenticated web-based swing-trade scanner for US stock
+tickers. It downloads market data, evaluates objective technical setups, and
+returns ranked results with annotated chart images and a professional trade
+quality assessment.
 
-It focuses on technical confluence only: volume profile levels, Fibonacci
-retracements, VWAP, EMA, market structure, relative strength, risk/reward, and
-liquidity sweeps.
+It focuses on technical confluence and trade quality: volume profile levels,
+Fibonacci retracements, VWAP, EMA, market structure, relative strength,
+risk/reward, liquidity sweeps, market regime, volume confirmation, liquidity
+quality, event risk, and entry/invalidation planning.
+
+Production access is gated by Supabase authentication. Users must sign in before
+they can scan tickers, view global setups, or save personal setups.
 
 ## Features
 
-- FastAPI web UI for scanning ticker lists
+- Authenticated FastAPI web UI for scanning ticker lists
 - CLI scanner for terminal use
 - Annotated PNG charts for each ticker
 - Analysis range selector for 3 months, 6 months, 1 year, or 2 years
-- Shared saved setup watchlist with automatic and manual saves
-- Lightweight local user identity with personal saved setups
-- Global setups tab for trade setups discovered by public scans
+- Supabase email/password authentication
+- Global setups tab for trade setups discovered by authenticated scans
+- My Setups tab for user-specific saved setups
 - Setup status tracking against target 1, target 2, and stop loss
 - Curated market universes for quality sector-based scans
 - Buy zone, stop, targets, risk/reward, score, and setup reason
+- Professional scan analysis: market regime, relative strength, liquidity,
+  trend quality, volume confirmation, event risk, and trade plan
+- Grade-based quality assessment with strengths and warnings
 - Docker-ready deployment
 - Render blueprint for public hosting
 
@@ -47,6 +55,9 @@ Then open:
 ```text
 http://127.0.0.1:8000
 ```
+
+Local development can run without Supabase environment variables. When Supabase
+variables are configured, product endpoints require a valid authenticated user.
 
 On Windows, you can also use:
 
@@ -96,25 +107,57 @@ curl -X POST http://localhost:8000/scan \
   -d '{"tickers": ["AAPL", "MSFT"], "min_rr": 2.0, "analysis_period": "6mo"}'
 ```
 
+In production, scanner and setup endpoints require a Supabase access token:
+
+```bash
+curl -X POST https://market-lens-scanner.onrender.com/ui/scan \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <supabase-access-token>" \
+  -d '{"tickers": ["AAPL", "MSFT"], "min_rr": 2.0, "analysis_period": "6mo"}'
+```
+
 Useful endpoints:
 
 - `GET /` - web UI
 - `GET /health` - health check
 - `GET /config` - active config
-- `POST /scan` - JSON scanner API
-- `POST /ui/scan` - scanner API with chart image generation
-- `GET /setups` - shared saved setup watchlist
-- `POST /setups` - manually save a setup
-- `POST /setups/{setup_id}/refresh` - refresh setup status against live price
+- `GET /auth/config` - Supabase client configuration for the UI
+- `POST /scan` - JSON scanner API, authenticated in production
+- `POST /ui/scan` - scanner API with chart image generation, authenticated in production
+- `GET /setups` - global or user saved setups, authenticated in production
+- `POST /setups` - manually save a setup, authenticated in production
+- `POST /setups/{setup_id}/refresh` - refresh setup status against live price, authenticated in production
 - `GET /watchlists` - curated market universes for the UI scanner
+
+## Professional Scan Analysis
+
+Every scan result is enriched with an additional professional context layer:
+
+- `market_regime` - SPY, QQQ, and IWM trend context with Risk-on, Mixed, or Risk-off label
+- `relative_strength_info` - ticker strength versus SPY, QQQ, and IWM
+- `liquidity` - average volume, average dollar volume, and tradability label
+- `trend_quality` - MA20, MA50, MA200 alignment and trend slope
+- `volume_confirmation` - accumulation/distribution, volume ratio, and pullback volume behavior
+- `event_risk` - near earnings and recent large gap warnings when available
+- `trade_plan` - entry trigger, invalidation, stop, targets, risk per share, and sample sizing
+- `professional_assessment` - A/B/C/D grade, quality score, decision, warnings, and strengths
+
+This layer adjusts the displayed score for trade setups so a technically valid
+pattern is ranked higher only when the broader context is supportive.
 
 ## Saved Setups
 
 When the UI scan finds a trade setup, Market Lens automatically records it in
-`Global Setups`. Users can also press `Save setup` on a result card to save it
-to their own `My Setups` tab. The app uses a local browser session id and an
-optional display name for lightweight user separation. Saved setups are stored
-in SQLite under `data/setups.sqlite` by default.
+`Global Setups`. Authenticated users can also press `Save setup` on a result
+card to save it to their own `My Setups` tab.
+
+With Supabase configured, saved setups are stored in Postgres:
+
+- `global_setups` stores setups found by scans
+- `user_saved_setups` stores setups saved by each authenticated user
+
+Without Supabase configured, local development falls back to SQLite under
+`data/setups.sqlite`.
 
 The saved setup status is:
 
@@ -123,9 +166,8 @@ The saved setup status is:
 - `TARGET2` - price reached target 2
 - `STOPPED` - price touched or moved below stop loss
 
-For production hosting, set `MARKET_LENS_DATA_DIR` or `MARKET_LENS_DB_PATH` to a
-persistent disk or database-backed volume. On ephemeral hosting plans, saved
-setups may reset after a restart or deploy.
+For production hosting, use Supabase/Postgres instead of SQLite because Render
+free instances use ephemeral storage.
 
 ## Supabase
 
@@ -135,8 +177,18 @@ The production auth/database schema is in `supabase_schema.sql`. It creates:
 - `global_setups` - setups discovered by scans
 - `user_saved_setups` - setups saved by each user
 
-The schema enables Row Level Security for user-owned rows and allows public
-read access to global setups.
+The schema enables Row Level Security for user-owned rows. The application API
+requires authentication before exposing scanner or setup data in production.
+
+Required production environment variables:
+
+```text
+SUPABASE_URL=<your Supabase project URL>
+SUPABASE_PUBLISHABLE_KEY=<your Supabase publishable key>
+DATABASE_URL=<your Supabase Postgres or pooler connection string>
+```
+
+Do not commit `DATABASE_URL` or any database password to the repository.
 
 ## Docker
 
@@ -152,11 +204,12 @@ service on Render.
 
 1. Push this repo to GitHub.
 2. In Render, create a new Blueprint from the repository.
-3. Render will build the Dockerfile and serve the app from a public URL.
-4. The service uses `/health` as its health check.
+3. Add the Supabase environment variables listed above.
+4. Render will build the Dockerfile and serve the app from a public URL.
+5. The service uses `/health` as its health check.
 
-The included Render plan is `starter` for an always-on shared URL. Change the
-plan in `render.yaml` before deploying if you prefer another option.
+The included Render plan is `free`. Free instances can spin down after
+inactivity, so the first request after idle time may be slow.
 
 ## Project Structure
 
@@ -169,6 +222,7 @@ app/
   config.py        config.yaml loader
   scanner.py       Scanner orchestrator
   data.py          yfinance data loading
+  professional.py  Market regime, quality, event risk, and trade plan enrichment
   indicators.py    ATR, VWAP, EMA, volume profile, relative strength
   fibonacci.py     Swing and Fibonacci detection
   setups.py        Setup detection and scoring
