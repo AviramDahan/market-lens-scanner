@@ -174,13 +174,24 @@ def configure_scan(page: Page, settings: Settings) -> None:
 
 
 def run_scan(page: Page) -> list[SetupResult]:
-    page.locator('[data-testid="scan-button"]').click()
-    page.wait_for_function(
-        "() => !document.querySelector('[data-testid=\"scan-button\"]')?.disabled",
-        timeout=600_000,
-    )
-    if "failed" in page.locator("#runMeta").inner_text(timeout=10_000).lower():
-        raise RuntimeError(page.locator("#message").inner_text(timeout=10_000))
+    last_error = ""
+    for attempt in range(1, 4):
+        page.locator('[data-testid="scan-button"]').click()
+        page.wait_for_function(
+            "() => !document.querySelector('[data-testid=\"scan-button\"]')?.disabled",
+            timeout=600_000,
+        )
+        if "failed" not in page.locator("#runMeta").inner_text(timeout=10_000).lower():
+            break
+
+        last_error = page.locator("#message").inner_text(timeout=10_000)
+        if attempt < 3 and is_transient_scan_error(last_error):
+            page.wait_for_timeout(15_000 * attempt)
+            continue
+        raise RuntimeError(last_error)
+    else:
+        raise RuntimeError(last_error or "Scan failed")
+
     page.wait_for_selector('[data-testid="result-card"]', timeout=30_000)
     cards = page.locator('[data-testid="result-card"]')
     extracted: list[dict[str, Any]] = cards.evaluate_all(
@@ -205,6 +216,11 @@ def run_scan(page: Page) -> list[SetupResult]:
           })"""
     )
     return [parse_result(item) for item in extracted]
+
+
+def is_transient_scan_error(message: str) -> bool:
+    text = message.lower()
+    return any(marker in text for marker in ("502", "503", "504", "timeout", "network"))
 
 
 def parse_result(item: dict[str, Any]) -> SetupResult:
