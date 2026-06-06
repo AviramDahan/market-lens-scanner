@@ -114,11 +114,12 @@ def scan_ticker_detail(
         relative_strength=relative_strength,
         daily=data.daily,
     )
+    earnings_date = fetch_next_earnings_date(ticker) if result.setup_type != "No Trade" else None
     result = enrich_professional_context(
         result,
         daily=data.daily,
         benchmarks=benchmarks,
-        earnings_date=fetch_next_earnings_date(ticker),
+        earnings_date=earnings_date,
     )
     vp_from_date = data.hourly.index[0].strftime("%Y-%m-%d")
     vp_to_date = data.hourly.index[-1].strftime("%Y-%m-%d")
