@@ -379,8 +379,8 @@ def list_watchlists() -> list[dict[str, object]]:
             "id": "smart-universe",
             "name": "Smart Universe",
             "description": (
-                "Dynamic diversified selection ranked by relative strength, trend, "
-                "liquidity, and volatility."
+                "Dynamic selection from a web-sourced market universe, filtered by "
+                "sector regime, relative strength, trend, liquidity, and volatility."
             ),
             "tickers": [],
             "companies": [],

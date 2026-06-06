@@ -393,9 +393,11 @@ async function loadDynamicWatchlist(watchlist, refresh = false) {
 
 function smartUniverseMeta(watchlist) {
   const sectors = watchlist.sector_counts
-    ? Object.entries(watchlist.sector_counts).map(([sector, count]) => `${sector}: ${count}`).join(" · ")
+    ? Object.entries(watchlist.sector_counts).map(([sector, count]) => `${sector}: ${count}`).join(" - ")
     : "";
-  return `${watchlist.count} selected from ${watchlist.base_count} quality names. ${sectors}`;
+  const source = watchlist.source === "sp500" ? "S&P 500 web source" : "curated source";
+  const scannedBase = watchlist.scored_base_count || watchlist.base_count;
+  return `${watchlist.count} selected from ${watchlist.base_count} ${source} names; ${scannedBase} passed sector regime prefilter. ${sectors}`;
 }
 
 function renderTickerPicker(watchlist) {
@@ -406,7 +408,7 @@ function renderTickerPicker(watchlist) {
   const companies = watchlist.companies || watchlist.tickers.map((ticker) => ({ ticker, name: ticker }));
   tickerPicker.innerHTML = companies.map((company) => {
     const detail = company.score
-      ? `Score ${formatNumber(company.score, 1)} · ${company.sector || "Smart"} · ${company.reason || ""}`
+      ? `Score ${formatNumber(company.score, 1)} - ${company.sector_health_label || "Sector"} ${formatNumber(company.sector_health_score, 0)}/100 - ${company.sector || "Smart"} - ${company.reason || ""}`
       : company.name;
     return `
       <label class="ticker-choice">

@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 from openpyxl import load_workbook
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
+from app.smart_universe import base_universe, build_sector_health
+
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_DIR = Path(os.getenv("MARKET_LENS_RUN_DIR", ROOT / "agent_runs"))
@@ -264,6 +266,8 @@ def update_workbook(
     max_total_exposure = starting_capital * float(settings_values.get("max_total_exposure_pct", 0.4))
     max_risk = starting_capital * float(settings_values.get("max_risk_per_trade_pct", 0.01))
     min_rr = float(settings_values.get("min_risk_reward", settings.min_rr))
+    sector_map = base_universe()
+    sector_health = build_sector_health(settings.analysis_period)
 
     open_positions = read_open_positions(wb)
     cash = compute_cash(wb, starting_capital)
@@ -282,6 +286,8 @@ def update_workbook(
             max_total_exposure=max_total_exposure,
             max_risk=max_risk,
             min_rr=min_rr,
+            sector_map=sector_map,
+            sector_health=sector_health,
         )
         decisions[result.ticker] = decision
         append_watchlist_row(wb, timestamp, result, decision)
@@ -338,6 +344,8 @@ def decide(
     max_total_exposure: float,
     max_risk: float,
     min_rr: float,
+    sector_map: dict[str, str],
+    sector_health: dict[str, dict[str, Any]],
 ) -> Decision:
     existing = open_positions.get(result.ticker)
     if existing:
@@ -359,6 +367,13 @@ def decide(
 
     if result.setup_type.upper().replace(" ", "_") in {"NO_TRADE", "NO-TRADE"} or result.setup_type == "No Trade":
         return Decision("SKIP", "No Trade result.")
+    sector = sector_map.get(result.ticker)
+    health = sector_health.get(sector or "")
+    if health and health.get("label") == "Weak":
+        return Decision(
+            "SKIP",
+            f"{sector} sector regime is weak ({float(health.get('score', 0)):.0f}/100); skip new entry.",
+        )
     if result.risk_reward < min_rr:
         return Decision("SKIP", f"Risk/reward {result.risk_reward:.2f} is below minimum {min_rr:.2f}.")
     if result.buy_zone_low is None or result.buy_zone_high is None:

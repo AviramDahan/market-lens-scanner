@@ -7,8 +7,7 @@ from typing import Any
 
 from openpyxl import load_workbook
 
-from app.smart_universe import base_universe
-from app.watchlists import COMPANY_NAMES
+from app.smart_universe import base_universe, company_name_for
 
 
 TRACKER_NAME = "market_lens_agent_portfolio_budget_100k.xlsx"
@@ -364,8 +363,8 @@ def latest_setup_by_ticker(setup_rows: list[dict[str, Any]], cutoff: Any) -> dic
 def with_ticker_meta(record: dict[str, Any]) -> dict[str, Any]:
     ticker = str(record.get("ticker") or "").upper()
     record["ticker"] = ticker
-    record["company_name"] = COMPANY_NAMES.get(ticker, ticker)
     record["sector"] = sector_map().get(ticker, "Unknown")
+    record["company_name"] = company_name_for(ticker)
     return record
 
 
