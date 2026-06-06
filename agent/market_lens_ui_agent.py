@@ -391,6 +391,8 @@ def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
             "status": row[8],
             "exposure_ils": float(row[11] or 0),
             "risk_ils": float(row[12] or 0),
+            "notes": str(row[13] or ""),
+            "screenshot": str(row[14] or ""),
             "partial_taken": "partial" in str(row[13] or "").lower(),
         }
     return positions
@@ -526,7 +528,7 @@ def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
         values = [
             pos["ticker"], pos["entry_date"], pos["entry_price"], pos["current_price"], pos["quantity"],
             pos["stop_loss"], pos["target_1"], pos["target_2"], pos["status"], pos["unrealized_usd"],
-            pos["unrealized_ils"], pos["exposure_ils"], pos["risk_ils"], pos["notes"], pos["screenshot"],
+            pos["unrealized_ils"], pos["exposure_ils"], pos["risk_ils"], pos.get("notes", ""), pos.get("screenshot", ""),
         ]
         for col_idx, value in enumerate(values, start=1):
             ws.cell(row_idx, col_idx, value)
