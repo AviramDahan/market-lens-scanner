@@ -92,5 +92,5 @@ window.
 - Valid setups inside the buy zone can open a simulated buy if portfolio limits allow it.
 - Existing positions can be held, partially closed, closed at target, or exited at stop.
 
-The agent manages a simulated 100,000 ILS paper portfolio using the limits in
+The agent manages a simulated 100,000 USD paper portfolio using the limits in
 the Excel `Settings` sheet.

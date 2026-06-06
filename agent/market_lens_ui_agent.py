@@ -237,8 +237,13 @@ def update_workbook(
 ) -> dict[str, Any]:
     wb = load_workbook(settings.excel_path)
     settings_values = read_settings(wb)
-    usd_ils = float(settings_values.get("usd_ils_rate", 3.7))
-    starting_capital = float(settings_values.get("starting_capital_ils", 100_000))
+    currency = str(settings_values.get("budget_currency") or "USD").upper()
+    currency_rate = 1.0 if currency == "USD" else float(settings_values.get("usd_ils_rate", 3.7))
+    starting_capital = float(
+        settings_values.get("starting_capital_usd")
+        or settings_values.get("starting_capital_ils")
+        or 100_000
+    )
     max_position = starting_capital * float(settings_values.get("max_position_allocation_pct", 0.1))
     max_total_exposure = starting_capital * float(settings_values.get("max_total_exposure_pct", 0.4))
     max_risk = starting_capital * float(settings_values.get("max_risk_per_trade_pct", 0.01))
@@ -256,7 +261,7 @@ def update_workbook(
             open_positions=open_positions,
             cash=cash,
             exposure=exposure,
-            usd_ils=usd_ils,
+            usd_ils=currency_rate,
             max_position=max_position,
             max_total_exposure=max_total_exposure,
             max_risk=max_risk,
@@ -265,15 +270,15 @@ def update_workbook(
         decisions[result.ticker] = decision
         append_watchlist_row(wb, timestamp, result, decision)
         if decision.action == "BUY_SIMULATED":
-            append_trade_log_row(wb, timestamp, result, decision, usd_ils, screenshot_path)
-            open_positions[result.ticker] = position_from_buy(result, decision, usd_ils, timestamp, screenshot_path)
+            append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
+            open_positions[result.ticker] = position_from_buy(result, decision, currency_rate, timestamp, screenshot_path)
             cash -= decision.cash_out_ils
             exposure += decision.cash_out_ils
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
-            append_trade_log_row(wb, timestamp, result, decision, usd_ils, screenshot_path)
-            apply_exit_decision(open_positions, result, decision, usd_ils)
+            append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
+            apply_exit_decision(open_positions, result, decision, currency_rate)
         elif result.ticker in open_positions:
-            refresh_open_position(open_positions[result.ticker], result, usd_ils)
+            refresh_open_position(open_positions[result.ticker], result, currency_rate)
 
     write_open_positions(wb, open_positions)
     cash = compute_cash(wb, starting_capital)
@@ -302,6 +307,7 @@ def update_workbook(
         "open_risk": open_risk,
         "open_positions": open_positions,
         "workbook": settings.excel_path,
+        "currency": currency,
     }
 
 
@@ -617,10 +623,10 @@ def write_summary(
         f"New simulated buys: {', '.join(buys) or 'None'}",
         f"Positions on watch: {', '.join(watch) or 'None'}",
         f"Positions closed: {', '.join(closed) or 'None'}",
-        f"Cash remaining: {workbook_context['cash']:.2f} ILS",
-        f"Current exposure: {workbook_context['exposure']:.2f} ILS",
-        f"Remaining available budget: {workbook_context['remaining_budget']:.2f} ILS",
-        f"Total open risk: {workbook_context['open_risk']:.2f} ILS",
+        f"Cash remaining: {workbook_context['cash']:.2f} {workbook_context['currency']}",
+        f"Current exposure: {workbook_context['exposure']:.2f} {workbook_context['currency']}",
+        f"Remaining available budget: {workbook_context['remaining_budget']:.2f} {workbook_context['currency']}",
+        f"Total open risk: {workbook_context['open_risk']:.2f} {workbook_context['currency']}",
         f"Excel updated: {settings.excel_path}",
         f"Screenshot saved: {screenshot_path}",
         f"Errors: {'; '.join(errors) if errors else 'None'}",

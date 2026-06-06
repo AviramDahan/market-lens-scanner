@@ -2,9 +2,9 @@ const state = {
   data: null,
 };
 
-const ils = new Intl.NumberFormat("en-US", {
+let money = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "ILS",
+  currency: "USD",
   maximumFractionDigits: 0,
 });
 
@@ -40,6 +40,11 @@ function renderDashboard(data) {
   }
 
   document.getElementById("actionsLink").href = data.github_actions_url;
+  money = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: data.summary.currency || "USD",
+    maximumFractionDigits: 0,
+  });
   document.getElementById("trackerLink").href = data.tracker_url;
   document.getElementById("lastRun").textContent = formatDate(data.latest_run.timestamp);
   document.getElementById("runStatus").textContent = "OK";
@@ -63,7 +68,7 @@ function renderMetrics(summary) {
   const metrics = [
     {
       label: "Equity",
-      value: ils.format(summary.equity_ils),
+      value: money.format(summary.equity_ils),
       detail: `${formatPct(summary.total_pnl_pct)} total P/L`,
       tone: summary.total_pnl_ils >= 0 ? "good" : "bad",
     },
@@ -75,19 +80,19 @@ function renderMetrics(summary) {
     },
     {
       label: "Cash",
-      value: ils.format(summary.cash_ils),
+      value: money.format(summary.cash_ils),
       detail: "Available paper budget",
       tone: "",
     },
     {
       label: "Exposure",
-      value: ils.format(summary.exposure_ils),
+      value: money.format(summary.exposure_ils),
       detail: `${summary.open_positions} open positions`,
       tone: "",
     },
     {
       label: "Open Risk",
-      value: ils.format(summary.open_risk_ils),
+      value: money.format(summary.open_risk_ils),
       detail: "Risk to active stops",
       tone: summary.open_risk_ils > 0 ? "warn" : "",
     },
@@ -215,8 +220,8 @@ function renderPositions(positions) {
           <td>${usd.format(position.stop_loss)}</td>
           <td>${usd.format(position.target_1)} / ${usd.format(position.target_2)}</td>
           <td class="${position.unrealized_pnl_ils >= 0 ? "money-pos" : "money-neg"}">${formatSignedMoney(position.unrealized_pnl_ils)}</td>
-          <td>${ils.format(position.exposure_ils)}</td>
-          <td>${ils.format(position.open_risk_ils)}</td>
+          <td>${money.format(position.exposure_ils)}</td>
+          <td>${money.format(position.open_risk_ils)}</td>
           <td>
             <div class="progress" title="${position.progress_to_target_1}% to target 1">
               <span style="width:${Math.max(0, Math.min(100, position.progress_to_target_1))}%"></span>
@@ -269,7 +274,7 @@ function renderTrades(trades, closedTrades) {
           <strong>${escapeHtml(trade.ticker)}</strong>
           <span class="${actionBadgeClass(trade.action)}">${escapeHtml(trade.action)}</span>
           <div>
-            <strong>${trade.quantity} shares / ${ils.format(cash)}</strong>
+            <strong>${trade.quantity} shares / ${money.format(cash)}</strong>
             <p>${escapeHtml(formatDate(trade.timestamp))}</p>
           </div>
         </div>
@@ -293,7 +298,7 @@ function actionBadgeClass(action) {
 
 function formatSignedMoney(value) {
   const number = Number(value || 0);
-  const formatted = ils.format(Math.abs(number));
+  const formatted = money.format(Math.abs(number));
   return number < 0 ? `-${formatted}` : `+${formatted}`;
 }
 
@@ -306,9 +311,9 @@ function formatPct(value) {
 function shortMoney(value) {
   const number = Number(value || 0);
   if (Math.abs(number) >= 1000) {
-    return `₪${Math.round(number / 1000)}k`;
+    return `$${Math.round(number / 1000)}k`;
   }
-  return `₪${Math.round(number)}`;
+  return `$${Math.round(number)}`;
 }
 
 function formatDate(value) {

@@ -25,7 +25,11 @@ def build_agent_dashboard(project_root: Path) -> dict[str, Any]:
 
     wb = load_workbook(tracker_path, data_only=True)
     settings = read_settings(wb)
-    starting_capital = to_float(settings.get("starting_capital_ils"), 100_000.0)
+    currency = str(settings.get("budget_currency") or "USD").upper()
+    starting_capital = to_float(
+        settings.get("starting_capital_usd") or settings.get("starting_capital_ils"),
+        100_000.0,
+    )
 
     updates = read_updates(wb)
     open_positions = read_open_positions(wb)
@@ -70,6 +74,7 @@ def build_agent_dashboard(project_root: Path) -> dict[str, Any]:
         "github_actions_url": "https://github.com/AviramDahan/market-lens-scanner/actions/workflows/market-lens-agent.yml",
         "summary": {
             "starting_capital_ils": starting_capital,
+            "currency": currency,
             "cash_ils": cash,
             "exposure_ils": exposure,
             "equity_ils": equity,
