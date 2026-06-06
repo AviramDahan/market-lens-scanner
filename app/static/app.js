@@ -395,9 +395,15 @@ function smartUniverseMeta(watchlist) {
   const sectors = watchlist.sector_counts
     ? Object.entries(watchlist.sector_counts).map(([sector, count]) => `${sector}: ${count}`).join(" - ")
     : "";
-  const source = watchlist.source === "sp500" ? "S&P 500 web source" : "curated source";
+  const sourceLabels = {
+    broad: "broad web universe",
+    sp500: "S&P 500 web source",
+    curated: "curated source",
+  };
+  const source = sourceLabels[watchlist.source] || "market universe";
+  const sourceName = watchlist.source_name ? ` (${watchlist.source_name})` : "";
   const scannedBase = watchlist.scored_base_count || watchlist.base_count;
-  return `${watchlist.count} selected from ${watchlist.base_count} ${source} names; ${scannedBase} passed sector regime prefilter. ${sectors}`;
+  return `${watchlist.count} selected from ${watchlist.base_count} ${source} names${sourceName}; ${scannedBase} passed sector regime prefilter. ${sectors}`;
 }
 
 function renderTickerPicker(watchlist) {

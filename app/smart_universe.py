@@ -4,12 +4,14 @@ import math
 import os
 import time
 import hashlib
+import csv
+import io
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any
-
-import httpx
+from urllib.request import Request, urlopen
 
 from app.data import fetch_daily_frame
 from app.indicators import compute_atr
@@ -19,13 +21,53 @@ from app.watchlists import COMPANY_NAMES, WATCHLISTS
 DEFAULT_LIMIT = int(os.getenv("MARKET_LENS_SMART_LIMIT", "35"))
 DEFAULT_MAX_PER_SECTOR = int(os.getenv("MARKET_LENS_SMART_MAX_PER_SECTOR", "5"))
 DEFAULT_WORKERS = int(os.getenv("MARKET_LENS_SMART_WORKERS", "8"))
-DEFAULT_SOURCE = os.getenv("MARKET_LENS_SMART_SOURCE", "sp500")
-SOURCE_URL = os.getenv(
-    "MARKET_LENS_SMART_SOURCE_URL",
-    "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+DEFAULT_SOURCE = os.getenv("MARKET_LENS_SMART_SOURCE", "broad").lower()
+SP500_SOURCE_URL = os.getenv(
+    "MARKET_LENS_SP500_SOURCE_URL",
+    os.getenv(
+        "MARKET_LENS_SMART_SOURCE_URL",
+        "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+    ),
 )
+NASDAQ100_SOURCE_URL = os.getenv(
+    "MARKET_LENS_NASDAQ100_SOURCE_URL",
+    "https://api.nasdaq.com/api/quote/list-type/nasdaq100",
+)
+RUSSELL_1000_SOURCE_URL = os.getenv(
+    "MARKET_LENS_RUSSELL_1000_SOURCE_URL",
+    "https://www.ishares.com/us/products/239707/ishares-russell-1000-etf/1467271812596.ajax"
+    "?fileType=csv&fileName=IWB_holdings&dataType=fund",
+)
+RUSSELL_3000_SOURCE_URL = os.getenv(
+    "MARKET_LENS_RUSSELL_3000_SOURCE_URL",
+    "https://www.ishares.com/us/products/239714/ishares-russell-3000-etf/1467271812596.ajax"
+    "?fileType=csv&fileName=IWV_holdings&dataType=fund",
+)
+BROAD_SCREENER_SOURCE_URL = os.getenv(
+    "MARKET_LENS_BROAD_SCREENER_SOURCE_URL",
+    "https://api.nasdaq.com/api/screener/stocks?download=true",
+)
+SOURCE_URL = SP500_SOURCE_URL
+BROAD_SOURCE_URLS = {
+    "sp500": SP500_SOURCE_URL,
+    "nasdaq100": NASDAQ100_SOURCE_URL,
+    "russell1000": RUSSELL_1000_SOURCE_URL,
+    "russell3000": RUSSELL_3000_SOURCE_URL,
+    "broad_screener": BROAD_SCREENER_SOURCE_URL,
+}
+SOURCE_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36"
+    ),
+    "Accept": "*/*",
+    "Referer": "https://www.nasdaq.com/",
+}
 SOURCE_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_SOURCE_CACHE_TTL", "86400"))
+BROAD_MARKET_CAP_LIMIT = int(os.getenv("MARKET_LENS_BROAD_MARKET_CAP_LIMIT", "3000"))
 MAX_SOURCE_PER_SECTOR = int(os.getenv("MARKET_LENS_SMART_SOURCE_PER_SECTOR", "20"))
+MIN_BROAD_MARKET_CAP = float(os.getenv("MARKET_LENS_BROAD_MIN_MARKET_CAP", "1000000000"))
+MIN_BROAD_VOLUME = float(os.getenv("MARKET_LENS_BROAD_MIN_VOLUME", "250000"))
 MIN_PRICE = float(os.getenv("MARKET_LENS_SMART_MIN_PRICE", "10"))
 MIN_DOLLAR_VOLUME = float(os.getenv("MARKET_LENS_SMART_MIN_DOLLAR_VOLUME", "100000000"))
 MIN_ATR_PCT = float(os.getenv("MARKET_LENS_SMART_MIN_ATR_PCT", "1.2"))
@@ -72,10 +114,19 @@ SECTOR_ETFS = {
 }
 
 _SMART_CACHE: dict[tuple[str, int, int], tuple[float, dict[str, Any]]] = {}
-_SOURCE_CACHE: tuple[float, dict[str, dict[str, str]], dict[str, str], str] | None = None
+_SOURCE_CACHE: tuple[
+    float,
+    dict[str, dict[str, str]],
+    dict[str, str],
+    str,
+    list[str],
+    list[str],
+] | None = None
 _SECTOR_HEALTH_CACHE: dict[str, tuple[float, dict[str, dict[str, Any]]]] = {}
 _SOURCE_COMPANY_NAMES: dict[str, str] = {}
 _LAST_SOURCE_NAME = "curated fallback"
+_LAST_SOURCE_PARTS: list[str] = []
+_LAST_SOURCE_URLS: list[str] = []
 
 
 @dataclass(frozen=True)
@@ -115,6 +166,8 @@ def build_smart_universe(
 
     source_universe = base_universe()
     source_name = _LAST_SOURCE_NAME
+    source_parts = list(_LAST_SOURCE_PARTS)
+    source_urls = list(_LAST_SOURCE_URLS)
     sector_health = build_sector_health(analysis_period)
     base = candidate_pool(source_universe, sector_health)
     benchmarks = fetch_benchmark_frames(analysis_period)
@@ -155,9 +208,11 @@ def build_smart_universe(
         "analysis_period": analysis_period,
         "limit": limit,
         "max_per_sector": max_per_sector,
-        "source": "sp500" if source_name == "S&P 500 constituents" else "curated",
+        "source": source_kind(source_name),
         "source_name": source_name,
-        "source_url": SOURCE_URL if DEFAULT_SOURCE == "sp500" else "",
+        "source_url": source_urls[0] if len(source_urls) == 1 else "",
+        "source_urls": source_urls,
+        "source_parts": source_parts,
         "base_count": len(source_universe),
         "scored_base_count": len(base),
         "eligible_count": len(ranked),
@@ -175,7 +230,7 @@ def build_smart_universe(
 
 
 def base_universe() -> dict[str, str]:
-    source = external_source_universe() if DEFAULT_SOURCE == "sp500" else {}
+    source = external_source_universe() if DEFAULT_SOURCE in {"broad", "sp500", "external"} else {}
     if source:
         return {ticker: item["sector"] for ticker, item in source.items()}
 
@@ -203,37 +258,168 @@ def curated_universe() -> dict[str, str]:
 
 
 def external_source_universe() -> dict[str, dict[str, str]]:
-    global _LAST_SOURCE_NAME, _SOURCE_CACHE
+    global _LAST_SOURCE_NAME, _LAST_SOURCE_PARTS, _LAST_SOURCE_URLS, _SOURCE_CACHE
     now = time.monotonic()
     if _SOURCE_CACHE and now - _SOURCE_CACHE[0] < SOURCE_CACHE_TTL_SECONDS:
         _LAST_SOURCE_NAME = _SOURCE_CACHE[3]
+        _LAST_SOURCE_PARTS = list(_SOURCE_CACHE[4])
+        _LAST_SOURCE_URLS = list(_SOURCE_CACHE[5])
+        _SOURCE_COMPANY_NAMES.clear()
+        _SOURCE_COMPANY_NAMES.update(_SOURCE_CACHE[2])
         return _SOURCE_CACHE[1]
 
-    try:
-        universe = fetch_sp500_universe()
-        source_name = "S&P 500 constituents"
-    except Exception:
-        universe = {}
-        source_name = "curated fallback"
+    if DEFAULT_SOURCE == "sp500":
+        universe, source_parts, source_urls = fetch_sp500_source_bundle()
+    else:
+        universe, source_parts, source_urls = fetch_broad_source_bundle()
 
     if universe:
+        source_name = " + ".join(source_parts)
+        _SOURCE_COMPANY_NAMES.clear()
         _SOURCE_COMPANY_NAMES.update({ticker: item["name"] for ticker, item in universe.items()})
-        _SOURCE_CACHE = (now, universe, dict(_SOURCE_COMPANY_NAMES), source_name)
+        _SOURCE_CACHE = (now, universe, dict(_SOURCE_COMPANY_NAMES), source_name, source_parts, source_urls)
         _LAST_SOURCE_NAME = source_name
+        _LAST_SOURCE_PARTS = source_parts
+        _LAST_SOURCE_URLS = source_urls
     else:
-        _LAST_SOURCE_NAME = source_name
+        _LAST_SOURCE_NAME = "curated fallback"
+        _LAST_SOURCE_PARTS = []
+        _LAST_SOURCE_URLS = []
     return universe
 
 
-def fetch_sp500_universe() -> dict[str, dict[str, str]]:
-    response = httpx.get(
-        SOURCE_URL,
-        timeout=20,
-        follow_redirects=True,
-        headers={"User-Agent": "MarketLensScanner/1.0 (market universe research)"},
+def fetch_sp500_source_bundle() -> tuple[dict[str, dict[str, str]], list[str], list[str]]:
+    try:
+        universe = fetch_sp500_universe()
+    except Exception:
+        return {}, [], []
+    return universe, ["S&P 500"], [SP500_SOURCE_URL]
+
+
+def fetch_broad_source_bundle() -> tuple[dict[str, dict[str, str]], list[str], list[str]]:
+    universe: dict[str, dict[str, str]] = {}
+    source_parts: list[str] = []
+    source_urls: list[str] = []
+    sp500 = safe_source(fetch_sp500_universe)
+    russell_1000 = safe_source(lambda: fetch_ishares_holdings_universe(RUSSELL_1000_SOURCE_URL))
+    russell_3000 = safe_source(lambda: fetch_ishares_holdings_universe(RUSSELL_3000_SOURCE_URL))
+    broad_screener = {} if russell_1000 or russell_3000 else safe_source(fetch_broad_screener_universe)
+    source_index = {
+        **sp500,
+        **russell_1000,
+        **russell_3000,
+        **broad_screener,
+        **curated_source_universe(),
+    }
+
+    merge_universe_source(
+        universe,
+        sp500,
+        "S&P 500",
+        SP500_SOURCE_URL,
+        source_parts,
+        source_urls,
     )
-    response.raise_for_status()
-    rows = SP500TableParser.parse(response.text)
+    merge_universe_source(
+        universe,
+        safe_source(lambda: fetch_nasdaq100_universe(source_index)),
+        "Nasdaq-100",
+        NASDAQ100_SOURCE_URL,
+        source_parts,
+        source_urls,
+    )
+
+    merge_universe_source(
+        universe,
+        russell_1000,
+        "Russell 1000",
+        RUSSELL_1000_SOURCE_URL,
+        source_parts,
+        source_urls,
+    )
+    merge_universe_source(
+        universe,
+        russell_3000,
+        "Russell 3000",
+        RUSSELL_3000_SOURCE_URL,
+        source_parts,
+        source_urls,
+    )
+
+    if not russell_1000 and not russell_3000:
+        merge_universe_source(
+            universe,
+            broad_screener,
+            "Russell-scale broad US market screener",
+            BROAD_SCREENER_SOURCE_URL,
+            source_parts,
+            source_urls,
+        )
+
+    merge_universe_source(
+        universe,
+        curated_source_universe(),
+        "dropdown sector lists",
+        "",
+        source_parts,
+        source_urls,
+        prefer=True,
+    )
+    return dict(sorted(universe.items())), source_parts, source_urls
+
+
+def safe_source(fetcher: Any) -> dict[str, dict[str, str]]:
+    try:
+        return fetcher()
+    except Exception:
+        return {}
+
+
+def merge_universe_source(
+    target: dict[str, dict[str, str]],
+    source: dict[str, dict[str, str]],
+    label: str,
+    source_url: str,
+    source_parts: list[str],
+    source_urls: list[str],
+    *,
+    prefer: bool = False,
+) -> None:
+    if not source:
+        return
+    for ticker, item in source.items():
+        sector = normalize_sector(item.get("sector", ""))
+        name = clean_company_name(item.get("name", "")) or ticker
+        if not ticker or sector not in SECTOR_ETFS:
+            continue
+        if prefer or ticker not in target:
+            target[ticker] = {"name": name, "sector": sector}
+    source_parts.append(label)
+    if source_url:
+        source_urls.append(source_url)
+
+
+def curated_source_universe() -> dict[str, dict[str, str]]:
+    return {
+        ticker: {"name": COMPANY_NAMES.get(ticker, ticker), "sector": sector}
+        for ticker, sector in curated_universe().items()
+    }
+
+
+def fetch_source_text(source_url: str, timeout: int = 30) -> str:
+    request = Request(source_url, headers=SOURCE_HEADERS)
+    with urlopen(request, timeout=timeout) as response:
+        content = response.read()
+        encoding = response.headers.get_content_charset() or "utf-8"
+        return content.decode(encoding, errors="replace")
+
+
+def fetch_source_json(source_url: str, timeout: int = 30) -> dict[str, Any]:
+    return json.loads(fetch_source_text(source_url, timeout=timeout))
+
+
+def fetch_sp500_universe() -> dict[str, dict[str, str]]:
+    rows = SP500TableParser.parse(fetch_source_text(SP500_SOURCE_URL, timeout=30))
     universe: dict[str, dict[str, str]] = {}
     for row in rows:
         raw_symbol = row.get("Symbol", "")
@@ -244,6 +430,85 @@ def fetch_sp500_universe() -> dict[str, dict[str, str]]:
         if not ticker or not raw_name or not sector:
             continue
         universe[ticker] = {"name": raw_name, "sector": sector}
+    return dict(sorted(universe.items()))
+
+
+def fetch_nasdaq100_universe(
+    source_index: dict[str, dict[str, str]] | None = None,
+) -> dict[str, dict[str, str]]:
+    payload = fetch_source_json(NASDAQ100_SOURCE_URL, timeout=45)
+    rows = payload.get("data", {}).get("data", {}).get("rows", [])
+    curated = curated_universe()
+    source_index = source_index or {}
+    universe: dict[str, dict[str, str]] = {}
+    for row in rows:
+        ticker = normalize_ticker(str(row.get("symbol", "")))
+        if not is_common_equity_ticker(ticker, str(row.get("companyName", ""))):
+            continue
+        indexed = source_index.get(ticker, {})
+        sector = normalize_sector(str(row.get("sector", "")) or indexed.get("sector", "") or curated.get(ticker, ""))
+        if not sector:
+            continue
+        name = (
+            clean_company_name(str(row.get("companyName", "")))
+            or indexed.get("name", "")
+            or COMPANY_NAMES.get(ticker, ticker)
+        )
+        universe[ticker] = {"name": name, "sector": sector}
+    return dict(sorted(universe.items()))
+
+
+def fetch_broad_screener_universe() -> dict[str, dict[str, str]]:
+    payload = fetch_source_json(BROAD_SCREENER_SOURCE_URL, timeout=90)
+    rows = payload.get("data", {}).get("rows", [])
+    ranked_rows = []
+    for row in rows:
+        ticker = normalize_ticker(str(row.get("symbol", "")))
+        name = clean_company_name(str(row.get("name", "")))
+        sector = normalize_sector(str(row.get("sector", "")))
+        market_cap = parse_float(row.get("marketCap"))
+        volume = parse_float(row.get("volume"))
+        country = clean_cell(str(row.get("country", "")))
+        if country and country != "United States":
+            continue
+        if market_cap < MIN_BROAD_MARKET_CAP or volume < MIN_BROAD_VOLUME:
+            continue
+        if sector not in SECTOR_ETFS or not is_common_equity_ticker(ticker, name):
+            continue
+        ranked_rows.append((market_cap, ticker, name, sector))
+
+    universe: dict[str, dict[str, str]] = {}
+    for _, ticker, name, sector in sorted(ranked_rows, reverse=True)[:BROAD_MARKET_CAP_LIMIT]:
+        universe[ticker] = {"name": name or ticker, "sector": sector}
+    return dict(sorted(universe.items()))
+
+
+def fetch_ishares_holdings_universe(source_url: str) -> dict[str, dict[str, str]]:
+    text = fetch_source_text(source_url, timeout=60).lstrip("\ufeff\n\r\t ")
+    if text.startswith("<"):
+        return {}
+
+    lines = text.splitlines()
+    header_index = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if "Ticker" in line and ("Name" in line or "Holding" in line or "Security" in line)
+        ),
+        None,
+    )
+    if header_index is None:
+        return {}
+
+    reader = csv.DictReader(io.StringIO("\n".join(lines[header_index:])))
+    universe: dict[str, dict[str, str]] = {}
+    for row in reader:
+        ticker = normalize_ticker(first_present(row, ("Ticker", "Symbol")))
+        name = clean_company_name(first_present(row, ("Name", "Holding Name", "Security Name")))
+        sector = normalize_sector(first_present(row, ("Sector", "GICS Sector", "Asset Class")))
+        if sector not in SECTOR_ETFS or not is_common_equity_ticker(ticker, name):
+            continue
+        universe[ticker] = {"name": name or ticker, "sector": sector}
     return dict(sorted(universe.items()))
 
 
@@ -310,6 +575,77 @@ def clean_cell(value: str) -> str:
     return " ".join(value.replace("\xa0", " ").split())
 
 
+def source_kind(source_name: str) -> str:
+    if DEFAULT_SOURCE == "sp500":
+        return "sp500"
+    if DEFAULT_SOURCE in {"broad", "external"} and source_name != "curated fallback":
+        return "broad"
+    return "curated"
+
+
+def first_present(row: dict[str, Any], keys: tuple[str, ...]) -> str:
+    for key in keys:
+        value = row.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return ""
+
+
+def parse_float(value: Any) -> float:
+    text = clean_cell(str(value or ""))
+    if not text or text in {"--", "N/A", "NA", "None"}:
+        return 0.0
+    negative = text.startswith("(") and text.endswith(")")
+    text = text.strip("()").replace("$", "").replace(",", "").replace("%", "")
+    try:
+        parsed = float(text)
+    except ValueError:
+        return 0.0
+    return -parsed if negative else parsed
+
+
+def clean_company_name(value: str) -> str:
+    name = clean_cell(value)
+    suffixes = (
+        " Common Stock",
+        " Class A",
+        " Class B",
+        " Class C",
+        " Ordinary Shares",
+        " American Depositary Shares",
+        " ADS",
+    )
+    for suffix in suffixes:
+        if name.endswith(suffix):
+            name = name[: -len(suffix)]
+    return clean_cell(name)
+
+
+def is_common_equity_ticker(ticker: str, name: str) -> bool:
+    if not ticker or len(ticker) > 8:
+        return False
+    if any(char for char in ticker if not (char.isalnum() or char == "-")):
+        return False
+    lowered = name.lower()
+    blocked_terms = (
+        "warrant",
+        "rights",
+        "units",
+        "preferred",
+        "preference",
+        "depositary",
+        "notes due",
+        "senior notes",
+        "bond",
+        "etf",
+        "exchange traded fund",
+        "closed end fund",
+        "acquisition corp",
+        "blank check",
+    )
+    return not any(term in lowered for term in blocked_terms)
+
+
 def normalize_ticker(value: str) -> str:
     return clean_cell(value).upper().replace(".", "-")
 
@@ -318,16 +654,28 @@ def normalize_sector(value: str) -> str:
     sector = clean_cell(value)
     mapping = {
         "Communication Services": "Communication Services",
+        "Telecommunications": "Communication Services",
+        "Consumer Cyclical": "Consumer",
         "Consumer Discretionary": "Consumer",
+        "Consumer Services": "Consumer",
         "Consumer Staples": "Consumer Defensive",
+        "Consumer Defensive": "Consumer Defensive",
         "Energy": "Energy",
+        "Finance": "Financials",
         "Financials": "Financials",
         "Health Care": "Healthcare",
+        "Healthcare": "Healthcare",
         "Industrials": "Industrials",
         "Information Technology": "Technology",
+        "Technology": "Technology",
+        "Basic Materials": "Materials",
         "Materials": "Materials",
         "Real Estate": "Real Estate",
+        "Public Utilities": "Utilities",
         "Utilities": "Utilities",
+        "": "",
+        "N/A": "",
+        "None": "",
     }
     return mapping.get(sector, sector)
 
