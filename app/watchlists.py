@@ -376,6 +376,19 @@ WATCHLISTS = (
 def list_watchlists() -> list[dict[str, object]]:
     return [
         {
+            "id": "smart-universe",
+            "name": "Smart Universe",
+            "description": (
+                "Dynamic diversified selection ranked by relative strength, trend, "
+                "liquidity, and volatility."
+            ),
+            "tickers": [],
+            "companies": [],
+            "count": "dynamic",
+            "dynamic": True,
+        },
+        *[
+        {
             "id": watchlist.id,
             "name": watchlist.name,
             "description": watchlist.description,
@@ -390,4 +403,5 @@ def list_watchlists() -> list[dict[str, object]]:
             "count": len(watchlist.tickers),
         }
         for watchlist in WATCHLISTS
+        ],
     ]

@@ -24,11 +24,16 @@ Required values:
 
 Optional values:
 
-- `MARKET_LENS_UNIVERSE=technology`
+- `MARKET_LENS_UNIVERSE=smart-universe`
 - `MARKET_LENS_TICKERS=AAPL MSFT NVDA`
 - `MARKET_LENS_ANALYSIS_PERIOD=6mo`
 - `MARKET_LENS_MIN_RR=2`
 - `MARKET_LENS_HEADLESS=true`
+
+When `MARKET_LENS_UNIVERSE=smart-universe`, the agent selects the dynamic Smart
+Universe through the UI. The app ranks quality large/liquid names by relative
+strength, trend quality, liquidity, and ATR%, then caps sector concentration
+before the agent scans the selected tickers.
 
 Install dependencies and browser runtime:
 

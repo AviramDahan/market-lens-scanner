@@ -11,6 +11,7 @@ from app.charts import write_scan_chart
 from app.config import load_config
 from app.models import SaveSetupRequest, ScanRequest, ScanResponse
 from app.scanner import scan_tickers
+from app.smart_universe import build_smart_universe
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
 from app.watchlists import list_watchlists
 
@@ -185,6 +186,19 @@ async def get_auth_config() -> dict:
 @app.get("/watchlists")
 async def get_watchlists() -> dict:
     return {"watchlists": list_watchlists()}
+
+
+@app.get("/smart-universe")
+async def get_smart_universe(
+    limit: int = Query(default=35, ge=5, le=100),
+    max_per_sector: int = Query(default=5, ge=1, le=20),
+    analysis_period: str = Query(default="6mo", pattern="^(3mo|6mo|1y|2y)$"),
+) -> dict:
+    return build_smart_universe(
+        analysis_period=analysis_period,
+        limit=limit,
+        max_per_sector=max_per_sector,
+    )
 
 
 @app.get("/health")

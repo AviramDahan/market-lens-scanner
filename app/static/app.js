@@ -37,6 +37,7 @@ let lastPayload = { results: [], errors: {}, charts: {}, saved_setups: [] };
 let currentView = "scan";
 let savedSetups = [];
 let watchlists = [];
+let smartUniverseCache = {};
 let supabaseClient = null;
 let authSession = null;
 let authUser = null;
@@ -49,16 +50,27 @@ signInButton.addEventListener("click", signIn);
 signUpButton.addEventListener("click", signUp);
 signOutButton.addEventListener("click", signOut);
 
-universeInput.addEventListener("change", () => {
+universeInput.addEventListener("change", handleUniverseChange);
+analysisPeriodInput.addEventListener("change", () => {
+  if (universeInput.value === "smart-universe") {
+    handleUniverseChange({ refresh: true });
+  }
+});
+
+async function handleUniverseChange(options = {}) {
   const selected = watchlists.find((watchlist) => watchlist.id === universeInput.value);
   if (!selected) {
     resetTickerPicker();
     universeMeta.textContent = "Choose a universe, select companies, then add them.";
     return;
   }
+  if (selected.dynamic) {
+    await loadDynamicWatchlist(selected, options.refresh);
+    return;
+  }
   renderTickerPicker(selected);
   universeMeta.textContent = `${selected.count} liquid names - ${selected.description}`;
-});
+}
 
 addTickersButton.addEventListener("click", () => {
   const selectedTickers = getCheckedTickerInputs().map((input) => input.value);
@@ -339,12 +351,51 @@ async function loadWatchlists() {
     universeInput.innerHTML = [
       `<option value="custom">Custom tickers</option>`,
       ...watchlists.map((watchlist) => {
-        return `<option value="${escapeHtml(watchlist.id)}">${escapeHtml(watchlist.name)} (${watchlist.count})</option>`;
+        const count = watchlist.dynamic ? "smart" : watchlist.count;
+        return `<option value="${escapeHtml(watchlist.id)}">${escapeHtml(watchlist.name)} (${escapeHtml(count)})</option>`;
       }),
     ].join("");
   } catch {
     universeMeta.textContent = "Curated lists are unavailable right now.";
   }
+}
+
+async function loadDynamicWatchlist(watchlist, refresh = false) {
+  const cacheKey = `${watchlist.id}:${analysisPeriodInput.value || "6mo"}`;
+  if (!refresh && smartUniverseCache[cacheKey]) {
+    renderTickerPicker(smartUniverseCache[cacheKey]);
+    universeMeta.textContent = smartUniverseMeta(smartUniverseCache[cacheKey]);
+    return;
+  }
+
+  resetTickerPicker();
+  tickerPicker.classList.remove("disabled");
+  tickerPicker.innerHTML = `<div class="picker-empty">Building smart universe...</div>`;
+  universeMeta.textContent = "Ranking liquid leaders across sectors. This can take a moment.";
+  try {
+    const params = new URLSearchParams({
+      analysis_period: analysisPeriodInput.value || "6mo",
+      limit: "35",
+      max_per_sector: "5",
+    });
+    const response = await fetch(`/smart-universe?${params.toString()}`);
+    if (!response.ok) throw new Error(`Smart Universe failed (${response.status})`);
+    const payload = await response.json();
+    const resolved = { ...watchlist, ...payload, dynamic: true };
+    smartUniverseCache[cacheKey] = resolved;
+    renderTickerPicker(resolved);
+    universeMeta.textContent = smartUniverseMeta(resolved);
+  } catch (error) {
+    resetTickerPicker();
+    universeMeta.textContent = error.message || "Smart Universe is unavailable right now.";
+  }
+}
+
+function smartUniverseMeta(watchlist) {
+  const sectors = watchlist.sector_counts
+    ? Object.entries(watchlist.sector_counts).map(([sector, count]) => `${sector}: ${count}`).join(" · ")
+    : "";
+  return `${watchlist.count} selected from ${watchlist.base_count} quality names. ${sectors}`;
 }
 
 function renderTickerPicker(watchlist) {
@@ -354,10 +405,16 @@ function renderTickerPicker(watchlist) {
   clearTickersButton.disabled = false;
   const companies = watchlist.companies || watchlist.tickers.map((ticker) => ({ ticker, name: ticker }));
   tickerPicker.innerHTML = companies.map((company) => {
+    const detail = company.score
+      ? `Score ${formatNumber(company.score, 1)} · ${company.sector || "Smart"} · ${company.reason || ""}`
+      : company.name;
     return `
       <label class="ticker-choice">
         <input type="checkbox" value="${escapeHtml(company.ticker)}" />
-        <span>${escapeHtml(company.ticker)} (${escapeHtml(company.name)})</span>
+        <span>
+          <strong>${escapeHtml(company.ticker)}</strong> (${escapeHtml(company.name)})
+          <small>${escapeHtml(detail)}</small>
+        </span>
       </label>
     `;
   }).join("");

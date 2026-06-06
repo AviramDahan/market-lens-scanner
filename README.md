@@ -24,6 +24,7 @@ they can scan tickers, view global setups, or save personal setups.
 - My Setups tab for user-specific saved setups
 - Setup status tracking against target 1, target 2, and stop loss
 - Curated market universes for quality sector-based scans
+- Smart Universe for diversified daily ticker selection across sectors
 - Buy zone, stop, targets, risk/reward, score, and setup reason
 - Professional scan analysis: market regime, relative strength, liquidity,
   trend quality, volume confirmation, event risk, and trade plan
@@ -133,6 +134,7 @@ Useful endpoints:
 - `POST /setups` - manually save a setup, authenticated in production
 - `POST /setups/{setup_id}/refresh` - refresh setup status against live price, authenticated in production
 - `GET /watchlists` - curated market universes for the UI scanner
+- `GET /smart-universe` - dynamic diversified ticker selection for the UI and agent
 
 ## Professional Scan Analysis
 
@@ -180,6 +182,12 @@ The `agent/` folder contains a paper-trading UI agent that uses the Market Lens
 website like a real user. It logs in through the UI, scans a configured ticker
 universe, reads the visible result cards, updates the Excel tracker, saves a
 screenshot, and writes a run summary.
+
+By default the cloud agent uses `Smart Universe`, not a fixed sector. The app
+builds this list from quality large/liquid names, filters for price, dollar
+volume, ATR%, relative strength, and trend quality, then limits concentration to
+keep the final scan diversified across sectors. The default daily scan size is
+35 tickers with a maximum of five per sector.
 
 The agent is paper trading only. It never places real trades or connects to a
 broker.

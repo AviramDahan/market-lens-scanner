@@ -122,7 +122,7 @@ def load_settings() -> Settings:
     email = required_env("MARKET_LENS_EMAIL")
     password = required_env("MARKET_LENS_PASSWORD")
     excel_path = Path(required_env("MARKET_LENS_EXCEL_PATH"))
-    universe = os.getenv("MARKET_LENS_UNIVERSE", "technology")
+    universe = os.getenv("MARKET_LENS_UNIVERSE", "smart-universe")
     tickers = parse_tickers(os.getenv("MARKET_LENS_TICKERS", ""))
     analysis_period = os.getenv("MARKET_LENS_ANALYSIS_PERIOD", "6mo")
     min_rr = float(os.getenv("MARKET_LENS_MIN_RR", "2"))
@@ -163,7 +163,7 @@ def configure_scan(page: Page, settings: Settings) -> None:
     page.locator('[data-testid="universe-select"]').select_option(settings.universe)
     page.wait_for_function(
         "() => !document.querySelector('[data-testid=\"select-all-tickers\"]')?.disabled",
-        timeout=30_000,
+        timeout=240_000,
     )
     page.locator('[data-testid="select-all-tickers"]').click()
     page.locator('[data-testid="add-selected-tickers"]').click()
@@ -173,7 +173,7 @@ def run_scan(page: Page) -> list[SetupResult]:
     page.locator('[data-testid="scan-button"]').click()
     page.wait_for_function(
         "() => !document.querySelector('[data-testid=\"scan-button\"]')?.disabled",
-        timeout=300_000,
+        timeout=600_000,
     )
     if "failed" in page.locator("#runMeta").inner_text(timeout=10_000).lower():
         raise RuntimeError(page.locator("#message").inner_text(timeout=10_000))
