@@ -28,6 +28,7 @@ they can scan tickers, view global setups, or save personal setups.
 - Professional scan analysis: market regime, relative strength, liquidity,
   trend quality, volume confirmation, event risk, and trade plan
 - Grade-based quality assessment with strengths and warnings
+- UI trading agent for one-month paper portfolio tracking in Excel
 - Docker-ready deployment
 - Render blueprint for public hosting
 
@@ -169,6 +170,31 @@ The saved setup status is:
 For production hosting, use Supabase/Postgres instead of SQLite because Render
 free instances use ephemeral storage.
 
+## UI Trading Agent
+
+The `agent/` folder contains a paper-trading UI agent that uses the Market Lens
+website like a real user. It logs in through the UI, scans a configured ticker
+universe, reads the visible result cards, updates the Excel tracker, saves a
+screenshot, and writes a run summary.
+
+The agent is paper trading only. It never places real trades or connects to a
+broker.
+
+Agent outputs:
+
+- Updated Excel tracker
+- `agent_runs/screenshots/*.png`
+- `agent_runs/summaries/*.md`
+
+Configure it with `.env` based on `.env.example`, then run:
+
+```powershell
+python agent\market_lens_ui_agent.py
+```
+
+When the app UI changes, update both the app selectors and the agent parser so
+the agent continues to read the visible UI reliably.
+
 ## Supabase
 
 The production auth/database schema is in `supabase_schema.sql`. It creates:
@@ -227,6 +253,8 @@ app/
   fibonacci.py     Swing and Fibonacci detection
   setups.py        Setup detection and scoring
   static/          Browser UI
+agent/
+  market_lens_ui_agent.py  UI paper-trading agent and Excel updater
 config.yaml        Default ticker watchlist
 Dockerfile         Docker API/UI server
 render.yaml        Render deployment blueprint

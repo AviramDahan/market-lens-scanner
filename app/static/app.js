@@ -581,11 +581,11 @@ function renderCard(result, chartUrl, analysisPeriod) {
     : "";
 
   return `
-    <article class="result-card">
+    <article class="result-card" data-testid="result-card" data-ticker="${escapeHtml(result.ticker)}">
       <header class="result-head">
         <div class="ticker">
-          <strong>${escapeHtml(result.ticker)}</strong>
-          <span class="badge ${hasTrade ? "trade" : ""}">${escapeHtml(result.setup_type)}</span>
+          <strong data-testid="result-ticker">${escapeHtml(result.ticker)}</strong>
+          <span data-testid="result-setup-type" class="badge ${hasTrade ? "trade" : ""}">${escapeHtml(result.setup_type)}</span>
         </div>
         <div class="score-box">
           <strong>${formatNumber(result.score, 2)}</strong>
@@ -604,7 +604,7 @@ function renderCard(result, chartUrl, analysisPeriod) {
             ${stat("Targets", `${formatNumber(result.target_1, 2)} / ${formatNumber(result.target_2, 2)}`, "target")}
           </div>
           ${renderProfessionalBlock(result)}
-          <p class="reason">${escapeHtml(result.reason)}</p>
+          <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
           <div class="levels">
             ${detailLevel("Fib 61.8", result.fibonacci?.fib_618)}
             ${detailLevel("Fib Zone", result.fibonacci ? zone(result.fibonacci.zone) : null)}
@@ -629,11 +629,11 @@ function renderSavedCard(setup) {
     : `<div class="chart-missing">No chart saved</div>`;
 
   return `
-    <article class="result-card">
+    <article class="result-card" data-testid="saved-result-card" data-ticker="${escapeHtml(setup.ticker)}">
       <header class="result-head">
         <div class="ticker">
-          <strong>${escapeHtml(setup.ticker)}</strong>
-          <span class="badge trade">${escapeHtml(setup.setup_type)}</span>
+          <strong data-testid="result-ticker">${escapeHtml(setup.ticker)}</strong>
+          <span data-testid="result-setup-type" class="badge trade">${escapeHtml(setup.setup_type)}</span>
           <span class="badge status-${setup.status.toLowerCase()}">${statusLabel(setup.status)}</span>
         </div>
         <div class="score-box">
@@ -652,7 +652,7 @@ function renderSavedCard(setup) {
             ${stat("Targets", `${formatNumber(setup.target_1, 2)} / ${formatNumber(setup.target_2, 2)}`, "target")}
           </div>
           ${renderProfessionalBlock(result)}
-          <p class="reason">${escapeHtml(result.reason)}</p>
+          <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
           <div class="saved-meta">
             <span>${escapeHtml(periodLabel(setup.analysis_period))}</span>
             <span>${escapeHtml(setup.source === "manual" ? "saved" : "found")}</span>
@@ -673,7 +673,7 @@ function renderProfessionalBlock(result) {
   const warnings = assessment?.warnings || [];
   const strengths = assessment?.strengths || [];
   return `
-    <div class="pro-panel">
+    <div class="pro-panel" data-testid="professional-panel">
       <div class="pro-head">
         <strong>${escapeHtml(assessment?.decision || "Professional context")}</strong>
         <span>${escapeHtml(result.market_regime?.label || "Regime unknown")}</span>
@@ -794,7 +794,7 @@ function statusLabel(status) {
 }
 
 function stat(label, value, tone = "") {
-  return `<div class="stat ${tone}"><span>${label}</span><strong>${valueText(value)}</strong></div>`;
+  return `<div class="stat ${tone}" data-stat-label="${escapeHtml(label)}"><span>${label}</span><strong>${valueText(value)}</strong></div>`;
 }
 
 function detailLevel(label, value) {

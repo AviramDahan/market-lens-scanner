@@ -23,10 +23,10 @@
               <label>Account</label>
               <span id="authStatus" class="auth-status">Sign in required</span>
             </div>
-            <input id="authEmail" type="email" autocomplete="email" placeholder="email@example.com" />
-            <input id="authPassword" type="password" autocomplete="current-password" placeholder="password" />
+            <input id="authEmail" data-testid="auth-email" type="email" autocomplete="email" placeholder="email@example.com" />
+            <input id="authPassword" data-testid="auth-password" type="password" autocomplete="current-password" placeholder="password" />
             <div class="auth-actions">
-              <button id="signInButton" class="secondary" type="button">Sign in</button>
+              <button id="signInButton" data-testid="sign-in-button" class="secondary" type="button">Sign in</button>
               <button id="signUpButton" class="secondary" type="button">Sign up</button>
               <button id="signOutButton" class="mini hidden" type="button">Sign out</button>
             </div>
@@ -35,7 +35,7 @@
           <form id="scanForm" class="scan-form">
             <div class="field">
               <label for="universe">Market Universe</label>
-              <select id="universe">
+              <select id="universe" data-testid="universe-select">
                 <option value="custom">Custom tickers</option>
               </select>
               <small id="universeMeta" class="universe-meta">Choose a universe, select companies, then add them.</small>
@@ -45,21 +45,21 @@
               <div class="picker-head">
                 <label>Companies</label>
                 <div>
-                  <button id="selectAllTickersButton" class="mini" type="button" disabled>Select all</button>
+                  <button id="selectAllTickersButton" data-testid="select-all-tickers" class="mini" type="button" disabled>Select all</button>
                   <button id="clearTickersButton" class="mini" type="button" disabled>Clear</button>
                 </div>
               </div>
               <div id="tickerPicker" class="ticker-picker disabled">
                 <div class="picker-empty">Select a market universe first</div>
               </div>
-              <button id="addTickersButton" class="secondary" type="button" disabled>Add selected</button>
+              <button id="addTickersButton" data-testid="add-selected-tickers" class="secondary" type="button" disabled>Add selected</button>
             </div>
 
             <div class="field">
               <label for="manualTicker">Manual Tickers</label>
               <div class="manual-add">
-                <input id="manualTicker" type="text" spellcheck="false" placeholder="example: MSFT" />
-                <button id="addManualTickerButton" class="secondary" type="button">Add</button>
+                <input id="manualTicker" data-testid="manual-ticker-input" type="text" spellcheck="false" placeholder="example: MSFT" />
+                <button id="addManualTickerButton" data-testid="add-manual-ticker" class="secondary" type="button">Add</button>
               </div>
             </div>
 
@@ -68,7 +68,7 @@
                 <label>Scan Basket</label>
                 <button id="clearBasketButton" class="mini" type="button">Clear all</button>
               </div>
-              <div id="tickerBasket" class="ticker-basket empty">
+              <div id="tickerBasket" data-testid="ticker-basket" class="ticker-basket empty">
                 <span class="basket-empty">No tickers selected</span>
               </div>
               <input id="tickers" type="hidden" />
@@ -76,12 +76,12 @@
 
             <div class="row field">
               <label for="minRr">Min R/R</label>
-              <input id="minRr" type="number" min="0.1" max="20" step="0.1" value="2.0" />
+              <input id="minRr" data-testid="min-rr-input" type="number" min="0.1" max="20" step="0.1" value="2.0" />
             </div>
 
             <div class="row field">
               <label for="analysisPeriod">Analysis range</label>
-              <select id="analysisPeriod">
+              <select id="analysisPeriod" data-testid="analysis-period-select">
                 <option value="3mo">3 months</option>
                 <option value="6mo" selected>6 months</option>
                 <option value="1y">1 year</option>
@@ -89,7 +89,7 @@
               </select>
             </div>
 
-            <button id="scanButton" class="primary" type="submit">Scan</button>
+            <button id="scanButton" data-testid="scan-button" class="primary" type="submit">Scan</button>
           </form>
 
           <div class="summary">
@@ -136,7 +136,7 @@
           </div>
 
           <div id="message" class="message hidden"></div>
-          <div id="results" class="results empty">
+          <div id="results" data-testid="results" class="results empty">
             <div class="empty-state">Run a scan to see ranked setups and annotated charts.</div>
           </div>
         </section>
