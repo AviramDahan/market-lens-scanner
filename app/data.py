@@ -1,4 +1,7 @@
 import logging
+import os
+import threading
+import time
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +25,11 @@ HOURLY_PERIOD_BY_ANALYSIS_PERIOD = {
     "1y": "60d",
     "2y": "60d",
 }
+DATA_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_DATA_CACHE_TTL", "900"))
+EARNINGS_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_EARNINGS_CACHE_TTL", "21600"))
+_FRAME_CACHE: dict[tuple[str, str, str], tuple[float, pd.DataFrame]] = {}
+_EARNINGS_CACHE: dict[str, tuple[float, str | None]] = {}
+_CACHE_LOCK = threading.RLock()
 
 
 @dataclass
@@ -57,11 +65,18 @@ def fetch_daily_frame(ticker: str, period: str = "6mo") -> pd.DataFrame:
 
 
 def fetch_next_earnings_date(ticker: str) -> str | None:
+    cache_key = ticker.upper()
+    cached = _get_earnings_cache(cache_key)
+    if cached is not _CACHE_MISS:
+        return cached
+
     try:
         calendar = yf.Ticker(ticker).calendar
     except Exception:
+        _set_earnings_cache(cache_key, None)
         return None
     if calendar is None:
+        _set_earnings_cache(cache_key, None)
         return None
 
     candidates = []
@@ -79,15 +94,19 @@ def fetch_next_earnings_date(ticker: str) -> str | None:
             else:
                 candidates.append(raw)
         except Exception:
+            _set_earnings_cache(cache_key, None)
             return None
 
     for candidate in candidates:
         if candidate is None:
             continue
         try:
-            return pd.Timestamp(candidate).isoformat()
+            value = pd.Timestamp(candidate).isoformat()
+            _set_earnings_cache(cache_key, value)
+            return value
         except Exception:
             continue
+    _set_earnings_cache(cache_key, None)
     return None
 
 
@@ -97,6 +116,11 @@ def fetch_last_price(ticker: str) -> float:
 
 
 def _fetch_frame(ticker: str, interval: str, period: str) -> pd.DataFrame:
+    cache_key = (ticker.upper(), interval, period)
+    cached = _get_frame_cache(cache_key)
+    if cached is not None:
+        return cached
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         df = yf.Ticker(ticker).history(period=period, interval=interval, auto_adjust=True)
@@ -117,7 +141,8 @@ def _fetch_frame(ticker: str, interval: str, period: str) -> pd.DataFrame:
     else:
         df.index = df.index.tz_convert("UTC")
 
-    return df
+    _set_frame_cache(cache_key, df)
+    return df.copy()
 
 
 def _validate_frame(df: pd.DataFrame, ticker: str, interval: str, min_rows: int) -> pd.DataFrame:
@@ -126,3 +151,42 @@ def _validate_frame(df: pd.DataFrame, ticker: str, interval: str, min_rows: int)
             f"{ticker}: only {len(df)} rows for interval={interval}, need at least {min_rows}"
         )
     return df
+
+
+_CACHE_MISS = object()
+
+
+def _get_frame_cache(key: tuple[str, str, str]) -> pd.DataFrame | None:
+    now = time.monotonic()
+    with _CACHE_LOCK:
+        cached = _FRAME_CACHE.get(key)
+        if not cached:
+            return None
+        stored_at, frame = cached
+        if now - stored_at > DATA_CACHE_TTL_SECONDS:
+            _FRAME_CACHE.pop(key, None)
+            return None
+        return frame.copy()
+
+
+def _set_frame_cache(key: tuple[str, str, str], frame: pd.DataFrame) -> None:
+    with _CACHE_LOCK:
+        _FRAME_CACHE[key] = (time.monotonic(), frame.copy())
+
+
+def _get_earnings_cache(key: str) -> object:
+    now = time.monotonic()
+    with _CACHE_LOCK:
+        cached = _EARNINGS_CACHE.get(key)
+        if not cached:
+            return _CACHE_MISS
+        stored_at, value = cached
+        if now - stored_at > EARNINGS_CACHE_TTL_SECONDS:
+            _EARNINGS_CACHE.pop(key, None)
+            return _CACHE_MISS
+        return value
+
+
+def _set_earnings_cache(key: str, value: str | None) -> None:
+    with _CACHE_LOCK:
+        _EARNINGS_CACHE[key] = (time.monotonic(), value)

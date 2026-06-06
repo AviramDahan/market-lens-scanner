@@ -41,6 +41,8 @@ let supabaseClient = null;
 let authSession = null;
 let authUser = null;
 let authConfigured = false;
+let scanTimer = null;
+let scanStartedAt = 0;
 const sessionId = getSessionId();
 
 signInButton.addEventListener("click", signIn);
@@ -459,8 +461,25 @@ function renderTickerBasket(tickers) {
 }
 
 function setLoading(isLoading) {
+  if (scanTimer) {
+    clearInterval(scanTimer);
+    scanTimer = null;
+  }
   scanButton.disabled = isLoading || isLocked();
-  scanButton.textContent = isLocked() ? "Sign in to scan" : (isLoading ? "Scanning..." : "Scan");
+  if (isLocked()) {
+    scanButton.textContent = "Sign in to scan";
+    return;
+  }
+  if (!isLoading) {
+    scanButton.textContent = "Scan";
+    return;
+  }
+  scanStartedAt = Date.now();
+  scanButton.textContent = "Scanning 0s";
+  scanTimer = setInterval(() => {
+    const seconds = Math.max(0, Math.round((Date.now() - scanStartedAt) / 1000));
+    scanButton.textContent = `Scanning ${seconds}s`;
+  }, 1000);
 }
 
 function setLoadingSaved(isLoading) {

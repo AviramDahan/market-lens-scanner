@@ -1,4 +1,6 @@
 import logging
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 
 from app.data import fetch_daily_frame, fetch_next_earnings_date, fetch_spy_returns, fetch_ticker
@@ -19,6 +21,7 @@ from app.professional import enrich_professional_context
 from app.setups import detect_setup
 
 logger = logging.getLogger(__name__)
+DEFAULT_SCAN_WORKERS = int(os.getenv("MARKET_LENS_SCAN_WORKERS", "6"))
 
 
 @dataclass
@@ -166,20 +169,35 @@ def scan_tickers(
         spy_returns = pd.Series(dtype=float)
     benchmarks = fetch_benchmarks(analysis_period)
 
-    for ticker in tickers:
-        try:
-            detail = scan_ticker_detail(
+    max_workers = max(1, min(DEFAULT_SCAN_WORKERS, len(tickers) or 1))
+    detail_by_ticker: dict[str, ScanDetail] = {}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_by_ticker = {
+            executor.submit(
+                scan_ticker_detail,
                 ticker,
                 min_rr,
                 analysis_period=analysis_period,
                 spy_returns=spy_returns,
                 benchmarks=benchmarks,
-            )
-            results.append(detail.result)
-            details.append(detail)
-            logger.info("Scanned %s -> %s", ticker, detail.result.setup_type)
-        except Exception as e:
-            logger.warning("Skipping %s: %s", ticker, e)
-            errors[ticker] = str(e)
+            ): ticker
+            for ticker in tickers
+        }
+        for future in as_completed(future_by_ticker):
+            ticker = future_by_ticker[future]
+            try:
+                detail = future.result()
+                detail_by_ticker[ticker] = detail
+                logger.info("Scanned %s -> %s", ticker, detail.result.setup_type)
+            except Exception as e:
+                logger.warning("Skipping %s: %s", ticker, e)
+                errors[ticker] = str(e)
+
+    for ticker in tickers:
+        detail = detail_by_ticker.get(ticker)
+        if detail is None:
+            continue
+        results.append(detail.result)
+        details.append(detail)
 
     return results, errors, details
