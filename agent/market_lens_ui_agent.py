@@ -40,6 +40,7 @@ class Settings:
     analysis_period: str
     min_rr: float
     headless: bool
+    timeout_seconds: int
 
 
 @dataclass
@@ -74,6 +75,7 @@ class Decision:
 def main() -> None:
     settings = load_settings()
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log(f"Agent run started: {run_id}")
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
     SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
     CHART_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,21 +89,31 @@ def main() -> None:
     decisions: dict[str, Decision] = {}
     login_status = "not_started"
     scan_status = "not_started"
+    deadline = time.monotonic() + settings.timeout_seconds
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=settings.headless)
         page = browser.new_page(viewport={"width": 1440, "height": 1200})
         try:
-            open_app(page, settings.url)
-            login_status = login(page, settings)
-            configure_scan(page, settings)
-            results = run_scan(page)
-            persist_chart_images(results, settings.url, run_id)
+            log("Opening Market Lens UI")
+            open_app(page, settings.url, deadline)
+            log("Logging in")
+            login_status = login(page, settings, deadline)
+            log(f"Login status: {login_status}")
+            log("Configuring scan")
+            configure_scan(page, settings, deadline)
+            log("Running UI scan")
+            results = run_scan(page, deadline)
+            log(f"Scan completed: {len(results)} results")
+            log("Persisting chart images")
+            persist_chart_images(results, settings.url, run_id, deadline)
             scan_status = f"completed: {len(results)} results"
+            log("Saving screenshot")
             page.screenshot(path=str(screenshot_path), full_page=True)
         except Exception as exc:
             errors.append(str(exc))
             scan_status = "failed"
+            log(f"Agent UI phase failed: {exc}")
             try:
                 page.screenshot(path=str(screenshot_path), full_page=True)
             except Exception:
@@ -109,6 +121,7 @@ def main() -> None:
         finally:
             browser.close()
 
+    log("Updating workbook")
     workbook_context = update_workbook(
         settings=settings,
         run_id=run_id,
@@ -119,6 +132,7 @@ def main() -> None:
         errors=errors,
     )
     decisions = workbook_context["decisions"]
+    log("Writing summary")
     write_summary(
         settings=settings,
         run_id=run_id,
@@ -145,7 +159,19 @@ def load_settings() -> Settings:
     analysis_period = os.getenv("MARKET_LENS_ANALYSIS_PERIOD", "6mo")
     min_rr = float(os.getenv("MARKET_LENS_MIN_RR", "2"))
     headless = os.getenv("MARKET_LENS_HEADLESS", "true").lower() not in {"0", "false", "no"}
-    return Settings(url, email, password, excel_path, universe, tickers, analysis_period, min_rr, headless)
+    timeout_seconds = int(os.getenv("MARKET_LENS_AGENT_TIMEOUT_SECONDS", "720"))
+    return Settings(
+        url,
+        email,
+        password,
+        excel_path,
+        universe,
+        tickers,
+        analysis_period,
+        min_rr,
+        headless,
+        timeout_seconds,
+    )
 
 
 def required_env(name: str) -> str:
@@ -155,27 +181,27 @@ def required_env(name: str) -> str:
     return value
 
 
-def open_app(page: Page, url: str) -> None:
-    deadline = time.monotonic() + 180
+def open_app(page: Page, url: str, run_deadline: float) -> None:
+    deadline = min(time.monotonic() + 180, run_deadline)
     last_error = ""
     while time.monotonic() < deadline:
         try:
-            page.goto(url, wait_until="domcontentloaded", timeout=90_000)
-            page.wait_for_selector(APP_READY_SELECTOR, timeout=30_000)
+            page.goto(url, wait_until="domcontentloaded", timeout=remaining_ms(deadline, 90_000))
+            page.wait_for_selector(APP_READY_SELECTOR, timeout=remaining_ms(deadline, 30_000))
             return
         except PlaywrightTimeoutError as exc:
             last_error = str(exc)
-            page.wait_for_timeout(10_000)
+            page.wait_for_timeout(remaining_ms(deadline, 10_000))
     raise RuntimeError(f"Market Lens app did not become ready after Render wake-up wait. {last_error}")
 
 
-def login(page: Page, settings: Settings) -> str:
-    page.wait_for_selector(APP_READY_SELECTOR, timeout=30_000)
+def login(page: Page, settings: Settings, deadline: float) -> str:
+    page.wait_for_selector(APP_READY_SELECTOR, timeout=remaining_ms(deadline, 30_000))
     page.wait_for_function(
         "() => Boolean(window.supabase) && document.querySelector('#authStatus')?.textContent?.trim().length > 0",
-        timeout=60_000,
+        timeout=remaining_ms(deadline, 60_000),
     )
-    auth_status = page.locator("#authStatus").inner_text(timeout=10_000)
+    auth_status = page.locator("#authStatus").inner_text(timeout=remaining_ms(deadline, 10_000))
     if settings.email.lower() in auth_status.lower():
         return "already signed in"
 
@@ -188,19 +214,19 @@ def login(page: Page, settings: Settings) -> str:
             page.wait_for_function(
                 "email => document.querySelector('#authStatus')?.textContent?.toLowerCase().includes(email.toLowerCase())",
                 arg=settings.email,
-                timeout=45_000,
+                timeout=remaining_ms(deadline, 45_000),
             )
             return "signed in"
         except PlaywrightTimeoutError:
-            last_message = page.locator("#message").inner_text(timeout=10_000)
+            last_message = page.locator("#message").inner_text(timeout=remaining_ms(deadline, 10_000))
             if attempt < 3:
-                page.wait_for_timeout(5_000 * attempt)
+                page.wait_for_timeout(remaining_ms(deadline, 5_000 * attempt))
 
-    auth_status = page.locator("#authStatus").inner_text(timeout=10_000)
+    auth_status = page.locator("#authStatus").inner_text(timeout=remaining_ms(deadline, 10_000))
     raise RuntimeError(f"Login did not complete. Status: {auth_status}. Message: {last_message}")
 
 
-def configure_scan(page: Page, settings: Settings) -> None:
+def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
     page.locator('[data-testid="min-rr-input"]').fill(str(settings.min_rr))
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
     open_tickers = read_open_position_tickers(settings.excel_path)
@@ -211,7 +237,7 @@ def configure_scan(page: Page, settings: Settings) -> None:
     page.locator('[data-testid="universe-select"]').select_option(settings.universe)
     page.wait_for_function(
         "() => !document.querySelector('[data-testid=\"select-all-tickers\"]')?.disabled",
-        timeout=240_000,
+        timeout=remaining_ms(deadline, 240_000),
     )
     page.locator('[data-testid="select-all-tickers"]').click()
     page.locator('[data-testid="add-selected-tickers"]').click()
@@ -220,26 +246,26 @@ def configure_scan(page: Page, settings: Settings) -> None:
         page.locator('[data-testid="add-manual-ticker"]').click()
 
 
-def run_scan(page: Page) -> list[SetupResult]:
+def run_scan(page: Page, deadline: float) -> list[SetupResult]:
     last_error = ""
     for attempt in range(1, 4):
         page.locator('[data-testid="scan-button"]').click()
         page.wait_for_function(
             "() => !document.querySelector('[data-testid=\"scan-button\"]')?.disabled",
-            timeout=600_000,
+            timeout=remaining_ms(deadline, 600_000),
         )
-        if "failed" not in page.locator("#runMeta").inner_text(timeout=10_000).lower():
+        if "failed" not in page.locator("#runMeta").inner_text(timeout=remaining_ms(deadline, 10_000)).lower():
             break
 
-        last_error = page.locator("#message").inner_text(timeout=10_000)
+        last_error = page.locator("#message").inner_text(timeout=remaining_ms(deadline, 10_000))
         if attempt < 3 and is_transient_scan_error(last_error):
-            page.wait_for_timeout(15_000 * attempt)
+            page.wait_for_timeout(remaining_ms(deadline, 15_000 * attempt))
             continue
         raise RuntimeError(last_error)
     else:
         raise RuntimeError(last_error or "Scan failed")
 
-    page.wait_for_selector('[data-testid="result-card"]', timeout=30_000)
+    page.wait_for_selector('[data-testid="result-card"]', timeout=remaining_ms(deadline, 30_000))
     cards = page.locator('[data-testid="result-card"]')
     extracted: list[dict[str, Any]] = cards.evaluate_all(
         """cards => cards.map(card => {
@@ -268,7 +294,7 @@ def run_scan(page: Page) -> list[SetupResult]:
     return [parse_result(item) for item in extracted]
 
 
-def persist_chart_images(results: list[SetupResult], base_url: str, run_id: str) -> None:
+def persist_chart_images(results: list[SetupResult], base_url: str, run_id: str, deadline: float) -> None:
     for result in results:
         if not result.chart_url:
             continue
@@ -276,7 +302,7 @@ def persist_chart_images(results: list[SetupResult], base_url: str, run_id: str)
         destination = CHART_DIR / f"market_lens_agent_{run_id}_{result.ticker.lower()}.png"
         try:
             request = Request(source_url, headers={"User-Agent": "market-lens-agent/1.0"})
-            with urlopen(request, timeout=60) as response:
+            with urlopen(request, timeout=max(1, remaining_ms(deadline, 60_000) // 1000)) as response:
                 content_type = response.headers.get("content-type", "")
                 data = response.read()
             if not data or "image" not in content_type.lower():
@@ -290,6 +316,17 @@ def persist_chart_images(results: list[SetupResult], base_url: str, run_id: str)
 def is_transient_scan_error(message: str) -> bool:
     text = message.lower()
     return any(marker in text for marker in ("502", "503", "504", "timeout", "network"))
+
+
+def remaining_ms(deadline: float, requested_ms: int) -> int:
+    remaining = int((deadline - time.monotonic()) * 1000)
+    if remaining <= 0:
+        raise RuntimeError("Agent run timeout reached before completion.")
+    return max(1_000, min(requested_ms, remaining))
+
+
+def log(message: str) -> None:
+    print(f"[{datetime.now().isoformat(timespec='seconds')}] {message}", flush=True)
 
 
 def parse_result(item: dict[str, Any]) -> SetupResult:
