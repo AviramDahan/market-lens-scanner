@@ -64,6 +64,10 @@ def fetch_daily_frame(ticker: str, period: str = "6mo") -> pd.DataFrame:
     return _validate_frame(_fetch_frame(ticker, "1d", period), ticker, "1d", MIN_DAILY_ROWS)
 
 
+def fetch_intraday_frame(ticker: str, period: str = "5d", interval: str = "1m") -> pd.DataFrame:
+    return _fetch_frame(ticker, interval, period)
+
+
 def fetch_next_earnings_date(ticker: str) -> str | None:
     cache_key = ticker.upper()
     cached = _get_earnings_cache(cache_key)

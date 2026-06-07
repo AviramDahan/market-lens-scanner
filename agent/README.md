@@ -29,6 +29,9 @@ Optional values:
 - `MARKET_LENS_ANALYSIS_PERIOD=6mo`
 - `MARKET_LENS_MIN_RR=2`
 - `MARKET_LENS_HEADLESS=true`
+- `MARKET_LENS_MONITOR_PERIOD=5d`
+- `MARKET_LENS_MONITOR_INTERVAL=1m`
+- `MARKET_LENS_MONITOR_SAVE_NOOP=false`
 
 When `MARKET_LENS_UNIVERSE=smart-universe`, the agent selects the dynamic Smart
 Universe through the UI. The app ranks quality large/liquid names by relative
@@ -50,6 +53,7 @@ python -m playwright install chromium
 
 ```powershell
 python agent\market_lens_ui_agent.py
+python agent\position_monitor.py
 ```
 
 On Windows you can also run:
@@ -63,12 +67,16 @@ Outputs:
 - Updated Excel tracker
 - `agent_runs/screenshots/*.png`
 - `agent_runs/summaries/*.md`
+- `agent_results/position_monitor/*.md` in the cloud workflow
 
 ## Cloud Schedule on GitHub
 
-The repository includes `.github/workflows/market-lens-agent.yml`.
+The repository includes two agent workflows:
 
-It runs the agent in GitHub Actions and commits the updated paper-trading
+- `.github/workflows/market-lens-agent.yml`
+- `.github/workflows/market-lens-position-monitor.yml`
+
+The full UI agent runs in GitHub Actions and commits the updated paper-trading
 tracker and run outputs back to the repository:
 
 - tracker: `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx`
@@ -80,8 +88,18 @@ Add these repository secrets in GitHub:
 - `MARKET_LENS_PASSWORD`
 
 Then open GitHub Actions and run `Market Lens Paper Agent` manually once. The
-workflow is also scheduled for 12:00 New York time during the current tracking
-window.
+workflow is also scheduled for 12:00 New York time.
+
+The position monitor runs every five minutes during the New York market session.
+It only manages existing open positions. It downloads one-minute intraday
+candles and checks each candle high/low against target 1, target 2, and stop
+loss. If target and stop are touched inside the same candle, the tracker applies
+a conservative stop-first rule because the exact intraminute sequence is not
+available.
+
+By default the monitor commits results only when it changes the portfolio state.
+Set `MARKET_LENS_MONITOR_SAVE_NOOP=true` only if you want every monitor run to
+publish a heartbeat and current-price refresh.
 
 ## Conservative Decision Rules
 

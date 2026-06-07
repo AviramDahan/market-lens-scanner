@@ -1,0 +1,81 @@
+name: Market Lens Position Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub cron is UTC. A New York time guard below handles DST and market hours.
+    - cron: "*/5 13-21 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-lens-position-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor-positions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check New York market-hours schedule
+        id: schedule_time
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          local_day="$(TZ=America/New_York date +%u)"
+          local_hour="$(TZ=America/New_York date +%H)"
+          local_minute="$(TZ=America/New_York date +%M)"
+          local_minutes=$((10#$local_hour * 60 + 10#$local_minute))
+          market_open=$((9 * 60 + 35))
+          market_close=$((16 * 60))
+          if [ "$local_day" -le 5 ] && [ "$local_minutes" -ge "$market_open" ] && [ "$local_minutes" -le "$market_close" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Outside New York market-hours monitor window; skipping."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.schedule_time.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.schedule_time.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.schedule_time.outputs.should_run == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Run position monitor
+        if: steps.schedule_time.outputs.should_run == 'true'
+        env:
+          MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+          MARKET_LENS_RUN_DIR: agent_results
+          MARKET_LENS_MONITOR_PERIOD: 5d
+          MARKET_LENS_MONITOR_INTERVAL: 1m
+          MARKET_LENS_MONITOR_SAVE_NOOP: "false"
+        run: python agent/position_monitor.py
+
+      - name: Commit monitor results
+        if: steps.schedule_time.outputs.should_run == 'true'
+        run: |
+          git config user.name "market-lens-agent"
+          git config user.email "market-lens-agent@users.noreply.github.com"
+          git add agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx agent_results
+          if git diff --cached --quiet; then
+            echo "No position monitor changes to commit."
+          else
+            git commit -m "Update Market Lens position monitor"
+            git push
+          fi

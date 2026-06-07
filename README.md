@@ -30,6 +30,7 @@ they can scan tickers, view global setups, or save personal setups.
   trend quality, volume confirmation, event risk, and trade plan
 - Grade-based quality assessment with strengths and warnings
 - UI trading agent for one-month paper portfolio tracking in Excel
+- Position monitor for intraday target/stop checks on open paper trades
 - Agent dashboard at `/agent` for portfolio, actions, screenshots, and P/L tracking
 - Docker-ready deployment
 - Render blueprint for public hosting
@@ -195,8 +196,9 @@ broker.
 Agent outputs:
 
 - Updated Excel tracker
-- `agent_runs/screenshots/*.png`
-- `agent_runs/summaries/*.md`
+- `agent_results/screenshots/*.png`
+- `agent_results/summaries/*.md`
+- `agent_results/position_monitor/*.md`
 
 The deployed app also exposes a read-only agent dashboard:
 
@@ -208,10 +210,27 @@ It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
 `agent_results/` from the repository, so each successful GitHub Actions run can
 publish the latest paper portfolio state back into the public app.
 
+The cloud setup has two separate workflows:
+
+- `Market Lens Paper Agent` runs the full UI scan once per day at 12:00 New York time.
+- `Market Lens Position Monitor` checks existing open positions every five minutes during the New York market session.
+
+The position monitor does not open new trades. It reads the current open
+positions from the Excel tracker, downloads one-minute intraday candles, and
+uses each candle's high/low to check whether target 1, target 2, or stop loss
+was touched. If target and stop are touched in the same one-minute candle, the
+paper tracker applies a conservative stop-first rule because the exact sequence
+inside that candle is unknown.
+
+To avoid unnecessary Render redeploys, the monitor commits back to GitHub only
+when it changes the portfolio state or when `MARKET_LENS_MONITOR_SAVE_NOOP=true`
+is explicitly enabled.
+
 Configure it with `.env` based on `.env.example`, then run:
 
 ```powershell
 python agent\market_lens_ui_agent.py
+python agent\position_monitor.py
 ```
 
 When the app UI changes, update both the app selectors and the agent parser so
