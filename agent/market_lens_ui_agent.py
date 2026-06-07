@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 import math
 import os
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from dotenv import load_dotenv
 from openpyxl import load_workbook
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
+from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.smart_universe import base_universe, build_sector_health
 
 
@@ -23,6 +25,7 @@ RUN_DIR = Path(os.getenv("MARKET_LENS_RUN_DIR", ROOT / "agent_runs"))
 SCREENSHOT_DIR = RUN_DIR / "screenshots"
 SUMMARY_DIR = RUN_DIR / "summaries"
 CHART_DIR = RUN_DIR / "charts"
+DECISION_DIR = RUN_DIR / "decisions"
 APP_READY_SELECTOR = '[data-testid="auth-email"], #authStatus'
 
 
@@ -65,6 +68,7 @@ class Decision:
     cash_out_ils: float = 0.0
     cash_in_ils: float = 0.0
     risk_ils: float = 0.0
+    decision_json: dict[str, Any] = field(default_factory=dict)
 
 
 def main() -> None:
@@ -73,8 +77,10 @@ def main() -> None:
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
     SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
     CHART_DIR.mkdir(parents=True, exist_ok=True)
+    DECISION_DIR.mkdir(parents=True, exist_ok=True)
     screenshot_path = SCREENSHOT_DIR / f"market_lens_agent_{run_id}.png"
     summary_path = SUMMARY_DIR / f"market_lens_agent_{run_id}.md"
+    decision_path = DECISION_DIR / f"market_lens_agent_{run_id}.jsonl"
 
     errors: list[str] = []
     results: list[SetupResult] = []
@@ -109,6 +115,7 @@ def main() -> None:
         results=results,
         screenshot_path=screenshot_path,
         summary_path=summary_path,
+        decision_path=decision_path,
         errors=errors,
     )
     decisions = workbook_context["decisions"]
@@ -312,6 +319,7 @@ def update_workbook(
     results: list[SetupResult],
     screenshot_path: Path,
     summary_path: Path,
+    decision_path: Path,
     errors: list[str],
 ) -> dict[str, Any]:
     wb = load_workbook(settings.excel_path)
@@ -329,12 +337,19 @@ def update_workbook(
     max_risk = starting_capital * float(settings_values.get("max_risk_per_trade_pct", 0.01))
     min_rr = float(settings_values.get("min_risk_reward", settings.min_rr))
     sector_map = base_universe()
-    sector_health = build_sector_health(settings.analysis_period)
+    run_context = build_agent_run_context(
+        analysis_period=settings.analysis_period,
+        starting_capital=starting_capital,
+        default_max_total_exposure=max_total_exposure,
+        max_position=max_position,
+    )
+    sector_health = run_context.sector_health or build_sector_health(settings.analysis_period)
 
     open_positions = read_open_positions(wb)
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     decisions: dict[str, Decision] = {}
+    decision_records: list[dict[str, Any]] = []
     timestamp = datetime.now().isoformat(timespec="seconds")
 
     for result in results:
@@ -351,6 +366,27 @@ def update_workbook(
             sector_map=sector_map,
             sector_health=sector_health,
         )
+        decision_json = evaluate_agent_candidate(
+            timestamp=timestamp,
+            result=result,
+            initial_action=decision.action,
+            initial_reason=decision.feedback,
+            quantity=decision.quantity,
+            cash_out=decision.cash_out_ils,
+            risk_amount=decision.risk_ils,
+            cash_available=cash,
+            portfolio_exposure_before=exposure,
+            open_positions=open_positions,
+            sector_map=sector_map,
+            run_context=run_context,
+        )
+        final_action = str(decision_json.get("final_action") or decision.action)
+        final_reason = str(decision_json.get("reason") or decision.feedback)
+        if final_action != decision.action:
+            decision = Decision(final_action, final_reason, decision_json=decision_json)
+        else:
+            decision.feedback = final_reason
+            decision.decision_json = decision_json
         result.selection_context = build_selection_context(
             result,
             decision,
@@ -358,7 +394,9 @@ def update_workbook(
             explicit_tickers=bool(settings.tickers),
             sector_map=sector_map,
             sector_health=sector_health,
+            decision_json=decision_json,
         )
+        decision_records.append(decision_json)
         decisions[result.ticker] = decision
         append_watchlist_row(wb, timestamp, result, decision)
         if decision.action == "BUY_SIMULATED":
@@ -370,9 +408,10 @@ def update_workbook(
             append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
             apply_exit_decision(open_positions, result, decision, currency_rate)
         elif result.ticker in open_positions:
-            refresh_open_position(open_positions[result.ticker], result, currency_rate)
+            refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
 
     write_open_positions(wb, open_positions)
+    write_decision_jsonl(decision_path, decision_records)
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
@@ -389,6 +428,7 @@ def update_workbook(
         open_positions=len(open_positions),
         summary_path=summary_path,
         screenshot_path=screenshot_path,
+        decision_path=decision_path,
     )
     wb.save(settings.excel_path)
     return {
@@ -400,6 +440,8 @@ def update_workbook(
         "open_positions": open_positions,
         "workbook": settings.excel_path,
         "currency": currency,
+        "decision_path": decision_path,
+        "market_regime": run_context.market_regime,
     }
 
 
@@ -483,6 +525,7 @@ def build_selection_context(
     explicit_tickers: bool,
     sector_map: dict[str, str],
     sector_health: dict[str, dict[str, Any]],
+    decision_json: dict[str, Any] | None = None,
 ) -> str:
     sector = sector_map.get(result.ticker, "Unknown")
     health = sector_health.get(sector, {})
@@ -507,7 +550,19 @@ def build_selection_context(
         f"R/R {result.risk_reward:.2f}x; price {result.current_price:.2f}"
     )
     action_text = f"Agent action: {decision.action} - {decision.feedback}"
-    return " | ".join([source, sector_text, setup_text, action_text])
+    parts = [source, sector_text, setup_text]
+    if decision_json:
+        risk_bits = [
+            f"Market: {decision_json.get('market_regime', 'Unknown')}",
+            f"Sector regime: {decision_json.get('sector_regime', 'Unknown')}",
+        ]
+        if decision_json.get("net_rr") is not None:
+            risk_bits.append(f"Net R/R: {float(decision_json.get('net_rr') or 0):.2f}")
+        if decision_json.get("factor_tags"):
+            risk_bits.append(f"Factors: {', '.join(decision_json.get('factor_tags') or [])}")
+        parts.append("; ".join(risk_bits))
+    parts.append(action_text)
+    return " | ".join(parts)
 
 
 def read_settings(wb: Any) -> dict[str, Any]:
@@ -524,14 +579,20 @@ def ensure_agent_columns(wb: Any) -> None:
         "Setup Watchlist": {
             16: "Chart URL",
             17: "Selection Context",
+            18: "Decision JSON",
         },
         "Trade Log": {
             18: "Chart URL",
             19: "Selection Context",
+            20: "Decision JSON",
         },
         "Open Positions": {
             16: "Chart URL",
             17: "Selection Context",
+            18: "Decision JSON",
+        },
+        "Update Log": {
+            12: "Decision JSONL",
         },
     }
     for sheet_name, sheet_headers in headers.items():
@@ -566,6 +627,7 @@ def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
             "screenshot": str(row[14] or ""),
             "chart_url": str(row[15] or ""),
             "selection_context": str(row[16] or ""),
+            "decision_json": str(row[17] or ""),
             "partial_taken": "partial" in str(row[13] or "").lower(),
         }
     return positions
@@ -617,6 +679,7 @@ def append_watchlist_row(wb: Any, timestamp: str, result: SetupResult, decision:
     ws.cell(row, 15, result.raw_text[:1000])
     ws.cell(row, 16, result.chart_url)
     ws.cell(row, 17, result.selection_context)
+    ws.cell(row, 18, decision_json_text(decision))
 
 
 def append_trade_log_row(
@@ -648,6 +711,7 @@ def append_trade_log_row(
     ws.cell(row, 17, str(screenshot_path))
     ws.cell(row, 18, result.chart_url)
     ws.cell(row, 19, result.selection_context)
+    ws.cell(row, 20, decision_json_text(decision))
 
 
 def position_from_buy(
@@ -677,6 +741,7 @@ def position_from_buy(
         "screenshot": str(screenshot_path),
         "chart_url": result.chart_url,
         "selection_context": result.selection_context,
+        "decision_json": decision_json_text(decision),
     }
 
 
@@ -698,12 +763,17 @@ def apply_exit_decision(
         pos["quantity"] = remaining_qty
         pos["stop_loss"] = pos["entry_price"]
         pos["notes"] = "Partial profit taken; stop moved to breakeven."
-        refresh_open_position(pos, result, usd_ils)
+        refresh_open_position(pos, result, usd_ils, decision)
         return
     open_positions.pop(result.ticker, None)
 
 
-def refresh_open_position(pos: dict[str, Any], result: SetupResult, usd_ils: float) -> None:
+def refresh_open_position(
+    pos: dict[str, Any],
+    result: SetupResult,
+    usd_ils: float,
+    decision: Decision | None = None,
+) -> None:
     qty = int(pos.get("quantity") or 0)
     entry = float(pos.get("entry_price") or 0)
     current = result.current_price
@@ -717,6 +787,9 @@ def refresh_open_position(pos: dict[str, Any], result: SetupResult, usd_ils: flo
         pos["chart_url"] = result.chart_url
     if result.selection_context:
         pos["selection_context"] = result.selection_context
+    if decision and decision.decision_json:
+        # Preserve the latest structured explanation for dashboard drill-down.
+        pos["decision_json"] = decision_json_text(decision)
 
 
 def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
@@ -728,10 +801,22 @@ def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
             pos["ticker"], pos["entry_date"], pos["entry_price"], pos["current_price"], pos["quantity"],
             pos["stop_loss"], pos["target_1"], pos["target_2"], pos["status"], pos["unrealized_usd"],
             pos["unrealized_ils"], pos["exposure_ils"], pos["risk_ils"], pos.get("notes", ""), pos.get("screenshot", ""),
-            pos.get("chart_url", ""), pos.get("selection_context", ""),
+            pos.get("chart_url", ""), pos.get("selection_context", ""), pos.get("decision_json", ""),
         ]
         for col_idx, value in enumerate(values, start=1):
             ws.cell(row_idx, col_idx, value)
+
+
+def decision_json_text(decision: Decision) -> str:
+    if not decision.decision_json:
+        return ""
+    return json.dumps(decision.decision_json, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def write_decision_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = "\n".join(json.dumps(record, ensure_ascii=False, sort_keys=True, default=str) for record in records)
+    path.write_text(payload + ("\n" if payload else ""), encoding="utf-8")
 
 
 def append_update_log(
@@ -748,6 +833,7 @@ def append_update_log(
     open_positions: int,
     summary_path: Path,
     screenshot_path: Path,
+    decision_path: Path,
 ) -> None:
     ws = wb["Update Log"]
     row = next_row(ws)
@@ -763,6 +849,7 @@ def append_update_log(
     ws.cell(row, 9, open_positions)
     ws.cell(row, 10, str(summary_path))
     ws.cell(row, 11, str(screenshot_path))
+    ws.cell(row, 12, str(decision_path))
 
 
 def write_summary(
@@ -782,6 +869,12 @@ def write_summary(
     buys = [ticker for ticker, decision in decisions.items() if decision.action == "BUY_SIMULATED"]
     watch = [ticker for ticker, decision in decisions.items() if decision.action == "WATCH"]
     closed = [ticker for ticker, decision in decisions.items() if decision.action in {"TAKE_PROFIT", "EXIT_STOP", "TAKE_PARTIAL_PROFIT"}]
+    market_regime = workbook_context.get("market_regime")
+    market_text = (
+        f"{market_regime.label} ({market_regime.score:.2f}) - {market_regime.reason}"
+        if market_regime
+        else "Not available"
+    )
     lines = [
         "Market Lens Agent Update",
         "",
@@ -791,6 +884,7 @@ def write_summary(
         f"Scan status: {scan_status}",
         f"Tickers scanned: {' '.join(result.ticker for result in results)}",
         f"Valid setups found: {len(valid)}",
+        f"Market regime: {market_text}",
         f"Actions taken: {', '.join(f'{ticker}:{decision.action}' for ticker, decision in decisions.items())}",
         f"New simulated buys: {', '.join(buys) or 'None'}",
         f"Positions on watch: {', '.join(watch) or 'None'}",
@@ -801,6 +895,7 @@ def write_summary(
         f"Total open risk: {workbook_context['open_risk']:.2f} {workbook_context['currency']}",
         f"Excel updated: {settings.excel_path}",
         f"Screenshot saved: {screenshot_path}",
+        f"Decision JSONL saved: {workbook_context.get('decision_path', '')}",
         f"Errors: {'; '.join(errors) if errors else 'None'}",
         "Agent feedback:",
     ]
@@ -808,6 +903,10 @@ def write_summary(
         decision = decisions.get(result.ticker)
         if decision:
             lines.append(f"- {result.ticker}: {decision.action} - {decision.feedback}")
+            if decision.decision_json:
+                warnings = decision.decision_json.get("warnings") or []
+                if warnings:
+                    lines.append(f"  Warnings: {'; '.join(str(item) for item in warnings[:4])}")
             if result.selection_context:
                 lines.append(f"  Context: {result.selection_context}")
     summary_path.write_text("\n".join(lines), encoding="utf-8")

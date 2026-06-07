@@ -329,6 +329,7 @@ def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
             "screenshot": str(row[14] or ""),
             "chart_url": str(row[15] or ""),
             "selection_context": str(row[16] or ""),
+            "decision_json": str(row[17] or ""),
             "partial_taken": "partial" in str(row[13] or "").lower(),
         }
     return positions
@@ -357,6 +358,7 @@ def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
             position.get("screenshot", ""),
             position.get("chart_url", ""),
             position.get("selection_context", ""),
+            position.get("decision_json", ""),
         ]
         for col_idx, value in enumerate(values, start=1):
             ws.cell(row_idx, col_idx, value)
@@ -367,10 +369,12 @@ def ensure_agent_columns(wb: Any) -> None:
         "Trade Log": {
             18: "Chart URL",
             19: "Selection Context",
+            20: "Decision JSON",
         },
         "Open Positions": {
             16: "Chart URL",
             17: "Selection Context",
+            18: "Decision JSON",
         },
     }
     for sheet_name, sheet_headers in headers.items():
@@ -477,6 +481,7 @@ def append_trade_log_row(
     ws.cell(row, 17, position.get("screenshot", ""))
     ws.cell(row, 18, position.get("chart_url", ""))
     ws.cell(row, 19, position.get("selection_context", ""))
+    ws.cell(row, 20, position.get("decision_json", ""))
 
 
 def append_update_log(

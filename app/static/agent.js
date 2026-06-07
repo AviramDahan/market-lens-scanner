@@ -313,7 +313,7 @@ function renderActions(setups) {
             : `<div class="action-chart missing"></div>`}
           <div class="ticker-cell">
             <strong>${escapeHtml(tickerLabel(setup))}</strong>
-            <span class="meta">${escapeHtml(setup.sector || "Unknown")}</span>
+            <span class="meta">${escapeHtml(decisionMeta(setup) || setup.sector || "Unknown")}</span>
           </div>
           <span class="${actionBadgeClass(setup.action)}">${escapeHtml(setup.action || "UNKNOWN")}</span>
           <div>
@@ -379,7 +379,18 @@ function tickerMeta(item, fallback = "") {
 }
 
 function selectionText(item) {
-  return item.selection_context || item.feedback || item.notes || item.reason || "";
+  return item.selection_context || item.decision_json?.reason || item.feedback || item.notes || item.reason || "";
+}
+
+function decisionMeta(item) {
+  const decision = item.decision_json || {};
+  const parts = [];
+  if (decision.market_regime) parts.push(`Market ${decision.market_regime}`);
+  if (decision.sector_regime) parts.push(`Sector ${decision.sector_regime}`);
+  if (decision.net_rr !== undefined && decision.net_rr !== null && decision.net_rr !== "") {
+    parts.push(`Net R/R ${Number(decision.net_rr || 0).toFixed(2)}x`);
+  }
+  return parts.join(" - ");
 }
 
 function renderPotential(item) {

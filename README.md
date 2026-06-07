@@ -198,7 +198,23 @@ Agent outputs:
 - Updated Excel tracker
 - `agent_results/screenshots/*.png`
 - `agent_results/summaries/*.md`
+- `agent_results/decisions/*.jsonl`
 - `agent_results/position_monitor/*.md`
+
+Before a new `BUY_SIMULATED` is accepted, the agent now adds a risk and
+transparency layer on top of the existing scanner decision. The original setup
+detection still runs first, then the agent records a structured decision for
+each ticker with:
+
+- market regime: `BULL`, `NEUTRAL`, or `BEAR`
+- sector regime: `STRONG`, `NEUTRAL`, or `WEAK`
+- dynamic market, sector, and factor exposure checks
+- gross R/R and slippage-adjusted net R/R
+- earnings blackout status
+- target feasibility versus ATR
+- normalized quality scores by market-cap/liquidity bucket
+- correlation warning versus open positions
+- a plain-English final reason for `BUY_SIMULATED`, `WATCH`, `SKIP`, or `HOLD`
 
 The deployed app also exposes a read-only agent dashboard:
 

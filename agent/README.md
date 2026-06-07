@@ -67,6 +67,7 @@ Outputs:
 - Updated Excel tracker
 - `agent_runs/screenshots/*.png`
 - `agent_runs/summaries/*.md`
+- `agent_runs/decisions/*.jsonl`
 - `agent_results/position_monitor/*.md` in the cloud workflow
 
 ## Cloud Schedule on GitHub
@@ -81,6 +82,7 @@ tracker and run outputs back to the repository:
 
 - tracker: `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx`
 - screenshots and summaries: `agent_results/`
+- structured decisions: `agent_results/decisions/*.jsonl`
 
 Add these repository secrets in GitHub:
 
@@ -112,3 +114,21 @@ publish a heartbeat and current-price refresh.
 
 The agent manages a simulated 100,000 USD paper portfolio using the limits in
 the Excel `Settings` sheet.
+
+## Risk and Transparency Layer
+
+The agent keeps the existing UI scan and setup detection, then applies an
+additional decision layer before opening any new simulated buy:
+
+- Market regime controls maximum exposure and required net R/R.
+- Sector regime can block or downgrade weak-sector setups.
+- Dynamic sector and factor exposure checks prevent concentrated simulated buys.
+- Correlation is checked against open positions using recent daily returns.
+- Gross R/R is preserved, and net R/R subtracts estimated spread, slippage, and fees.
+- Earnings blackout can block new buys around earnings dates.
+- Targets are validated against daily ATR distance.
+- Momentum, ATR, and liquidity are normalized by market-cap bucket.
+
+Each scanned ticker receives a Decision JSON object in the tracker and in the
+run JSONL file. The object includes the final action, warnings, exposure values,
+factor tags, correlation data, and a human-readable reason.

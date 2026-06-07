@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections import defaultdict, deque
 from datetime import datetime, time
 from pathlib import Path
@@ -19,6 +20,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     results_dir = project_root / "agent_results"
     screenshot_dir = results_dir / "screenshots"
     summary_dir = results_dir / "summaries"
+    decision_dir = results_dir / "decisions"
 
     if not tracker_path.exists():
         return {
@@ -81,6 +83,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     action_counts: dict[str, int] = defaultdict(int)
     for setup in latest_setups:
         action_counts[str(setup.get("action") or "UNKNOWN")] += 1
+    latest_decisions = [setup["decision_json"] for setup in latest_setups if setup.get("decision_json")]
 
     return {
         "status": "ok",
@@ -122,14 +125,19 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "actions_summary": latest_update.get("actions_summary", ""),
             "screenshot_url": latest_screenshot,
             "summary_url": resolve_asset_url(latest_summary_path),
+            "decision_jsonl_url": resolve_asset_url(
+                latest_update.get("decision_jsonl") or resolve_latest_file(decision_dir, ".jsonl")
+            ),
             "summary_text": latest_summary,
             "action_counts": dict(sorted(action_counts.items())),
+            "market_regime": latest_decisions[0].get("market_regime", "") if latest_decisions else "",
         },
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
         "open_positions": open_positions,
         "recent_trades": scoped_trades[-30:],
         "closed_trades": realized["closed"][-30:],
         "latest_setups": latest_setups,
+        "latest_decisions": latest_decisions,
         "recent_runs": scoped_updates[-20:],
     }
 
@@ -160,6 +168,7 @@ def read_updates(wb: Any) -> list[dict[str, Any]]:
                 "open_positions": to_int(row[8]),
                 "summary": row[9] or "",
                 "screenshot": row[10] or "",
+                "decision_jsonl": cell(row, 11),
             }
         )
     return rows
@@ -196,6 +205,7 @@ def read_open_positions(wb: Any) -> list[dict[str, Any]]:
                         "screenshot_url": resolve_asset_url(row[14]),
                         "chart_url": resolve_asset_url(cell(row, 15)),
                         "selection_context": cell(row, 16),
+                        "decision_json": parse_json(cell(row, 17), {}),
                         "progress_to_target_1": round(progress, 2),
                     }
                 )
@@ -229,6 +239,7 @@ def read_trades(wb: Any) -> list[dict[str, Any]]:
                 "screenshot_url": resolve_asset_url(row[16]),
                 "chart_url": resolve_asset_url(cell(row, 17)),
                 "selection_context": cell(row, 18),
+                "decision_json": parse_json(cell(row, 19), {}),
             }
         )
         rows.append(with_trade_potential(trade))
@@ -257,6 +268,7 @@ def read_setup_rows(wb: Any) -> list[dict[str, Any]]:
                 "feedback": row[13] or "",
                 "chart_url": resolve_asset_url(cell(row, 15)),
                 "selection_context": cell(row, 16),
+                "decision_json": parse_json(cell(row, 17), {}),
             }
         )
         rows.append(with_setup_potential(setup))
@@ -335,6 +347,7 @@ def reconstruct_open_positions(
                         or latest_setup.get(ticker, {}).get("selection_context")
                         or ""
                     ),
+                    "decision_json": trade.get("decision_json") or latest_setup.get(ticker, {}).get("decision_json") or {},
                 }
             )
             continue
@@ -361,6 +374,7 @@ def reconstruct_open_positions(
             position["selection_context"] = (
                 position.get("selection_context") or setup.get("selection_context") or ""
             )
+            position["decision_json"] = position.get("decision_json") or setup.get("decision_json") or {}
         rebuilt.append(with_position_calculations(position))
     return rebuilt
 
@@ -538,6 +552,17 @@ def cell(row: tuple[Any, ...], index: int, default: Any = "") -> Any:
         return default
     value = row[index]
     return default if value is None else value
+
+
+def parse_json(value: Any, default: Any) -> Any:
+    if not value:
+        return default
+    if isinstance(value, (dict, list)):
+        return value
+    try:
+        return json.loads(str(value))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return default
 
 
 def data_rows(ws: Any) -> list[tuple[Any, ...]]:
