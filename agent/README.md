@@ -80,7 +80,7 @@ Add these repository secrets in GitHub:
 - `MARKET_LENS_PASSWORD`
 
 Then open GitHub Actions and run `Market Lens Paper Agent` manually once. The
-workflow is also scheduled for 09:30 Israel time during the current tracking
+workflow is also scheduled for 12:00 New York time during the current tracking
 window.
 
 ## Conservative Decision Rules
