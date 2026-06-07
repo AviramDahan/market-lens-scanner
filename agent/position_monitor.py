@@ -56,6 +56,7 @@ def main() -> None:
     timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
     wb = load_workbook(settings.excel_path)
+    ensure_agent_columns(wb)
     ensure_position_events_sheet(wb)
 
     settings_values = read_settings(wb)
@@ -326,6 +327,8 @@ def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
             "risk_ils": float(row[12] or 0),
             "notes": str(row[13] or ""),
             "screenshot": str(row[14] or ""),
+            "chart_url": str(row[15] or ""),
+            "selection_context": str(row[16] or ""),
             "partial_taken": "partial" in str(row[13] or "").lower(),
         }
     return positions
@@ -352,9 +355,30 @@ def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
             position["risk_ils"],
             position.get("notes", ""),
             position.get("screenshot", ""),
+            position.get("chart_url", ""),
+            position.get("selection_context", ""),
         ]
         for col_idx, value in enumerate(values, start=1):
             ws.cell(row_idx, col_idx, value)
+
+
+def ensure_agent_columns(wb: Any) -> None:
+    headers = {
+        "Trade Log": {
+            18: "Chart URL",
+            19: "Selection Context",
+        },
+        "Open Positions": {
+            16: "Chart URL",
+            17: "Selection Context",
+        },
+    }
+    for sheet_name, sheet_headers in headers.items():
+        if sheet_name not in wb.sheetnames:
+            continue
+        ws = wb[sheet_name]
+        for col_idx, header in sheet_headers.items():
+            ws.cell(1, col_idx, header)
 
 
 def ensure_position_events_sheet(wb: Any) -> None:
@@ -451,6 +475,8 @@ def append_trade_log_row(
     ws.cell(row, 15, 0)
     ws.cell(row, 16, event.note)
     ws.cell(row, 17, position.get("screenshot", ""))
+    ws.cell(row, 18, position.get("chart_url", ""))
+    ws.cell(row, 19, position.get("selection_context", ""))
 
 
 def append_update_log(

@@ -50,6 +50,8 @@ class SetupResult:
     risk_reward: float
     reason: str
     raw_text: str
+    chart_url: str = ""
+    selection_context: str = ""
 
 
 @dataclass
@@ -244,6 +246,9 @@ def run_scan(page: Page) -> list[SetupResult]:
               targets: stat('Targets'),
               risk_reward: stat('R/R'),
               reason: card.querySelector('[data-testid="result-reason"]')?.textContent?.trim() || '',
+              chart_url: (card.querySelector('img.chart-preview')?.getAttribute('data-chart')
+                || card.querySelector('img.chart-preview')?.getAttribute('src')
+                || '').split('?')[0],
               raw_text: card.innerText,
             };
           })"""
@@ -272,6 +277,7 @@ def parse_result(item: dict[str, Any]) -> SetupResult:
         risk_reward=parse_float(str(item.get("risk_reward", "")).replace("x", "")),
         reason=item.get("reason", ""),
         raw_text=item.get("raw_text", ""),
+        chart_url=str(item.get("chart_url", "")),
     )
 
 
@@ -285,6 +291,7 @@ def update_workbook(
     errors: list[str],
 ) -> dict[str, Any]:
     wb = load_workbook(settings.excel_path)
+    ensure_agent_columns(wb)
     settings_values = read_settings(wb)
     currency = str(settings_values.get("budget_currency") or "USD").upper()
     currency_rate = 1.0 if currency == "USD" else float(settings_values.get("usd_ils_rate", 3.7))
@@ -317,6 +324,14 @@ def update_workbook(
             max_total_exposure=max_total_exposure,
             max_risk=max_risk,
             min_rr=min_rr,
+            sector_map=sector_map,
+            sector_health=sector_health,
+        )
+        result.selection_context = build_selection_context(
+            result,
+            decision,
+            universe=settings.universe,
+            explicit_tickers=bool(settings.tickers),
             sector_map=sector_map,
             sector_health=sector_health,
         )
@@ -436,6 +451,41 @@ def decide(
     )
 
 
+def build_selection_context(
+    result: SetupResult,
+    decision: Decision,
+    *,
+    universe: str,
+    explicit_tickers: bool,
+    sector_map: dict[str, str],
+    sector_health: dict[str, dict[str, Any]],
+) -> str:
+    sector = sector_map.get(result.ticker, "Unknown")
+    health = sector_health.get(sector, {})
+    if explicit_tickers:
+        source = "Configured manual ticker basket"
+    elif universe == "smart-universe":
+        source = "Smart Universe: broad liquid US universe, diversified by sector"
+    else:
+        source = f"Configured universe: {universe}"
+
+    sector_text = f"Sector: {sector}"
+    if health:
+        sector_text += (
+            f" - {health.get('label', 'Unknown')} "
+            f"({float(health.get('score', 0)):.0f}/100)"
+        )
+        if health.get("reason"):
+            sector_text += f"; {health['reason']}"
+
+    setup_text = (
+        f"Setup: {result.setup_type}; score {result.score:.2f}; "
+        f"R/R {result.risk_reward:.2f}x; price {result.current_price:.2f}"
+    )
+    action_text = f"Agent action: {decision.action} - {decision.feedback}"
+    return " | ".join([source, sector_text, setup_text, action_text])
+
+
 def read_settings(wb: Any) -> dict[str, Any]:
     ws = wb["Settings"]
     values = {}
@@ -443,6 +493,29 @@ def read_settings(wb: Any) -> dict[str, Any]:
         if row[0]:
             values[str(row[0])] = row[1]
     return values
+
+
+def ensure_agent_columns(wb: Any) -> None:
+    headers = {
+        "Setup Watchlist": {
+            16: "Chart URL",
+            17: "Selection Context",
+        },
+        "Trade Log": {
+            18: "Chart URL",
+            19: "Selection Context",
+        },
+        "Open Positions": {
+            16: "Chart URL",
+            17: "Selection Context",
+        },
+    }
+    for sheet_name, sheet_headers in headers.items():
+        if sheet_name not in wb.sheetnames:
+            continue
+        ws = wb[sheet_name]
+        for col_idx, header in sheet_headers.items():
+            ws.cell(1, col_idx, header)
 
 
 def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
@@ -467,6 +540,8 @@ def read_open_positions(wb: Any) -> dict[str, dict[str, Any]]:
             "risk_ils": float(row[12] or 0),
             "notes": str(row[13] or ""),
             "screenshot": str(row[14] or ""),
+            "chart_url": str(row[15] or ""),
+            "selection_context": str(row[16] or ""),
             "partial_taken": "partial" in str(row[13] or "").lower(),
         }
     return positions
@@ -516,6 +591,8 @@ def append_watchlist_row(wb: Any, timestamp: str, result: SetupResult, decision:
     ws.cell(row, 13, decision.action)
     ws.cell(row, 14, decision.feedback)
     ws.cell(row, 15, result.raw_text[:1000])
+    ws.cell(row, 16, result.chart_url)
+    ws.cell(row, 17, result.selection_context)
 
 
 def append_trade_log_row(
@@ -545,6 +622,8 @@ def append_trade_log_row(
     ws.cell(row, 15, decision.risk_ils)
     ws.cell(row, 16, decision.feedback)
     ws.cell(row, 17, str(screenshot_path))
+    ws.cell(row, 18, result.chart_url)
+    ws.cell(row, 19, result.selection_context)
 
 
 def position_from_buy(
@@ -572,6 +651,8 @@ def position_from_buy(
         "risk_ils": round(risk, 2),
         "notes": decision.feedback,
         "screenshot": str(screenshot_path),
+        "chart_url": result.chart_url,
+        "selection_context": result.selection_context,
     }
 
 
@@ -608,6 +689,10 @@ def refresh_open_position(pos: dict[str, Any], result: SetupResult, usd_ils: flo
     pos["unrealized_ils"] = round((current - entry) * qty * usd_ils, 2)
     pos["exposure_ils"] = round(current * qty * usd_ils, 2)
     pos["risk_ils"] = round(max(0.0, current - stop) * qty * usd_ils, 2)
+    if result.chart_url:
+        pos["chart_url"] = result.chart_url
+    if result.selection_context:
+        pos["selection_context"] = result.selection_context
 
 
 def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
@@ -619,6 +704,7 @@ def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
             pos["ticker"], pos["entry_date"], pos["entry_price"], pos["current_price"], pos["quantity"],
             pos["stop_loss"], pos["target_1"], pos["target_2"], pos["status"], pos["unrealized_usd"],
             pos["unrealized_ils"], pos["exposure_ils"], pos["risk_ils"], pos.get("notes", ""), pos.get("screenshot", ""),
+            pos.get("chart_url", ""), pos.get("selection_context", ""),
         ]
         for col_idx, value in enumerate(values, start=1):
             ws.cell(row_idx, col_idx, value)
@@ -698,6 +784,8 @@ def write_summary(
         decision = decisions.get(result.ticker)
         if decision:
             lines.append(f"- {result.ticker}: {decision.action} - {decision.feedback}")
+            if result.selection_context:
+                lines.append(f"  Context: {result.selection_context}")
     summary_path.write_text("\n".join(lines), encoding="utf-8")
 
 

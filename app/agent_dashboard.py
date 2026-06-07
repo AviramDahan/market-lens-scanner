@@ -194,6 +194,8 @@ def read_open_positions(wb: Any) -> list[dict[str, Any]]:
                         "open_risk_ils": round(to_float(row[12]), 2),
                         "notes": row[13] or "",
                         "screenshot_url": resolve_asset_url(row[14]),
+                        "chart_url": resolve_asset_url(cell(row, 15)),
+                        "selection_context": cell(row, 16),
                         "progress_to_target_1": round(progress, 2),
                     }
                 )
@@ -225,6 +227,8 @@ def read_trades(wb: Any) -> list[dict[str, Any]]:
                 "risk_ils": round(to_float(row[14]), 2),
                 "reason": row[15] or "",
                 "screenshot_url": resolve_asset_url(row[16]),
+                "chart_url": resolve_asset_url(cell(row, 17)),
+                "selection_context": cell(row, 18),
             }
         )
         rows.append(with_trade_potential(trade))
@@ -251,6 +255,8 @@ def read_setup_rows(wb: Any) -> list[dict[str, Any]]:
                 "reason": row[11] or "",
                 "action": row[12] or "",
                 "feedback": row[13] or "",
+                "chart_url": resolve_asset_url(cell(row, 15)),
+                "selection_context": cell(row, 16),
             }
         )
         rows.append(with_setup_potential(setup))
@@ -323,6 +329,12 @@ def reconstruct_open_positions(
                     "status": "OPEN",
                     "notes": trade.get("reason") or "",
                     "screenshot_url": trade.get("screenshot_url") or "",
+                    "chart_url": trade.get("chart_url") or latest_setup.get(ticker, {}).get("chart_url") or "",
+                    "selection_context": (
+                        trade.get("selection_context")
+                        or latest_setup.get(ticker, {}).get("selection_context")
+                        or ""
+                    ),
                 }
             )
             continue
@@ -345,6 +357,10 @@ def reconstruct_open_positions(
         setup = latest_setup.get(ticker, {})
         if setup:
             position["current_price_usd"] = setup.get("current_price_usd") or position["current_price_usd"]
+            position["chart_url"] = position.get("chart_url") or setup.get("chart_url") or ""
+            position["selection_context"] = (
+                position.get("selection_context") or setup.get("selection_context") or ""
+            )
         rebuilt.append(with_position_calculations(position))
     return rebuilt
 
@@ -515,6 +531,13 @@ def build_equity_curve(updates: list[dict[str, Any]], starting_capital: float) -
             }
         )
     return curve
+
+
+def cell(row: tuple[Any, ...], index: int, default: Any = "") -> Any:
+    if index >= len(row):
+        return default
+    value = row[index]
+    return default if value is None else value
 
 
 def data_rows(ws: Any) -> list[tuple[Any, ...]]:

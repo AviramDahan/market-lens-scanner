@@ -72,6 +72,7 @@ function renderDashboard(data) {
   renderEquity(data.equity_curve, data.summary);
   renderScreenshot(data.latest_run);
   renderPositions(data.open_positions);
+  renderPositionCharts(data.open_positions);
   renderActions(data.latest_setups);
   renderTrades(data.recent_trades, data.closed_trades);
   renderSummary(data.latest_run);
@@ -264,6 +265,38 @@ function renderPositions(positions) {
     .join("");
 }
 
+function renderPositionCharts(positions) {
+  const grid = document.getElementById("positionChartsGrid");
+  const withCharts = positions.filter((position) => position.chart_url);
+  document.getElementById("positionChartsMeta").textContent = `${withCharts.length} chart${withCharts.length === 1 ? "" : "s"} available`;
+  if (!positions.length) {
+    grid.innerHTML = '<div class="empty-state">No open positions to chart</div>';
+    return;
+  }
+
+  grid.innerHTML = positions
+    .map((position) => {
+      const chart = position.chart_url
+        ? `<a class="position-chart-media" href="${escapeHtml(position.chart_url)}" target="_blank" rel="noreferrer">
+            <img src="${escapeHtml(position.chart_url)}?v=${Date.now()}" alt="${escapeHtml(position.ticker)} chart" />
+          </a>`
+        : `<div class="position-chart-media missing"><span>No chart saved</span></div>`;
+      return `
+        <article class="position-chart-card">
+          ${chart}
+          <div class="position-chart-copy">
+            <div class="ticker-cell">
+              <strong>${escapeHtml(tickerLabel(position))}</strong>
+              <span class="meta">${escapeHtml(tickerMeta(position, formatDate(position.entry_date)))}</span>
+            </div>
+            <p>${escapeHtml(selectionText(position))}</p>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function renderActions(setups) {
   document.getElementById("actionMeta").textContent = `${setups.length} latest setup decisions`;
   const list = document.getElementById("actionsList");
@@ -275,6 +308,9 @@ function renderActions(setups) {
     .map(
       (setup) => `
         <div class="action-row">
+          ${setup.chart_url
+            ? `<img class="action-chart" src="${escapeHtml(setup.chart_url)}?v=${Date.now()}" alt="${escapeHtml(setup.ticker)} chart" />`
+            : `<div class="action-chart missing"></div>`}
           <div class="ticker-cell">
             <strong>${escapeHtml(tickerLabel(setup))}</strong>
             <span class="meta">${escapeHtml(setup.sector || "Unknown")}</span>
@@ -282,7 +318,7 @@ function renderActions(setups) {
           <span class="${actionBadgeClass(setup.action)}">${escapeHtml(setup.action || "UNKNOWN")}</span>
           <div>
             <strong>${escapeHtml(setup.setup_type || "")}</strong>
-            <p>${escapeHtml(setup.feedback || setup.reason || "")}</p>
+            <p>${escapeHtml(selectionText(setup))}</p>
           </div>
         </div>
       `,
@@ -340,6 +376,10 @@ function tickerLabel(item) {
 
 function tickerMeta(item, fallback = "") {
   return [item.sector || "Unknown", fallback].filter(Boolean).join(" - ");
+}
+
+function selectionText(item) {
+  return item.selection_context || item.feedback || item.notes || item.reason || "";
 }
 
 function renderPotential(item) {
