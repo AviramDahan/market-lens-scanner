@@ -84,6 +84,8 @@ class CandidateMarketSnapshot:
     return_3m: float = 0.0
     market_cap: float = 0.0
     market_cap_bucket: str = "Unknown"
+    bid: float = 0.0
+    ask: float = 0.0
     normalized_momentum_score: float = 50.0
     normalized_atr_score: float = 50.0
     normalized_liquidity_score: float = 50.0
@@ -132,12 +134,16 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
     qqq = indicators.get("QQQ", {})
     iwm = indicators.get("IWM", {})
     vix = indicators.get("VIX", {})
+    us10y = indicators.get("US10Y", {})
+    dxy = indicators.get("DXY", {})
 
-    risk_points = 0
+    risk_points = 0.0
     risk_points += 2 if trend_is_bullish(spy) else -2 if trend_is_bearish(spy) else 0
     risk_points += 2 if trend_is_bullish(qqq) else -2 if trend_is_bearish(qqq) else 0
     risk_points += 1 if not trend_is_bearish(iwm) else -1
     risk_points += 1 if vix_is_calm(vix) else -2 if vix_is_stressed(vix) else 0
+    risk_points += -0.5 if trend_is_bullish(us10y) else 0.25 if trend_is_bearish(us10y) else 0
+    risk_points += -0.25 if trend_is_bullish(dxy) else 0.25 if trend_is_bearish(dxy) else 0
 
     if risk_points >= 4:
         label = "BULL"
@@ -263,6 +269,8 @@ def evaluate_agent_candidate(
     warnings.extend(correlation["warnings"])
     warnings.extend(sector_exposure["warnings"])
     warnings.extend(factor_exposure["warnings"])
+    if earnings_info["earnings_blackout"]:
+        warnings.append("Earnings blackout active.")
 
     final_action = initial_action
     final_reason = initial_reason
@@ -295,7 +303,13 @@ def evaluate_agent_candidate(
     elif initial_action == "SKIP":
         final_reason = enrich_non_buy_reason("SKIP", initial_reason, run_context, sector_info, net_rr_info)
     elif initial_action == "HOLD":
-        final_reason = f"HOLD: Existing simulated position remains open. {run_context.market_regime.label} regime recorded."
+        if earnings_info["earnings_blackout"]:
+            final_reason = (
+                "HOLD: Existing simulated position remains open, but earnings blackout is active; "
+                "review the position before holding through earnings."
+            )
+        else:
+            final_reason = f"HOLD: Existing simulated position remains open. {run_context.market_regime.label} regime recorded."
 
     portfolio_exposure_after = portfolio_exposure_after_if_buy if final_action == "BUY_SIMULATED" else portfolio_exposure_before
     decision = {
@@ -313,6 +327,8 @@ def evaluate_agent_candidate(
         "sector_score": sector_info["score"],
         "market_cap": snapshot.market_cap,
         "market_cap_bucket": snapshot.market_cap_bucket,
+        "bid": snapshot.bid,
+        "ask": snapshot.ask,
         "stock_score": round(float(result.score or 0), 4),
         "normalized_momentum_score": snapshot.normalized_momentum_score,
         "normalized_atr_score": snapshot.normalized_atr_score,
@@ -328,10 +344,15 @@ def evaluate_agent_candidate(
         "target_1_atr_distance": target_info["target_1_atr_distance"],
         "target_2_atr_distance": target_info["target_2_atr_distance"],
         "target_feasibility_status": target_info["status"],
+        "market_structure_status": target_info["market_structure_status"],
+        "previous_resistance": target_info["previous_resistance"],
+        "prior_high_20": target_info["prior_high_20"],
+        "prior_high_63": target_info["prior_high_63"],
         "gross_rr": net_rr_info["gross_rr"],
         "estimated_spread": net_rr_info["estimated_spread"],
         "estimated_slippage": net_rr_info["estimated_slippage"],
         "estimated_fees": net_rr_info["estimated_fees"],
+        "spread_source": net_rr_info["spread_source"],
         "net_rr": net_rr_info["net_rr"],
         "earnings_date": earnings_info["earnings_date"],
         "days_to_earnings": earnings_info["days_to_earnings"],
@@ -349,6 +370,16 @@ def evaluate_agent_candidate(
         "cash_available": round(cash_available, 2),
         "portfolio_exposure_before": round(portfolio_exposure_before, 2),
         "portfolio_exposure_after": round(portfolio_exposure_after, 2),
+        "position_sizing_explanation": position_sizing_explanation(
+            initial_action=initial_action,
+            final_action=final_action,
+            quantity=quantity,
+            cash_out=cash_out,
+            risk_amount=risk_amount,
+            cash_available=cash_available,
+            portfolio_exposure_after=portfolio_exposure_after,
+            market_regime=run_context.market_regime,
+        ),
         "initial_action": initial_action,
         "final_action": final_action,
         "reason": final_reason,
@@ -436,7 +467,7 @@ def buy_blockers(
     if target_info["status"] == "INVALID":
         blockers.append({"action": "SKIP", "reason": "SKIP: Target validation failed; target is not above price."})
     if target_info["status"] == "EXTENDED":
-        blockers.append({"action": "WATCH", "reason": "WATCH: Target distance is extended versus daily ATR."})
+        blockers.append({"action": "WATCH", "reason": "WATCH: Target distance is extended versus daily ATR or market structure."})
     if sector_exposure["limit_exceeded"]:
         blockers.append(
             {"action": "WATCH", "reason": "WATCH: Sector exposure limit would be exceeded by this trade."}
@@ -469,6 +500,33 @@ def enrich_non_buy_reason(
     return (
         f"{action}: {initial_reason} Market regime {run_context.market_regime.label}; "
         f"sector {sector_info['regime']}; net R/R {net_rr_info['net_rr']:.2f}."
+    )
+
+
+def position_sizing_explanation(
+    *,
+    initial_action: str,
+    final_action: str,
+    quantity: int,
+    cash_out: float,
+    risk_amount: float,
+    cash_available: float,
+    portfolio_exposure_after: float,
+    market_regime: MarketRegime,
+) -> str:
+    if initial_action != "BUY_SIMULATED":
+        return "No new position size was calculated because the base decision did not open a simulated buy."
+    if final_action != "BUY_SIMULATED":
+        return (
+            "Base position sizing produced a candidate trade, but the risk transparency layer "
+            f"blocked the new buy. Candidate size: {quantity} shares, cash {cash_out:.2f}, "
+            f"risk {risk_amount:.2f}."
+        )
+    return (
+        f"Position size accepted: {quantity} shares, cash out {cash_out:.2f}, "
+        f"risk {risk_amount:.2f}, cash available {cash_available:.2f}, "
+        f"portfolio exposure after trade {portfolio_exposure_after:.2f}, "
+        f"market-regime exposure cap {market_regime.max_total_exposure:.2f}."
     )
 
 
@@ -508,8 +566,8 @@ def build_candidate_snapshot(ticker: str, price: float, analysis_period: str) ->
     except Exception as exc:
         warnings.append(f"Candidate market data unavailable: {exc}")
 
-    market_cap = fetch_market_cap(ticker, warnings)
-    bucket = market_cap_bucket(market_cap)
+    market_profile = fetch_market_profile(ticker, warnings)
+    bucket = market_cap_bucket(market_profile["market_cap"])
     return CandidateMarketSnapshot(
         ticker=ticker,
         price=round(price, 4),
@@ -518,8 +576,10 @@ def build_candidate_snapshot(ticker: str, price: float, analysis_period: str) ->
         avg_dollar_volume=round(avg_dollar_volume, 2),
         return_1m=round(ret_1m, 4),
         return_3m=round(ret_3m, 4),
-        market_cap=round(market_cap, 2),
+        market_cap=round(market_profile["market_cap"], 2),
         market_cap_bucket=bucket,
+        bid=round(market_profile["bid"], 4),
+        ask=round(market_profile["ask"], 4),
         normalized_momentum_score=normalized_momentum_score(ret_1m, ret_3m, bucket),
         normalized_atr_score=normalized_atr_score(atr_pct, bucket),
         normalized_liquidity_score=normalized_liquidity_score(avg_dollar_volume, bucket),
@@ -529,28 +589,39 @@ def build_candidate_snapshot(ticker: str, price: float, analysis_period: str) ->
     )
 
 
-def fetch_market_cap(ticker: str, warnings: list[str]) -> float:
+def fetch_market_profile(ticker: str, warnings: list[str]) -> dict[str, float]:
     try:
         import yfinance as yf
 
         fast_info = yf.Ticker(ticker).fast_info
         market_cap = getattr(fast_info, "market_cap", None)
+        bid = getattr(fast_info, "bid", None)
+        ask = getattr(fast_info, "ask", None)
         if market_cap is None and isinstance(fast_info, dict):
             market_cap = fast_info.get("marketCap") or fast_info.get("market_cap")
-        return float(market_cap or 0.0)
+            bid = fast_info.get("bid")
+            ask = fast_info.get("ask")
+        return {
+            "market_cap": float(market_cap or 0.0),
+            "bid": float(bid or 0.0),
+            "ask": float(ask or 0.0),
+        }
     except Exception as exc:
-        warnings.append(f"Market cap unavailable: {exc}")
-        return 0.0
+        warnings.append(f"Market profile unavailable: {exc}")
+        return {"market_cap": 0.0, "bid": 0.0, "ask": 0.0}
 
 
-def calculate_net_rr(result: Any, snapshot: CandidateMarketSnapshot, config: AgentRiskConfig) -> dict[str, float]:
+def calculate_net_rr(result: Any, snapshot: CandidateMarketSnapshot, config: AgentRiskConfig) -> dict[str, Any]:
     price = float(result.current_price or snapshot.price or 0.0)
     stop = float(result.stop_loss or 0.0)
     target_1 = float(result.target_1 or 0.0)
     target_2 = float(result.target_2 or 0.0)
     gross_rr = float(result.risk_reward or 0.0)
     spread_pct, slippage_pct = execution_cost_pct(snapshot.avg_dollar_volume, snapshot.atr_pct, result.setup_type)
-    estimated_spread = price * spread_pct
+    fallback_spread = price * spread_pct
+    quoted_spread = snapshot.ask - snapshot.bid if snapshot.ask > 0 and snapshot.bid > 0 and snapshot.ask >= snapshot.bid else 0.0
+    estimated_spread = quoted_spread if quoted_spread > 0 else fallback_spread
+    spread_source = "bid_ask" if quoted_spread > 0 else "liquidity_fallback"
     estimated_slippage = price * slippage_pct
     estimated_fees = config.fees_per_share
     friction = estimated_spread + estimated_slippage + estimated_fees
@@ -570,6 +641,7 @@ def calculate_net_rr(result: Any, snapshot: CandidateMarketSnapshot, config: Age
         "estimated_spread": round(estimated_spread, 4),
         "estimated_slippage": round(estimated_slippage, 4),
         "estimated_fees": round(estimated_fees, 4),
+        "spread_source": spread_source,
         "net_rr": round(net_rr, 4),
     }
 
@@ -626,8 +698,14 @@ def validate_targets(result: Any, snapshot: CandidateMarketSnapshot) -> dict[str
             "target_1_atr_distance": 0.0,
             "target_2_atr_distance": 0.0,
             "status": "UNKNOWN",
+            "market_structure_status": "UNKNOWN",
+            "previous_resistance": 0.0,
+            "prior_high_20": 0.0,
+            "prior_high_63": 0.0,
             "warnings": ["Target ATR feasibility unavailable."],
         }
+    structure = assess_target_market_structure(snapshot.daily, price, atr, t1, t2, result.setup_type)
+    warnings.extend(structure["warnings"])
     d1 = (t1 - price) / atr
     d2 = (t2 - price) / atr
     if d1 <= 0 or d2 <= 0:
@@ -636,6 +714,9 @@ def validate_targets(result: Any, snapshot: CandidateMarketSnapshot) -> dict[str
     elif d1 > 7 or d2 > 14:
         status = "EXTENDED"
         warnings.append("Target distance is extended versus daily ATR.")
+    elif structure["status"] == "EXTENDED_ABOVE_STRUCTURE":
+        status = "EXTENDED"
+        warnings.append("Target distance is extended versus recent market structure.")
     elif d1 > 5 or d2 > 10:
         status = "AGGRESSIVE"
         warnings.append("Target distance is aggressive versus daily ATR.")
@@ -648,6 +729,62 @@ def validate_targets(result: Any, snapshot: CandidateMarketSnapshot) -> dict[str
         "target_1_atr_distance": round(d1, 4),
         "target_2_atr_distance": round(d2, 4),
         "status": status,
+        "market_structure_status": structure["status"],
+        "previous_resistance": structure["previous_resistance"],
+        "prior_high_20": structure["prior_high_20"],
+        "prior_high_63": structure["prior_high_63"],
+        "warnings": warnings,
+    }
+
+
+def assess_target_market_structure(
+    daily: pd.DataFrame | None,
+    price: float,
+    atr: float,
+    target_1: float,
+    target_2: float,
+    setup_type: str,
+) -> dict[str, Any]:
+    if daily is None or daily.empty or "High" not in daily:
+        return {
+            "status": "UNKNOWN",
+            "previous_resistance": 0.0,
+            "prior_high_20": 0.0,
+            "prior_high_63": 0.0,
+            "warnings": ["Market structure target validation unavailable."],
+        }
+    history = daily.iloc[:-1] if len(daily) > 1 else daily
+    if history.empty:
+        return {
+            "status": "UNKNOWN",
+            "previous_resistance": 0.0,
+            "prior_high_20": 0.0,
+            "prior_high_63": 0.0,
+            "warnings": ["Market structure target validation unavailable."],
+        }
+    high_20 = float(history["High"].tail(20).max())
+    high_63 = float(history["High"].tail(63).max())
+    previous_resistance = high_20 if high_20 >= price else high_63
+    breakout = "breakout" in str(setup_type).lower()
+    warnings: list[str] = []
+
+    if target_1 <= high_20 * 1.02:
+        status = "SUPPORTED_BY_20D_RESISTANCE"
+    elif target_1 <= high_63 * 1.03:
+        status = "SUPPORTED_BY_63D_RESISTANCE"
+    elif breakout and target_1 <= price + (atr * 5) and target_2 <= price + (atr * 10):
+        status = "BREAKOUT_MEASURED_MOVE"
+    elif target_1 > high_63 + (atr * 4) or target_2 > high_63 + (atr * 8):
+        status = "EXTENDED_ABOVE_STRUCTURE"
+        warnings.append("Targets are extended above recent resistance structure.")
+    else:
+        status = "MIXED_STRUCTURE"
+
+    return {
+        "status": status,
+        "previous_resistance": round(previous_resistance, 4),
+        "prior_high_20": round(high_20, 4),
+        "prior_high_63": round(high_63, 4),
         "warnings": warnings,
     }
 

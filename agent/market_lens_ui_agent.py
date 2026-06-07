@@ -380,6 +380,7 @@ def update_workbook(
             sector_map=sector_map,
             run_context=run_context,
         )
+        decision_json["scan_source"] = scan_source_text(settings)
         final_action = str(decision_json.get("final_action") or decision.action)
         final_reason = str(decision_json.get("reason") or decision.feedback)
         if final_action != decision.action:
@@ -563,6 +564,14 @@ def build_selection_context(
         parts.append("; ".join(risk_bits))
     parts.append(action_text)
     return " | ".join(parts)
+
+
+def scan_source_text(settings: Settings) -> str:
+    if settings.tickers:
+        return "Manual ticker basket configured for this agent run."
+    if settings.universe == "smart-universe":
+        return "Smart Universe: broad liquid US universe filtered and diversified by the Market Lens UI."
+    return f"Configured UI universe: {settings.universe}."
 
 
 def read_settings(wb: Any) -> dict[str, Any]:
