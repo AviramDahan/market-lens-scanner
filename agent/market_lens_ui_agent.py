@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urljoin
+from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
 from openpyxl import load_workbook
@@ -20,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUN_DIR = Path(os.getenv("MARKET_LENS_RUN_DIR", ROOT / "agent_runs"))
 SCREENSHOT_DIR = RUN_DIR / "screenshots"
 SUMMARY_DIR = RUN_DIR / "summaries"
+CHART_DIR = RUN_DIR / "charts"
 APP_READY_SELECTOR = '[data-testid="auth-email"], #authStatus'
 
 
@@ -69,6 +72,7 @@ def main() -> None:
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
     SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
+    CHART_DIR.mkdir(parents=True, exist_ok=True)
     screenshot_path = SCREENSHOT_DIR / f"market_lens_agent_{run_id}.png"
     summary_path = SUMMARY_DIR / f"market_lens_agent_{run_id}.md"
 
@@ -86,6 +90,7 @@ def main() -> None:
             login_status = login(page, settings)
             configure_scan(page, settings)
             results = run_scan(page)
+            persist_chart_images(results, settings.url, run_id)
             scan_status = f"completed: {len(results)} results"
             page.screenshot(path=str(screenshot_path), full_page=True)
         except Exception as exc:
@@ -254,6 +259,25 @@ def run_scan(page: Page) -> list[SetupResult]:
           })"""
     )
     return [parse_result(item) for item in extracted]
+
+
+def persist_chart_images(results: list[SetupResult], base_url: str, run_id: str) -> None:
+    for result in results:
+        if not result.chart_url:
+            continue
+        source_url = urljoin(base_url, result.chart_url)
+        destination = CHART_DIR / f"market_lens_agent_{run_id}_{result.ticker.lower()}.png"
+        try:
+            request = Request(source_url, headers={"User-Agent": "market-lens-agent/1.0"})
+            with urlopen(request, timeout=60) as response:
+                content_type = response.headers.get("content-type", "")
+                data = response.read()
+            if not data or "image" not in content_type.lower():
+                continue
+            destination.write_bytes(data)
+            result.chart_url = str(destination)
+        except Exception:
+            continue
 
 
 def is_transient_scan_error(message: str) -> bool:
