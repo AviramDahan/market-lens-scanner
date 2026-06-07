@@ -127,8 +127,18 @@
               <h2>Latest Actions</h2>
               <p id="actionMeta">Last scan decisions</p>
             </div>
+            <button id="toggleActions" class="icon-button secondary" type="button" aria-expanded="false">
+              <i data-lucide="chevron-down"></i>
+              <span>Show</span>
+            </button>
           </div>
           <div id="actionsList" class="actions-list"></div>
+          <div id="actionsLoadMoreRow" class="load-more-row" hidden>
+            <button id="loadMoreActions" class="icon-button secondary" type="button">
+              <i data-lucide="list-plus"></i>
+              <span>Load more</span>
+            </button>
+          </div>
         </div>
 
         <div class="panel">

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
 from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
@@ -232,10 +232,17 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
     open_tickers = read_open_position_tickers(settings.excel_path)
     watch_tickers = read_recent_watch_tickers(settings.excel_path)
     carry_forward_tickers = unique_tickers(open_tickers + watch_tickers)
+    skipped_tickers = read_recent_skip_tickers(settings.excel_path)
     if carry_forward_tickers:
         log(
             "Carry-forward tickers added outside universe quota: "
             f"{len(carry_forward_tickers)} ({' '.join(carry_forward_tickers)})"
+        )
+    if skipped_tickers:
+        log(
+            "Recent SKIP tickers excluded from base universe: "
+            f"{len(skipped_tickers)} ({' '.join(skipped_tickers[:20])}"
+            f"{' ...' if len(skipped_tickers) > 20 else ''})"
         )
     if settings.tickers:
         page.locator('[data-testid="manual-ticker-input"]').fill(
@@ -243,6 +250,15 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
         )
         page.locator('[data-testid="add-manual-ticker"]').click()
         return
+
+    agent_tickers = build_agent_scan_tickers(settings, carry_forward_tickers, skipped_tickers)
+    if agent_tickers:
+        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(agent_tickers))
+        page.locator('[data-testid="add-manual-ticker"]').click()
+        log(f"Agent selected {len(agent_tickers)} tickers: {' '.join(agent_tickers)}")
+        return
+
+    log("Smart Universe API selection unavailable; falling back to UI select-all flow.")
     page.locator('[data-testid="universe-select"]').select_option(settings.universe)
     page.wait_for_function(
         "() => !document.querySelector('[data-testid=\"select-all-tickers\"]')?.disabled",
@@ -253,6 +269,58 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
     if carry_forward_tickers:
         page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(carry_forward_tickers))
         page.locator('[data-testid="add-manual-ticker"]').click()
+
+
+def build_agent_scan_tickers(
+    settings: Settings,
+    carry_forward_tickers: list[str],
+    skipped_tickers: list[str],
+) -> list[str]:
+    if settings.universe != "smart-universe":
+        return []
+    target_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "35"))
+    pool_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "100"))
+    candidates = fetch_smart_universe_tickers(settings, pool_count)
+    if not candidates:
+        return []
+
+    excluded = set(skipped_tickers) | set(carry_forward_tickers)
+    base_tickers = [ticker for ticker in candidates if ticker not in excluded][:target_count]
+    final_tickers = unique_tickers(base_tickers + carry_forward_tickers)
+    log(
+        "Smart agent universe built: "
+        f"{len(base_tickers)} fresh base tickers + "
+        f"{len([ticker for ticker in carry_forward_tickers if ticker not in base_tickers])} carry-forward tickers."
+    )
+    if len(base_tickers) < target_count:
+        log(f"Smart agent universe warning: only {len(base_tickers)} fresh tickers available after exclusions.")
+    return final_tickers
+
+
+def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
+    params = urlencode(
+        {
+            "analysis_period": settings.analysis_period,
+            "limit": max(35, min(100, limit)),
+            "max_per_sector": int(os.getenv("MARKET_LENS_AGENT_MAX_PER_SECTOR", "10")),
+        }
+    )
+    url = urljoin(settings.url, f"/smart-universe?{params}")
+    try:
+        request = Request(url, headers={"User-Agent": "MarketLensAgent/1.0"})
+        with urlopen(request, timeout=90) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        log(f"Smart Universe API fetch failed: {exc}")
+        return []
+
+    ranked = payload.get("ranked") or payload.get("companies") or []
+    tickers: list[str] = []
+    for item in ranked:
+        ticker = item.get("ticker") if isinstance(item, dict) else item
+        if ticker:
+            tickers.append(str(ticker).upper().strip())
+    return unique_tickers(tickers)
 
 
 def run_scan(page: Page, deadline: float) -> list[SetupResult]:
@@ -727,21 +795,38 @@ def read_open_position_tickers(excel_path: Path) -> list[str]:
 def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_CARRY_FORWARD_DAYS", "14"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
+    return read_recent_action_tickers(excel_path, "WATCH", cutoff)
+
+
+def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list[str]:
+    cooldown_hours = hours or int(os.getenv("MARKET_LENS_SKIP_COOLDOWN_HOURS", "8"))
+    cutoff = datetime.now() - timedelta(hours=cooldown_hours)
+    return read_recent_action_tickers(excel_path, "SKIP", cutoff)
+
+
+def read_recent_action_tickers(excel_path: Path, action_name: str, cutoff: datetime) -> list[str]:
     try:
         wb = load_workbook(excel_path, read_only=True, data_only=True)
         ws = wb["Setup Watchlist"]
     except Exception:
         return []
     try:
-        latest: dict[str, datetime] = {}
+        latest: dict[str, tuple[datetime, str]] = {}
         for row in ws.iter_rows(min_row=2, values_only=True):
             ticker = str(row[1] or "").upper().strip() if len(row) > 1 else ""
             action = str(row[12] or "").upper().strip() if len(row) > 12 else ""
             timestamp = parse_agent_timestamp(row[0] if row else None)
-            if not ticker or action != "WATCH" or timestamp is None or timestamp < cutoff:
+            if not ticker or not action or timestamp is None or timestamp < cutoff:
                 continue
-            latest[ticker] = max(timestamp, latest.get(ticker, timestamp))
-        return sorted(latest, key=lambda ticker: latest[ticker], reverse=True)
+            current = latest.get(ticker)
+            if current is None or timestamp > current[0]:
+                latest[ticker] = (timestamp, action)
+        matching = {
+            ticker: event_time
+            for ticker, (event_time, action) in latest.items()
+            if action == action_name
+        }
+        return sorted(matching, key=lambda ticker: matching[ticker], reverse=True)
     finally:
         wb.close()
 

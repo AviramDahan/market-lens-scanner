@@ -1,6 +1,10 @@
 const state = {
   data: null,
+  actionsExpanded: false,
+  visibleActionCount: 10,
 };
+
+const ACTIONS_PAGE_SIZE = 10;
 
 let money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -24,6 +28,15 @@ document.addEventListener("DOMContentLoaded", () => {
     historyDate.value = "";
     loadDashboard("");
   });
+  document.getElementById("toggleActions").addEventListener("click", () => {
+    state.actionsExpanded = !state.actionsExpanded;
+    state.visibleActionCount = ACTIONS_PAGE_SIZE;
+    renderActions(state.data?.latest_setups || []);
+  });
+  document.getElementById("loadMoreActions").addEventListener("click", () => {
+    state.visibleActionCount += ACTIONS_PAGE_SIZE;
+    renderActions(state.data?.latest_setups || []);
+  });
   setupMediaModal();
   loadDashboard(selectedDate);
 });
@@ -37,6 +50,8 @@ async function loadDashboard(selectedDate = "") {
       throw new Error(`Agent data failed: ${response.status}`);
     }
     state.data = await response.json();
+    state.actionsExpanded = false;
+    state.visibleActionCount = ACTIONS_PAGE_SIZE;
     syncDateUrl(selectedDate);
     renderDashboard(state.data);
   } catch (error) {
@@ -328,11 +343,29 @@ function renderPositionCharts(positions) {
 function renderActions(setups) {
   document.getElementById("actionMeta").textContent = `${setups.length} latest setup decisions`;
   const list = document.getElementById("actionsList");
+  const toggle = document.getElementById("toggleActions");
+  const loadMoreRow = document.getElementById("actionsLoadMoreRow");
+  const loadMore = document.getElementById("loadMoreActions");
+  toggle.setAttribute("aria-expanded", String(state.actionsExpanded));
+  toggle.innerHTML = `
+    <i data-lucide="${state.actionsExpanded ? "chevron-up" : "chevron-down"}"></i>
+    <span>${state.actionsExpanded ? "Hide" : "Show"}</span>
+  `;
   if (!setups.length) {
     list.innerHTML = '<div class="empty-state">No setup decisions</div>';
+    loadMoreRow.hidden = true;
+    toggle.disabled = true;
     return;
   }
-  list.innerHTML = setups
+  toggle.disabled = false;
+  if (!state.actionsExpanded) {
+    list.innerHTML = '<div class="empty-state compact">Actions are collapsed. Open to load the latest 10 decisions.</div>';
+    loadMoreRow.hidden = true;
+    return;
+  }
+
+  const visible = setups.slice(0, state.visibleActionCount);
+  list.innerHTML = visible
     .map(
       (setup) => `
         <div class="action-row">
@@ -355,9 +388,17 @@ function renderActions(setups) {
       `,
     )
     .join("");
+  loadMoreRow.hidden = state.visibleActionCount >= setups.length;
+  if (!loadMoreRow.hidden) {
+    const nextCount = Math.min(ACTIONS_PAGE_SIZE, setups.length - state.visibleActionCount);
+    loadMore.querySelector("span").textContent = `Load ${nextCount} more`;
+  }
   list.querySelectorAll(".action-chart-button").forEach((button) => {
     button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
   });
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 }
 
 function setupMediaModal() {
