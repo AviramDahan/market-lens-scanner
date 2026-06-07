@@ -188,7 +188,9 @@ By default the cloud agent uses `Smart Universe`, not a fixed sector. The app
 builds this list from quality large/liquid names, filters for price, dollar
 volume, ATR%, relative strength, and trend quality, then limits concentration to
 keep the final scan diversified across sectors. The default daily scan size is
-35 tickers with a maximum of five per sector.
+35 tickers by default. Sector scan quota is dynamic: strong sectors can receive
+up to roughly 8-10 tickers, neutral sectors stay tighter, and weak sectors are
+excluded from new candidates.
 
 The agent is paper trading only. It never places real trades or connects to a
 broker.
@@ -209,11 +211,15 @@ each ticker with:
 - market regime: `BULL`, `NEUTRAL`, or `BEAR`
 - sector regime: `STRONG`, `NEUTRAL`, or `WEAK`
 - dynamic market, sector, and factor exposure checks
-- gross R/R and slippage-adjusted net R/R
+- primary/target-2 R/R plus weighted decision R/R
+- executable entry versus theoretical entry
+- full gross/net R/R breakdown: entry, stop, targets, risk, reward, spread, slippage, and fees
 - earnings blackout status
 - target feasibility versus ATR
 - normalized quality scores by market-cap/liquidity bucket
 - correlation warning versus open positions
+- reduced position sizing when a candidate exceeds sector/factor exposure caps
+- score calibration buckets for closed trades in the `/agent` dashboard
 - a plain-English final reason for `BUY_SIMULATED`, `WATCH`, `SKIP`, or `HOLD`
 
 The deployed app also exposes a read-only agent dashboard:

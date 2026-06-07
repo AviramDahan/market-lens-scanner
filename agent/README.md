@@ -123,11 +123,18 @@ additional decision layer before opening any new simulated buy:
 - Market regime controls maximum exposure and required net R/R.
 - Sector regime can block or downgrade weak-sector setups.
 - Dynamic sector and factor exposure checks prevent concentrated simulated buys.
+- If a candidate is valid but too large for a sector/factor cap, the agent first
+  tries a reduced share count before downgrading to `WATCH`.
 - Correlation is checked against open positions using recent daily returns.
-- Gross R/R is preserved, and net R/R subtracts estimated spread, slippage, and fees.
+- R/R uses primary target, stretch target, and weighted decision R/R instead of
+  relying only on the best target.
+- Net R/R records executable entry, net stop/targets, gross and net risk/reward,
+  spread source, slippage bucket, and fees.
 - Earnings blackout can block new buys around earnings dates.
 - Targets are validated against daily ATR distance.
 - Momentum, ATR, and liquidity are normalized by market-cap bucket.
+- The `/agent` dashboard exposes risk-check pills and score calibration buckets
+  for closed trades.
 
 Each scanned ticker receives a Decision JSON object in the tracker and in the
 run JSONL file. The object includes the final action, warnings, exposure values,

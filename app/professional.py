@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pandas as pd
@@ -42,8 +42,9 @@ def enrich_professional_context(
         event_risk=event_risk,
     )
 
-    updated = result.model_copy(
-        update={
+    updated = copy_model(
+        result,
+        {
             "market_regime": market_regime,
             "relative_strength_info": relative_strength,
             "liquidity": liquidity,
@@ -52,12 +53,18 @@ def enrich_professional_context(
             "event_risk": event_risk,
             "trade_plan": trade_plan,
             "professional_assessment": professional_assessment,
-        }
+        },
     )
     if updated.setup_type != "No Trade":
         adjusted_score = (updated.score * 0.55) + (professional_assessment.quality_score * 0.45)
-        updated = updated.model_copy(update={"score": round(max(0.0, min(1.0, adjusted_score)), 3)})
+        updated = copy_model(updated, {"score": round(max(0.0, min(1.0, adjusted_score)), 3)})
     return updated
+
+
+def copy_model(result: ScanResult, update: dict[str, Any]) -> ScanResult:
+    if hasattr(result, "model_copy"):
+        return result.model_copy(update=update)
+    return result.copy(update=update)
 
 
 def assess_market_regime(benchmarks: dict[str, pd.DataFrame]) -> MarketRegimeInfo:
@@ -365,5 +372,5 @@ def _days_until(date_text: str | None) -> int | None:
     except ValueError:
         return None
     if target.tzinfo is None:
-        target = target.replace(tzinfo=UTC)
-    return (target.date() - datetime.now(UTC).date()).days
+        target = target.replace(tzinfo=timezone.utc)
+    return (target.date() - datetime.now(timezone.utc).date()).days

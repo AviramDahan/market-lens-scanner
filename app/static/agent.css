@@ -450,6 +450,44 @@ td {
   line-height: 1.35;
 }
 
+.risk-checks,
+.calibration-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.risk-checks span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #344054;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.risk-checks b {
+  color: var(--ink);
+}
+
+.calibration-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) repeat(3, minmax(100px, 1fr));
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
 .position-chart-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -557,7 +595,8 @@ td {
   }
 
   .action-row,
-  .trade-row {
+  .trade-row,
+  .calibration-row {
     grid-template-columns: 1fr;
   }
 

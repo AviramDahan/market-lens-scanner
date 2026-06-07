@@ -57,11 +57,12 @@ function renderDashboard(data) {
     maximumFractionDigits: 0,
   });
   const historyDate = document.getElementById("historyDate");
-  historyDate.value = data.snapshot.selected_date || "";
-  if (data.snapshot.available_dates.length) {
-    historyDate.max = data.snapshot.available_dates[data.snapshot.available_dates.length - 1];
+  const snapshot = data.snapshot || { selected_date: "", available_dates: [] };
+  historyDate.value = snapshot.selected_date || "";
+  if (snapshot.available_dates.length) {
+    historyDate.max = snapshot.available_dates[snapshot.available_dates.length - 1];
   }
-  document.getElementById("latestSnapshot").disabled = !data.snapshot.selected_date;
+  document.getElementById("latestSnapshot").disabled = !snapshot.selected_date;
   document.getElementById("trackerLink").href = data.tracker_url;
   document.getElementById("lastRun").textContent = formatDate(data.latest_run.timestamp);
   document.getElementById("runStatus").textContent = "OK";
@@ -75,6 +76,7 @@ function renderDashboard(data) {
   renderPositionCharts(data.open_positions);
   renderActions(data.latest_setups);
   renderTrades(data.recent_trades, data.closed_trades);
+  renderCalibration(data.score_calibration || []);
   renderSummary(data.latest_run);
 
   if (window.lucide) {
@@ -319,7 +321,32 @@ function renderActions(setups) {
           <div>
             <strong>${escapeHtml(setup.setup_type || "")}</strong>
             <p>${escapeHtml(selectionText(setup))}</p>
+            ${riskCheckPills(setup)}
           </div>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function renderCalibration(rows) {
+  const list = document.getElementById("calibrationList");
+  const total = rows.reduce((sum, row) => sum + Number(row.trades || 0), 0);
+  document.getElementById("calibrationMeta").textContent = total
+    ? `${total} closed trades tracked`
+    : "Waiting for closed trades";
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty-state">No calibration data yet</div>';
+    return;
+  }
+  list.innerHTML = rows
+    .map(
+      (row) => `
+        <div class="calibration-row">
+          <strong>${escapeHtml(row.bucket)}</strong>
+          <span>${Number(row.trades || 0)} trades</span>
+          <span>${Number(row.win_rate || 0).toFixed(1)}% win</span>
+          <span class="${Number(row.pnl_ils || 0) >= 0 ? "money-pos" : "money-neg"}">${formatSignedMoney(row.pnl_ils || 0)}</span>
         </div>
       `,
     )
@@ -391,6 +418,33 @@ function decisionMeta(item) {
     parts.push(`Net R/R ${Number(decision.net_rr || 0).toFixed(2)}x`);
   }
   return parts.join(" - ");
+}
+
+function riskCheckPills(item) {
+  const d = item.decision_json || {};
+  if (!Object.keys(d).length) return "";
+  const checks = [];
+  if (d.gross_rr_1 !== undefined) checks.push(["RR1", `${Number(d.gross_rr_1 || 0).toFixed(2)}x`]);
+  if (d.gross_rr_2 !== undefined) checks.push(["RR2", `${Number(d.gross_rr_2 || 0).toFixed(2)}x`]);
+  if (d.net_rr !== undefined) checks.push(["Net", `${Number(d.net_rr || 0).toFixed(2)}x`]);
+  if (d.earnings_blackout) checks.push(["Earnings", "Blackout"]);
+  else if (d.earnings_date) checks.push(["Earnings", `${d.earnings_date}`]);
+  else checks.push(["Earnings", "N/A"]);
+  if (d.sector_exposure_after !== undefined && d.sector_exposure_cap !== undefined) {
+    checks.push(["Sector exp", `${money.format(d.sector_exposure_after)} / ${money.format(d.sector_exposure_cap)}`]);
+  }
+  if (d.factor_exposure_limit_exceeded) checks.push(["Factor", "Limit"]);
+  else if (Array.isArray(d.factor_tags) && d.factor_tags.length) checks.push(["Factor", d.factor_tags.slice(0, 2).join(", ")]);
+  if (d.correlation_warning) {
+    checks.push(["Corr", `${d.highest_correlation_ticker || ""} ${Number(d.highest_correlation_value || 0).toFixed(2)}`]);
+  } else {
+    checks.push(["Corr", "OK"]);
+  }
+  if (d.target_feasibility_status) checks.push(["Targets", d.target_feasibility_status]);
+  if (d.position_size_adjusted) checks.push(["Size", `Adjusted to ${d.adjusted_position_size || 0}`]);
+  return `<div class="risk-checks">${checks
+    .map(([label, value]) => `<span><b>${escapeHtml(label)}</b> ${escapeHtml(value)}</span>`)
+    .join("")}</div>`;
 }
 
 function renderPotential(item) {

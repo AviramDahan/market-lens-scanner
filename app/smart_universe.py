@@ -20,6 +20,8 @@ from app.watchlists import COMPANY_NAMES, WATCHLISTS
 
 DEFAULT_LIMIT = int(os.getenv("MARKET_LENS_SMART_LIMIT", "35"))
 DEFAULT_MAX_PER_SECTOR = int(os.getenv("MARKET_LENS_SMART_MAX_PER_SECTOR", "5"))
+DEFAULT_STRONG_SECTOR_QUOTA = int(os.getenv("MARKET_LENS_SMART_STRONG_SECTOR_QUOTA", "10"))
+DEFAULT_NEUTRAL_SECTOR_QUOTA = int(os.getenv("MARKET_LENS_SMART_NEUTRAL_SECTOR_QUOTA", "5"))
 DEFAULT_WORKERS = int(os.getenv("MARKET_LENS_SMART_WORKERS", "8"))
 DEFAULT_SOURCE = os.getenv("MARKET_LENS_SMART_SOURCE", "broad").lower()
 SP500_SOURCE_URL = os.getenv(
@@ -208,6 +210,11 @@ def build_smart_universe(
         "analysis_period": analysis_period,
         "limit": limit,
         "max_per_sector": max_per_sector,
+        "sector_quota_policy": {
+            "strong": dynamic_sector_quota("Strong", max_per_sector),
+            "neutral": dynamic_sector_quota("Neutral", max_per_sector),
+            "weak": 0,
+        },
         "source": source_kind(source_name),
         "source_name": source_name,
         "source_url": source_urls[0] if len(source_urls) == 1 else "",
@@ -909,7 +916,8 @@ def diversify(
     for candidate in ranked:
         if len(selected) >= limit:
             break
-        if counts.get(candidate.sector, 0) >= max_per_sector:
+        quota = dynamic_sector_quota(candidate.sector_health_label, max_per_sector)
+        if quota <= 0 or counts.get(candidate.sector, 0) >= quota:
             continue
         selected.append(candidate)
         selected_tickers.add(candidate.ticker)
@@ -921,12 +929,26 @@ def diversify(
     while len(selected) < limit and remaining:
         remaining.sort(key=lambda item: (counts.get(item.sector, 0), -item.score))
         candidate = remaining.pop(0)
+        quota = dynamic_sector_quota(candidate.sector_health_label, max_per_sector)
+        if quota <= 0 or counts.get(candidate.sector, 0) >= quota:
+            continue
         if len(selected) >= limit:
             break
         selected.append(candidate)
         selected_tickers.add(candidate.ticker)
         counts[candidate.sector] = counts.get(candidate.sector, 0) + 1
     return selected
+
+
+def dynamic_sector_quota(label: str, max_per_sector: int) -> int:
+    normalized = str(label or "").lower()
+    if normalized == "strong":
+        return max(DEFAULT_STRONG_SECTOR_QUOTA, max(8, int(max_per_sector) * 2))
+    if normalized == "neutral":
+        return min(max(3, DEFAULT_NEUTRAL_SECTOR_QUOTA), max(3, int(max_per_sector)))
+    if normalized == "weak":
+        return 0
+    return max(3, int(max_per_sector))
 
 
 def candidate_to_company(candidate: SmartCandidate) -> dict[str, Any]:

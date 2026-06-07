@@ -138,6 +138,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         "closed_trades": realized["closed"][-30:],
         "latest_setups": latest_setups,
         "latest_decisions": latest_decisions,
+        "score_calibration": build_score_calibration(realized["closed"]),
         "recent_runs": scoped_updates[-20:],
     }
 
@@ -531,6 +532,43 @@ def compute_realized_pnl(trades: list[dict[str, Any]]) -> dict[str, Any]:
         closed.append({**trade, "cost_basis_ils": round(cost_basis, 2), "pnl_ils": pnl})
 
     return {"total": total, "closed": closed, "wins": wins, "losses": losses}
+
+
+def build_score_calibration(closed_trades: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    buckets = [
+        ("0.30-0.40", 0.30, 0.40),
+        ("0.40-0.50", 0.40, 0.50),
+        ("0.50-0.60", 0.50, 0.60),
+        ("0.60-0.70", 0.60, 0.70),
+        ("0.70+", 0.70, 9.99),
+    ]
+    stats: dict[str, dict[str, Any]] = {
+        label: {"bucket": label, "trades": 0, "wins": 0, "losses": 0, "pnl_ils": 0.0}
+        for label, _, _ in buckets
+    }
+    for trade in closed_trades:
+        decision = trade.get("decision_json") or {}
+        score = to_float(decision.get("setup_score"), trade.get("score"))
+        label = next((name for name, low, high in buckets if low <= score < high), "0.30-0.40")
+        pnl = to_float(trade.get("pnl_ils"))
+        stats[label]["trades"] += 1
+        stats[label]["wins"] += 1 if pnl > 0 else 0
+        stats[label]["losses"] += 1 if pnl < 0 else 0
+        stats[label]["pnl_ils"] += pnl
+
+    rows = []
+    for label, _, _ in buckets:
+        item = stats[label]
+        trades = item["trades"]
+        rows.append(
+            {
+                **item,
+                "pnl_ils": round(item["pnl_ils"], 2),
+                "win_rate": round(item["wins"] / trades * 100, 2) if trades else 0,
+                "avg_pnl_ils": round(item["pnl_ils"] / trades, 2) if trades else 0,
+            }
+        )
+    return rows
 
 
 def build_equity_curve(updates: list[dict[str, Any]], starting_capital: float) -> list[dict[str, Any]]:

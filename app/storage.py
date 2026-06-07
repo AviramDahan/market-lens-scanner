@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 import sqlite3
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -562,7 +562,7 @@ def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
 
 
 def _now() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def _iso(value: Any) -> str | None:

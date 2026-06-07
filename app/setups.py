@@ -14,6 +14,9 @@ SETUP_NO_TRADE = "No Trade"
 _VOL_PROX = 0.5   # price vs volume level (POC / VAL / HVN)
 _FLOW_PROX = 0.3  # price vs VWAP
 _STRUCT_PROX = 0.3  # price vs swing low
+_MIN_PRIMARY_RR = 1.3
+_PRIMARY_RR_WEIGHT = 0.65
+_STRETCH_RR_WEIGHT = 0.35
 
 # Signal weights (tiered by predictive strength)
 _W_SWEEP      = 30   # tier 1: sweep-and-reclaim anywhere
@@ -77,6 +80,7 @@ def detect_setup(
         if daily is not None else False
     )
     sweep_at_val = sweep_at_val_hourly or sweep_at_val_daily
+    anchored_vwap = _anchored_vwap_from_swing(daily)
 
     if fib_info is not None:
         result = _try_fib_confluence(
@@ -107,15 +111,16 @@ def detect_setup(
 
     result = _try_liquidity_trap(
         ticker, current_price, atr, vwap, vp, fib_info,
-        in_value_area, price_above_ema, sweep_at_val, vsl, min_rr, price_above_ma200,
-        market_structure, vp_scenario, relative_strength, sweep_at_val_daily,
+        hourly_closes, hourly_volume, in_value_area, price_above_ema, sweep_at_val,
+        vsl, min_rr, price_above_ma200, market_structure, vp_scenario,
+        relative_strength, sweep_at_val_daily,
     )
     if result:
         return result
 
     result = _try_vwap_reclaim(
         ticker, current_price, atr, vwap, vp, fib_info,
-        hourly_closes, hourly_volume,
+        hourly_closes, hourly_volume, anchored_vwap,
         in_value_area, price_above_ema, sweep_at_val, min_rr, price_above_ma200,
         market_structure, vp_scenario, relative_strength, sweep_at_val_daily,
     )
@@ -171,9 +176,78 @@ def _split_rr(
 
 
 def _compute_rr(entry: float, stop_loss: float, target_1: float, target_2: float = 0.0) -> float:
-    """Output R/R: best of the two targets (used in the result field)."""
+    """Output R/R: weighted decision R/R, not the best target only."""
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    return max(rr1, rr2)
+    return _decision_rr(rr1, rr2)
+
+
+def _decision_rr(rr1: float, rr2: float) -> float:
+    return (_PRIMARY_RR_WEIGHT * rr1) + (_STRETCH_RR_WEIGHT * rr2)
+
+
+def _rr_passes(rr1: float, rr2: float, min_rr: float) -> bool:
+    """Require target 1 to be useful and target 2 to justify the swing trade."""
+    return rr1 >= _MIN_PRIMARY_RR and rr2 >= min_rr and _decision_rr(rr1, rr2) >= min_rr
+
+
+def _executable_entry(current_price: float, planned_entry: float, buy_zone: tuple[float, float]) -> float:
+    """Use the current executable price when it is worse than an ideal planned entry."""
+    low, high = buy_zone
+    if low <= current_price <= high:
+        return current_price
+    if current_price > planned_entry:
+        return current_price
+    return planned_entry
+
+
+def _rr_result_fields(
+    rr1: float,
+    rr2: float,
+    theoretical_entry: float,
+    executable_entry: float,
+) -> dict[str, float]:
+    decision_rr = _decision_rr(rr1, rr2)
+    return {
+        "risk_reward": round(decision_rr, 2),
+        "risk_reward_primary": round(rr1, 4),
+        "risk_reward_stretch": round(rr2, 4),
+        "risk_reward_decision": round(decision_rr, 4),
+        "theoretical_entry": round(theoretical_entry, 4),
+        "executable_entry": round(executable_entry, 4),
+    }
+
+
+def _anchored_vwap_from_swing(daily: "pd.DataFrame | None", lookback: int = 63) -> float | None:
+    if daily is None or daily.empty or not {"Low", "Close", "Volume"}.issubset(daily.columns):
+        return None
+    window = daily.tail(min(lookback, len(daily))).copy()
+    if window.empty:
+        return None
+    anchor_pos = int(window["Low"].astype(float).values.argmin())
+    anchored = window.iloc[anchor_pos:]
+    dollar_volume = (anchored["Close"].astype(float) * anchored["Volume"].astype(float)).sum()
+    volume = anchored["Volume"].astype(float).sum()
+    if volume <= 0:
+        return None
+    return float(dollar_volume / volume)
+
+
+def _nearest_structure_target(
+    daily: "pd.DataFrame | None",
+    entry: float,
+    atr: float,
+    fallback: float,
+    lookback: int = 63,
+) -> float:
+    if daily is None or daily.empty or "High" not in daily:
+        return fallback
+    history = daily.iloc[:-1].tail(min(lookback, max(1, len(daily) - 1)))
+    if history.empty:
+        return fallback
+    highs = sorted(float(value) for value in history["High"] if float(value) > entry + (0.75 * atr))
+    if not highs:
+        return fallback
+    return highs[0]
 
 
 def _score_setup(
@@ -330,13 +404,14 @@ def _try_fib_confluence(
         daily is not None and _detect_sweep_daily(daily["Low"], daily["Close"], fib.zone[0])
     )
 
-    entry = fib.zone[0]
+    theoretical_entry = fib.zone[0]
+    entry = _executable_entry(current_price, theoretical_entry, fib.zone)
     stop_loss = fib.fib_786 - 0.1 * atr
     target_1 = vwap if vwap > entry else fib.fib_500
     target_2 = max(vp.vah, fib.swing_high)
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if max(rr1, rr2) < min_rr:
+    if not _rr_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -365,7 +440,8 @@ def _try_fib_confluence(
     )
     reason = (
         f"Price at 61.8% fib retracement ({fib.fib_618:.2f}) with confluence at {', '.join(reasons)}."
-        f" Entry at zone low {entry:.2f}, stop below fib 78.6% at {stop_loss:.2f}.{vsl_note}"
+        f" Planned entry at zone low {theoretical_entry:.2f}; executable entry {entry:.2f}, "
+        f"stop below fib 78.6% at {stop_loss:.2f}.{vsl_note}"
     )
 
     return ScanResult(
@@ -377,7 +453,7 @@ def _try_fib_confluence(
         stop_loss=round(stop_loss, 4),
         target_1=round(target_1, 4),
         target_2=round(target_2, 4),
-        risk_reward=round(max(rr1, rr2), 2),
+        **_rr_result_fields(rr1, rr2, theoretical_entry, entry),
         reason=reason,
         fibonacci=fib,
         volume_supported_swing_low=vsl,
@@ -450,13 +526,15 @@ def _try_breakout_retest(
             continue
 
         # Valid setup — compute trade parameters
+        theoretical_entry = current_price
         entry = current_price
         stop_loss = resistance_level - 1.5 * atr
-        target_1 = resistance_level + (resistance_level - stop_loss)
+        mechanical_target_1 = resistance_level + (resistance_level - stop_loss)
+        target_1 = _nearest_structure_target(daily, entry, atr, mechanical_target_1)
         target_2 = max(vp.vah, fib.swing_high if fib else 0.0)
 
         rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-        if max(rr1, rr2) < min_rr:
+        if not _rr_passes(rr1, rr2, min_rr):
             continue
 
         score = _score_setup(
@@ -496,7 +574,7 @@ def _try_breakout_retest(
             stop_loss=round(stop_loss, 4),
             target_1=round(target_1, 4),
             target_2=round(target_2, 4),
-            risk_reward=round(max(rr1, rr2), 2),
+            **_rr_result_fields(rr1, rr2, theoretical_entry, entry),
             reason=reason,
             fibonacci=fib,
             volume_supported_swing_low=vsl,
@@ -536,13 +614,15 @@ def _try_swing_volume(
     if vsl.accepted_below:
         return None
 
-    entry = vsl.swing_low
+    buy_zone = (vsl.swing_low - _STRUCT_PROX * atr, vsl.swing_low + _VOL_PROX * atr)
+    theoretical_entry = vsl.swing_low
+    entry = _executable_entry(current_price, theoretical_entry, buy_zone)
     stop_loss = vsl.swing_low - 1.5 * atr
     target_1 = vwap if vwap > entry else entry + 1.5 * atr
     target_2 = vp.vah
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if max(rr1, rr2) < min_rr:
+    if not _rr_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -576,11 +656,11 @@ def _try_swing_volume(
         setup_type=SETUP_SWING_VOLUME,
         score=score,
         current_price=round(current_price, 4),
-        buy_zone=(round(entry - _STRUCT_PROX * atr, 4), round(entry + _VOL_PROX * atr, 4)),
+        buy_zone=(round(buy_zone[0], 4), round(buy_zone[1], 4)),
         stop_loss=round(stop_loss, 4),
         target_1=round(target_1, 4),
         target_2=round(target_2, 4),
-        risk_reward=round(max(rr1, rr2), 2),
+        **_rr_result_fields(rr1, rr2, theoretical_entry, entry),
         reason=reason,
         fibonacci=fib,
         volume_supported_swing_low=vsl,
@@ -594,6 +674,8 @@ def _try_liquidity_trap(
     vwap: float,
     vp: VolumeProfile,
     fib: FibonacciInfo | None,
+    hourly_closes: "pd.Series",
+    hourly_volume: "pd.Series",
     in_value_area: bool,
     price_above_ema: bool,
     sweep_at_val: bool,
@@ -606,23 +688,34 @@ def _try_liquidity_trap(
     sweep_at_val_daily: bool = False,
 ) -> ScanResult | None:
     near_poc = abs(current_price - vp.poc) <= _VOL_PROX * atr
+    latest_close = float(hourly_closes.iloc[-1]) if len(hourly_closes) else current_price
+    if len(hourly_volume) >= 4:
+        avg_reclaim_volume = float(hourly_volume.iloc[:-1].mean())
+        reclaim_volume_confirmed = float(hourly_volume.iloc[-1]) >= avg_reclaim_volume
+    else:
+        reclaim_volume_confirmed = True
 
     # Tier 1: swept below VAL and reclaimed (CIIDB Release signal — higher conviction)
-    val_swept_and_reclaimed = sweep_at_val and current_price >= vp.val
+    val_swept_and_reclaimed = (
+        sweep_at_val
+        and latest_close >= vp.val
+        and current_price >= vp.val
+        and reclaim_volume_confirmed
+        and near_poc
+    )
     # Tier 2: price currently below VAL near POC (wipe in progress — lower conviction)
-    below_val_near_poc = (vp.val - 1.0 * atr <= current_price < vp.val) and near_poc
-
-    if not (val_swept_and_reclaimed or below_val_near_poc):
+    if not val_swept_and_reclaimed:
         return None
 
+    theoretical_entry = current_price
     entry = current_price
     sweep_low = current_price - 1.5 * atr
     stop_loss = min(fib.fib_786, sweep_low) if fib is not None else sweep_low
-    target_1 = vp.val if not val_swept_and_reclaimed else vp.vah
+    target_1 = vp.vah
     target_2 = vp.vah
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if max(rr1, rr2) < min_rr:
+    if not _rr_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -637,6 +730,7 @@ def _try_liquidity_trap(
         in_value_area=in_value_area,
         sweep_at_val=sweep_at_val,
         price_above_ema=price_above_ema,
+        volume_confirmed=reclaim_volume_confirmed,
         val_reclaimed=val_swept_and_reclaimed,
         price_above_ma200=price_above_ma200,
         market_structure=market_structure,
@@ -666,7 +760,7 @@ def _try_liquidity_trap(
         stop_loss=round(stop_loss, 4),
         target_1=round(target_1, 4),
         target_2=round(target_2, 4),
-        risk_reward=round(max(rr1, rr2), 2),
+        **_rr_result_fields(rr1, rr2, theoretical_entry, entry),
         reason=reason,
         fibonacci=fib,
         volume_supported_swing_low=vsl,
@@ -682,6 +776,7 @@ def _try_vwap_reclaim(
     fib: FibonacciInfo | None,
     hourly_closes: "pd.Series",
     hourly_volume: "pd.Series",
+    anchored_vwap: float | None,
     in_value_area: bool,
     price_above_ema: bool,
     sweep_at_val: bool,
@@ -695,15 +790,17 @@ def _try_vwap_reclaim(
     recent_closes = hourly_closes.iloc[-5:-1]
     was_below_vwap = (recent_closes < vwap).any()
     near_vwap = abs(current_price - vwap) <= _FLOW_PROX * atr
+    anchored_context_ok = anchored_vwap is None or current_price >= anchored_vwap - (_FLOW_PROX * atr)
 
     if len(hourly_volume) >= 2:
         volume_not_decreasing = float(hourly_volume.iloc[-1]) >= float(hourly_volume.iloc[-2])
     else:
         volume_not_decreasing = True
 
-    if not (was_below_vwap and near_vwap and volume_not_decreasing):
+    if not (was_below_vwap and near_vwap and volume_not_decreasing and anchored_context_ok):
         return None
 
+    theoretical_entry = current_price
     entry = current_price
     stop_loss = current_price - 1.0 * atr
     if fib is not None:
@@ -713,7 +810,7 @@ def _try_vwap_reclaim(
     target_2 = vp.vah
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if max(rr1, rr2) < min_rr:
+    if not _rr_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -738,7 +835,9 @@ def _try_vwap_reclaim(
 
     reason = (
         f"Price ({current_price:.2f}) reclaiming VWAP ({vwap:.2f}) after trading below it. "
-        f"Volume confirming. Entry at {entry:.2f}, stop at {stop_loss:.2f}."
+        f"Volume confirming. "
+        f"{f'Anchored VWAP context {anchored_vwap:.2f} is supportive. ' if anchored_vwap is not None else ''}"
+        f"Entry at {entry:.2f}, stop at {stop_loss:.2f}."
     )
 
     return ScanResult(
@@ -750,7 +849,8 @@ def _try_vwap_reclaim(
         stop_loss=round(stop_loss, 4),
         target_1=round(target_1, 4),
         target_2=round(target_2, 4),
-        risk_reward=round(max(rr1, rr2), 2),
+        **_rr_result_fields(rr1, rr2, theoretical_entry, entry),
+        anchored_vwap=round(anchored_vwap, 4) if anchored_vwap is not None else None,
         reason=reason,
         fibonacci=fib,
         volume_supported_swing_low=None,

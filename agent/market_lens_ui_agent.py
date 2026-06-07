@@ -420,6 +420,10 @@ def update_workbook(
         decision_json["scan_source"] = scan_source_text(settings)
         final_action = str(decision_json.get("final_action") or decision.action)
         final_reason = str(decision_json.get("reason") or decision.feedback)
+        if final_action == "BUY_SIMULATED":
+            decision.quantity = int(decision_json.get("position_size") or decision.quantity)
+            decision.cash_out_ils = float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils)
+            decision.risk_ils = float(decision_json.get("adjusted_risk_amount") or decision.risk_ils)
         if final_action != decision.action:
             decision = Decision(final_action, final_reason, decision_json=decision_json)
         else:

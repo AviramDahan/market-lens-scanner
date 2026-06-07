@@ -124,6 +124,12 @@ class ScanResult(BaseModel):
     target_1: float
     target_2: float
     risk_reward: float
+    risk_reward_primary: float = 0.0
+    risk_reward_stretch: float = 0.0
+    risk_reward_decision: float = 0.0
+    theoretical_entry: float | None = None
+    executable_entry: float | None = None
+    anchored_vwap: float | None = None
     reason: str
     fibonacci: FibonacciInfo | None = None
     volume_supported_swing_low: VolumeSupportedSwingLow | None = None

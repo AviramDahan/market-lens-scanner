@@ -53,6 +53,8 @@ class AgentRiskConfig:
     factor_exposure_bull_pct: float = 0.50
     factor_exposure_neutral_pct: float = 0.35
     correlation_block_threshold: float = 0.85
+    primary_rr_weight: float = 0.65
+    stretch_rr_weight: float = 0.35
     earnings_blackout_before_days: int = 5
     earnings_blackout_after_days: int = 1
     block_unknown_earnings: bool = False
@@ -233,14 +235,33 @@ def evaluate_agent_candidate(
         ),
         2,
     )
+    sizing = adjust_candidate_position_size(
+        ticker=ticker,
+        sector=sector,
+        factor_tags=factor_tags,
+        initial_action=initial_action,
+        quantity=quantity,
+        cash_out=cash_out,
+        risk_amount=risk_amount,
+        cash_available=cash_available,
+        portfolio_exposure_before=portfolio_exposure_before,
+        open_positions=open_positions,
+        sector_map=sector_map,
+        run_context=run_context,
+    )
+    effective_quantity = sizing["quantity"]
+    effective_cash_out = sizing["cash_out"]
+    effective_risk_amount = sizing["risk_amount"]
     portfolio_exposure_after_if_buy = (
-        portfolio_exposure_before + cash_out if initial_action == "BUY_SIMULATED" else portfolio_exposure_before
+        portfolio_exposure_before + effective_cash_out
+        if initial_action == "BUY_SIMULATED" and effective_quantity > 0
+        else portfolio_exposure_before
     )
     sector_exposure = sector_exposure_check(
         ticker=ticker,
         sector=sector,
         initial_action=initial_action,
-        trade_cash_out=cash_out,
+        trade_cash_out=effective_cash_out,
         open_positions=open_positions,
         sector_map=sector_map,
         run_context=run_context,
@@ -249,7 +270,7 @@ def evaluate_agent_candidate(
         ticker=ticker,
         factor_tags=factor_tags,
         initial_action=initial_action,
-        trade_cash_out=cash_out,
+        trade_cash_out=effective_cash_out,
         open_positions=open_positions,
         sector_map=sector_map,
         run_context=run_context,
@@ -266,9 +287,12 @@ def evaluate_agent_candidate(
     warnings.extend(snapshot.warnings)
     warnings.extend(earnings_info["warnings"])
     warnings.extend(target_info["warnings"])
+    warnings.extend(net_rr_info["warnings"])
     warnings.extend(correlation["warnings"])
     warnings.extend(sector_exposure["warnings"])
     warnings.extend(factor_exposure["warnings"])
+    if sizing["adjusted"]:
+        warnings.append(sizing["reason"])
     if earnings_info["earnings_blackout"]:
         warnings.append("Earnings blackout active.")
 
@@ -287,6 +311,7 @@ def evaluate_agent_candidate(
             correlation=correlation,
             normalized_quality_score=normalized_quality_score,
             portfolio_exposure_after=portfolio_exposure_after_if_buy,
+            sizing=sizing,
         )
         if blockers:
             final_action = "WATCH" if any(blocker["action"] == "WATCH" for blocker in blockers) else "SKIP"
@@ -298,6 +323,8 @@ def evaluate_agent_candidate(
                 f"{sector_info['regime']} sector, valid setup, net R/R {net_rr_info['net_rr']:.2f}, "
                 "no earnings blackout, correlation acceptable, and risk limits allow entry."
             )
+            if sizing["adjusted"]:
+                final_reason += f" Position size reduced to {effective_quantity} shares to fit exposure caps."
     elif initial_action == "WATCH":
         final_reason = enrich_non_buy_reason("WATCH", initial_reason, run_context, sector_info, net_rr_info)
     elif initial_action == "SKIP":
@@ -349,36 +376,67 @@ def evaluate_agent_candidate(
         "prior_high_20": target_info["prior_high_20"],
         "prior_high_63": target_info["prior_high_63"],
         "gross_rr": net_rr_info["gross_rr"],
+        "gross_rr_1": net_rr_info["gross_rr_1"],
+        "gross_rr_2": net_rr_info["gross_rr_2"],
+        "gross_rr_decision": net_rr_info["gross_rr_decision"],
+        "theoretical_entry": net_rr_info["theoretical_entry"],
+        "executable_entry": net_rr_info["executable_entry"],
+        "gross_risk_per_share": net_rr_info["gross_risk_per_share"],
+        "gross_reward_1_per_share": net_rr_info["gross_reward_1_per_share"],
+        "gross_reward_2_per_share": net_rr_info["gross_reward_2_per_share"],
         "estimated_spread": net_rr_info["estimated_spread"],
         "estimated_slippage": net_rr_info["estimated_slippage"],
         "estimated_fees": net_rr_info["estimated_fees"],
         "spread_source": net_rr_info["spread_source"],
+        "execution_liquidity_bucket": net_rr_info["execution_liquidity_bucket"],
+        "net_entry": net_rr_info["net_entry"],
+        "net_stop_assumption": net_rr_info["net_stop_assumption"],
+        "net_target_1_assumption": net_rr_info["net_target_1_assumption"],
+        "net_target_2_assumption": net_rr_info["net_target_2_assumption"],
+        "net_risk_per_share": net_rr_info["net_risk_per_share"],
+        "net_reward_1_per_share": net_rr_info["net_reward_1_per_share"],
+        "net_reward_2_per_share": net_rr_info["net_reward_2_per_share"],
+        "net_rr_1": net_rr_info["net_rr_1"],
+        "net_rr_2": net_rr_info["net_rr_2"],
         "net_rr": net_rr_info["net_rr"],
         "earnings_date": earnings_info["earnings_date"],
         "days_to_earnings": earnings_info["days_to_earnings"],
         "earnings_blackout": earnings_info["earnings_blackout"],
         "sector_exposure_before": sector_exposure["before"],
         "sector_exposure_after": sector_exposure["after"],
+        "sector_exposure_cap": sector_exposure["cap"],
+        "sector_exposure_limit_exceeded": sector_exposure["limit_exceeded"],
         "factor_tags": factor_tags,
         "factor_exposure_before": factor_exposure["before"],
         "factor_exposure_after": factor_exposure["after"],
+        "factor_exposure_cap": factor_exposure["cap"],
+        "factor_exposure_limit_exceeded": factor_exposure["limit_exceeded"],
         "correlation_warning": correlation["correlation_warning"],
         "highest_correlation_ticker": correlation["highest_correlation_ticker"],
         "highest_correlation_value": correlation["highest_correlation_value"],
-        "position_size": quantity if final_action == "BUY_SIMULATED" else 0,
-        "risk_amount": round(risk_amount if final_action == "BUY_SIMULATED" else 0.0, 2),
+        "position_size": effective_quantity if final_action == "BUY_SIMULATED" else 0,
+        "risk_amount": round(effective_risk_amount if final_action == "BUY_SIMULATED" else 0.0, 2),
         "cash_available": round(cash_available, 2),
         "portfolio_exposure_before": round(portfolio_exposure_before, 2),
         "portfolio_exposure_after": round(portfolio_exposure_after, 2),
+        "original_position_size": quantity,
+        "original_cash_out": round(cash_out, 2),
+        "original_risk_amount": round(risk_amount, 2),
+        "position_size_adjusted": sizing["adjusted"],
+        "adjusted_position_size": effective_quantity,
+        "adjusted_cash_out": round(effective_cash_out, 2),
+        "adjusted_risk_amount": round(effective_risk_amount, 2),
+        "sizing_adjustment_reason": sizing["reason"],
         "position_sizing_explanation": position_sizing_explanation(
             initial_action=initial_action,
             final_action=final_action,
-            quantity=quantity,
-            cash_out=cash_out,
-            risk_amount=risk_amount,
+            quantity=effective_quantity,
+            cash_out=effective_cash_out,
+            risk_amount=effective_risk_amount,
             cash_available=cash_available,
             portfolio_exposure_after=portfolio_exposure_after,
             market_regime=run_context.market_regime,
+            sizing=sizing,
         ),
         "initial_action": initial_action,
         "final_action": final_action,
@@ -401,9 +459,12 @@ def buy_blockers(
     correlation: dict[str, Any],
     normalized_quality_score: float,
     portfolio_exposure_after: float,
+    sizing: dict[str, Any],
 ) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     regime = run_context.market_regime
+    if sizing["blocked"]:
+        blockers.append({"action": "WATCH", "reason": f"WATCH: {sizing['reason']}"})
     if regime.label == "BEAR":
         blockers.append({"action": "SKIP", "reason": "SKIP: Bear market regime blocks new simulated buys."})
     if portfolio_exposure_after > regime.max_total_exposure:
@@ -468,6 +529,8 @@ def buy_blockers(
         blockers.append({"action": "SKIP", "reason": "SKIP: Target validation failed; target is not above price."})
     if target_info["status"] == "EXTENDED":
         blockers.append({"action": "WATCH", "reason": "WATCH: Target distance is extended versus daily ATR or market structure."})
+    if target_info["status"] == "LOW_REWARD_DISTANCE":
+        blockers.append({"action": "WATCH", "reason": "WATCH: Target 1 is too close versus daily ATR."})
     if sector_exposure["limit_exceeded"]:
         blockers.append(
             {"action": "WATCH", "reason": "WATCH: Sector exposure limit would be exceeded by this trade."}
@@ -513,6 +576,7 @@ def position_sizing_explanation(
     cash_available: float,
     portfolio_exposure_after: float,
     market_regime: MarketRegime,
+    sizing: dict[str, Any] | None = None,
 ) -> str:
     if initial_action != "BUY_SIMULATED":
         return "No new position size was calculated because the base decision did not open a simulated buy."
@@ -521,6 +585,12 @@ def position_sizing_explanation(
             "Base position sizing produced a candidate trade, but the risk transparency layer "
             f"blocked the new buy. Candidate size: {quantity} shares, cash {cash_out:.2f}, "
             f"risk {risk_amount:.2f}."
+        )
+    if sizing and sizing.get("adjusted"):
+        return (
+            f"Position size reduced from {sizing.get('original_quantity')} to {quantity} shares. "
+            f"Accepted cash out {cash_out:.2f}, risk {risk_amount:.2f}. "
+            f"Reason: {sizing.get('reason')}"
         )
     return (
         f"Position size accepted: {quantity} shares, cash out {cash_out:.2f}, "
@@ -542,6 +612,83 @@ def sector_regime_for(sector: str, sector_health: dict[str, dict[str, Any]]) -> 
         "regime": label,
         "score": round(score, 2),
         "reason": item.get("reason", "Sector regime fallback used."),
+    }
+
+
+def adjust_candidate_position_size(
+    *,
+    ticker: str,
+    sector: str,
+    factor_tags: list[str],
+    initial_action: str,
+    quantity: int,
+    cash_out: float,
+    risk_amount: float,
+    cash_available: float,
+    portfolio_exposure_before: float,
+    open_positions: dict[str, dict[str, Any]],
+    sector_map: dict[str, str],
+    run_context: AgentRunRiskContext,
+) -> dict[str, Any]:
+    original = {
+        "quantity": quantity,
+        "cash_out": cash_out,
+        "risk_amount": risk_amount,
+        "original_quantity": quantity,
+        "original_cash_out": cash_out,
+        "original_risk_amount": risk_amount,
+        "adjusted": False,
+        "blocked": False,
+        "reason": "",
+    }
+    if initial_action != "BUY_SIMULATED" or quantity <= 0 or cash_out <= 0:
+        return original
+
+    per_share_cash = cash_out / quantity
+    per_share_risk = risk_amount / quantity if quantity else 0.0
+    caps = [
+        ("candidate size", cash_out),
+        ("cash available", cash_available),
+        ("market regime exposure", max(0.0, run_context.market_regime.max_total_exposure - portfolio_exposure_before)),
+    ]
+
+    sector_before = current_sector_exposure(ticker, sector, open_positions, sector_map)
+    sector_cap = sector_exposure_cap(run_context)
+    caps.append((f"{sector} sector exposure", max(0.0, sector_cap - sector_before)))
+
+    factor_before = current_factor_exposure(ticker, open_positions, sector_map)
+    factor_cap = factor_exposure_cap(run_context)
+    for tag in factor_tags:
+        caps.append((f"{tag} factor exposure", max(0.0, factor_cap - factor_before.get(tag, 0.0))))
+
+    limiting_name, limiting_cash = min(caps, key=lambda item: item[1])
+    adjusted_quantity = math.floor(max(0.0, limiting_cash) / per_share_cash) if per_share_cash > 0 else 0
+    if adjusted_quantity <= 0:
+        return {
+            **original,
+            "quantity": 0,
+            "cash_out": 0.0,
+            "risk_amount": 0.0,
+            "adjusted": True,
+            "blocked": True,
+            "reason": f"Position cannot be opened because {limiting_name} cap leaves no executable size.",
+        }
+    if adjusted_quantity >= quantity:
+        return original
+
+    adjusted_cash = adjusted_quantity * per_share_cash
+    adjusted_risk = adjusted_quantity * per_share_risk
+    return {
+        **original,
+        "quantity": adjusted_quantity,
+        "cash_out": round(adjusted_cash, 2),
+        "risk_amount": round(adjusted_risk, 2),
+        "adjusted": True,
+        "blocked": False,
+        "reason": (
+            f"Position size reduced by {limiting_name} cap "
+            f"({quantity} -> {adjusted_quantity} shares)."
+        ),
     }
 
 
@@ -613,53 +760,125 @@ def fetch_market_profile(ticker: str, warnings: list[str]) -> dict[str, float]:
 
 def calculate_net_rr(result: Any, snapshot: CandidateMarketSnapshot, config: AgentRiskConfig) -> dict[str, Any]:
     price = float(result.current_price or snapshot.price or 0.0)
+    entry_info = resolve_entry_info(result, price)
+    entry = entry_info["executable_entry"]
     stop = float(result.stop_loss or 0.0)
     target_1 = float(result.target_1 or 0.0)
     target_2 = float(result.target_2 or 0.0)
-    gross_rr = float(result.risk_reward or 0.0)
-    spread_pct, slippage_pct = execution_cost_pct(snapshot.avg_dollar_volume, snapshot.atr_pct, result.setup_type)
-    fallback_spread = price * spread_pct
-    quoted_spread = snapshot.ask - snapshot.bid if snapshot.ask > 0 and snapshot.bid > 0 and snapshot.ask >= snapshot.bid else 0.0
-    estimated_spread = quoted_spread if quoted_spread > 0 else fallback_spread
-    spread_source = "bid_ask" if quoted_spread > 0 else "liquidity_fallback"
-    estimated_slippage = price * slippage_pct
-    estimated_fees = config.fees_per_share
-    friction = estimated_spread + estimated_slippage + estimated_fees
+    gross_risk = max(0.0, entry - stop)
+    gross_reward_1 = max(0.0, target_1 - entry)
+    gross_reward_2 = max(0.0, target_2 - entry)
+    gross_rr_1 = gross_reward_1 / gross_risk if gross_risk > 0 else 0.0
+    gross_rr_2 = gross_reward_2 / gross_risk if gross_risk > 0 else 0.0
+    gross_rr_decision = (gross_rr_1 * config.primary_rr_weight) + (gross_rr_2 * config.stretch_rr_weight)
 
-    risk = max(0.0, price - stop)
-    if target_1 > 0 and target_2 > 0:
-        planned_reward = ((target_1 - price) * 0.5) + ((target_2 - price) * 0.5)
-    elif target_1 > 0:
-        planned_reward = target_1 - price
+    spread_pct, slippage_pct, liquidity_bucket = execution_cost_pct(
+        snapshot.avg_dollar_volume,
+        snapshot.atr_pct,
+        result.setup_type,
+    )
+    warnings: list[str] = []
+    fallback_spread = entry * spread_pct
+    quoted_spread = snapshot.ask - snapshot.bid if snapshot.ask > 0 and snapshot.bid > 0 and snapshot.ask >= snapshot.bid else 0.0
+    max_quoted_spread = entry * max(spread_pct * 2.5, 0.0005)
+    if quoted_spread > 0 and quoted_spread <= max_quoted_spread:
+        estimated_spread = quoted_spread
+        spread_source = "bid_ask"
+    elif quoted_spread > max_quoted_spread:
+        estimated_spread = fallback_spread
+        spread_source = "liquidity_fallback_capped_quote"
+        warnings.append("Bid/ask spread looked stale or too wide; liquidity fallback used.")
     else:
-        planned_reward = 0.0
-    net_reward = max(0.0, planned_reward - friction)
-    net_risk = risk + friction
-    net_rr = net_reward / net_risk if net_risk > 0 else 0.0
+        estimated_spread = fallback_spread
+        spread_source = "liquidity_fallback"
+
+    entry_slippage = entry * slippage_pct
+    stop_slippage = entry * slippage_pct
+    target_slippage = entry * (slippage_pct * 0.50)
+    estimated_slippage = entry_slippage + stop_slippage
+    estimated_fees = config.fees_per_share
+    half_spread = estimated_spread / 2.0
+
+    net_entry = entry + half_spread + entry_slippage + estimated_fees
+    net_stop = stop - half_spread - stop_slippage
+    net_target_1 = target_1 - half_spread - target_slippage - estimated_fees
+    net_target_2 = target_2 - half_spread - target_slippage - estimated_fees
+    net_risk = max(0.0, net_entry - net_stop)
+    net_reward_1 = max(0.0, net_target_1 - net_entry)
+    net_reward_2 = max(0.0, net_target_2 - net_entry)
+    net_rr_1 = net_reward_1 / net_risk if net_risk > 0 else 0.0
+    net_rr_2 = net_reward_2 / net_risk if net_risk > 0 else 0.0
+    net_rr = (net_rr_1 * config.primary_rr_weight) + (net_rr_2 * config.stretch_rr_weight)
     return {
-        "gross_rr": round(gross_rr, 4),
+        "gross_rr": round(gross_rr_decision, 4),
+        "gross_rr_1": round(gross_rr_1, 4),
+        "gross_rr_2": round(gross_rr_2, 4),
+        "gross_rr_decision": round(gross_rr_decision, 4),
+        "theoretical_entry": round(entry_info["theoretical_entry"], 4),
+        "executable_entry": round(entry, 4),
+        "gross_risk_per_share": round(gross_risk, 4),
+        "gross_reward_1_per_share": round(gross_reward_1, 4),
+        "gross_reward_2_per_share": round(gross_reward_2, 4),
         "estimated_spread": round(estimated_spread, 4),
         "estimated_slippage": round(estimated_slippage, 4),
         "estimated_fees": round(estimated_fees, 4),
         "spread_source": spread_source,
+        "execution_liquidity_bucket": liquidity_bucket,
+        "net_entry": round(net_entry, 4),
+        "net_stop_assumption": round(net_stop, 4),
+        "net_target_1_assumption": round(net_target_1, 4),
+        "net_target_2_assumption": round(net_target_2, 4),
+        "net_risk_per_share": round(net_risk, 4),
+        "net_reward_1_per_share": round(net_reward_1, 4),
+        "net_reward_2_per_share": round(net_reward_2, 4),
+        "net_rr_1": round(net_rr_1, 4),
+        "net_rr_2": round(net_rr_2, 4),
         "net_rr": round(net_rr, 4),
+        "warnings": warnings,
     }
 
 
-def execution_cost_pct(avg_dollar_volume: float, atr_pct: float, setup_type: str) -> tuple[float, float]:
+def resolve_entry_info(result: Any, fallback_price: float) -> dict[str, float]:
+    current_price = float(getattr(result, "current_price", fallback_price) or fallback_price or 0.0)
+    theoretical = getattr(result, "theoretical_entry", None)
+    executable = getattr(result, "executable_entry", None)
+    if theoretical in (None, ""):
+        theoretical = getattr(result, "buy_zone_low", None)
+    if theoretical in (None, ""):
+        buy_zone = getattr(result, "buy_zone", None)
+        if buy_zone and len(buy_zone) >= 1:
+            theoretical = buy_zone[0]
+    theoretical = float(theoretical or current_price)
+
+    if executable in (None, ""):
+        buy_low = getattr(result, "buy_zone_low", None)
+        buy_high = getattr(result, "buy_zone_high", None)
+        buy_zone = getattr(result, "buy_zone", None)
+        if (buy_low in (None, "") or buy_high in (None, "")) and buy_zone and len(buy_zone) >= 2:
+            buy_low, buy_high = buy_zone[0], buy_zone[1]
+        if buy_low not in (None, "") and buy_high not in (None, "") and float(buy_low) <= current_price <= float(buy_high):
+            executable = current_price
+        elif current_price > theoretical:
+            executable = current_price
+        else:
+            executable = theoretical
+    return {"theoretical_entry": float(theoretical), "executable_entry": float(executable or current_price)}
+
+
+def execution_cost_pct(avg_dollar_volume: float, atr_pct: float, setup_type: str) -> tuple[float, float, str]:
     if avg_dollar_volume >= 500_000_000:
-        spread_pct, slippage_pct = 0.0005, 0.0007
+        spread_pct, slippage_pct, bucket = 0.0003, 0.0007, "large_liquid"
     elif avg_dollar_volume >= 100_000_000:
-        spread_pct, slippage_pct = 0.0010, 0.0015
+        spread_pct, slippage_pct, bucket = 0.0008, 0.0015, "mid_liquid"
     elif avg_dollar_volume >= 25_000_000:
-        spread_pct, slippage_pct = 0.0025, 0.0035
+        spread_pct, slippage_pct, bucket = 0.0015, 0.0030, "lower_liquidity"
     else:
-        spread_pct, slippage_pct = 0.0045, 0.0060
+        spread_pct, slippage_pct, bucket = 0.0025, 0.0060, "low_liquidity"
     if "breakout" in str(setup_type).lower():
-        slippage_pct *= 1.5
+        slippage_pct += 0.0010 if avg_dollar_volume >= 100_000_000 else 0.0020
     if atr_pct >= 6:
-        slippage_pct *= 1.25
-    return spread_pct, slippage_pct
+        slippage_pct *= 1.15
+    return spread_pct, min(slippage_pct, 0.0075), bucket
 
 
 def calculate_earnings_blackout(ticker: str, config: AgentRiskConfig) -> dict[str, Any]:
@@ -799,24 +1018,38 @@ def sector_exposure_check(
     sector_map: dict[str, str],
     run_context: AgentRunRiskContext,
 ) -> dict[str, Any]:
-    before = 0.0
+    before = current_sector_exposure(ticker, sector, open_positions, sector_map)
     warnings = []
+    after = before + (trade_cash_out if initial_action == "BUY_SIMULATED" else 0.0)
+    cap = sector_exposure_cap(run_context)
+    limit_exceeded = initial_action == "BUY_SIMULATED" and after > cap
+    if limit_exceeded:
+        warnings.append("Sector exposure limit would be exceeded.")
+    return {"before": round(before, 2), "after": round(after, 2), "cap": round(cap, 2), "limit_exceeded": limit_exceeded, "warnings": warnings}
+
+
+def current_sector_exposure(
+    ticker: str,
+    sector: str,
+    open_positions: dict[str, dict[str, Any]],
+    sector_map: dict[str, str],
+) -> float:
+    before = 0.0
     for open_ticker, pos in open_positions.items():
-        if open_ticker == ticker:
+        if str(open_ticker).upper() == ticker:
             continue
         if sector_map.get(str(open_ticker).upper(), "Unknown") == sector:
             before += float(pos.get("exposure_ils") or 0)
-    after = before + (trade_cash_out if initial_action == "BUY_SIMULATED" else 0.0)
+    return before
+
+
+def sector_exposure_cap(run_context: AgentRunRiskContext) -> float:
     pct = (
         run_context.config.sector_exposure_bull_pct
         if run_context.market_regime.label == "BULL"
         else run_context.config.sector_exposure_neutral_pct
     )
-    cap = max(0.0, run_context.market_regime.max_total_exposure * pct)
-    limit_exceeded = initial_action == "BUY_SIMULATED" and after > cap
-    if limit_exceeded:
-        warnings.append("Sector exposure limit would be exceeded.")
-    return {"before": round(before, 2), "after": round(after, 2), "cap": round(cap, 2), "limit_exceeded": limit_exceeded, "warnings": warnings}
+    return max(0.0, run_context.market_regime.max_total_exposure * pct)
 
 
 def factor_exposure_check(
@@ -829,23 +1062,12 @@ def factor_exposure_check(
     sector_map: dict[str, str],
     run_context: AgentRunRiskContext,
 ) -> dict[str, Any]:
-    before: dict[str, float] = {}
-    for open_ticker, pos in open_positions.items():
-        if open_ticker == ticker:
-            continue
-        tags = factor_tags_for(str(open_ticker).upper(), sector_map.get(str(open_ticker).upper(), "Unknown"), "Unknown")
-        for tag in tags:
-            before[tag] = before.get(tag, 0.0) + float(pos.get("exposure_ils") or 0)
+    before = current_factor_exposure(ticker, open_positions, sector_map)
     after = dict(before)
     if initial_action == "BUY_SIMULATED":
         for tag in factor_tags:
             after[tag] = after.get(tag, 0.0) + trade_cash_out
-    pct = (
-        run_context.config.factor_exposure_bull_pct
-        if run_context.market_regime.label == "BULL"
-        else run_context.config.factor_exposure_neutral_pct
-    )
-    cap = max(0.0, run_context.market_regime.max_total_exposure * pct)
+    cap = factor_exposure_cap(run_context)
     limit_exceeded = initial_action == "BUY_SIMULATED" and any(after.get(tag, 0.0) > cap for tag in factor_tags)
     warnings = ["Factor/theme exposure limit would be exceeded."] if limit_exceeded else []
     return {
@@ -855,6 +1077,31 @@ def factor_exposure_check(
         "limit_exceeded": limit_exceeded,
         "warnings": warnings,
     }
+
+
+def current_factor_exposure(
+    ticker: str,
+    open_positions: dict[str, dict[str, Any]],
+    sector_map: dict[str, str],
+) -> dict[str, float]:
+    before: dict[str, float] = {}
+    for open_ticker, pos in open_positions.items():
+        open_ticker = str(open_ticker).upper()
+        if open_ticker == ticker:
+            continue
+        tags = factor_tags_for(open_ticker, sector_map.get(open_ticker, "Unknown"), "Unknown")
+        for tag in tags:
+            before[tag] = before.get(tag, 0.0) + float(pos.get("exposure_ils") or 0)
+    return before
+
+
+def factor_exposure_cap(run_context: AgentRunRiskContext) -> float:
+    pct = (
+        run_context.config.factor_exposure_bull_pct
+        if run_context.market_regime.label == "BULL"
+        else run_context.config.factor_exposure_neutral_pct
+    )
+    return max(0.0, run_context.market_regime.max_total_exposure * pct)
 
 
 def correlation_check(
