@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     historyDate.value = "";
     loadDashboard("");
   });
+  setupMediaModal();
   loadDashboard(selectedDate);
 });
 
@@ -71,7 +72,7 @@ function renderDashboard(data) {
 
   renderMetrics(data.summary);
   renderEquity(data.equity_curve, data.summary);
-  renderScreenshot(data.latest_run);
+  renderScanCharts(data.latest_setups, data.latest_run);
   renderPositions(data.open_positions);
   renderPositionCharts(data.open_positions);
   renderActions(data.latest_setups);
@@ -215,17 +216,39 @@ function renderEquity(curve, summary) {
   document.getElementById("equityMeta").textContent = `${runCount} tracked ${runCount === 1 ? "run" : "runs"}`;
 }
 
-function renderScreenshot(run) {
-  const frame = document.getElementById("screenshotFrame");
+function renderScanCharts(setups, run) {
+  const grid = document.getElementById("scanChartsGrid");
   const link = document.getElementById("screenshotLink");
-  if (!run.screenshot_url) {
-    frame.innerHTML = '<span class="empty-media">No screenshot</span>';
+  const charts = (setups || []).filter((setup) => setup.chart_url);
+  document.getElementById("scanChartsMeta").textContent = `${charts.length} chart${charts.length === 1 ? "" : "s"} from ${formatDate(run.timestamp)}`;
+  if (run.screenshot_url) {
+    link.href = run.screenshot_url;
+  } else {
     link.removeAttribute("href");
+  }
+  if (!charts.length) {
+    grid.innerHTML = '<div class="empty-media">No scan charts saved</div>';
     return;
   }
-  frame.innerHTML = `<img src="${escapeHtml(run.screenshot_url)}" alt="Latest agent screenshot" />`;
-  link.href = run.screenshot_url;
-  document.getElementById("screenshotMeta").textContent = formatDate(run.timestamp);
+
+  grid.innerHTML = charts
+    .map((setup) => {
+      const src = `${setup.chart_url}?v=${Date.now()}`;
+      return `
+        <button class="scan-chart-card" type="button" data-full-src="${escapeHtml(src)}" title="Open ${escapeHtml(setup.ticker)} chart">
+          <img src="${escapeHtml(src)}" alt="${escapeHtml(setup.ticker)} chart" />
+          <span>
+            <strong>${escapeHtml(tickerLabel(setup))}</strong>
+            <small>${escapeHtml(`${setup.action || "UNKNOWN"} - ${setup.setup_type || ""}`)}</small>
+          </span>
+        </button>
+      `;
+    })
+    .join("");
+
+  grid.querySelectorAll(".scan-chart-card").forEach((button) => {
+    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
+  });
 }
 
 function renderPositions(positions) {
@@ -279,9 +302,9 @@ function renderPositionCharts(positions) {
   grid.innerHTML = positions
     .map((position) => {
       const chart = position.chart_url
-        ? `<a class="position-chart-media" href="${escapeHtml(position.chart_url)}" target="_blank" rel="noreferrer">
+        ? `<button class="position-chart-media clickable-media" type="button" data-full-src="${escapeHtml(position.chart_url)}?v=${Date.now()}">
             <img src="${escapeHtml(position.chart_url)}?v=${Date.now()}" alt="${escapeHtml(position.ticker)} chart" />
-          </a>`
+          </button>`
         : `<div class="position-chart-media missing"><span>No chart saved</span></div>`;
       return `
         <article class="position-chart-card">
@@ -297,6 +320,9 @@ function renderPositionCharts(positions) {
       `;
     })
     .join("");
+  grid.querySelectorAll(".clickable-media").forEach((button) => {
+    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
+  });
 }
 
 function renderActions(setups) {
@@ -311,7 +337,9 @@ function renderActions(setups) {
       (setup) => `
         <div class="action-row">
           ${setup.chart_url
-            ? `<img class="action-chart" src="${escapeHtml(setup.chart_url)}?v=${Date.now()}" alt="${escapeHtml(setup.ticker)} chart" />`
+            ? `<button class="action-chart-button" type="button" data-full-src="${escapeHtml(setup.chart_url)}?v=${Date.now()}">
+                <img class="action-chart" src="${escapeHtml(setup.chart_url)}?v=${Date.now()}" alt="${escapeHtml(setup.ticker)} chart" />
+              </button>`
             : `<div class="action-chart missing"></div>`}
           <div class="ticker-cell">
             <strong>${escapeHtml(tickerLabel(setup))}</strong>
@@ -327,6 +355,38 @@ function renderActions(setups) {
       `,
     )
     .join("");
+  list.querySelectorAll(".action-chart-button").forEach((button) => {
+    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
+  });
+}
+
+function setupMediaModal() {
+  const modal = document.getElementById("mediaModal");
+  const close = document.getElementById("mediaModalClose");
+  close.addEventListener("click", closeMediaModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeMediaModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeMediaModal();
+  });
+}
+
+function openMediaModal(src) {
+  if (!src) return;
+  const modal = document.getElementById("mediaModal");
+  const image = document.getElementById("mediaModalImage");
+  image.src = src;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeMediaModal() {
+  const modal = document.getElementById("mediaModal");
+  const image = document.getElementById("mediaModalImage");
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  image.removeAttribute("src");
 }
 
 function renderCalibration(rows) {

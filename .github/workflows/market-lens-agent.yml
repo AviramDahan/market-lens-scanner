@@ -3,8 +3,10 @@ name: Market Lens Paper Agent
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron is UTC. 12:00 New York is 16:00 UTC during EDT and 17:00 UTC during EST.
-    - cron: "0 16,17 * * *"
+    # GitHub cron is UTC. The New York time guard below handles DST and exact scan times.
+    - cron: "45 13,14 * * 1-5"
+    - cron: "30 14-20 * * 1-5"
+    - cron: "15 20,21 * * 1-5"
 
 permissions:
   contents: write
@@ -19,7 +21,7 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Check New York noon schedule
+      - name: Check New York scan schedule
         id: schedule_time
         shell: bash
         run: |
@@ -28,11 +30,15 @@ jobs:
             exit 0
           fi
 
+          local_day="$(TZ=America/New_York date +%u)"
           current_hour="$(TZ=America/New_York date +%H)"
-          if [ "$current_hour" = "12" ]; then
+          current_minute="$(TZ=America/New_York date +%M)"
+          current_time="${current_hour}:${current_minute}"
+          allowed_times="09:45 10:30 11:30 13:30 14:30 15:30 16:15"
+          if [ "$local_day" -le 5 ] && [[ " $allowed_times " == *" $current_time "* ]]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Not 12:00 New York time; skipping this scheduled trigger."
+            echo "Not one of the configured New York scan times; skipping this scheduled trigger."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
           fi
 

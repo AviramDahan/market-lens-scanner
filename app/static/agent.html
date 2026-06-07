@@ -66,17 +66,17 @@
           <canvas id="equityChart" height="260"></canvas>
         </div>
 
-        <div class="panel screenshot-panel">
+        <div class="panel scan-charts-panel">
           <div class="panel-head">
             <div>
-              <h2>Latest Screen</h2>
-              <p id="screenshotMeta">Agent capture</p>
+              <h2>Scan Charts</h2>
+              <p id="scanChartsMeta">Charts by ticker</p>
             </div>
-            <a id="screenshotLink" class="icon-only" href="#" target="_blank" rel="noreferrer" title="Open screenshot">
+            <a id="screenshotLink" class="icon-only" href="#" target="_blank" rel="noreferrer" title="Open full run screenshot">
               <i data-lucide="external-link"></i>
             </a>
           </div>
-          <div id="screenshotFrame" class="screenshot-frame"></div>
+          <div id="scanChartsGrid" class="scan-chart-grid"></div>
         </div>
       </section>
 
@@ -162,6 +162,13 @@
         <pre id="summaryText" class="summary-text">Loading</pre>
       </section>
     </main>
+
+    <div id="mediaModal" class="media-modal" aria-hidden="true">
+      <button id="mediaModalClose" class="media-close" type="button" title="Close">
+        <i data-lucide="x"></i>
+      </button>
+      <img id="mediaModalImage" alt="Expanded chart" />
+    </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="/static/agent.js"></script>
