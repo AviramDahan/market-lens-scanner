@@ -1,3 +1,6 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import pandas as pd
 
 from app.fibonacci import find_pivot_highs
@@ -17,6 +20,14 @@ _STRUCT_PROX = 0.3  # price vs swing low
 _MIN_PRIMARY_RR = 1.3
 _PRIMARY_RR_WEIGHT = 0.65
 _STRETCH_RR_WEIGHT = 0.35
+
+
+def _regular_market_is_open(now: datetime | None = None) -> bool:
+    current = now or datetime.now(ZoneInfo("America/New_York"))
+    if current.weekday() >= 5:
+        return False
+    minutes = current.hour * 60 + current.minute
+    return (9 * 60 + 30) <= minutes <= (16 * 60)
 
 # Signal weights (tiered by predictive strength)
 _W_SWEEP      = 30   # tier 1: sweep-and-reclaim anywhere
@@ -698,7 +709,9 @@ def _try_liquidity_trap(
 ) -> ScanResult | None:
     near_poc = abs(current_price - vp.poc) <= _VOL_PROX * atr
     latest_close = float(hourly_closes.iloc[-1]) if len(hourly_closes) else current_price
-    if len(hourly_volume) >= 4:
+    if not _regular_market_is_open():
+        reclaim_volume_confirmed = True
+    elif len(hourly_volume) >= 4:
         avg_reclaim_volume = float(hourly_volume.iloc[:-1].mean())
         reclaim_volume_confirmed = float(hourly_volume.iloc[-1]) >= avg_reclaim_volume
     else:
@@ -801,7 +814,9 @@ def _try_vwap_reclaim(
     near_vwap = abs(current_price - vwap) <= _FLOW_PROX * atr
     anchored_context_ok = anchored_vwap is None or current_price >= anchored_vwap - (_FLOW_PROX * atr)
 
-    if len(hourly_volume) >= 2:
+    if not _regular_market_is_open():
+        volume_not_decreasing = True
+    elif len(hourly_volume) >= 2:
         volume_not_decreasing = float(hourly_volume.iloc[-1]) >= float(hourly_volume.iloc[-2])
     else:
         volume_not_decreasing = True
