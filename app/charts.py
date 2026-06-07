@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from app.scanner import ScanDetail
+if TYPE_CHECKING:
+    from app.scanner import ScanDetail
 
 
 def write_scan_chart(detail: ScanDetail, output_dir: Path | str = "charts") -> Path:
@@ -107,6 +111,7 @@ def write_scan_chart(detail: ScanDetail, output_dir: Path | str = "charts") -> P
     ax.set_ylabel("Price")
     ax.grid(True, axis="y", color="#e5e7eb", linewidth=0.8)
     ax.legend(loc="upper left", fontsize=8, ncols=2)
+    _render_level_labels(ax)
 
     ax_vol.bar(daily.index, daily["Volume"], color=colors, width=0.8, alpha=0.55)
     ax_vol.set_ylabel("Volume")
@@ -124,16 +129,62 @@ def _hline(ax, y: float, label: str, color: str, **kwargs) -> None:
     ax.axhline(y, color=color, linewidth=kwargs.pop("linewidth", 1.0), label=label, **kwargs)
     if not annotate:
         return
-    ax.annotate(
-        f"{label} {y:.2f}",
-        xy=(1.0, y),
-        xycoords=("axes fraction", "data"),
-        xytext=(6, 0),
-        textcoords="offset points",
-        va="center",
-        fontsize=8,
-        color=color,
-    )
+    labels = getattr(ax, "_market_lens_level_labels", [])
+    labels.append({"y": float(y), "label": label, "color": color})
+    setattr(ax, "_market_lens_level_labels", labels)
+
+
+def _render_level_labels(ax) -> None:
+    labels = getattr(ax, "_market_lens_level_labels", [])
+    if not labels:
+        return
+
+    y_min, y_max = ax.get_ylim()
+    y_span = max(y_max - y_min, 1.0)
+    min_gap = y_span * 0.035
+    pad = y_span * 0.012
+
+    items = sorted(labels, key=lambda item: item["y"])
+    placed: list[float] = []
+    for item in items:
+        y_text = item["y"]
+        if placed:
+            y_text = max(y_text, placed[-1] + min_gap)
+        placed.append(y_text)
+
+    overflow = placed[-1] - (y_max - pad)
+    if overflow > 0:
+        placed = [value - overflow for value in placed]
+
+    for index in range(len(placed) - 2, -1, -1):
+        placed[index] = min(placed[index], placed[index + 1] - min_gap)
+
+    underflow = (y_min + pad) - placed[0]
+    if underflow > 0:
+        placed = [value + underflow for value in placed]
+
+    for item, y_text in zip(items, placed):
+        arrow = None
+        if abs(y_text - item["y"]) > y_span * 0.01:
+            arrow = {
+                "arrowstyle": "-",
+                "color": item["color"],
+                "linewidth": 0.65,
+                "alpha": 0.9,
+            }
+        ax.annotate(
+            f"{item['label']} {item['y']:.2f}",
+            xy=(1.0, item["y"]),
+            xycoords=("axes fraction", "data"),
+            xytext=(1.014, y_text),
+            textcoords=("axes fraction", "data"),
+            ha="left",
+            va="center",
+            fontsize=8,
+            color=item["color"],
+            annotation_clip=False,
+            arrowprops=arrow,
+        )
 
 
 def _mark_date_level(ax, daily: pd.DataFrame, date_text: str, level: float, label: str, color: str) -> None:

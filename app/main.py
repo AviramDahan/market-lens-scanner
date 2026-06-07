@@ -93,9 +93,8 @@ async def scan_with_charts(
     user_id = user.get("id")
     user_label = user.get("email") or request.user_label
     for detail in details:
-        if detail.result.setup_type != "No Trade":
-            path = write_scan_chart(detail, CHART_DIR)
-            charts[detail.result.ticker] = f"/charts/{path.name}"
+        path = write_scan_chart(detail, CHART_DIR)
+        charts[detail.result.ticker] = f"/charts/{path.name}"
         saved_setup = save_setup(
             detail.result,
             analysis_period=request.analysis_period,
