@@ -6,7 +6,7 @@ import os
 import re
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
@@ -230,8 +230,17 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
     page.locator('[data-testid="min-rr-input"]').fill(str(settings.min_rr))
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
     open_tickers = read_open_position_tickers(settings.excel_path)
+    watch_tickers = read_recent_watch_tickers(settings.excel_path)
+    carry_forward_tickers = unique_tickers(open_tickers + watch_tickers)
+    if carry_forward_tickers:
+        log(
+            "Carry-forward tickers added outside universe quota: "
+            f"{len(carry_forward_tickers)} ({' '.join(carry_forward_tickers)})"
+        )
     if settings.tickers:
-        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(unique_tickers(settings.tickers + open_tickers)))
+        page.locator('[data-testid="manual-ticker-input"]').fill(
+            " ".join(unique_tickers(settings.tickers + carry_forward_tickers))
+        )
         page.locator('[data-testid="add-manual-ticker"]').click()
         return
     page.locator('[data-testid="universe-select"]').select_option(settings.universe)
@@ -241,8 +250,8 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
     )
     page.locator('[data-testid="select-all-tickers"]').click()
     page.locator('[data-testid="add-selected-tickers"]').click()
-    if open_tickers:
-        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(open_tickers))
+    if carry_forward_tickers:
+        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(carry_forward_tickers))
         page.locator('[data-testid="add-manual-ticker"]').click()
 
 
@@ -713,6 +722,40 @@ def read_open_position_tickers(excel_path: Path) -> list[str]:
         return tickers
     finally:
         wb.close()
+
+
+def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list[str]:
+    lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_CARRY_FORWARD_DAYS", "14"))
+    cutoff = datetime.now() - timedelta(days=lookback_days)
+    try:
+        wb = load_workbook(excel_path, read_only=True, data_only=True)
+        ws = wb["Setup Watchlist"]
+    except Exception:
+        return []
+    try:
+        latest: dict[str, datetime] = {}
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            ticker = str(row[1] or "").upper().strip() if len(row) > 1 else ""
+            action = str(row[12] or "").upper().strip() if len(row) > 12 else ""
+            timestamp = parse_agent_timestamp(row[0] if row else None)
+            if not ticker or action != "WATCH" or timestamp is None or timestamp < cutoff:
+                continue
+            latest[ticker] = max(timestamp, latest.get(ticker, timestamp))
+        return sorted(latest, key=lambda ticker: latest[ticker], reverse=True)
+    finally:
+        wb.close()
+
+
+def parse_agent_timestamp(value: Any) -> datetime | None:
+    if isinstance(value, datetime):
+        return value.replace(tzinfo=None)
+    if not value:
+        return None
+    text = str(value).strip()
+    try:
+        return datetime.fromisoformat(text).replace(tzinfo=None)
+    except ValueError:
+        return None
 
 
 def append_watchlist_row(wb: Any, timestamp: str, result: SetupResult, decision: Decision) -> None:
