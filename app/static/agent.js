@@ -380,7 +380,10 @@ function renderActions(setups) {
           </div>
           <span class="${actionBadgeClass(setup.action)}">${escapeHtml(setup.action || "UNKNOWN")}</span>
           <div>
-            <strong>${escapeHtml(setup.setup_type || "")}</strong>
+            <div class="setup-title-line">
+              <strong>${escapeHtml(setup.setup_type || "")}</strong>
+              ${entryChecklist(setup)}
+            </div>
             <p>${escapeHtml(selectionText(setup))}</p>
             ${riskCheckPills(setup)}
           </div>
@@ -546,6 +549,156 @@ function riskCheckPills(item) {
   return `<div class="risk-checks">${checks
     .map(([label, value]) => `<span><b>${escapeHtml(label)}</b> ${escapeHtml(value)}</span>`)
     .join("")}</div>`;
+}
+
+function entryChecklist(item) {
+  const d = item.decision_json || {};
+  const action = String(item.action || d.final_action || "").toUpperCase();
+  const setupType = String(item.setup_type || d.setup_type || "");
+  if (!Object.keys(d).length || setupType === "No Trade" || !["WATCH", "BUY_SIMULATED"].includes(action)) {
+    return "";
+  }
+
+  const items = buildEntryChecklistItems(item);
+  const passed = items.filter((check) => check.status === "pass").length;
+  const missing = items.filter((check) => check.status !== "pass").length;
+  const summary = action === "BUY_SIMULATED"
+    ? "Entry checklist passed"
+    : `${missing} condition${missing === 1 ? "" : "s"} still missing`;
+
+  return `
+    <span class="entry-checklist">
+      <button class="entry-check-button" type="button" aria-label="Entry checklist for ${escapeHtml(item.ticker || "")}">
+        <i data-lucide="${missing ? "circle-alert" : "circle-check"}"></i>
+      </button>
+      <span class="entry-check-popover" role="tooltip">
+        <strong>${escapeHtml(summary)}</strong>
+        <span class="entry-check-subtitle">${escapeHtml(checklistSubtitle(d))}</span>
+        <span class="entry-check-items">
+          ${items.map(renderChecklistItem).join("")}
+        </span>
+      </span>
+    </span>
+  `;
+}
+
+function buildEntryChecklistItems(item) {
+  const d = item.decision_json || {};
+  const minNetRr = d.market_regime === "NEUTRAL" ? 2.5 : d.market_regime === "BULL" ? 2.0 : Infinity;
+  const minSetupScore = d.market_regime === "NEUTRAL" ? 0.45 : 0;
+  const hasSetup = String(item.setup_type || d.setup_type || "") !== "No Trade";
+  const setupScore = Number(d.setup_score ?? item.score ?? 0);
+  const netRr = Number(d.net_rr ?? 0);
+  const rr1 = Number(d.net_rr_1 ?? d.gross_rr_1 ?? 0);
+  const rr2 = Number(d.net_rr_2 ?? d.gross_rr_2 ?? 0);
+  const targetStatus = String(d.target_feasibility_status || "");
+
+  const checks = [
+    {
+      status: hasSetup ? "pass" : "fail",
+      label: "Technical setup",
+      detail: hasSetup ? `${item.setup_type} detected` : "No clean setup detected",
+    },
+    {
+      status: d.market_regime === "BEAR" ? "fail" : "pass",
+      label: "Market regime",
+      detail: d.market_regime === "BEAR" ? "Bear regime blocks new buys" : `${d.market_regime || "Unknown"} allows review`,
+    },
+    {
+      status: d.sector_regime === "WEAK" ? "fail" : d.sector_regime === "NEUTRAL" ? "warn" : "pass",
+      label: "Sector regime",
+      detail: d.sector_regime === "WEAK"
+        ? "Weak sector blocks auto-buy"
+        : d.sector_regime === "NEUTRAL"
+          ? "Neutral sector needs cleaner score"
+          : `${d.sector_regime || "Unknown"} sector`,
+    },
+    {
+      status: Number.isFinite(minNetRr) && netRr >= minNetRr ? "pass" : "fail",
+      label: "Net R/R",
+      detail: Number.isFinite(minNetRr)
+        ? `${netRr.toFixed(2)}x / needs ${minNetRr.toFixed(2)}x`
+        : "Bear market blocks new buys",
+    },
+    {
+      status: rr1 >= 1.2 && rr2 >= 2.0 ? "pass" : "warn",
+      label: "Targets R/R",
+      detail: `T1 ${rr1.toFixed(2)}x, T2 ${rr2.toFixed(2)}x`,
+    },
+    {
+      status: targetStatus === "OK" ? "pass" : "warn",
+      label: "Target quality",
+      detail: targetStatus === "OK" ? "ATR distance is acceptable" : humanizeStatus(targetStatus || "Needs cleaner target distance"),
+    },
+    {
+      status: setupScore >= minSetupScore ? "pass" : "warn",
+      label: "Setup score",
+      detail: minSetupScore ? `${setupScore.toFixed(2)} / needs ${minSetupScore.toFixed(2)}` : `${setupScore.toFixed(2)}`,
+    },
+    {
+      status: d.earnings_blackout ? "fail" : "pass",
+      label: "Earnings",
+      detail: d.earnings_blackout ? "Blackout active" : d.earnings_date ? `Next: ${d.earnings_date}` : "No blackout",
+    },
+    {
+      status: d.sector_exposure_limit_exceeded ? "fail" : "pass",
+      label: "Sector exposure",
+      detail: d.sector_exposure_cap !== undefined
+        ? `${money.format(d.sector_exposure_after || 0)} / ${money.format(d.sector_exposure_cap || 0)}`
+        : "Within limit",
+    },
+    {
+      status: d.factor_exposure_limit_exceeded ? "fail" : "pass",
+      label: "Factor exposure",
+      detail: d.factor_exposure_limit_exceeded ? "Factor limit exceeded" : "Within factor limit",
+    },
+    {
+      status: d.correlation_warning ? "warn" : "pass",
+      label: "Correlation",
+      detail: d.correlation_warning
+        ? `${d.highest_correlation_ticker || "Position"} ${Number(d.highest_correlation_value || 0).toFixed(2)}`
+        : "Acceptable",
+    },
+  ];
+
+  const reason = String(d.reason || item.feedback || "");
+  const missingReason = reason.replace(/^(WATCH|SKIP|BUY_SIMULATED):\s*/i, "");
+  if (String(item.action || "").toUpperCase() === "WATCH" && missingReason) {
+    checks.push({
+      status: "need",
+      label: "What must improve",
+      detail: missingReason,
+    });
+  }
+  return checks;
+}
+
+function renderChecklistItem(check) {
+  const icon = check.status === "pass" ? "check" : check.status === "fail" ? "x" : "alert-triangle";
+  return `
+    <span class="entry-check-item ${escapeHtml(check.status)}">
+      <i data-lucide="${icon}"></i>
+      <span>
+        <b>${escapeHtml(check.label)}</b>
+        <small>${escapeHtml(check.detail)}</small>
+      </span>
+    </span>
+  `;
+}
+
+function checklistSubtitle(decision) {
+  const action = decision.final_action || "";
+  const regime = decision.market_regime || "Unknown market";
+  const sector = decision.sector_regime || "Unknown sector";
+  const rr = decision.net_rr !== undefined ? `Net R/R ${Number(decision.net_rr || 0).toFixed(2)}x` : "Net R/R unavailable";
+  return `${action} - ${regime} market - ${sector} sector - ${rr}`;
+}
+
+function humanizeStatus(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function renderPotential(item) {
