@@ -190,6 +190,15 @@ def _rr_passes(rr1: float, rr2: float, min_rr: float) -> bool:
     return rr1 >= _MIN_PRIMARY_RR and rr2 >= min_rr and _decision_rr(rr1, rr2) >= min_rr
 
 
+def _rr_candidate_passes(rr1: float, rr2: float, min_rr: float) -> bool:
+    """Keep real technical setups visible even when final trade quality is not enough.
+
+    The scanner's job is to surface candidates. The agent risk layer later decides
+    whether the setup is BUY_SIMULATED, WATCH, or SKIP using weighted and net R/R.
+    """
+    return rr1 > 0 and max(rr1, rr2) >= min_rr
+
+
 def _executable_entry(current_price: float, planned_entry: float, buy_zone: tuple[float, float]) -> float:
     """Use the current executable price when it is worse than an ideal planned entry."""
     low, high = buy_zone
@@ -411,7 +420,7 @@ def _try_fib_confluence(
     target_2 = max(vp.vah, fib.swing_high)
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if not _rr_passes(rr1, rr2, min_rr):
+    if not _rr_candidate_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -534,7 +543,7 @@ def _try_breakout_retest(
         target_2 = max(vp.vah, fib.swing_high if fib else 0.0)
 
         rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-        if not _rr_passes(rr1, rr2, min_rr):
+        if not _rr_candidate_passes(rr1, rr2, min_rr):
             continue
 
         score = _score_setup(
@@ -622,7 +631,7 @@ def _try_swing_volume(
     target_2 = vp.vah
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if not _rr_passes(rr1, rr2, min_rr):
+    if not _rr_candidate_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -715,7 +724,7 @@ def _try_liquidity_trap(
     target_2 = vp.vah
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if not _rr_passes(rr1, rr2, min_rr):
+    if not _rr_candidate_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(
@@ -810,7 +819,7 @@ def _try_vwap_reclaim(
     target_2 = vp.vah
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
-    if not _rr_passes(rr1, rr2, min_rr):
+    if not _rr_candidate_passes(rr1, rr2, min_rr):
         return None
 
     score = _score_setup(

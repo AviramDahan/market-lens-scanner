@@ -529,7 +529,13 @@ def decide(
             f"{sector} sector regime is weak ({float(health.get('score', 0)):.0f}/100); skip new entry.",
         )
     if result.risk_reward < min_rr:
-        return Decision("SKIP", f"Risk/reward {result.risk_reward:.2f} is below minimum {min_rr:.2f}.")
+        return Decision(
+            "WATCH",
+            (
+                f"Technical setup detected, but weighted risk/reward {result.risk_reward:.2f} "
+                f"is below minimum {min_rr:.2f}."
+            ),
+        )
     if result.buy_zone_low is None or result.buy_zone_high is None:
         return Decision("SKIP", "Buy zone missing.")
     if not result.stop_loss or result.stop_loss <= 0:
