@@ -294,6 +294,61 @@ h2 {
   color: var(--blue);
 }
 
+.info-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entry-rules {
+  position: relative;
+  display: inline-flex;
+}
+
+.entry-rules-button {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--blue);
+  background: #fff;
+  cursor: help;
+}
+
+.entry-rules-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.entry-rules-popover {
+  position: absolute;
+  z-index: 40;
+  top: 28px;
+  right: 0;
+  display: none;
+  width: min(420px, calc(100vw - 48px));
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(16, 24, 40, 0.18);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.entry-rules:hover .entry-rules-popover,
+.entry-rules:focus-within .entry-rules-popover {
+  display: grid;
+  gap: 8px;
+}
+
+.entry-rules-popover strong {
+  font-size: 14px;
+}
+
 #equityChart {
   width: 100%;
   min-height: 260px;

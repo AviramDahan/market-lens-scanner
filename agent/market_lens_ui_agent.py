@@ -795,7 +795,7 @@ def read_open_position_tickers(excel_path: Path) -> list[str]:
 def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_CARRY_FORWARD_DAYS", "14"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
-    return read_recent_action_tickers(excel_path, "WATCH", cutoff)
+    return read_recent_action_tickers(excel_path, {"WATCH", "WATCH_READY"}, cutoff)
 
 
 def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list[str]:
@@ -804,7 +804,8 @@ def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list
     return read_recent_action_tickers(excel_path, "SKIP", cutoff)
 
 
-def read_recent_action_tickers(excel_path: Path, action_name: str, cutoff: datetime) -> list[str]:
+def read_recent_action_tickers(excel_path: Path, action_name: str | set[str], cutoff: datetime) -> list[str]:
+    action_names = {action_name} if isinstance(action_name, str) else set(action_name)
     try:
         wb = load_workbook(excel_path, read_only=True, data_only=True)
         ws = wb["Setup Watchlist"]
@@ -824,7 +825,7 @@ def read_recent_action_tickers(excel_path: Path, action_name: str, cutoff: datet
         matching = {
             ticker: event_time
             for ticker, (event_time, action) in latest.items()
-            if action == action_name
+            if action in action_names
         }
         return sorted(matching, key=lambda ticker: matching[ticker], reverse=True)
     finally:
@@ -1051,6 +1052,7 @@ def write_summary(
 ) -> None:
     valid = [result for result in results if result.setup_type != "No Trade"]
     buys = [ticker for ticker, decision in decisions.items() if decision.action == "BUY_SIMULATED"]
+    watch_ready = [ticker for ticker, decision in decisions.items() if decision.action == "WATCH_READY"]
     watch = [ticker for ticker, decision in decisions.items() if decision.action == "WATCH"]
     closed = [ticker for ticker, decision in decisions.items() if decision.action in {"TAKE_PROFIT", "EXIT_STOP", "TAKE_PARTIAL_PROFIT"}]
     market_regime = workbook_context.get("market_regime")
@@ -1071,6 +1073,7 @@ def write_summary(
         f"Market regime: {market_text}",
         f"Actions taken: {', '.join(f'{ticker}:{decision.action}' for ticker, decision in decisions.items())}",
         f"New simulated buys: {', '.join(buys) or 'None'}",
+        f"Watch ready setups: {', '.join(watch_ready) or 'None'}",
         f"Positions on watch: {', '.join(watch) or 'None'}",
         f"Positions closed: {', '.join(closed) or 'None'}",
         f"Cash remaining: {workbook_context['cash']:.2f} {workbook_context['currency']}",

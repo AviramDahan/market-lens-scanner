@@ -47,6 +47,7 @@ class AgentRiskConfig:
     bull_min_net_rr: float = 2.0
     neutral_min_net_rr: float = 2.5
     bear_min_net_rr: float = 999.0
+    neutral_strong_sector_min_net_rr: float = 2.2
     neutral_min_setup_score: float = 0.45
     sector_exposure_bull_pct: float = 0.40
     sector_exposure_neutral_pct: float = 0.30
@@ -299,6 +300,7 @@ def evaluate_agent_candidate(
     final_action = initial_action
     final_reason = initial_reason
     if initial_action == "BUY_SIMULATED":
+        minimum_net_rr = minimum_net_rr_for(run_context.market_regime, sector_info, config)
         blockers = buy_blockers(
             result=result,
             run_context=run_context,
@@ -312,9 +314,10 @@ def evaluate_agent_candidate(
             normalized_quality_score=normalized_quality_score,
             portfolio_exposure_after=portfolio_exposure_after_if_buy,
             sizing=sizing,
+            minimum_net_rr=minimum_net_rr,
         )
         if blockers:
-            final_action = "WATCH" if any(blocker["action"] == "WATCH" for blocker in blockers) else "SKIP"
+            final_action = downgrade_action_from_blockers(blockers)
             final_reason = blockers[0]["reason"]
             warnings.extend(blocker["reason"] for blocker in blockers[1:])
         else:
@@ -347,6 +350,7 @@ def evaluate_agent_candidate(
         "market_regime": run_context.market_regime.label,
         "market_regime_score": run_context.market_regime.score,
         "market_regime_reason": run_context.market_regime.reason,
+        "minimum_net_rr_required": minimum_net_rr_for(run_context.market_regime, sector_info, config),
         "market_regime_indicators": run_context.market_regime.indicators,
         "sector": sector,
         "sector_etf": sector_info["etf"],
@@ -460,6 +464,7 @@ def buy_blockers(
     normalized_quality_score: float,
     portfolio_exposure_after: float,
     sizing: dict[str, Any],
+    minimum_net_rr: float,
 ) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     regime = run_context.market_regime
@@ -513,13 +518,13 @@ def buy_blockers(
         )
     if sector_info["regime"] == "NEUTRAL" and float(result.score or 0) < 0.40:
         blockers.append({"action": "WATCH", "reason": "WATCH: Neutral sector requires a cleaner setup score."})
-    if net_rr_info["net_rr"] < regime.minimum_net_rr:
+    if net_rr_info["net_rr"] < minimum_net_rr:
         blockers.append(
             {
-                "action": "WATCH",
+                "action": "WATCH_READY" if near_ready_net_rr(net_rr_info["net_rr"], minimum_net_rr) else "WATCH",
                 "reason": (
-                    f"WATCH: Gross R/R is valid, but Net R/R {net_rr_info['net_rr']:.2f} "
-                    f"failed after slippage/spread adjustment."
+                    f"Gross R/R is valid, but Net R/R {net_rr_info['net_rr']:.2f} "
+                    f"failed minimum {minimum_net_rr:.2f} after slippage/spread adjustment."
                 ),
             }
         )
@@ -529,8 +534,11 @@ def buy_blockers(
         blockers.append({"action": "SKIP", "reason": "SKIP: Target validation failed; target is not above price."})
     if target_info["status"] == "EXTENDED":
         blockers.append({"action": "WATCH", "reason": "WATCH: Target distance is extended versus daily ATR or market structure."})
-    if target_info["status"] == "LOW_REWARD_DISTANCE":
-        blockers.append({"action": "WATCH", "reason": "WATCH: Target 1 is too close versus daily ATR."})
+    if target_info["status"] == "LOW_REWARD_DISTANCE" and not target_one_warning_only(
+        net_rr_info=net_rr_info,
+        minimum_net_rr=minimum_net_rr,
+    ):
+        blockers.append({"action": "WATCH_READY", "reason": "Target 1 is too close versus daily ATR."})
     if sector_exposure["limit_exceeded"]:
         blockers.append(
             {"action": "WATCH", "reason": "WATCH: Sector exposure limit would be exceeded by this trade."}
@@ -551,6 +559,35 @@ def buy_blockers(
             }
         )
     return blockers
+
+
+def minimum_net_rr_for(
+    market_regime: MarketRegime,
+    sector_info: dict[str, Any],
+    config: AgentRiskConfig,
+) -> float:
+    if market_regime.label == "NEUTRAL" and sector_info.get("regime") == "STRONG":
+        return config.neutral_strong_sector_min_net_rr
+    return market_regime.minimum_net_rr
+
+
+def target_one_warning_only(*, net_rr_info: dict[str, Any], minimum_net_rr: float) -> bool:
+    return (
+        net_rr_info.get("net_rr", 0.0) >= minimum_net_rr
+        and net_rr_info.get("net_rr_2", 0.0) >= 2.0
+    )
+
+
+def near_ready_net_rr(net_rr: float, minimum_net_rr: float) -> bool:
+    return net_rr >= max(1.8, minimum_net_rr - 0.30)
+
+
+def downgrade_action_from_blockers(blockers: list[dict[str, str]]) -> str:
+    if any(blocker["action"] == "SKIP" for blocker in blockers):
+        return "SKIP"
+    if all(blocker["action"] == "WATCH_READY" for blocker in blockers):
+        return "WATCH_READY"
+    return "WATCH"
 
 
 def enrich_non_buy_reason(

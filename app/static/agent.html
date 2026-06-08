@@ -50,6 +50,28 @@
           <span class="label">Technical setups</span>
           <strong id="validSetups">0</strong>
         </div>
+        <div>
+          <span class="label info-label">
+            Trade-ready
+            <span class="entry-rules">
+              <button class="entry-rules-button" type="button" aria-label="Entry checklist rules">
+                <i data-lucide="info"></i>
+              </button>
+              <span class="entry-rules-popover" role="tooltip">
+                <strong>Entry checklist</strong>
+                <span>Required before BUY_SIMULATED:</span>
+                <span>Technical setup detected and price is executable inside the buy zone.</span>
+                <span>Market is not BEAR.</span>
+                <span>Sector is not WEAK; STRONG sectors get a lighter Neutral-market R/R threshold.</span>
+                <span>Net R/R meets the active threshold: BULL 2.0x, NEUTRAL 2.5x, NEUTRAL + STRONG sector 2.2x.</span>
+                <span>Target 2 gives enough upside. A close Target 1 is a warning, not an automatic block, when Net R/R and T2 are strong.</span>
+                <span>No earnings blackout, no excessive sector/factor exposure, and no high correlation warning.</span>
+                <span>Position sizing fits cash, exposure, and risk limits.</span>
+              </span>
+            </span>
+          </span>
+          <strong id="tradeReadySetups">0</strong>
+        </div>
       </section>
 
       <section class="metric-grid" id="metricGrid"></section>

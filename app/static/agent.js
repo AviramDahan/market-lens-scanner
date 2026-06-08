@@ -84,6 +84,7 @@ function renderDashboard(data) {
   document.getElementById("runStatus").textContent = "OK";
   document.getElementById("tickerCount").textContent = data.latest_run.tickers.length;
   document.getElementById("validSetups").textContent = data.latest_run.valid_setups;
+  document.getElementById("tradeReadySetups").textContent = countTradeReady(data.latest_setups);
 
   renderMetrics(data.summary);
   renderEquity(data.equity_curve, data.summary);
@@ -555,7 +556,7 @@ function entryChecklist(item) {
   const d = item.decision_json || {};
   const action = String(item.action || d.final_action || "").toUpperCase();
   const setupType = String(item.setup_type || d.setup_type || "");
-  if (!Object.keys(d).length || setupType === "No Trade" || !["WATCH", "BUY_SIMULATED"].includes(action)) {
+  if (!Object.keys(d).length || setupType === "No Trade" || !["WATCH", "WATCH_READY", "BUY_SIMULATED"].includes(action)) {
     return "";
   }
 
@@ -584,7 +585,7 @@ function entryChecklist(item) {
 
 function buildEntryChecklistItems(item) {
   const d = item.decision_json || {};
-  const minNetRr = d.market_regime === "NEUTRAL" ? 2.5 : d.market_regime === "BULL" ? 2.0 : Infinity;
+  const minNetRr = Number(d.minimum_net_rr_required ?? (d.market_regime === "NEUTRAL" ? 2.5 : d.market_regime === "BULL" ? 2.0 : Infinity));
   const minSetupScore = d.market_regime === "NEUTRAL" ? 0.45 : 0;
   const hasSetup = String(item.setup_type || d.setup_type || "") !== "No Trade";
   const setupScore = Number(d.setup_score ?? item.score ?? 0);
@@ -662,8 +663,8 @@ function buildEntryChecklistItems(item) {
   ];
 
   const reason = String(d.reason || item.feedback || "");
-  const missingReason = reason.replace(/^(WATCH|SKIP|BUY_SIMULATED):\s*/i, "");
-  if (String(item.action || "").toUpperCase() === "WATCH" && missingReason) {
+  const missingReason = reason.replace(/^(WATCH_READY|WATCH|SKIP|BUY_SIMULATED):\s*/i, "");
+  if (["WATCH", "WATCH_READY"].includes(String(item.action || "").toUpperCase()) && missingReason) {
     checks.push({
       status: "need",
       label: "What must improve",
@@ -725,8 +726,16 @@ function actionBadgeClass(action) {
   const value = String(action || "").toUpperCase();
   if (["BUY_SIMULATED", "TAKE_PROFIT", "TAKE_PARTIAL_PROFIT"].includes(value)) return "badge good";
   if (["EXIT_STOP"].includes(value)) return "badge bad";
+  if (["WATCH_READY"].includes(value)) return "badge neutral";
   if (["WATCH", "SKIP"].includes(value)) return "badge warn";
   return "badge neutral";
+}
+
+function countTradeReady(setups) {
+  return (setups || []).filter((setup) => {
+    const action = String(setup.action || setup.decision_json?.final_action || "").toUpperCase();
+    return action === "BUY_SIMULATED" || action === "WATCH_READY";
+  }).length;
 }
 
 function formatSignedMoney(value) {
