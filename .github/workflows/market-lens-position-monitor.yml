@@ -64,7 +64,8 @@ jobs:
           MARKET_LENS_RUN_DIR: agent_results
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
-          MARKET_LENS_MONITOR_SAVE_NOOP: "false"
+          # Keep the /agent dashboard's open-position prices, exposure, and unrealized P/L fresh.
+          MARKET_LENS_MONITOR_SAVE_NOOP: "true"
         run: python agent/position_monitor.py
 
       - name: Commit monitor results
@@ -77,5 +78,6 @@ jobs:
             echo "No position monitor changes to commit."
           else
             git commit -m "Update Market Lens position monitor"
-            git push
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main
           fi

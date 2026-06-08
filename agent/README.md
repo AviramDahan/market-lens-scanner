@@ -90,7 +90,8 @@ Add these repository secrets in GitHub:
 - `MARKET_LENS_PASSWORD`
 
 Then open GitHub Actions and run `Market Lens Paper Agent` manually once. The
-workflow is also scheduled for 12:00 New York time.
+workflow is also scheduled for 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and
+16:15 New York time.
 
 The position monitor runs every five minutes during the New York market session.
 It only manages existing open positions. It downloads one-minute intraday
@@ -99,9 +100,8 @@ loss. If target and stop are touched inside the same candle, the tracker applies
 a conservative stop-first rule because the exact intraminute sequence is not
 available.
 
-By default the monitor commits results only when it changes the portfolio state.
-Set `MARKET_LENS_MONITOR_SAVE_NOOP=true` only if you want every monitor run to
-publish a heartbeat and current-price refresh.
+In the cloud workflow, `MARKET_LENS_MONITOR_SAVE_NOOP=true` is enabled so every
+monitor run publishes a heartbeat and current-price refresh for open positions.
 
 ## Conservative Decision Rules
 

@@ -234,8 +234,8 @@ publish the latest paper portfolio state back into the public app.
 
 The cloud setup has two separate workflows:
 
-- `Market Lens Paper Agent` runs the full UI scan once per day at 12:00 New York time.
-- `Market Lens Position Monitor` checks existing open positions every five minutes during the New York market session.
+- `Market Lens Paper Agent` runs the full UI scan at 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and 16:15 New York time.
+- `Market Lens Position Monitor` checks existing open positions every five minutes from 09:35 through 16:00 New York time.
 
 The position monitor does not open new trades. It reads the current open
 positions from the Excel tracker, downloads one-minute intraday candles, and
@@ -244,9 +244,9 @@ was touched. If target and stop are touched in the same one-minute candle, the
 paper tracker applies a conservative stop-first rule because the exact sequence
 inside that candle is unknown.
 
-To avoid unnecessary Render redeploys, the monitor commits back to GitHub only
-when it changes the portfolio state or when `MARKET_LENS_MONITOR_SAVE_NOOP=true`
-is explicitly enabled.
+The cloud monitor uses `MARKET_LENS_MONITOR_SAVE_NOOP=true` so the public
+`/agent` dashboard keeps open-position prices, exposure, and unrealized P/L
+fresh even when no target or stop was touched.
 
 Configure it with `.env` based on `.env.example`, then run:
 

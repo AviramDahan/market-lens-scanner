@@ -72,6 +72,9 @@ jobs:
           MARKET_LENS_ANALYSIS_PERIOD: 6mo
           MARKET_LENS_MIN_RR: "2"
           MARKET_LENS_HEADLESS: "true"
+          MARKET_LENS_AGENT_TIMEOUT_SECONDS: "900"
+          MARKET_LENS_SKIP_COOLDOWN_HOURS: "8"
+          MARKET_LENS_WATCH_CARRY_FORWARD_DAYS: "14"
         run: python agent/market_lens_ui_agent.py
 
       - name: Commit agent results
@@ -84,5 +87,6 @@ jobs:
             echo "No agent result changes to commit."
           else
             git commit -m "Update Market Lens paper agent results"
-            git push
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main
           fi
