@@ -20,6 +20,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     results_dir = project_root / "agent_results"
     screenshot_dir = results_dir / "screenshots"
     summary_dir = results_dir / "summaries"
+    position_monitor_dir = results_dir / "position_monitor"
     decision_dir = results_dir / "decisions"
 
     if not tracker_path.exists():
@@ -42,6 +43,8 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     setup_rows = read_setup_rows(wb)
     latest_update = select_update(updates, selected_date)
     latest_run_timestamp = latest_update.get("timestamp")
+    latest_scan_update = select_latest_scan_update(updates, latest_update)
+    latest_scan_timestamp = latest_scan_update.get("timestamp")
     scoped_updates = filter_records_until(updates, latest_run_timestamp)
     scoped_trades = filter_records_until(trades, latest_run_timestamp)
     current_snapshot = not selected_date and latest_update == (updates[-1] if updates else {})
@@ -66,16 +69,18 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     total_pnl_pct = round(total_pnl / starting_capital * 100, 2) if starting_capital else 0
 
     latest_summary_path = resolve_record_file(latest_update.get("summary"), summary_dir, ".md")
+    if not latest_summary_path:
+        latest_summary_path = resolve_record_file(latest_update.get("summary"), position_monitor_dir, ".md")
     if not selected_date and not latest_summary_path:
         latest_summary_path = resolve_latest_file(summary_dir, ".md")
     latest_summary = latest_summary_path.read_text(encoding="utf-8") if latest_summary_path else ""
-    screenshot_source = latest_update.get("screenshot")
+    screenshot_source = latest_update.get("screenshot") or latest_scan_update.get("screenshot")
     if not selected_date and not screenshot_source:
         screenshot_source = resolve_latest_file(screenshot_dir, ".png")
     latest_screenshot = resolve_asset_url(screenshot_source)
 
     latest_setups = [
-        row for row in setup_rows if latest_run_timestamp and row.get("run_date") == latest_run_timestamp
+        row for row in setup_rows if latest_scan_timestamp and row.get("run_date") == latest_scan_timestamp
     ]
     if not latest_setups and not selected_date:
         latest_setups = setup_rows[-25:]
@@ -126,11 +131,13 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "screenshot_url": latest_screenshot,
             "summary_url": resolve_asset_url(latest_summary_path),
             "decision_jsonl_url": resolve_asset_url(
-                latest_update.get("decision_jsonl") or resolve_latest_file(decision_dir, ".jsonl")
+                latest_scan_update.get("decision_jsonl") or latest_update.get("decision_jsonl") or resolve_latest_file(decision_dir, ".jsonl")
             ),
             "summary_text": latest_summary,
             "action_counts": dict(sorted(action_counts.items())),
             "market_regime": latest_decisions[0].get("market_regime", "") if latest_decisions else "",
+            "latest_scan_run_id": latest_scan_update.get("run_id"),
+            "latest_scan_timestamp": latest_scan_update.get("timestamp"),
         },
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
         "open_positions": open_positions,
@@ -288,6 +295,22 @@ def select_update(updates: list[dict[str, Any]], selected_date: str | None) -> d
 
     selected = [update for update in updates if parse_timestamp(update.get("timestamp")) <= end_of_day]
     return selected[-1] if selected else {}
+
+
+def select_latest_scan_update(updates: list[dict[str, Any]], latest_update: dict[str, Any]) -> dict[str, Any]:
+    if not updates:
+        return {}
+    end_index = len(updates) - 1
+    if latest_update in updates:
+        end_index = updates.index(latest_update)
+    for update in reversed(updates[: end_index + 1]):
+        if not is_monitor_update(update):
+            return update
+    return {}
+
+
+def is_monitor_update(update: dict[str, Any]) -> bool:
+    return str(update.get("run_id") or "").startswith("monitor_")
 
 
 def filter_records_until(records: list[dict[str, Any]], cutoff: Any, key: str = "timestamp") -> list[dict[str, Any]]:
@@ -623,7 +646,7 @@ def parse_selected_date_end(value: str | None) -> datetime | None:
 
 def parse_timestamp(value: Any) -> datetime:
     if isinstance(value, datetime):
-        return value
+        return value.replace(tzinfo=None)
     if not value:
         return datetime.min
     text = str(value).strip()
@@ -631,7 +654,7 @@ def parse_timestamp(value: Any) -> datetime:
         return datetime.min
     normalized = text.replace("Z", "").replace(" ", "T")
     try:
-        return datetime.fromisoformat(normalized)
+        return datetime.fromisoformat(normalized).replace(tzinfo=None)
     except ValueError:
         try:
             return datetime.strptime(text[:19], "%Y-%m-%dT%H:%M:%S")
