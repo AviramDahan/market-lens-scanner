@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   schedule:
     # GitHub cron runs in UTC.
-    # This triggers every 20 minutes, Monday-Friday.
+    # Trigger every 20 minutes, every day.
     # The New York time guard below limits actual execution to US market hours.
-    - cron: "*/3 * * * 1-5"
+    - cron: "0,10,20,40 * * * *"
 
 permissions:
   contents: write
