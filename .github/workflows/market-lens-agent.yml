@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Every 20 min during US market hours Mon–Fri (13:00–20:59 UTC ≈ 09:00–16:59 ET)
-    - cron: "*/20 13-20 * * 1-5"
+    - cron: "*/5 13-20 * * 1-5"
 
 permissions:
   contents: write
