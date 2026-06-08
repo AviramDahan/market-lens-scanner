@@ -3,10 +3,11 @@ name: Market Lens Paper Agent
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron runs in UTC.
-    # Trigger every 20 minutes, every day.
-    # The New York time guard below limits actual execution to US market hours.
-    - cron: "0,10,20,40 * * * *"
+    # US market hours Mon–Fri (EDT: 09:30–16:00 NY = 13:30–20:00 UTC)
+    # Note: during EST (Nov–Mar) shift +1 hour (14:30–21:00 UTC)
+    - cron: "40 13 * * 1-5"
+    - cron: "0,10,20,40 14-19 * * 1-5"
+    - cron: "0 20 * * 1-5"
 
 permissions:
   contents: write
@@ -21,46 +22,21 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Check New York market hours
-        id: schedule_time
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" != "schedule" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          local_day="$(TZ=America/New_York date +%u)"
-          current_time="$(TZ=America/New_York date +%H%M)"
-
-          # Run only Monday-Friday during regular US market hours:
-          # 09:30-16:00 New York time.
-          if [ "$local_day" -le 5 ] && [ "$current_time" -ge 0930 ] && [ "$current_time" -le 1600 ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Outside US market hours; skipping this scheduled trigger."
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout
-        if: steps.schedule_time.outputs.should_run == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python
-        if: steps.schedule_time.outputs.should_run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        if: steps.schedule_time.outputs.should_run == 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m playwright install --with-deps chromium
 
       - name: Run Market Lens UI agent
-        if: steps.schedule_time.outputs.should_run == 'true'
         env:
           MARKET_LENS_URL: https://market-lens-scanner.onrender.com/?v=latest
           MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}
@@ -78,7 +54,6 @@ jobs:
         run: python agent/market_lens_ui_agent.py
 
       - name: Commit agent results
-        if: steps.schedule_time.outputs.should_run == 'true'
         run: |
           git config user.name "market-lens-agent"
           git config user.email "market-lens-agent@users.noreply.github.com"
