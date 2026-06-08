@@ -3,11 +3,8 @@ name: Market Lens Paper Agent
 on:
   workflow_dispatch:
   schedule:
-    # US market hours Mon–Fri (EDT: 09:30–16:00 NY = 13:30–20:00 UTC)
-    # Note: during EST (Nov–Mar) shift +1 hour (14:30–21:00 UTC)
-    - cron: "40 13 * * 1-5"
-    - cron: "0,10,20,40 14-19 * * 1-5"
-    - cron: "0 20 * * 1-5"
+    # Every 20 min during US market hours Mon–Fri (13:00–20:59 UTC ≈ 09:00–16:59 ET)
+    - cron: "*/20 13-20 * * 1-5"
 
 permissions:
   contents: write
