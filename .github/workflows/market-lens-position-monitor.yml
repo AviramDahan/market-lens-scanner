@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: market-lens-position-monitor
+  group: market-lens-repo-writes
   cancel-in-progress: false
 
 jobs:
@@ -34,6 +34,7 @@ jobs:
           local_minutes=$((10#$local_hour * 60 + 10#$local_minute))
           market_open=$((9 * 60 + 35))
           market_close=$((16 * 60))
+
           if [ "$local_day" -le 5 ] && [ "$local_minutes" -ge "$market_open" ] && [ "$local_minutes" -le "$market_close" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
           else
@@ -44,6 +45,8 @@ jobs:
       - name: Checkout
         if: steps.schedule_time.outputs.should_run == 'true'
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         if: steps.schedule_time.outputs.should_run == 'true'
@@ -64,20 +67,86 @@ jobs:
           MARKET_LENS_RUN_DIR: agent_results
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
-          # Keep the /agent dashboard's open-position prices, exposure, and unrealized P/L fresh.
           MARKET_LENS_MONITOR_SAVE_NOOP: "true"
         run: python agent/position_monitor.py
 
-      - name: Commit monitor results
+      - name: Commit monitor results safely
         if: steps.schedule_time.outputs.should_run == 'true'
+        shell: bash
         run: |
+          set -e
+
           git config user.name "market-lens-agent"
           git config user.email "market-lens-agent@users.noreply.github.com"
-          git add agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx agent_results
+
+          EXCEL_FILE="agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
+          RESULTS_DIR="agent_results"
+          TEMP_DIR="/tmp/market_lens_monitor_generated"
+
+          echo "Saving Monitor-generated files aside..."
+          rm -rf "$TEMP_DIR"
+          mkdir -p "$TEMP_DIR"
+
+          if [ -f "$EXCEL_FILE" ]; then
+            mkdir -p "$TEMP_DIR/agent_tracker"
+            cp "$EXCEL_FILE" "$TEMP_DIR/$EXCEL_FILE"
+          fi
+
+          if [ -d "$RESULTS_DIR" ]; then
+            mkdir -p "$TEMP_DIR/$RESULTS_DIR"
+            cp -R "$RESULTS_DIR"/. "$TEMP_DIR/$RESULTS_DIR"/
+          fi
+
+          echo "Moving local repo to latest origin/main..."
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
+
+          echo "Restoring Monitor-generated files on top of latest main..."
+          if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
+            mkdir -p "$(dirname "$EXCEL_FILE")"
+            cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
+          fi
+
+          if [ -d "$TEMP_DIR/$RESULTS_DIR" ]; then
+            mkdir -p "$RESULTS_DIR"
+            cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
+          fi
+
+          git add "$EXCEL_FILE" "$RESULTS_DIR"
+
           if git diff --cached --quiet; then
             echo "No position monitor changes to commit."
-          else
+            exit 0
+          fi
+
+          git commit -m "Update Market Lens position monitor"
+
+          echo "Pushing changes..."
+          if ! git push origin HEAD:main; then
+            echo "Push rejected because main changed. Retrying once on top of latest main..."
+
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
+              mkdir -p "$(dirname "$EXCEL_FILE")"
+              cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
+            fi
+
+            if [ -d "$TEMP_DIR/$RESULTS_DIR" ]; then
+              mkdir -p "$RESULTS_DIR"
+              cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
+            fi
+
+            git add "$EXCEL_FILE" "$RESULTS_DIR"
+
+            if git diff --cached --quiet; then
+              echo "No position monitor changes to commit after retry."
+              exit 0
+            fi
+
             git commit -m "Update Market Lens position monitor"
-            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
