@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: market-lens-paper-agent
+  group: market-lens-repo-writes
   cancel-in-progress: false
 
 jobs:
@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -49,15 +51,82 @@ jobs:
           MARKET_LENS_WATCH_CARRY_FORWARD_DAYS: "14"
         run: python agent/market_lens_ui_agent.py
 
-      - name: Commit agent results
+      - name: Commit agent results safely
+        shell: bash
         run: |
+          set -e
+
           git config user.name "market-lens-agent"
           git config user.email "market-lens-agent@users.noreply.github.com"
-          git add agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx agent_results
+
+          EXCEL_FILE="agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
+          RESULTS_DIR="agent_results"
+          TEMP_DIR="/tmp/market_lens_agent_generated"
+
+          echo "Saving Agent-generated files aside..."
+          rm -rf "$TEMP_DIR"
+          mkdir -p "$TEMP_DIR"
+
+          if [ -f "$EXCEL_FILE" ]; then
+            mkdir -p "$TEMP_DIR/agent_tracker"
+            cp "$EXCEL_FILE" "$TEMP_DIR/$EXCEL_FILE"
+          fi
+
+          if [ -d "$RESULTS_DIR" ]; then
+            mkdir -p "$TEMP_DIR/$RESULTS_DIR"
+            cp -R "$RESULTS_DIR"/. "$TEMP_DIR/$RESULTS_DIR"/
+          fi
+
+          echo "Moving local repo to latest origin/main..."
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
+
+          echo "Restoring Agent-generated files on top of latest main..."
+          if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
+            mkdir -p "$(dirname "$EXCEL_FILE")"
+            cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
+          fi
+
+          if [ -d "$TEMP_DIR/$RESULTS_DIR" ]; then
+            mkdir -p "$RESULTS_DIR"
+            cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
+          fi
+
+          git add "$EXCEL_FILE" "$RESULTS_DIR"
+
           if git diff --cached --quiet; then
             echo "No agent result changes to commit."
-          else
+            exit 0
+          fi
+
+          git commit -m "Update Market Lens paper agent results"
+
+          echo "Pushing changes..."
+          if ! git push origin HEAD:main; then
+            echo "Push rejected because main changed. Retrying once on top of latest main..."
+
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
+              mkdir -p "$(dirname "$EXCEL_FILE")"
+              cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
+            fi
+
+            if [ -d "$TEMP_DIR/$RESULTS_DIR" ]; then
+              mkdir -p "$RESULTS_DIR"
+              cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
+            fi
+
+            git add "$EXCEL_FILE" "$RESULTS_DIR"
+
+            if git diff --cached --quiet; then
+              echo "No agent result changes to commit after retry."
+              exit 0
+            fi
+
             git commit -m "Update Market Lens paper agent results"
-            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
