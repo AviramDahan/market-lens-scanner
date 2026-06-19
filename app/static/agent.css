@@ -809,6 +809,26 @@ td {
   line-height: 1.45;
 }
 
+.selection-lines {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.selection-lines span {
+  display: block;
+  padding-left: 10px;
+  border-left: 2px solid #dfe5ee;
+  overflow-wrap: anywhere;
+}
+
+.selection-lines.empty {
+  padding-left: 0;
+  border-left: 0;
+}
+
 .summary-text {
   margin: 0;
   max-height: 360px;

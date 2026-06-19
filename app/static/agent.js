@@ -2,9 +2,13 @@ const state = {
   data: null,
   actionsExpanded: false,
   visibleActionCount: 10,
+  tradesExpanded: false,
+  visibleTradeCount: 10,
+  liveTimer: null,
 };
 
 const ACTIONS_PAGE_SIZE = 10;
+const TRADES_PAGE_SIZE = 10;
 
 let money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -37,6 +41,15 @@ document.addEventListener("DOMContentLoaded", () => {
     state.visibleActionCount += ACTIONS_PAGE_SIZE;
     renderActions(state.data?.latest_setups || []);
   });
+  document.getElementById("toggleTrades").addEventListener("click", () => {
+    state.tradesExpanded = !state.tradesExpanded;
+    state.visibleTradeCount = TRADES_PAGE_SIZE;
+    renderTrades(state.data?.recent_trades || [], state.data?.closed_trades || []);
+  });
+  document.getElementById("loadMoreTrades").addEventListener("click", () => {
+    state.visibleTradeCount += TRADES_PAGE_SIZE;
+    renderTrades(state.data?.recent_trades || [], state.data?.closed_trades || []);
+  });
   setupMediaModal();
   loadDashboard(selectedDate);
 });
@@ -52,6 +65,8 @@ async function loadDashboard(selectedDate = "") {
     state.data = await response.json();
     state.actionsExpanded = false;
     state.visibleActionCount = ACTIONS_PAGE_SIZE;
+    state.tradesExpanded = false;
+    state.visibleTradeCount = TRADES_PAGE_SIZE;
     syncDateUrl(selectedDate);
     renderDashboard(state.data);
   } catch (error) {
@@ -96,9 +111,40 @@ function renderDashboard(data) {
   renderTrades(data.recent_trades, data.closed_trades);
   renderCalibration(data.score_calibration || []);
   renderSummary(data.latest_run);
+  startLivePrices(snapshot.selected_date || "");
 
   if (window.lucide) {
     window.lucide.createIcons();
+  }
+}
+
+function startLivePrices(selectedDate) {
+  stopLivePrices();
+  if (selectedDate || !state.data?.open_positions?.length) return;
+  refreshLivePrices();
+  state.liveTimer = window.setInterval(refreshLivePrices, 60_000);
+}
+
+function stopLivePrices() {
+  if (!state.liveTimer) return;
+  window.clearInterval(state.liveTimer);
+  state.liveTimer = null;
+}
+
+async function refreshLivePrices() {
+  try {
+    const response = await fetch(`/agent/live-prices?v=${Date.now()}`);
+    if (!response.ok) return;
+    const live = await response.json();
+    if (live.status !== "ok" || !state.data) return;
+    state.data.summary = live.summary || state.data.summary;
+    state.data.open_positions = live.open_positions || state.data.open_positions;
+    renderMetrics(state.data.summary);
+    renderPositionsOverview(state.data.open_positions, live.updated_at);
+    renderPositions(state.data.open_positions, live.updated_at);
+    renderPositionCharts(state.data.open_positions);
+  } catch (_error) {
+    // Live refresh is best-effort; the committed tracker remains the fallback.
   }
 }
 
@@ -268,10 +314,12 @@ function renderScanCharts(setups, run) {
   });
 }
 
-function renderPositionsOverview(positions) {
+function renderPositionsOverview(positions, liveUpdatedAt = "") {
   const panel = document.getElementById("positionsOverviewPanel");
   const grid = document.getElementById("positionsOverview");
-  document.getElementById("positionsOverviewMeta").textContent = `${positions.length} open positions`;
+  document.getElementById("positionsOverviewMeta").textContent = liveUpdatedAt
+    ? `${positions.length} open positions - live ${formatDate(liveUpdatedAt)}`
+    : `${positions.length} open positions`;
   if (!positions.length) {
     grid.innerHTML = '<div class="empty-state compact">No open positions</div>';
     panel.classList.add("is-empty");
@@ -307,8 +355,10 @@ function renderPositionsOverview(positions) {
     .join("");
 }
 
-function renderPositions(positions) {
-  document.getElementById("positionMeta").textContent = `${positions.length} open positions`;
+function renderPositions(positions, liveUpdatedAt = "") {
+  document.getElementById("positionMeta").textContent = liveUpdatedAt
+    ? `${positions.length} open positions - live ${formatDate(liveUpdatedAt)}`
+    : `${positions.length} open positions`;
   const body = document.getElementById("positionsBody");
   if (!positions.length) {
     body.innerHTML = `<tr><td colspan="12" class="empty-state">No open positions</td></tr>`;
@@ -370,7 +420,7 @@ function renderPositionCharts(positions) {
               <strong>${escapeHtml(tickerLabel(position))}</strong>
               <span class="meta">${escapeHtml(tickerMeta(position, formatDate(position.entry_date)))}</span>
             </div>
-            <p>${escapeHtml(selectionText(position))}</p>
+            ${selectionLines(position)}
           </div>
         </article>
       `;
@@ -501,14 +551,29 @@ function renderCalibration(rows) {
 function renderTrades(trades, closedTrades) {
   document.getElementById("tradeMeta").textContent = `${closedTrades.length} closed / ${trades.length} logged`;
   const list = document.getElementById("tradeList");
+  const toggle = document.getElementById("toggleTrades");
+  const loadMoreRow = document.getElementById("tradesLoadMoreRow");
+  const loadMore = document.getElementById("loadMoreTrades");
+  toggle.setAttribute("aria-expanded", String(state.tradesExpanded));
+  toggle.innerHTML = `
+    <i data-lucide="${state.tradesExpanded ? "chevron-up" : "chevron-down"}"></i>
+    <span>${state.tradesExpanded ? "Hide" : "Show"}</span>
+  `;
   if (!trades.length) {
     list.innerHTML = '<div class="empty-state">No trades logged</div>';
+    loadMoreRow.hidden = true;
+    toggle.disabled = true;
     return;
   }
-  list.innerHTML = trades
-    .slice()
-    .reverse()
-    .slice(0, 12)
+  toggle.disabled = false;
+  if (!state.tradesExpanded) {
+    list.innerHTML = '<div class="empty-state compact">Trade log is collapsed. Open to load the latest 10 trades.</div>';
+    loadMoreRow.hidden = true;
+    return;
+  }
+  const sorted = trades.slice().reverse();
+  const visible = sorted.slice(0, state.visibleTradeCount);
+  list.innerHTML = visible
     .map((trade) => {
       const cash = trade.action === "BUY_SIMULATED" ? trade.cash_out_ils : trade.cash_in_ils;
       return `
@@ -526,6 +591,14 @@ function renderTrades(trades, closedTrades) {
       `;
     })
     .join("");
+  loadMoreRow.hidden = state.visibleTradeCount >= sorted.length;
+  if (!loadMoreRow.hidden) {
+    const nextCount = Math.min(TRADES_PAGE_SIZE, sorted.length - state.visibleTradeCount);
+    loadMore.querySelector("span").textContent = `Load ${nextCount} more`;
+  }
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 }
 
 function renderSummary(run) {
@@ -552,6 +625,15 @@ function tickerMeta(item, fallback = "") {
 
 function selectionText(item) {
   return item.selection_context || item.decision_json?.reason || item.feedback || item.notes || item.reason || "";
+}
+
+function selectionLines(item) {
+  const lines = selectionText(item)
+    .split("|")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (!lines.length) return '<p class="selection-lines empty">No selection context</p>';
+  return `<div class="selection-lines">${lines.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</div>`;
 }
 
 function decisionMeta(item) {

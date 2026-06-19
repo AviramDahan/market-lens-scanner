@@ -1,14 +1,17 @@
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard
+from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard, with_position_calculations
 from app.auth import get_current_user_required
 from app.charts import write_scan_chart
 from app.config import load_config
+from app.data import fetch_intraday_frame
 from app.models import SaveSetupRequest, ScanRequest, ScanResponse
 from app.scanner import scan_tickers
 from app.smart_universe import build_smart_universe
@@ -25,6 +28,9 @@ AGENT_TRACKER_DIR = PROJECT_ROOT / "agent_tracker"
 CHART_DIR.mkdir(exist_ok=True)
 AGENT_RESULTS_DIR.mkdir(exist_ok=True)
 init_storage()
+
+LIVE_PRICE_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_LIVE_PRICE_CACHE_TTL", "45"))
+_LIVE_PRICE_CACHE: dict[str, tuple[float, float, str]] = {}
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/charts", StaticFiles(directory=CHART_DIR), name="charts")
@@ -49,6 +55,83 @@ async def agent_ui_trailing() -> FileResponse:
 @app.get("/agent/data")
 async def get_agent_dashboard(date: str | None = Query(default=None)) -> dict:
     return build_agent_dashboard(PROJECT_ROOT, selected_date=date)
+
+
+@app.get("/agent/live-prices")
+async def get_agent_live_prices() -> dict:
+    dashboard = build_agent_dashboard(PROJECT_ROOT)
+    if dashboard.get("status") != "ok":
+        return dashboard
+
+    positions = dashboard.get("open_positions", [])
+    refreshed = []
+    prices = {}
+    warnings = {}
+    for position in positions:
+        ticker = str(position.get("ticker") or "").upper()
+        if not ticker:
+            refreshed.append(position)
+            continue
+        try:
+            price, source_time = fetch_live_price(ticker)
+            updated = dict(position)
+            updated["current_price_usd"] = round(price, 2)
+            updated["live_price_updated_at"] = source_time
+            updated["live_price_source"] = "1m intraday"
+            refreshed_position = with_position_calculations(updated)
+            refreshed.append(refreshed_position)
+            prices[ticker] = {
+                "current_price_usd": refreshed_position["current_price_usd"],
+                "updated_at": source_time,
+            }
+        except Exception as exc:
+            warnings[ticker] = str(exc)
+            fallback = dict(position)
+            fallback["live_price_warning"] = str(exc)
+            refreshed.append(fallback)
+
+    summary = dict(dashboard.get("summary") or {})
+    exposure = round(sum(float(position.get("exposure_ils") or 0) for position in refreshed), 2)
+    unrealized = round(sum(float(position.get("unrealized_pnl_ils") or 0) for position in refreshed), 2)
+    open_risk = round(sum(float(position.get("open_risk_ils") or 0) for position in refreshed), 2)
+    summary.update(
+        {
+            "exposure_ils": exposure,
+            "unrealized_pnl_ils": unrealized,
+            "open_risk_ils": open_risk,
+            "equity_ils": round(float(summary.get("cash_ils") or 0) + exposure, 2),
+        }
+    )
+    starting = float(summary.get("starting_capital_ils") or 0)
+    summary["total_pnl_ils"] = round(summary["equity_ils"] - starting, 2)
+    summary["total_pnl_pct"] = round(summary["total_pnl_ils"] / starting * 100, 2) if starting else 0
+
+    return {
+        "status": "ok",
+        "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "summary": summary,
+        "open_positions": refreshed,
+        "prices": prices,
+        "warnings": warnings,
+    }
+
+
+def fetch_live_price(ticker: str) -> tuple[float, str]:
+    now = time.monotonic()
+    cached = _LIVE_PRICE_CACHE.get(ticker)
+    if cached and now - cached[0] < LIVE_PRICE_CACHE_TTL_SECONDS:
+        return cached[1], cached[2]
+
+    try:
+        frame = fetch_intraday_frame(ticker, period="1d", interval="1m")
+    except Exception:
+        frame = fetch_intraday_frame(ticker, period="5d", interval="1m")
+    if frame.empty:
+        raise ValueError(f"{ticker}: no live intraday rows returned")
+    price = float(frame["Close"].dropna().iloc[-1])
+    source_time = frame.index[-1].isoformat()
+    _LIVE_PRICE_CACHE[ticker] = (now, price, source_time)
+    return price, source_time
 
 
 @app.get("/agent/tracker")
@@ -92,9 +175,20 @@ async def scan_with_charts(
     saved = []
     user_id = user.get("id")
     user_label = user.get("email") or request.user_label
-    for detail in details:
+
+    def build_chart(detail):
         path = write_scan_chart(detail, CHART_DIR)
-        charts[detail.result.ticker] = f"/charts/{path.name}"
+        return detail.result.ticker, f"/charts/{path.name}"
+
+    if details:
+        max_workers = max(1, min(int(os.getenv("MARKET_LENS_CHART_WORKERS", "6")), len(details)))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_by_ticker = {executor.submit(build_chart, detail): detail.result.ticker for detail in details}
+            for future in as_completed(future_by_ticker):
+                ticker, chart_url = future.result()
+                charts[ticker] = chart_url
+
+    for detail in details:
         saved_setup = save_setup(
             detail.result,
             analysis_period=request.analysis_period,

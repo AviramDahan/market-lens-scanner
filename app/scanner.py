@@ -21,7 +21,7 @@ from app.professional import enrich_professional_context
 from app.setups import detect_setup
 
 logger = logging.getLogger(__name__)
-DEFAULT_SCAN_WORKERS = int(os.getenv("MARKET_LENS_SCAN_WORKERS", "6"))
+DEFAULT_SCAN_WORKERS = int(os.getenv("MARKET_LENS_SCAN_WORKERS", "10"))
 
 
 @dataclass

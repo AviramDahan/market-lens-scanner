@@ -179,8 +179,18 @@
               <h2>Trade Log</h2>
               <p id="tradeMeta">Recent agent trades</p>
             </div>
+            <button id="toggleTrades" class="icon-button secondary" type="button" aria-expanded="false">
+              <i data-lucide="chevron-down"></i>
+              <span>Show</span>
+            </button>
           </div>
           <div id="tradeList" class="trade-list"></div>
+          <div id="tradesLoadMoreRow" class="load-more-row" hidden>
+            <button id="loadMoreTrades" class="icon-button secondary" type="button">
+              <i data-lucide="list-plus"></i>
+              <span>Load more</span>
+            </button>
+          </div>
         </div>
       </section>
 
