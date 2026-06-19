@@ -84,7 +84,7 @@ jobs:
           MARKET_LENS_RUN_DIR: agent_results
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
-          MARKET_LENS_MONITOR_SAVE_NOOP: "true"
+          MARKET_LENS_MONITOR_SAVE_NOOP: "false"
         run: python agent/position_monitor.py
 
       - name: Run Market Lens UI agent
