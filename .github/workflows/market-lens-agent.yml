@@ -34,7 +34,7 @@ jobs:
           local_time="$(TZ=America/New_York date +%H:%M)"
 
           case "$local_time" in
-            "09:45"|"11:30"|"13:30"|"15:30")
+            "09:45"|"10:30"|"11:30"|"13:30"|"14:30"|"15:30"|"16:15")
               if [ "$local_day" -le 5 ]; then
                 echo "should_run=true" >> "$GITHUB_OUTPUT"
               else
@@ -94,6 +94,9 @@ jobs:
           MARKET_LENS_STOP_COOLDOWN_DAYS: "3"
           MARKET_LENS_COOLDOWN_EXCEPTION_SETUP_SCORE: "0.60"
           MARKET_LENS_COOLDOWN_EXCEPTION_NET_RR1: "1.20"
+          MARKET_LENS_SAVE_REJECTED_CHARTS: "false"
+          MARKET_LENS_REJECTED_CHART_LIMIT: "5"
+          MARKET_LENS_REJECTED_CHART_MIN_SCORE: "0.40"
         run: python agent/market_lens_ui_agent.py
 
       - name: Commit agent results safely

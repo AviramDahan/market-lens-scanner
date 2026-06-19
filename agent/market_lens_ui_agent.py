@@ -74,6 +74,13 @@ class Decision:
     decision_json: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class ChartRetentionSettings:
+    save_rejected_charts: bool
+    rejected_chart_limit: int
+    rejected_chart_min_score: float
+
+
 def main() -> None:
     settings = load_settings()
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -108,8 +115,6 @@ def main() -> None:
             log("Running UI scan")
             results = run_scan(page, deadline)
             log(f"Scan completed: {len(results)} results")
-            log("Persisting chart images")
-            persist_chart_images(results, settings.url, run_id, deadline)
             scan_status = f"completed: {len(results)} results"
             log("Saving screenshot")
             page.screenshot(path=str(screenshot_path), full_page=True)
@@ -198,6 +203,21 @@ def required_env(name: str) -> str:
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
     return value
+
+
+def env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def chart_retention_settings() -> ChartRetentionSettings:
+    return ChartRetentionSettings(
+        save_rejected_charts=env_bool("MARKET_LENS_SAVE_REJECTED_CHARTS", False),
+        rejected_chart_limit=max(0, int(os.getenv("MARKET_LENS_REJECTED_CHART_LIMIT", "5"))),
+        rejected_chart_min_score=float(os.getenv("MARKET_LENS_REJECTED_CHART_MIN_SCORE", "0.40")),
+    )
 
 
 def is_auth_failure(message: str) -> bool:
@@ -403,23 +423,91 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
     return [parse_result(item) for item in extracted]
 
 
-def persist_chart_images(results: list[SetupResult], base_url: str, run_id: str, deadline: float) -> None:
-    for result in results:
-        if not result.chart_url:
+def apply_chart_retention_policy(
+    pending: list[tuple[SetupResult, Decision]],
+    *,
+    base_url: str,
+    run_id: str,
+    open_position_tickers: set[str],
+) -> None:
+    settings = chart_retention_settings()
+    selected = select_chart_tickers(pending, settings=settings, open_position_tickers=open_position_tickers)
+    deadline = time.monotonic() + 120
+    for result, _decision in pending:
+        if result.ticker not in selected:
+            result.chart_url = ""
             continue
-        source_url = urljoin(base_url, result.chart_url)
-        destination = CHART_DIR / f"market_lens_agent_{run_id}_{result.ticker.lower()}.png"
-        try:
-            request = Request(source_url, headers={"User-Agent": "market-lens-agent/1.0"})
-            with urlopen(request, timeout=max(1, remaining_ms(deadline, 60_000) // 1000)) as response:
-                content_type = response.headers.get("content-type", "")
-                data = response.read()
-            if not data or "image" not in content_type.lower():
-                continue
-            destination.write_bytes(data)
-            result.chart_url = str(destination)
-        except Exception:
+        if not persist_chart_image(result, base_url, run_id, deadline):
+            result.chart_url = ""
+
+
+def select_chart_tickers(
+    pending: list[tuple[SetupResult, Decision]],
+    *,
+    settings: ChartRetentionSettings,
+    open_position_tickers: set[str] | None = None,
+) -> set[str]:
+    open_position_tickers = open_position_tickers or set()
+    selected: set[str] = set()
+    rejected_candidates: list[tuple[float, str]] = []
+    always_actions = {
+        "BUY_SIMULATED",
+        "HOLD",
+        "WATCH_READY",
+        "TAKE_PARTIAL_PROFIT",
+        "TAKE_PROFIT",
+        "EXIT_STOP",
+    }
+
+    for result, decision in pending:
+        ticker = result.ticker
+        action = str(decision.action or "").upper()
+        decision_json = decision.decision_json or {}
+        if action in always_actions or ticker in open_position_tickers:
+            selected.add(ticker)
             continue
+        if action not in {"WATCH", "SKIP"}:
+            continue
+        setup_type = str(decision_json.get("setup_type") or result.setup_type or "")
+        if setup_type == "No Trade":
+            continue
+        setup_score = float(decision_json.get("setup_score") or result.score or 0)
+        if setup_score < settings.rejected_chart_min_score:
+            continue
+        if str(decision_json.get("sector_regime") or "").upper() == "WEAK":
+            continue
+        net_rr = parse_optional_float(decision_json.get("net_rr"))
+        if net_rr is not None and net_rr < 0.80:
+            continue
+        rank = float(decision_json.get("final_display_score") or setup_score)
+        if settings.save_rejected_charts:
+            selected.add(ticker)
+        else:
+            rejected_candidates.append((rank, ticker))
+
+    if not settings.save_rejected_charts and settings.rejected_chart_limit:
+        rejected_candidates.sort(reverse=True)
+        selected.update(ticker for _rank, ticker in rejected_candidates[: settings.rejected_chart_limit])
+    return selected
+
+
+def persist_chart_image(result: SetupResult, base_url: str, run_id: str, deadline: float) -> bool:
+    if not result.chart_url:
+        return False
+    source_url = urljoin(base_url, result.chart_url)
+    destination = CHART_DIR / f"market_lens_agent_{run_id}_{result.ticker.lower()}.png"
+    try:
+        request = Request(source_url, headers={"User-Agent": "market-lens-agent/1.0"})
+        with urlopen(request, timeout=max(1, remaining_ms(deadline, 60_000) // 1000)) as response:
+            content_type = response.headers.get("content-type", "")
+            data = response.read()
+        if not data or "image" not in content_type.lower():
+            return False
+        destination.write_bytes(data)
+        result.chart_url = str(destination)
+        return True
+    except Exception:
+        return False
 
 
 def is_transient_scan_error(message: str) -> bool:
@@ -495,8 +583,11 @@ def update_workbook(
     open_positions = read_open_positions(wb)
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
+    initial_open_position_tickers = set(open_positions)
     decisions: dict[str, Decision] = {}
     decision_records: list[dict[str, Any]] = []
+    pending_decisions: list[tuple[SetupResult, Decision]] = []
+    new_buy_tickers: set[str] = set()
     timestamp = datetime.now().isoformat(timespec="seconds")
 
     for result in results:
@@ -552,17 +643,31 @@ def update_workbook(
         )
         decision_records.append(decision_json)
         decisions[result.ticker] = decision
-        append_watchlist_row(wb, timestamp, result, decision)
+        pending_decisions.append((result, decision))
         if decision.action == "BUY_SIMULATED":
-            append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
             open_positions[result.ticker] = position_from_buy(result, decision, currency_rate, timestamp, screenshot_path)
+            new_buy_tickers.add(result.ticker)
             cash -= decision.cash_out_ils
             exposure += decision.cash_out_ils
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
-            append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
             apply_exit_decision(open_positions, result, decision, currency_rate)
         elif result.ticker in open_positions:
             refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
+
+    apply_chart_retention_policy(
+        pending_decisions,
+        base_url=settings.url,
+        run_id=run_id,
+        open_position_tickers=initial_open_position_tickers | set(open_positions),
+    )
+    for result, decision in pending_decisions:
+        if result.ticker in open_positions and (result.chart_url or result.ticker in new_buy_tickers):
+            open_positions[result.ticker]["chart_url"] = result.chart_url
+        append_watchlist_row(wb, timestamp, result, decision)
+        if decision.action == "BUY_SIMULATED":
+            append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
+        elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
 
     write_open_positions(wb, open_positions)
     write_decision_jsonl(decision_path, decision_records)

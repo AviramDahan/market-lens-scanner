@@ -2,7 +2,13 @@ from types import SimpleNamespace
 
 import pandas as pd
 
-from agent.market_lens_ui_agent import is_auth_failure
+from agent.market_lens_ui_agent import (
+    ChartRetentionSettings,
+    Decision,
+    SetupResult,
+    is_auth_failure,
+    select_chart_tickers,
+)
 from app.agent_risk import (
     AgentRiskConfig,
     AgentRunRiskContext,
@@ -46,6 +52,44 @@ def result(score: float = 0.60, setup_type: str = "Breakout + Retest") -> Simple
         target_1=105.0,
         target_2=115.0,
     )
+
+
+def chart_candidate(
+    ticker: str,
+    action: str,
+    *,
+    score: float = 0.60,
+    setup_type: str = "Breakout + Retest",
+    sector_regime: str = "STRONG",
+    net_rr: float = 2.0,
+) -> tuple[SetupResult, Decision]:
+    setup = SetupResult(
+        ticker=ticker,
+        setup_type=setup_type,
+        score=score,
+        current_price=100.0,
+        buy_zone_low=98.0,
+        buy_zone_high=100.0,
+        stop_loss=95.0,
+        target_1=105.0,
+        target_2=115.0,
+        risk_reward=2.0,
+        reason="test",
+        raw_text="test",
+        chart_url=f"/charts/{ticker}.png",
+    )
+    decision = Decision(
+        action=action,
+        feedback="test",
+        decision_json={
+            "setup_type": setup_type,
+            "setup_score": score,
+            "sector_regime": sector_regime,
+            "net_rr": net_rr,
+            "final_display_score": score,
+        },
+    )
+    return setup, decision
 
 
 def blockers_for(
@@ -172,3 +216,35 @@ def test_cooldown_exception_requires_different_setup() -> None:
     )
     assert cooldown["cooldown_active"] is True
     assert cooldown["cooldown_exception_used"] is False
+
+
+def test_chart_retention_keeps_actionable_and_limited_debug_charts() -> None:
+    selected = select_chart_tickers(
+        [
+            chart_candidate("BUY", "BUY_SIMULATED", score=0.50),
+            chart_candidate("READY", "WATCH_READY", score=0.45),
+            chart_candidate("TOP1", "WATCH", score=0.70),
+            chart_candidate("TOP2", "SKIP", score=0.65),
+            chart_candidate("EXTRA", "WATCH", score=0.60),
+            chart_candidate("LOW", "WATCH", score=0.20),
+            chart_candidate("WEAK", "WATCH", score=0.80, sector_regime="WEAK"),
+            chart_candidate("NOTRADE", "SKIP", score=0.90, setup_type="No Trade"),
+            chart_candidate("BADRR", "WATCH", score=0.90, net_rr=0.30),
+        ],
+        settings=ChartRetentionSettings(
+            save_rejected_charts=False,
+            rejected_chart_limit=2,
+            rejected_chart_min_score=0.40,
+        ),
+        open_position_tickers=set(),
+    )
+    assert selected == {"BUY", "READY", "TOP1", "TOP2"}
+
+
+def test_chart_retention_keeps_open_position_chart() -> None:
+    selected = select_chart_tickers(
+        [chart_candidate("OPEN", "WATCH", score=0.10, setup_type="No Trade")],
+        settings=ChartRetentionSettings(False, 0, 0.40),
+        open_position_tickers={"OPEN"},
+    )
+    assert selected == {"OPEN"}
