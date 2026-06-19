@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,10 +10,13 @@ from typing import Any
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from app.data import fetch_intraday_frame
 
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TRACKER = ROOT / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
 DEFAULT_RUN_DIR = ROOT / "agent_results"
 EVENT_SHEET = "Position Events"

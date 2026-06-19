@@ -19,30 +19,44 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Check New York scan schedule
+      - name: Check New York automation schedule
         id: schedule_time
         shell: bash
         run: |
           if [ "${{ github.event_name }}" != "schedule" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "run_scan=true" >> "$GITHUB_OUTPUT"
+            echo "run_monitor=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           local_day="$(TZ=America/New_York date +%u)"
           local_time="$(TZ=America/New_York date +%H:%M)"
+          run_scan=false
+          run_monitor=false
+
+          if [ "$local_day" -le 5 ] && [[ "$local_time" > "09:44" && "$local_time" < "16:16" ]]; then
+            run_monitor=true
+          fi
+
           case "$local_time" in
             "09:45"|"10:30"|"11:30"|"13:30"|"14:30"|"15:30"|"16:15")
               if [ "$local_day" -le 5 ]; then
-                echo "should_run=true" >> "$GITHUB_OUTPUT"
-              else
-                echo "should_run=false" >> "$GITHUB_OUTPUT"
+                run_scan=true
               fi
               ;;
             *)
-              echo "Outside configured New York scan times; skipping."
-              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              echo "Outside configured full scan times."
               ;;
           esac
+
+          echo "run_scan=$run_scan" >> "$GITHUB_OUTPUT"
+          echo "run_monitor=$run_monitor" >> "$GITHUB_OUTPUT"
+          if [ "$run_scan" = "true" ] || [ "$run_monitor" = "true" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout
         if: steps.schedule_time.outputs.should_run == 'true'
@@ -63,8 +77,18 @@ jobs:
           python -m pip install -e .
           python -m playwright install --with-deps chromium
 
+      - name: Monitor open positions
+        if: steps.schedule_time.outputs.run_monitor == 'true'
+        env:
+          MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+          MARKET_LENS_RUN_DIR: agent_results
+          MARKET_LENS_MONITOR_PERIOD: 5d
+          MARKET_LENS_MONITOR_INTERVAL: 1m
+          MARKET_LENS_MONITOR_SAVE_NOOP: "true"
+        run: python agent/position_monitor.py
+
       - name: Run Market Lens UI agent
-        if: steps.schedule_time.outputs.should_run == 'true'
+        if: steps.schedule_time.outputs.run_scan == 'true'
         env:
           MARKET_LENS_URL: https://market-lens-scanner-fb63.onrender.com/?v=latest
           MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}
