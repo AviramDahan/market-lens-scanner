@@ -3,8 +3,9 @@ name: Market Lens Paper Agent Test
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron is UTC. A New York time guard below handles DST and exact run times.
-    - cron: "*/15 13-21 * * 1-5"
+    # GitHub cron is UTC. New York time guard below keeps exact scan times through DST.
+    - cron: "45 13,14 * * 1-5"
+    - cron: "30 15,16,17,18,19,20 * * 1-5"
 
 permissions:
   contents: write
@@ -16,47 +17,34 @@ concurrency:
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
 
     steps:
-      - name: Check New York automation schedule
+      - name: Check New York scan schedule
         id: schedule_time
         shell: bash
         run: |
           if [ "${{ github.event_name }}" != "schedule" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "run_scan=true" >> "$GITHUB_OUTPUT"
-            echo "run_monitor=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           local_day="$(TZ=America/New_York date +%u)"
           local_time="$(TZ=America/New_York date +%H:%M)"
-          run_scan=false
-          run_monitor=false
-
-          if [ "$local_day" -le 5 ] && [[ "$local_time" > "09:44" && "$local_time" < "16:16" ]]; then
-            run_monitor=true
-          fi
 
           case "$local_time" in
-            "09:45"|"10:30"|"11:30"|"13:30"|"14:30"|"15:30"|"16:15")
+            "09:45"|"11:30"|"13:30"|"15:30")
               if [ "$local_day" -le 5 ]; then
-                run_scan=true
+                echo "should_run=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "should_run=false" >> "$GITHUB_OUTPUT"
               fi
               ;;
             *)
-              echo "Outside configured full scan times."
+              echo "Outside configured New York scan times; skipping."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
               ;;
           esac
-
-          echo "run_scan=$run_scan" >> "$GITHUB_OUTPUT"
-          echo "run_monitor=$run_monitor" >> "$GITHUB_OUTPUT"
-          if [ "$run_scan" = "true" ] || [ "$run_monitor" = "true" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Checkout
         if: steps.schedule_time.outputs.should_run == 'true'
@@ -69,6 +57,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
         if: steps.schedule_time.outputs.should_run == 'true'
@@ -77,18 +66,8 @@ jobs:
           python -m pip install -e .
           python -m playwright install --with-deps chromium
 
-      - name: Monitor open positions
-        if: steps.schedule_time.outputs.run_monitor == 'true'
-        env:
-          MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
-          MARKET_LENS_RUN_DIR: agent_results
-          MARKET_LENS_MONITOR_PERIOD: 5d
-          MARKET_LENS_MONITOR_INTERVAL: 1m
-          MARKET_LENS_MONITOR_SAVE_NOOP: "false"
-        run: python agent/position_monitor.py
-
       - name: Run Market Lens UI agent
-        if: steps.schedule_time.outputs.run_scan == 'true'
+        if: steps.schedule_time.outputs.should_run == 'true'
         env:
           MARKET_LENS_URL: https://market-lens-scanner-fb63.onrender.com/?v=latest
           MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}

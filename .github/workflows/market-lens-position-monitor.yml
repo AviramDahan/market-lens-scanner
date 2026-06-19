@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # GitHub cron is UTC. A New York time guard below handles DST and market hours.
-    - cron: "*/5 13-21 * * 1-5"
+    - cron: "*/30 13-21 * * 1-5"
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   monitor-positions:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
       - name: Check New York market-hours schedule
@@ -32,7 +32,7 @@ jobs:
           local_hour="$(TZ=America/New_York date +%H)"
           local_minute="$(TZ=America/New_York date +%M)"
           local_minutes=$((10#$local_hour * 60 + 10#$local_minute))
-          market_open=$((9 * 60 + 35))
+          market_open=$((9 * 60 + 45))
           market_close=$((16 * 60))
 
           if [ "$local_day" -le 5 ] && [ "$local_minutes" -ge "$market_open" ] && [ "$local_minutes" -le "$market_close" ]; then
@@ -48,30 +48,42 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Check for open positions
         if: steps.schedule_time.outputs.should_run == 'true'
+        id: open_positions
+        shell: bash
+        run: |
+          has_open="$(python3 agent/has_open_positions.py agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx)"
+          echo "has_open=$has_open" >> "$GITHUB_OUTPUT"
+          if [ "$has_open" != "true" ]; then
+            echo "No open positions; skipping monitor dependency install."
+          fi
+
+      - name: Set up Python
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
-        if: steps.schedule_time.outputs.should_run == 'true'
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
 
       - name: Run position monitor
-        if: steps.schedule_time.outputs.should_run == 'true'
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         env:
           MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
           MARKET_LENS_RUN_DIR: agent_results
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
-          MARKET_LENS_MONITOR_SAVE_NOOP: "true"
+          MARKET_LENS_MONITOR_SAVE_NOOP: "false"
         run: python agent/position_monitor.py
 
       - name: Commit monitor results safely
-        if: steps.schedule_time.outputs.should_run == 'true'
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         shell: bash
         run: |
           set -e
