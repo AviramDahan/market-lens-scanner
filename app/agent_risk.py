@@ -685,6 +685,7 @@ def adjust_candidate_position_size(
     per_share_risk = risk_amount / quantity if quantity else 0.0
     caps = [
         ("candidate size", cash_out),
+        ("max position allocation", run_context.config.max_position),
         ("cash available", cash_available),
         ("market regime exposure", max(0.0, run_context.market_regime.max_total_exposure - portfolio_exposure_before)),
     ]

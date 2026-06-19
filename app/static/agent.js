@@ -89,6 +89,7 @@ function renderDashboard(data) {
   renderMetrics(data.summary);
   renderEquity(data.equity_curve, data.summary);
   renderScanCharts(data.latest_setups, data.latest_run);
+  renderPositionsOverview(data.open_positions);
   renderPositions(data.open_positions);
   renderPositionCharts(data.open_positions);
   renderActions(data.latest_setups);
@@ -265,6 +266,45 @@ function renderScanCharts(setups, run) {
   grid.querySelectorAll(".scan-chart-card").forEach((button) => {
     button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
   });
+}
+
+function renderPositionsOverview(positions) {
+  const panel = document.getElementById("positionsOverviewPanel");
+  const grid = document.getElementById("positionsOverview");
+  document.getElementById("positionsOverviewMeta").textContent = `${positions.length} open positions`;
+  if (!positions.length) {
+    grid.innerHTML = '<div class="empty-state compact">No open positions</div>';
+    panel.classList.add("is-empty");
+    return;
+  }
+  panel.classList.remove("is-empty");
+  grid.innerHTML = positions
+    .map((position) => {
+      const pnlClass = position.unrealized_pnl_ils >= 0 ? "money-pos" : "money-neg";
+      return `
+        <article class="position-mini-card">
+          <div class="position-mini-head">
+            <div class="ticker-cell">
+              <strong>${escapeHtml(tickerLabel(position))}</strong>
+              <span class="meta">${escapeHtml(tickerMeta(position, `${position.quantity} shares`))}</span>
+            </div>
+            <span class="badge neutral">${escapeHtml(position.status)}</span>
+          </div>
+          <div class="position-mini-grid">
+            <span><b>Entry</b>${usd.format(position.entry_price_usd)}</span>
+            <span><b>Now</b>${usd.format(position.current_price_usd)}</span>
+            <span><b>Stop</b>${usd.format(position.stop_loss)}</span>
+            <span><b>TP</b>${usd.format(position.target_1)} / ${usd.format(position.target_2)}</span>
+            <span><b>Exposure</b>${money.format(position.exposure_ils)}</span>
+            <span><b>P/L</b><em class="${pnlClass}">${formatSignedMoney(position.unrealized_pnl_ils)}</em></span>
+          </div>
+          <div class="progress" title="${position.progress_to_target_1}% to target 1">
+            <span style="width:${Math.max(0, Math.min(100, position.progress_to_target_1))}%"></span>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 function renderPositions(positions) {

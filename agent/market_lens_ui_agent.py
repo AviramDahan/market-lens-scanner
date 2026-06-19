@@ -69,6 +69,7 @@ class Decision:
     cash_out_ils: float = 0.0
     cash_in_ils: float = 0.0
     risk_ils: float = 0.0
+    execution_price: float | None = None
     decision_json: dict[str, Any] = field(default_factory=dict)
 
 
@@ -581,18 +582,33 @@ def decide(
     existing = open_positions.get(result.ticker)
     if existing:
         quantity = int(existing.get("quantity") or 0)
-        cash_in = quantity * result.current_price * usd_ils
         if result.current_price <= float(existing["stop_loss"]):
-            return Decision("EXIT_STOP", "Current price reached stop loss.", quantity=quantity, cash_in_ils=round(cash_in, 2))
+            exit_price = float(existing["stop_loss"])
+            return Decision(
+                "EXIT_STOP",
+                "Current price reached stop loss.",
+                quantity=quantity,
+                cash_in_ils=round(quantity * exit_price * usd_ils, 2),
+                execution_price=exit_price,
+            )
         if result.target_2 and result.current_price >= result.target_2:
-            return Decision("TAKE_PROFIT", "Target 2 reached; close remaining simulated position.", quantity=quantity, cash_in_ils=round(cash_in, 2))
+            exit_price = float(result.target_2)
+            return Decision(
+                "TAKE_PROFIT",
+                "Target 2 reached; close remaining simulated position.",
+                quantity=quantity,
+                cash_in_ils=round(quantity * exit_price * usd_ils, 2),
+                execution_price=exit_price,
+            )
         if result.target_1 and result.current_price >= result.target_1 and not existing.get("partial_taken"):
             partial_qty = max(1, quantity // 2)
+            exit_price = float(result.target_1)
             return Decision(
                 "TAKE_PARTIAL_PROFIT",
                 "Target 1 reached; take partial simulated profit and move stop to breakeven.",
                 quantity=partial_qty,
-                cash_in_ils=round(partial_qty * result.current_price * usd_ils, 2),
+                cash_in_ils=round(partial_qty * exit_price * usd_ils, 2),
+                execution_price=exit_price,
             )
         return Decision("HOLD", "Existing simulated position remains open.")
 
@@ -881,7 +897,7 @@ def append_trade_log_row(
     ws.cell(row, 2, decision.action)
     ws.cell(row, 3, result.ticker)
     ws.cell(row, 4, result.current_price if decision.action == "BUY_SIMULATED" else None)
-    ws.cell(row, 5, result.current_price if decision.action != "BUY_SIMULATED" else None)
+    ws.cell(row, 5, (decision.execution_price or result.current_price) if decision.action != "BUY_SIMULATED" else None)
     ws.cell(row, 6, decision.quantity)
     ws.cell(row, 7, usd_ils)
     ws.cell(row, 8, decision.quantity * result.current_price * usd_ils if decision.action == "BUY_SIMULATED" else 0)

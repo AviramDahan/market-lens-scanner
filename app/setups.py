@@ -270,6 +270,33 @@ def _nearest_structure_target(
     return highs[0]
 
 
+def _normalize_targets(
+    *,
+    daily: "pd.DataFrame | None",
+    entry: float,
+    atr: float,
+    target_1: float,
+    target_2: float,
+    minimum_t1_atr: float = 1.2,
+    fallback_t1_atr: float = 2.0,
+    fallback_t2_atr: float = 4.0,
+) -> tuple[float, float]:
+    """Keep TP1/TP2 executable and ordered: TP1 is first scale-out, TP2 is stretch."""
+    if atr <= 0 or entry <= 0:
+        return target_1, target_2
+
+    min_t1 = entry + minimum_t1_atr * atr
+    if target_1 <= entry:
+        target_1 = entry + fallback_t1_atr * atr
+    elif target_1 < min_t1:
+        target_1 = min_t1
+
+    structure_t2 = _nearest_structure_target(daily, target_1, atr, entry + fallback_t2_atr * atr) if daily is not None else 0.0
+    if target_2 <= target_1:
+        target_2 = max(structure_t2, entry + fallback_t2_atr * atr, target_1 + atr)
+    return target_1, target_2
+
+
 def _score_setup(
     current_price: float,
     atr: float,
@@ -429,6 +456,13 @@ def _try_fib_confluence(
     stop_loss = fib.fib_786 - 0.1 * atr
     target_1 = vwap if vwap > entry else fib.fib_500
     target_2 = max(vp.vah, fib.swing_high)
+    target_1, target_2 = _normalize_targets(
+        daily=daily,
+        entry=entry,
+        atr=atr,
+        target_1=target_1,
+        target_2=target_2,
+    )
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
     if not _rr_candidate_passes(rr1, rr2, min_rr):
@@ -552,6 +586,13 @@ def _try_breakout_retest(
         mechanical_target_1 = resistance_level + (resistance_level - stop_loss)
         target_1 = _nearest_structure_target(daily, entry, atr, mechanical_target_1)
         target_2 = max(vp.vah, fib.swing_high if fib else 0.0)
+        target_1, target_2 = _normalize_targets(
+            daily=daily,
+            entry=entry,
+            atr=atr,
+            target_1=target_1,
+            target_2=target_2,
+        )
 
         rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
         if not _rr_candidate_passes(rr1, rr2, min_rr):
@@ -640,6 +681,13 @@ def _try_swing_volume(
     stop_loss = vsl.swing_low - 1.5 * atr
     target_1 = vwap if vwap > entry else entry + 1.5 * atr
     target_2 = vp.vah
+    target_1, target_2 = _normalize_targets(
+        daily=None,
+        entry=entry,
+        atr=atr,
+        target_1=target_1,
+        target_2=target_2,
+    )
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
     if not _rr_candidate_passes(rr1, rr2, min_rr):
@@ -735,6 +783,13 @@ def _try_liquidity_trap(
     stop_loss = min(fib.fib_786, sweep_low) if fib is not None else sweep_low
     target_1 = vp.vah
     target_2 = vp.vah
+    target_1, target_2 = _normalize_targets(
+        daily=None,
+        entry=entry,
+        atr=atr,
+        target_1=target_1,
+        target_2=target_2,
+    )
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
     if not _rr_candidate_passes(rr1, rr2, min_rr):
@@ -832,6 +887,16 @@ def _try_vwap_reclaim(
 
     target_1 = vwap + 0.5 * atr
     target_2 = vp.vah
+    target_1, target_2 = _normalize_targets(
+        daily=None,
+        entry=entry,
+        atr=atr,
+        target_1=target_1,
+        target_2=target_2,
+        minimum_t1_atr=1.0,
+        fallback_t1_atr=1.5,
+        fallback_t2_atr=3.0,
+    )
 
     rr1, rr2 = _split_rr(entry, stop_loss, target_1, target_2)
     if not _rr_candidate_passes(rr1, rr2, min_rr):
