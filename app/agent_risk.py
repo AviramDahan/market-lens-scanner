@@ -48,14 +48,22 @@ class AgentRiskConfig:
     neutral_min_net_rr: float = 2.5
     bear_min_net_rr: float = 999.0
     neutral_strong_sector_min_net_rr: float = 2.2
-    neutral_min_setup_score: float = 0.45
+    bull_min_setup_score: float = 0.40
+    neutral_min_setup_score: float = 0.50
     sector_exposure_bull_pct: float = 0.40
     sector_exposure_neutral_pct: float = 0.30
     factor_exposure_bull_pct: float = 0.50
     factor_exposure_neutral_pct: float = 0.35
     correlation_block_threshold: float = 0.85
-    primary_rr_weight: float = 0.65
-    stretch_rr_weight: float = 0.35
+    primary_rr_weight: float = 0.80
+    stretch_rr_weight: float = 0.20
+    minimum_primary_net_rr: float = 0.80
+    preferred_primary_net_rr: float = 1.00
+    minimum_target1_atr_distance: float = 0.75
+    require_entry_confirmation: bool = True
+    stop_cooldown_days: int = 3
+    cooldown_exception_setup_score: float = 0.60
+    cooldown_exception_net_rr1: float = 1.20
     earnings_blackout_before_days: int = 5
     earnings_blackout_after_days: int = 1
     block_unknown_earnings: bool = False
@@ -66,6 +74,10 @@ class AgentRiskConfig:
             self.bull_max_exposure = min(self.default_max_total_exposure, self.starting_capital * 0.40)
         if self.neutral_max_exposure is None:
             self.neutral_max_exposure = min(self.default_max_total_exposure, self.starting_capital * 0.20)
+        total_rr_weight = self.primary_rr_weight + self.stretch_rr_weight
+        if total_rr_weight <= 0:
+            self.primary_rr_weight = 0.80
+            self.stretch_rr_weight = 0.20
 
 
 @dataclass
@@ -109,6 +121,20 @@ def build_agent_run_context(
         default_max_total_exposure=default_max_total_exposure,
         max_position=max_position,
         analysis_period=analysis_period,
+        bull_min_setup_score=float(os.getenv("MARKET_LENS_BULL_MIN_SETUP_SCORE", "0.40")),
+        neutral_min_setup_score=float(os.getenv("MARKET_LENS_NEUTRAL_MIN_SETUP_SCORE", "0.50")),
+        primary_rr_weight=float(os.getenv("MARKET_LENS_PRIMARY_RR_WEIGHT", "0.80")),
+        stretch_rr_weight=float(os.getenv("MARKET_LENS_STRETCH_RR_WEIGHT", "0.20")),
+        minimum_primary_net_rr=float(os.getenv("MARKET_LENS_MIN_PRIMARY_NET_RR", "0.80")),
+        preferred_primary_net_rr=float(os.getenv("MARKET_LENS_PREFERRED_PRIMARY_NET_RR", "1.00")),
+        minimum_target1_atr_distance=float(os.getenv("MARKET_LENS_MIN_TARGET1_ATR_DISTANCE", "0.75")),
+        require_entry_confirmation=os.getenv("MARKET_LENS_REQUIRE_ENTRY_CONFIRMATION", "true").lower()
+        in {"1", "true", "yes"},
+        stop_cooldown_days=int(os.getenv("MARKET_LENS_STOP_COOLDOWN_DAYS", "3")),
+        cooldown_exception_setup_score=float(
+            os.getenv("MARKET_LENS_COOLDOWN_EXCEPTION_SETUP_SCORE", "0.60")
+        ),
+        cooldown_exception_net_rr1=float(os.getenv("MARKET_LENS_COOLDOWN_EXCEPTION_NET_RR1", "1.20")),
         block_unknown_earnings=os.getenv("MARKET_LENS_BLOCK_UNKNOWN_EARNINGS", "false").lower()
         in {"1", "true", "yes"},
         fees_per_share=float(os.getenv("MARKET_LENS_AGENT_FEES_PER_SHARE", "0")),
@@ -154,7 +180,7 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
         reason = "SPY/QQQ trend is constructive and volatility is acceptable."
         max_exposure = float(config.bull_max_exposure or config.default_max_total_exposure)
         min_rr = config.bull_min_net_rr
-        min_setup_score = 0.0
+        min_setup_score = config.bull_min_setup_score
     elif risk_points <= -2:
         label = "BEAR"
         score = 0.22
@@ -218,6 +244,7 @@ def evaluate_agent_candidate(
     open_positions: dict[str, dict[str, Any]],
     sector_map: dict[str, str],
     run_context: AgentRunRiskContext,
+    recent_stop_events: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     config = run_context.config
     ticker = str(result.ticker).upper()
@@ -227,7 +254,16 @@ def evaluate_agent_candidate(
     factor_tags = factor_tags_for(ticker, sector, snapshot.market_cap_bucket)
     net_rr_info = calculate_net_rr(result, snapshot, config)
     earnings_info = calculate_earnings_blackout(ticker, config)
-    target_info = validate_targets(result, snapshot)
+    target_info = validate_targets(result, snapshot, config)
+    confirmation = calculate_entry_confirmation(result, snapshot, config)
+    cooldown = cooldown_check(
+        ticker=ticker,
+        result=result,
+        net_rr_info=net_rr_info,
+        confirmation=confirmation,
+        recent_stop_events=recent_stop_events or {},
+        config=config,
+    )
     normalized_quality_score = round(
         (
             snapshot.normalized_momentum_score * 0.45
@@ -288,6 +324,8 @@ def evaluate_agent_candidate(
     warnings.extend(snapshot.warnings)
     warnings.extend(earnings_info["warnings"])
     warnings.extend(target_info["warnings"])
+    warnings.extend(confirmation["warnings"])
+    warnings.extend(cooldown["warnings"])
     warnings.extend(net_rr_info["warnings"])
     warnings.extend(correlation["warnings"])
     warnings.extend(sector_exposure["warnings"])
@@ -308,6 +346,8 @@ def evaluate_agent_candidate(
             net_rr_info=net_rr_info,
             earnings_info=earnings_info,
             target_info=target_info,
+            confirmation=confirmation,
+            cooldown=cooldown,
             sector_exposure=sector_exposure,
             factor_exposure=factor_exposure,
             correlation=correlation,
@@ -379,6 +419,15 @@ def evaluate_agent_candidate(
         "previous_resistance": target_info["previous_resistance"],
         "prior_high_20": target_info["prior_high_20"],
         "prior_high_63": target_info["prior_high_63"],
+        "confirmation_status": confirmation["confirmation_status"],
+        "confirmation_reason": confirmation["confirmation_reason"],
+        "trigger_level": confirmation["trigger_level"],
+        "close_above_trigger": confirmation["close_above_trigger"],
+        "vwap_reclaimed": confirmation["vwap_reclaimed"],
+        "retest_held": confirmation["retest_held"],
+        "entry_confirmation_passed": confirmation["entry_confirmation_passed"],
+        "confirmation_timeframe": confirmation["confirmation_timeframe"],
+        "confirmation_candle_timestamp": confirmation["confirmation_candle_timestamp"],
         "gross_rr": net_rr_info["gross_rr"],
         "gross_rr_1": net_rr_info["gross_rr_1"],
         "gross_rr_2": net_rr_info["gross_rr_2"],
@@ -418,6 +467,11 @@ def evaluate_agent_candidate(
         "correlation_warning": correlation["correlation_warning"],
         "highest_correlation_ticker": correlation["highest_correlation_ticker"],
         "highest_correlation_value": correlation["highest_correlation_value"],
+        "cooldown_active": cooldown["cooldown_active"],
+        "last_stop_date": cooldown["last_stop_date"],
+        "cooldown_days_remaining": cooldown["cooldown_days_remaining"],
+        "cooldown_exception_used": cooldown["cooldown_exception_used"],
+        "cooldown_reason": cooldown["cooldown_reason"],
         "position_size": effective_quantity if final_action == "BUY_SIMULATED" else 0,
         "risk_amount": round(effective_risk_amount if final_action == "BUY_SIMULATED" else 0.0, 2),
         "cash_available": round(cash_available, 2),
@@ -458,6 +512,8 @@ def buy_blockers(
     net_rr_info: dict[str, Any],
     earnings_info: dict[str, Any],
     target_info: dict[str, Any],
+    confirmation: dict[str, Any],
+    cooldown: dict[str, Any],
     sector_exposure: dict[str, Any],
     factor_exposure: dict[str, Any],
     correlation: dict[str, Any],
@@ -482,12 +538,12 @@ def buy_blockers(
                 ),
             }
         )
-    if regime.label == "NEUTRAL" and float(result.score or 0) < regime.min_setup_score:
+    if regime.label in {"BULL", "NEUTRAL"} and float(result.score or 0) < regime.min_setup_score:
         blockers.append(
             {
                 "action": "WATCH",
                 "reason": (
-                    f"WATCH: Neutral market requires stronger setup score "
+                    f"WATCH: {regime.label} market requires setup score "
                     f"({float(result.score or 0):.2f} < {regime.min_setup_score:.2f})."
                 ),
             }
@@ -518,6 +574,17 @@ def buy_blockers(
         )
     if sector_info["regime"] == "NEUTRAL" and float(result.score or 0) < 0.40:
         blockers.append({"action": "WATCH", "reason": "WATCH: Neutral sector requires a cleaner setup score."})
+    if net_rr_info["net_rr_1"] < run_context.config.minimum_primary_net_rr:
+        blockers.append(
+            {
+                "action": "WATCH",
+                "reason": (
+                    f"WATCH: Target 1 net R/R {net_rr_info['net_rr_1']:.2f} "
+                    f"is below minimum {run_context.config.minimum_primary_net_rr:.2f}; "
+                    "Target 2 cannot justify the entry alone."
+                ),
+            }
+        )
     if net_rr_info["net_rr"] < minimum_net_rr:
         blockers.append(
             {
@@ -534,11 +601,17 @@ def buy_blockers(
         blockers.append({"action": "SKIP", "reason": "SKIP: Target validation failed; target is not above price."})
     if target_info["status"] == "EXTENDED":
         blockers.append({"action": "WATCH", "reason": "WATCH: Target distance is extended versus daily ATR or market structure."})
-    if target_info["status"] == "LOW_REWARD_DISTANCE" and not target_one_warning_only(
-        net_rr_info=net_rr_info,
-        minimum_net_rr=minimum_net_rr,
-    ):
+    if target_info["status"] == "LOW_REWARD_DISTANCE":
         blockers.append({"action": "WATCH_READY", "reason": "Target 1 is too close versus daily ATR."})
+    if run_context.config.require_entry_confirmation and not confirmation["entry_confirmation_passed"]:
+        blockers.append(
+            {
+                "action": "WATCH",
+                "reason": f"WATCH: Entry confirmation failed - {confirmation['confirmation_reason']}",
+            }
+        )
+    if cooldown["cooldown_active"] and not cooldown["cooldown_exception_used"]:
+        blockers.append({"action": "WATCH", "reason": f"WATCH: {cooldown['cooldown_reason']}"})
     if sector_exposure["limit_exceeded"]:
         blockers.append(
             {"action": "WATCH", "reason": "WATCH: Sector exposure limit would be exceeded by this trade."}
@@ -944,7 +1017,184 @@ def calculate_earnings_blackout(ticker: str, config: AgentRiskConfig) -> dict[st
     }
 
 
-def validate_targets(result: Any, snapshot: CandidateMarketSnapshot) -> dict[str, Any]:
+def calculate_entry_confirmation(
+    result: Any,
+    snapshot: CandidateMarketSnapshot,
+    config: AgentRiskConfig,
+) -> dict[str, Any]:
+    if not config.require_entry_confirmation:
+        return {
+            "confirmation_status": "DISABLED",
+            "confirmation_reason": "Entry confirmation requirement disabled by config.",
+            "trigger_level": 0.0,
+            "close_above_trigger": True,
+            "vwap_reclaimed": False,
+            "retest_held": True,
+            "entry_confirmation_passed": True,
+            "confirmation_timeframe": "disabled",
+            "confirmation_candle_timestamp": "",
+            "warnings": [],
+        }
+
+    base = {
+        "confirmation_status": "UNKNOWN",
+        "confirmation_reason": "Entry confirmation unavailable.",
+        "trigger_level": 0.0,
+        "close_above_trigger": False,
+        "vwap_reclaimed": False,
+        "retest_held": False,
+        "entry_confirmation_passed": False,
+        "confirmation_timeframe": "1d_completed",
+        "confirmation_candle_timestamp": "",
+        "warnings": [],
+    }
+    daily = snapshot.daily
+    buy_low = getattr(result, "buy_zone_low", None)
+    buy_high = getattr(result, "buy_zone_high", None)
+    if daily is None or daily.empty or len(daily) < 3 or buy_low in (None, "") or buy_high in (None, ""):
+        base["warnings"] = ["Entry confirmation data unavailable; blocking auto-buy."]
+        return base
+
+    completed = daily.iloc[:-1]
+    if len(completed) < 2:
+        base["warnings"] = ["Not enough completed candles for entry confirmation; blocking auto-buy."]
+        return base
+
+    last = completed.iloc[-1]
+    prev = completed.iloc[-2]
+    close = float(last["Close"])
+    open_ = float(last["Open"])
+    low = float(last["Low"])
+    high = float(last["High"])
+    prev_close = float(prev["Close"])
+    buy_low = float(buy_low)
+    buy_high = float(buy_high)
+    setup_type = str(getattr(result, "setup_type", "") or "").lower()
+    candle_time = completed.index[-1].isoformat() if hasattr(completed.index[-1], "isoformat") else str(completed.index[-1])
+    bullish_or_reclaim = close >= open_ and close >= prev_close
+    falling_into_zone = close < open_ and close < prev_close
+
+    trigger_level = buy_high
+    close_above_trigger = close >= trigger_level
+    retest_held = low >= buy_low and close >= buy_low
+    vwap_reclaimed = False
+
+    if "breakout" in setup_type:
+        passed = close_above_trigger and retest_held and not falling_into_zone
+        reason = (
+            "Completed candle closed above retest trigger and held the zone."
+            if passed
+            else "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+        )
+    elif "vwap" in setup_type:
+        vwap = rolling_vwap(completed)
+        vwap_reclaimed = bool(vwap and close >= vwap and close >= open_ and close >= prev_close)
+        trigger_level = float(vwap or trigger_level)
+        close_above_trigger = bool(vwap and close >= vwap)
+        retest_held = close >= buy_low and not falling_into_zone
+        passed = vwap_reclaimed and retest_held
+        reason = (
+            "Completed candle reclaimed VWAP proxy and held the setup zone."
+            if passed
+            else "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+        )
+    else:
+        retest_held = low <= buy_high and close >= buy_low
+        close_above_trigger = close >= buy_high or bullish_or_reclaim
+        passed = retest_held and close_above_trigger and not falling_into_zone
+        reason = (
+            "Completed candle bounced/reclaimed from the buy zone."
+            if passed
+            else "Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle."
+        )
+
+    return {
+        "confirmation_status": "PASSED" if passed else "FAILED",
+        "confirmation_reason": reason,
+        "trigger_level": round(float(trigger_level or 0.0), 4),
+        "close_above_trigger": bool(close_above_trigger),
+        "vwap_reclaimed": bool(vwap_reclaimed),
+        "retest_held": bool(retest_held),
+        "entry_confirmation_passed": bool(passed),
+        "confirmation_timeframe": "1d_completed",
+        "confirmation_candle_timestamp": candle_time,
+        "warnings": [] if passed else [reason],
+    }
+
+
+def rolling_vwap(frame: pd.DataFrame, lookback: int = 20) -> float | None:
+    if frame is None or frame.empty or not {"High", "Low", "Close", "Volume"}.issubset(frame.columns):
+        return None
+    window = frame.tail(min(lookback, len(frame)))
+    volume = window["Volume"].astype(float)
+    total_volume = float(volume.sum())
+    if total_volume <= 0:
+        return None
+    typical = (window["High"].astype(float) + window["Low"].astype(float) + window["Close"].astype(float)) / 3.0
+    return float((typical * volume).sum() / total_volume)
+
+
+def cooldown_check(
+    *,
+    ticker: str,
+    result: Any,
+    net_rr_info: dict[str, Any],
+    confirmation: dict[str, Any],
+    recent_stop_events: dict[str, dict[str, Any]],
+    config: AgentRiskConfig,
+) -> dict[str, Any]:
+    event = recent_stop_events.get(ticker.upper())
+    if not event:
+        return {
+            "cooldown_active": False,
+            "last_stop_date": "",
+            "cooldown_days_remaining": 0,
+            "cooldown_exception_used": False,
+            "cooldown_reason": "",
+            "warnings": [],
+        }
+
+    days_remaining = int(event.get("days_remaining") or 0)
+    if days_remaining <= 0:
+        return {
+            "cooldown_active": False,
+            "last_stop_date": str(event.get("last_stop_date") or ""),
+            "cooldown_days_remaining": 0,
+            "cooldown_exception_used": False,
+            "cooldown_reason": "",
+            "warnings": [],
+        }
+
+    current_setup = str(getattr(result, "setup_type", "") or "")
+    last_setup = str(event.get("setup_type") or "")
+    exception_used = (
+        float(getattr(result, "score", 0) or 0) >= config.cooldown_exception_setup_score
+        and float(net_rr_info.get("net_rr_1") or 0) >= config.cooldown_exception_net_rr1
+        and bool(confirmation.get("entry_confirmation_passed"))
+        and current_setup
+        and last_setup
+        and current_setup != last_setup
+    )
+    reason = (
+        f"Stop-loss cooldown active after {event.get('last_stop_date')}; "
+        f"{days_remaining} trading days remaining."
+    )
+    warnings = [] if exception_used else [reason]
+    return {
+        "cooldown_active": True,
+        "last_stop_date": str(event.get("last_stop_date") or ""),
+        "cooldown_days_remaining": days_remaining,
+        "cooldown_exception_used": bool(exception_used),
+        "cooldown_reason": reason if not exception_used else "Cooldown exception used for stronger, meaningfully new setup.",
+        "warnings": warnings,
+    }
+
+
+def validate_targets(
+    result: Any,
+    snapshot: CandidateMarketSnapshot,
+    config: AgentRiskConfig | None = None,
+) -> dict[str, Any]:
     warnings: list[str] = []
     price = float(result.current_price or 0.0)
     atr = snapshot.atr
@@ -965,6 +1215,7 @@ def validate_targets(result: Any, snapshot: CandidateMarketSnapshot) -> dict[str
     warnings.extend(structure["warnings"])
     d1 = (t1 - price) / atr
     d2 = (t2 - price) / atr
+    min_target1_distance = config.minimum_target1_atr_distance if config else 0.75
     if d1 <= 0 or d2 <= 0:
         status = "INVALID"
         warnings.append("Target is not above current price.")
@@ -977,7 +1228,7 @@ def validate_targets(result: Any, snapshot: CandidateMarketSnapshot) -> dict[str
     elif d1 > 5 or d2 > 10:
         status = "AGGRESSIVE"
         warnings.append("Target distance is aggressive versus daily ATR.")
-    elif d1 < 0.75:
+    elif d1 < min_target1_distance:
         status = "LOW_REWARD_DISTANCE"
         warnings.append("Target 1 is close versus daily ATR.")
     else:

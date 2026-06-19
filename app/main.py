@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard, with_position_calculations
-from app.auth import get_current_user_required
+from app.auth import get_current_user_required, supabase_publishable_key
 from app.charts import write_scan_chart
 from app.config import load_config
 from app.data import fetch_intraday_frame
@@ -269,10 +269,11 @@ async def get_config() -> dict:
 
 @app.get("/auth/config")
 async def get_auth_config() -> dict:
+    publishable_key = supabase_publishable_key()
     return {
         "supabase_url": os.getenv("SUPABASE_URL", ""),
-        "publishable_key": os.getenv("SUPABASE_PUBLISHABLE_KEY", ""),
-        "enabled": bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_PUBLISHABLE_KEY")),
+        "publishable_key": publishable_key,
+        "enabled": bool(os.getenv("SUPABASE_URL") and publishable_key),
     }
 
 

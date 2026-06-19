@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -173,6 +174,7 @@ def monitor_position(
     target_2 = float(position.get("target_2") or 0)
     partial_taken = bool(position.get("partial_taken"))
     quantity = int(position.get("quantity") or 0)
+    update_position_excursion(position, bars)
 
     for index, row in bars.iterrows():
         high = float(row["High"])
@@ -301,6 +303,58 @@ def refresh_position(position: dict[str, Any], current_price: float, currency_ra
     position["notes"] = position.get("notes") or "Open position refreshed by monitor."
 
 
+def update_position_excursion(position: dict[str, Any], bars: Any) -> None:
+    if bars is None or bars.empty:
+        return
+    entry = float(position.get("entry_price") or 0)
+    quantity = int(position.get("quantity") or 0)
+    if entry <= 0 or quantity <= 0:
+        return
+    high = float(bars["High"].max())
+    low = float(bars["Low"].min())
+    decision = parse_decision_json(position.get("decision_json", ""))
+    existing_mfe = float(decision.get("mfe") or 0)
+    existing_mae = float(decision.get("mae") or 0)
+    decision["mfe"] = round(max(existing_mfe, max(0.0, high - entry) * quantity), 2)
+    decision["mae"] = round(max(existing_mae, max(0.0, entry - low) * quantity), 2)
+    position["decision_json"] = json.dumps(decision, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def parse_decision_json(value: Any) -> dict[str, Any]:
+    if not value:
+        return {}
+    try:
+        parsed = json.loads(str(value))
+    except Exception:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def event_r_multiple(position: dict[str, Any], event: PositionEvent) -> float | None:
+    entry = float(position.get("entry_price") or 0)
+    stop = float(position.get("stop_loss") or 0)
+    if entry <= 0 or stop <= 0 or entry <= stop:
+        return None
+    return round((event.trigger_price - entry) / (entry - stop), 4)
+
+
+def trade_analytics_values(decision: dict[str, Any]) -> list[Any]:
+    return [
+        decision.get("trade_id", ""),
+        decision.get("setup_score_bucket", ""),
+        decision.get("entry_confirmation_status") or decision.get("confirmation_status", ""),
+        decision.get("mfe"),
+        decision.get("mae"),
+        decision.get("r_multiple"),
+        decision.get("duration"),
+        decision.get("exit_reason"),
+        decision.get("outcome_after_1d"),
+        decision.get("outcome_after_3d"),
+        decision.get("outcome_after_5d"),
+        decision.get("outcome_after_10d"),
+    ]
+
+
 def read_settings(wb: Any) -> dict[str, Any]:
     ws = wb["Settings"]
     values = {}
@@ -375,6 +429,18 @@ def ensure_agent_columns(wb: Any) -> None:
             18: "Chart URL",
             19: "Selection Context",
             20: "Decision JSON",
+            21: "Trade ID",
+            22: "Setup Score Bucket",
+            23: "Entry Confirmation",
+            24: "MFE",
+            25: "MAE",
+            26: "R Multiple",
+            27: "Duration",
+            28: "Exit Reason",
+            29: "Outcome After 1D",
+            30: "Outcome After 3D",
+            31: "Outcome After 5D",
+            32: "Outcome After 10D",
         },
         "Open Positions": {
             16: "Chart URL",
@@ -487,6 +553,11 @@ def append_trade_log_row(
     ws.cell(row, 18, position.get("chart_url", ""))
     ws.cell(row, 19, position.get("selection_context", ""))
     ws.cell(row, 20, position.get("decision_json", ""))
+    analytics = parse_decision_json(position.get("decision_json", ""))
+    analytics["exit_reason"] = event.action
+    analytics["r_multiple"] = event_r_multiple(position, event)
+    for col_idx, value in enumerate(trade_analytics_values(analytics), start=21):
+        ws.cell(row, col_idx, value)
 
 
 def append_update_log(

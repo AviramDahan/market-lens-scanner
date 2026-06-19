@@ -5,8 +5,12 @@ import httpx
 from fastapi import Depends, Header, HTTPException
 
 
+def supabase_publishable_key() -> str:
+    return os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or ""
+
+
 def auth_is_configured() -> bool:
-    return bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_PUBLISHABLE_KEY"))
+    return bool(os.getenv("SUPABASE_URL") and supabase_publishable_key())
 
 
 async def get_current_user_optional(
@@ -20,7 +24,7 @@ async def get_current_user_optional(
         return None
 
     supabase_url = os.getenv("SUPABASE_URL")
-    publishable_key = os.getenv("SUPABASE_PUBLISHABLE_KEY")
+    publishable_key = supabase_publishable_key()
     if not supabase_url or not publishable_key:
         return None
 

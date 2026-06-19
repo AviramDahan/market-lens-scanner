@@ -4,6 +4,7 @@ import json
 import math
 import os
 import re
+import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -90,6 +91,7 @@ def main() -> None:
     decisions: dict[str, Decision] = {}
     login_status = "not_started"
     scan_status = "not_started"
+    auth_failed = False
     deadline = time.monotonic() + settings.timeout_seconds
 
     with sync_playwright() as playwright:
@@ -112,8 +114,15 @@ def main() -> None:
             log("Saving screenshot")
             page.screenshot(path=str(screenshot_path), full_page=True)
         except Exception as exc:
-            errors.append(str(exc))
-            scan_status = "failed"
+            message = str(exc)
+            if is_auth_failure(message):
+                auth_failed = True
+                login_status = "AUTH_FAILED"
+                scan_status = "auth_failed"
+                errors.append(f"AUTH_FAILED: {message}")
+            else:
+                errors.append(message)
+                scan_status = "failed"
             log(f"Agent UI phase failed: {exc}")
             try:
                 page.screenshot(path=str(screenshot_path), full_page=True)
@@ -122,17 +131,24 @@ def main() -> None:
         finally:
             browser.close()
 
-    log("Updating workbook")
-    workbook_context = update_workbook(
-        settings=settings,
-        run_id=run_id,
-        results=results,
-        screenshot_path=screenshot_path,
-        summary_path=summary_path,
-        decision_path=decision_path,
-        errors=errors,
-    )
-    decisions = workbook_context["decisions"]
+    scan_completed = scan_status.startswith("completed:")
+    if auth_failed or not scan_completed:
+        run_status = "AUTH_FAILED" if auth_failed else "RUN_FAILED"
+        log(f"{run_status}; skipping workbook/trade updates")
+        workbook_context = workbook_snapshot(settings=settings, run_status=run_status)
+        decisions = {}
+    else:
+        log("Updating workbook")
+        workbook_context = update_workbook(
+            settings=settings,
+            run_id=run_id,
+            results=results,
+            screenshot_path=screenshot_path,
+            summary_path=summary_path,
+            decision_path=decision_path,
+            errors=errors,
+        )
+        decisions = workbook_context["decisions"]
     log("Writing summary")
     write_summary(
         settings=settings,
@@ -147,6 +163,8 @@ def main() -> None:
         errors=errors,
     )
     print(f"Agent run complete: {summary_path}")
+    if workbook_context.get("run_status") in {"AUTH_FAILED", "RUN_FAILED"}:
+        raise SystemExit(2)
 
 
 def load_settings() -> Settings:
@@ -180,6 +198,19 @@ def required_env(name: str) -> str:
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
     return value
+
+
+def is_auth_failure(message: str) -> bool:
+    text = message.lower()
+    auth_markers = (
+        "auth not configured",
+        "account login is not configured",
+        "login did not complete",
+        "invalid login credentials",
+        "email not confirmed",
+        "sign in required",
+    )
+    return any(marker in text for marker in auth_markers)
 
 
 def open_app(page: Page, url: str, run_deadline: float) -> None:
@@ -459,6 +490,7 @@ def update_workbook(
         max_position=max_position,
     )
     sector_health = run_context.sector_health or build_sector_health(settings.analysis_period)
+    recent_stop_events = read_recent_stop_events(wb, run_context.config.stop_cooldown_days)
 
     open_positions = read_open_positions(wb)
     cash = compute_cash(wb, starting_capital)
@@ -494,6 +526,7 @@ def update_workbook(
             open_positions=open_positions,
             sector_map=sector_map,
             run_context=run_context,
+            recent_stop_events=recent_stop_events,
         )
         decision_json["scan_source"] = scan_source_text(settings)
         final_action = str(decision_json.get("final_action") or decision.action)
@@ -507,6 +540,7 @@ def update_workbook(
         else:
             decision.feedback = final_reason
             decision.decision_json = decision_json
+        enrich_decision_analytics(decision_json, run_id=run_id, result=result, final_action=final_action)
         result.selection_context = build_selection_context(
             result,
             decision,
@@ -562,6 +596,46 @@ def update_workbook(
         "currency": currency,
         "decision_path": decision_path,
         "market_regime": run_context.market_regime,
+        "excel_updated": True,
+        "run_status": "OK" if not errors else "ISSUES",
+    }
+
+
+def workbook_snapshot(*, settings: Settings, run_status: str) -> dict[str, Any]:
+    try:
+        wb = load_workbook(settings.excel_path, data_only=True)
+        settings_values = read_settings(wb)
+        currency = str(settings_values.get("budget_currency") or "USD").upper()
+        starting_capital = float(
+            settings_values.get("starting_capital_usd")
+            or settings_values.get("starting_capital_ils")
+            or 100_000
+        )
+        open_positions = read_open_positions(wb)
+        cash = compute_cash(wb, starting_capital)
+        exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
+        open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
+        wb.close()
+    except Exception:
+        currency = "USD"
+        starting_capital = 100_000.0
+        cash = starting_capital
+        exposure = 0.0
+        open_risk = 0.0
+        open_positions = {}
+    return {
+        "decisions": {},
+        "cash": cash,
+        "exposure": exposure,
+        "remaining_budget": max(0.0, starting_capital - exposure),
+        "open_risk": open_risk,
+        "open_positions": open_positions,
+        "workbook": settings.excel_path,
+        "currency": currency,
+        "decision_path": "",
+        "market_regime": None,
+        "excel_updated": False,
+        "run_status": run_status,
     }
 
 
@@ -734,6 +808,18 @@ def ensure_agent_columns(wb: Any) -> None:
             18: "Chart URL",
             19: "Selection Context",
             20: "Decision JSON",
+            21: "Trade ID",
+            22: "Setup Score Bucket",
+            23: "Entry Confirmation",
+            24: "MFE",
+            25: "MAE",
+            26: "R Multiple",
+            27: "Duration",
+            28: "Exit Reason",
+            29: "Outcome After 1D",
+            30: "Outcome After 3D",
+            31: "Outcome After 5D",
+            32: "Outcome After 10D",
         },
         "Open Positions": {
             16: "Chart URL",
@@ -818,6 +904,57 @@ def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list
     cooldown_hours = hours or int(os.getenv("MARKET_LENS_SKIP_COOLDOWN_HOURS", "8"))
     cutoff = datetime.now() - timedelta(hours=cooldown_hours)
     return read_recent_action_tickers(excel_path, "SKIP", cutoff)
+
+
+def read_recent_stop_events(wb: Any, cooldown_days: int) -> dict[str, dict[str, Any]]:
+    if cooldown_days <= 0 or "Trade Log" not in wb.sheetnames:
+        return {}
+    ws = wb["Trade Log"]
+    now = datetime.now()
+    events: dict[str, dict[str, Any]] = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        timestamp = parse_agent_timestamp(row[0] if row else None)
+        action = str(row[1] or "").upper().strip() if len(row) > 1 else ""
+        ticker = str(row[2] or "").upper().strip() if len(row) > 2 else ""
+        if action != "EXIT_STOP" or not ticker or timestamp is None:
+            continue
+        elapsed = business_days_between(timestamp, now)
+        if elapsed > cooldown_days:
+            continue
+        decision_json = parse_json_cell(row[19] if len(row) > 19 else "")
+        current = events.get(ticker)
+        if current and timestamp <= current["timestamp"]:
+            continue
+        events[ticker] = {
+            "timestamp": timestamp,
+            "last_stop_date": timestamp.isoformat(timespec="seconds"),
+            "setup_type": decision_json.get("setup_type", ""),
+            "days_remaining": max(0, cooldown_days - elapsed),
+        }
+    return events
+
+
+def business_days_between(start: datetime, end: datetime) -> int:
+    if start > end:
+        return 0
+    day = start.date()
+    end_day = end.date()
+    count = 0
+    while day < end_day:
+        day = day + timedelta(days=1)
+        if day.weekday() < 5:
+            count += 1
+    return count
+
+
+def parse_json_cell(value: Any) -> dict[str, Any]:
+    if not value:
+        return {}
+    try:
+        parsed = json.loads(str(value))
+    except Exception:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def read_recent_action_tickers(excel_path: Path, action_name: str | set[str], cutoff: datetime) -> list[str]:
@@ -913,6 +1050,26 @@ def append_trade_log_row(
     ws.cell(row, 18, result.chart_url)
     ws.cell(row, 19, result.selection_context)
     ws.cell(row, 20, decision_json_text(decision))
+    write_trade_analytics_columns(ws, row, decision.decision_json)
+
+
+def write_trade_analytics_columns(ws: Any, row: int, decision_json: dict[str, Any]) -> None:
+    values = [
+        decision_json.get("trade_id", ""),
+        decision_json.get("setup_score_bucket", ""),
+        decision_json.get("entry_confirmation_status") or decision_json.get("confirmation_status", ""),
+        decision_json.get("mfe"),
+        decision_json.get("mae"),
+        decision_json.get("r_multiple"),
+        decision_json.get("duration"),
+        decision_json.get("exit_reason"),
+        decision_json.get("outcome_after_1d"),
+        decision_json.get("outcome_after_3d"),
+        decision_json.get("outcome_after_5d"),
+        decision_json.get("outcome_after_10d"),
+    ]
+    for offset, value in enumerate(values, start=21):
+        ws.cell(row, offset, value)
 
 
 def position_from_buy(
@@ -1014,6 +1171,44 @@ def decision_json_text(decision: Decision) -> str:
     return json.dumps(decision.decision_json, ensure_ascii=False, sort_keys=True, default=str)
 
 
+def enrich_decision_analytics(
+    decision_json: dict[str, Any],
+    *,
+    run_id: str,
+    result: SetupResult,
+    final_action: str,
+) -> None:
+    setup_score = float(decision_json.get("setup_score") or result.score or 0)
+    if final_action == "BUY_SIMULATED":
+        decision_json.setdefault("trade_id", f"{run_id}-{result.ticker}")
+    else:
+        decision_json.setdefault("trade_id", "")
+    decision_json["setup_score_bucket"] = setup_score_bucket(setup_score)
+    decision_json["weighted_net_rr"] = decision_json.get("net_rr")
+    decision_json["entry_confirmation_status"] = decision_json.get("confirmation_status")
+    decision_json.setdefault("mfe", None)
+    decision_json.setdefault("mae", None)
+    decision_json.setdefault("r_multiple", None)
+    decision_json.setdefault("duration", None)
+    decision_json.setdefault("exit_reason", None)
+    decision_json.setdefault("outcome_after_1d", None)
+    decision_json.setdefault("outcome_after_3d", None)
+    decision_json.setdefault("outcome_after_5d", None)
+    decision_json.setdefault("outcome_after_10d", None)
+
+
+def setup_score_bucket(score: float) -> str:
+    if score < 0.40:
+        return "<0.40"
+    if score < 0.50:
+        return "0.40-0.49"
+    if score < 0.60:
+        return "0.50-0.59"
+    if score < 0.70:
+        return "0.60-0.69"
+    return "0.70+"
+
+
 def write_decision_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = "\n".join(json.dumps(record, ensure_ascii=False, sort_keys=True, default=str) for record in records)
@@ -1077,11 +1272,22 @@ def write_summary(
         if market_regime
         else "Not available"
     )
+    run_status = str(workbook_context.get("run_status") or ("OK" if not errors else "ISSUES"))
+    excel_line = (
+        f"Excel updated: {settings.excel_path}"
+        if workbook_context.get("excel_updated", True)
+        else "Excel updated: skipped"
+    )
+    decision_line = (
+        f"Decision JSONL saved: {workbook_context.get('decision_path', '')}"
+        if workbook_context.get("decision_path")
+        else "Decision JSONL saved: skipped"
+    )
     lines = [
         "Market Lens Agent Update",
         "",
         f"Date: {datetime.now().isoformat(timespec='seconds')}",
-        f"Run status: {'OK' if not errors else 'ISSUES'}",
+        f"Run status: {run_status}",
         f"Login status: {login_status}",
         f"Scan status: {scan_status}",
         f"Tickers scanned: {' '.join(result.ticker for result in results)}",
@@ -1096,9 +1302,9 @@ def write_summary(
         f"Current exposure: {workbook_context['exposure']:.2f} {workbook_context['currency']}",
         f"Remaining available budget: {workbook_context['remaining_budget']:.2f} {workbook_context['currency']}",
         f"Total open risk: {workbook_context['open_risk']:.2f} {workbook_context['currency']}",
-        f"Excel updated: {settings.excel_path}",
+        excel_line,
         f"Screenshot saved: {screenshot_path}",
-        f"Decision JSONL saved: {workbook_context.get('decision_path', '')}",
+        decision_line,
         f"Errors: {'; '.join(errors) if errors else 'None'}",
         "Agent feedback:",
     ]
