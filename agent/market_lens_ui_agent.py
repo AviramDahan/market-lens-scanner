@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import json
-import math
 import os
 import re
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -19,6 +18,8 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sy
 
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.smart_universe import base_universe, build_sector_health
+from app.strategy import StrategyDecision as Decision
+from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,18 +61,6 @@ class SetupResult:
     raw_text: str
     chart_url: str = ""
     selection_context: str = ""
-
-
-@dataclass
-class Decision:
-    action: str
-    feedback: str
-    quantity: int = 0
-    cash_out_ils: float = 0.0
-    cash_in_ils: float = 0.0
-    risk_ils: float = 0.0
-    execution_price: float | None = None
-    decision_json: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -758,82 +747,18 @@ def decide(
     sector_map: dict[str, str],
     sector_health: dict[str, dict[str, Any]],
 ) -> Decision:
-    existing = open_positions.get(result.ticker)
-    if existing:
-        quantity = int(existing.get("quantity") or 0)
-        if result.current_price <= float(existing["stop_loss"]):
-            exit_price = float(existing["stop_loss"])
-            return Decision(
-                "EXIT_STOP",
-                "Current price reached stop loss.",
-                quantity=quantity,
-                cash_in_ils=round(quantity * exit_price * usd_ils, 2),
-                execution_price=exit_price,
-            )
-        if result.target_2 and result.current_price >= result.target_2:
-            exit_price = float(result.target_2)
-            return Decision(
-                "TAKE_PROFIT",
-                "Target 2 reached; close remaining simulated position.",
-                quantity=quantity,
-                cash_in_ils=round(quantity * exit_price * usd_ils, 2),
-                execution_price=exit_price,
-            )
-        if result.target_1 and result.current_price >= result.target_1 and not existing.get("partial_taken"):
-            partial_qty = max(1, quantity // 2)
-            exit_price = float(result.target_1)
-            return Decision(
-                "TAKE_PARTIAL_PROFIT",
-                "Target 1 reached; take partial simulated profit and move stop to breakeven.",
-                quantity=partial_qty,
-                cash_in_ils=round(partial_qty * exit_price * usd_ils, 2),
-                execution_price=exit_price,
-            )
-        return Decision("HOLD", "Existing simulated position remains open.")
-
-    if result.setup_type.upper().replace(" ", "_") in {"NO_TRADE", "NO-TRADE"} or result.setup_type == "No Trade":
-        return Decision("SKIP", "No Trade result.")
-    sector = sector_map.get(result.ticker)
-    health = sector_health.get(sector or "")
-    if health and health.get("label") == "Weak":
-        return Decision(
-            "SKIP",
-            f"{sector} sector regime is weak ({float(health.get('score', 0)):.0f}/100); skip new entry.",
-        )
-    if result.risk_reward < min_rr:
-        return Decision(
-            "WATCH",
-            (
-                f"Technical setup detected, but weighted risk/reward {result.risk_reward:.2f} "
-                f"is below minimum {min_rr:.2f}."
-            ),
-        )
-    if result.buy_zone_low is None or result.buy_zone_high is None:
-        return Decision("SKIP", "Buy zone missing.")
-    if not result.stop_loss or result.stop_loss <= 0:
-        return Decision("SKIP", "Stop loss missing.")
-    if not result.target_1 or not result.target_2:
-        return Decision("SKIP", "Targets missing.")
-    if not (result.buy_zone_low <= result.current_price <= result.buy_zone_high):
-        return Decision("WATCH", "Valid setup, but price is not inside the buy zone.")
-
-    risk_per_share_ils = (result.current_price - result.stop_loss) * usd_ils
-    if risk_per_share_ils <= 0:
-        return Decision("SKIP", "Risk cannot be calculated safely.")
-    price_ils = result.current_price * usd_ils
-    remaining_exposure = max_total_exposure - exposure
-    max_cash_for_trade = min(max_position, max_risk / risk_per_share_ils * price_ils, cash, remaining_exposure)
-    quantity = math.floor(max_cash_for_trade / price_ils)
-    if quantity <= 0:
-        return Decision("SKIP", "Position size blocked by cash, exposure, or risk limits.")
-    cash_out = quantity * price_ils
-    risk_ils = quantity * risk_per_share_ils
-    return Decision(
-        "BUY_SIMULATED",
-        "Price is inside buy zone, R/R is valid, and simulated risk limits allow entry.",
-        quantity=quantity,
-        cash_out_ils=round(cash_out, 2),
-        risk_ils=round(risk_ils, 2),
+    return decide_strategy_candidate(
+        normalize_strategy_candidate(result),
+        open_positions=open_positions,
+        cash=cash,
+        exposure=exposure,
+        currency_rate=usd_ils,
+        max_position=max_position,
+        max_total_exposure=max_total_exposure,
+        max_risk=max_risk,
+        min_rr=min_rr,
+        sector_map=sector_map,
+        sector_health=sector_health,
     )
 
 

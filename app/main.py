@@ -16,6 +16,7 @@ from app.models import SaveSetupRequest, ScanRequest, ScanResponse
 from app.scanner import scan_tickers
 from app.smart_universe import build_smart_universe
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
+from app.strategy import apply_strategy_decisions
 from app.watchlists import list_watchlists
 
 app = FastAPI(title="Market Lens", version="0.1.0", description="Swing trade scanner")
@@ -157,6 +158,11 @@ async def scan(
         min_rr=request.min_rr,
         analysis_period=request.analysis_period,
     )
+    results = apply_strategy_decisions(
+        results,
+        analysis_period=request.analysis_period,
+        min_rr=request.min_rr,
+    )
     return ScanResponse(results=results, errors=errors)
 
 
@@ -171,6 +177,14 @@ async def scan_with_charts(
         min_rr=request.min_rr,
         analysis_period=request.analysis_period,
     )
+    results = apply_strategy_decisions(
+        results,
+        analysis_period=request.analysis_period,
+        min_rr=request.min_rr,
+    )
+    result_by_ticker = {result.ticker: result for result in results}
+    for detail in details:
+        detail.result = result_by_ticker.get(detail.result.ticker, detail.result)
     charts = {}
     saved = []
     user_id = user.get("id")

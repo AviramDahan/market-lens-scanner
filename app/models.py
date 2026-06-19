@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 ANALYSIS_PERIODS = ("3mo", "6mo", "1y", "2y")
@@ -142,6 +144,9 @@ class ScanResult(BaseModel):
     event_risk: EventRiskInfo | None = None
     trade_plan: TradePlanInfo | None = None
     professional_assessment: ProfessionalAssessment | None = None
+    strategy_action: str | None = None
+    strategy_reason: str | None = None
+    strategy_decision: dict[str, Any] = Field(default_factory=dict)
 
 
 class ScanRequest(BaseModel):

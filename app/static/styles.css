@@ -561,6 +561,75 @@ button:hover {
   padding: 14px;
 }
 
+.strategy-panel {
+  display: grid;
+  gap: 11px;
+  border: 1px solid #b9cce6;
+  border-radius: 8px;
+  background: #f7fbff;
+  padding: 14px;
+}
+
+.strategy-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.strategy-head span,
+.strategy-checks span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.strategy-action {
+  border-radius: 999px;
+  background: var(--soft-blue);
+  color: var(--blue);
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.strategy-action.buy-simulated,
+.strategy-action.take-profit,
+.strategy-action.take-partial-profit {
+  background: var(--soft-green);
+  color: var(--green);
+}
+
+.strategy-action.skip,
+.strategy-action.exit-stop {
+  background: #fff0ee;
+  color: var(--red);
+}
+
+.strategy-checks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.strategy-checks div {
+  border-top: 1px solid #d9e5f3;
+  padding-top: 8px;
+}
+
+.strategy-checks strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.strategy-panel p {
+  margin: 0;
+  color: #344054;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .pro-head {
   display: flex;
   align-items: center;
@@ -826,6 +895,7 @@ dialog::backdrop {
 
   .primary-stats,
   .levels,
+  .strategy-checks,
   .pro-grid,
   .summary,
   .manual-add {

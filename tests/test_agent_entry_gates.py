@@ -6,6 +6,7 @@ from agent.market_lens_ui_agent import (
     ChartRetentionSettings,
     Decision,
     SetupResult,
+    decide,
     is_auth_failure,
     select_chart_tickers,
 )
@@ -19,6 +20,7 @@ from app.agent_risk import (
     cooldown_check,
     validate_targets,
 )
+from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 
 
 def config() -> AgentRiskConfig:
@@ -248,3 +250,49 @@ def test_chart_retention_keeps_open_position_chart() -> None:
         open_position_tickers={"OPEN"},
     )
     assert selected == {"OPEN"}
+
+
+def test_agent_and_user_strategy_decision_share_same_helper() -> None:
+    setup = SetupResult(
+        ticker="TEST",
+        setup_type="Breakout + Retest",
+        score=0.70,
+        current_price=100.0,
+        buy_zone_low=98.0,
+        buy_zone_high=101.0,
+        stop_loss=95.0,
+        target_1=107.0,
+        target_2=115.0,
+        risk_reward=2.20,
+        reason="test",
+        raw_text="test",
+    )
+    kwargs = {
+        "open_positions": {},
+        "cash": 100_000.0,
+        "exposure": 0.0,
+        "usd_ils": 1.0,
+        "max_position": 10_000.0,
+        "max_total_exposure": 40_000.0,
+        "max_risk": 1_000.0,
+        "min_rr": 2.0,
+        "sector_map": {},
+        "sector_health": {},
+    }
+    agent_decision = decide(setup, **kwargs)
+    shared_decision = decide_strategy_candidate(
+        normalize_strategy_candidate(setup),
+        open_positions=kwargs["open_positions"],
+        cash=kwargs["cash"],
+        exposure=kwargs["exposure"],
+        currency_rate=kwargs["usd_ils"],
+        max_position=kwargs["max_position"],
+        max_total_exposure=kwargs["max_total_exposure"],
+        max_risk=kwargs["max_risk"],
+        min_rr=kwargs["min_rr"],
+        sector_map=kwargs["sector_map"],
+        sector_health=kwargs["sector_health"],
+    )
+    assert agent_decision.action == shared_decision.action
+    assert agent_decision.feedback == shared_decision.feedback
+    assert agent_decision.quantity == shared_decision.quantity

@@ -662,12 +662,14 @@ function renderCard(result, chartUrl, analysisPeriod) {
           <div class="primary-stats">
             ${stat("Price", result.current_price)}
             ${stat("R/R", `${formatNumber(result.risk_reward, 2)}x`)}
+            ${stat("Strategy", result.strategy_action || result.strategy_decision?.final_action || "-")}
             ${stat("Grade", result.professional_assessment?.grade || "-")}
             ${stat("Quality", result.professional_assessment ? `${formatNumber(result.professional_assessment.quality_score * 100, 0)}%` : "-")}
             ${stat("Buy Zone", zone(result.buy_zone))}
             ${stat("Stop", result.stop_loss, "stop")}
             ${stat("Targets", `${formatNumber(result.target_1, 2)} / ${formatNumber(result.target_2, 2)}`, "target")}
           </div>
+          ${renderStrategyBlock(result)}
           ${renderProfessionalBlock(result)}
           <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
           <div class="levels">
@@ -711,11 +713,13 @@ function renderSavedCard(setup) {
           <div class="primary-stats">
             ${stat("Saved", setup.saved_price)}
             ${stat("Current", setup.current_price)}
+            ${stat("Strategy", result.strategy_action || result.strategy_decision?.final_action || "-")}
             ${stat("Grade", result.professional_assessment?.grade || "-")}
             ${stat("Quality", result.professional_assessment ? `${formatNumber(result.professional_assessment.quality_score * 100, 0)}%` : "-")}
             ${stat("Stop", setup.stop_loss, "stop")}
             ${stat("Targets", `${formatNumber(setup.target_1, 2)} / ${formatNumber(setup.target_2, 2)}`, "target")}
           </div>
+          ${renderStrategyBlock(result)}
           ${renderProfessionalBlock(result)}
           <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
           <div class="saved-meta">
@@ -729,6 +733,36 @@ function renderSavedCard(setup) {
         ${chart}
       </div>
     </article>
+  `;
+}
+
+function renderStrategyBlock(result) {
+  const decision = result.strategy_decision || {};
+  const action = result.strategy_action || decision.final_action;
+  if (!action) return "";
+  const reason = result.strategy_reason || decision.reason || "";
+  const checks = [
+    ["Market", decision.market_regime],
+    ["Sector", decision.sector_regime],
+    ["Net R/R", typeof decision.net_rr === "number" ? formatNumber(decision.net_rr, 2) : null],
+    ["T1 R/R", typeof decision.net_rr_1 === "number" ? formatNumber(decision.net_rr_1, 2) : null],
+    ["Confirm", decision.entry_confirmation_passed === true ? "Passed" : decision.confirmation_status || null],
+  ].filter(([, value]) => value !== null && value !== undefined && value !== "");
+  const actionClass = String(action).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return `
+    <div class="strategy-panel" data-testid="strategy-panel">
+      <div class="strategy-head">
+        <span>Strategy Decision</span>
+        <strong class="strategy-action ${escapeHtml(actionClass)}">${escapeHtml(action)}</strong>
+      </div>
+      ${checks.length ? `<div class="strategy-checks">${checks.map(([label, value]) => `
+        <div>
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(String(value))}</strong>
+        </div>
+      `).join("")}</div>` : ""}
+      ${reason ? `<p>${escapeHtml(reason)}</p>` : ""}
+    </div>
   `;
 }
 
