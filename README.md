@@ -114,7 +114,7 @@ curl -X POST http://localhost:8000/scan \
 In production, scanner and setup endpoints require a Supabase access token:
 
 ```bash
-curl -X POST https://market-lens-scanner.onrender.com/ui/scan \
+curl -X POST https://market-lens-scanner-fb63.onrender.com/ui/scan \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <supabase-access-token>" \
   -d '{"tickers": ["AAPL", "MSFT"], "min_rr": 2.0, "analysis_period": "6mo"}'
@@ -225,7 +225,7 @@ each ticker with:
 The deployed app also exposes a read-only agent dashboard:
 
 ```text
-https://market-lens-scanner.onrender.com/agent
+https://market-lens-scanner-fb63.onrender.com/agent
 ```
 
 It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
