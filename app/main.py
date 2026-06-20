@@ -125,26 +125,43 @@ async def get_agent_live_prices() -> dict:
 
 @app.post("/agent/trigger-monitor")
 async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
+    trigger_configured = monitor_trigger_configured()
     dashboard = build_agent_dashboard(PROJECT_ROOT)
     if dashboard.get("status") != "ok":
-        return {"status": "skipped", "triggered": False, "reason": "Agent dashboard data unavailable."}
+        return {
+            "status": "skipped",
+            "triggered": False,
+            "trigger_configured": trigger_configured,
+            "reason": "Agent dashboard data unavailable.",
+        }
 
     ticker = request.ticker.upper().strip()
     positions = dashboard.get("open_positions", [])
     position = next((item for item in positions if str(item.get("ticker") or "").upper() == ticker), None)
     if not position:
-        return {"status": "skipped", "triggered": False, "reason": f"No open position for {ticker}."}
+        return {
+            "status": "skipped",
+            "triggered": False,
+            "trigger_configured": trigger_configured,
+            "reason": f"No open position for {ticker}.",
+        }
 
     try:
         live_price, source_time = fetch_live_price(ticker)
     except Exception as exc:
-        return {"status": "skipped", "triggered": False, "reason": f"Live price unavailable: {exc}"}
+        return {
+            "status": "skipped",
+            "triggered": False,
+            "trigger_configured": trigger_configured,
+            "reason": f"Live price unavailable: {exc}",
+        }
 
     event = detect_live_monitor_event(position, live_price)
     if event is None:
         return {
             "status": "skipped",
             "triggered": False,
+            "trigger_configured": trigger_configured,
             "ticker": ticker,
             "live_price": round(live_price, 4),
             "live_price_updated_at": source_time,
@@ -156,16 +173,18 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
         return {
             "status": "rate_limited",
             "triggered": False,
+            "trigger_configured": trigger_configured,
             "ticker": ticker,
             "event_type": event.event_type,
             "live_price": round(live_price, 4),
             "reason": limit_reason,
         }
 
-    if not monitor_trigger_configured():
+    if not trigger_configured:
         return {
             "status": "not_configured",
             "triggered": False,
+            "trigger_configured": False,
             "ticker": ticker,
             "event_type": event.event_type,
             "live_price": round(live_price, 4),
@@ -180,6 +199,7 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
     return {
         "status": "triggered",
         "triggered": True,
+        "trigger_configured": True,
         "ticker": ticker,
         "event_type": event.event_type,
         "threshold": event.threshold,
