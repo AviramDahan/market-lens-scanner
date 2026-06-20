@@ -33,19 +33,40 @@ jobs:
           local_day="$(TZ=America/New_York date +%u)"
           local_time="$(TZ=America/New_York date +%H:%M)"
 
-          case "$local_time" in
-            "09:45"|"10:30"|"11:30"|"13:30"|"14:30"|"15:30"|"16:15")
-              if [ "$local_day" -le 5 ]; then
-                echo "should_run=true" >> "$GITHUB_OUTPUT"
-              else
-                echo "should_run=false" >> "$GITHUB_OUTPUT"
-              fi
-              ;;
-            *)
-              echo "Outside configured New York scan times; skipping."
-              echo "should_run=false" >> "$GITHUB_OUTPUT"
-              ;;
-          esac
+          should_run=false
+
+          # Weekday off-hours staging scans plus regular-session confirmation scans.
+          if [ "$local_day" -le 5 ]; then
+            case "$local_time" in
+              "06:30"|"08:30"|"09:10"|"09:45"|"10:30"|"11:30"|"13:30"|"14:30"|"15:30"|"16:15"|"16:20"|"18:30"|"20:15"|"22:30")
+                should_run=true
+                ;;
+            esac
+          fi
+
+          # Weekend research/staging scans. These can stage WATCH_READY only, not BUY_SIMULATED.
+          if [ "$local_day" = "6" ]; then
+            case "$local_time" in
+              "11:00")
+                should_run=true
+                ;;
+            esac
+          fi
+
+          if [ "$local_day" = "7" ]; then
+            case "$local_time" in
+              "18:30"|"22:00")
+                should_run=true
+                ;;
+            esac
+          fi
+
+          if [ "$should_run" = "true" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Outside configured New York scan times; skipping."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout
         if: steps.schedule_time.outputs.should_run == 'true'
@@ -97,6 +118,7 @@ jobs:
           MARKET_LENS_STOP_COOLDOWN_DAYS: "3"
           MARKET_LENS_COOLDOWN_EXCEPTION_SETUP_SCORE: "0.60"
           MARKET_LENS_COOLDOWN_EXCEPTION_NET_RR1: "1.20"
+          MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS: "false"
           MARKET_LENS_SAVE_REJECTED_CHARTS: "false"
           MARKET_LENS_REJECTED_CHART_LIMIT: "5"
           MARKET_LENS_REJECTED_CHART_MIN_SCORE: "0.40"

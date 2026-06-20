@@ -18,6 +18,7 @@ from app.agent_risk import (
     buy_blockers,
     calculate_entry_confirmation,
     cooldown_check,
+    market_session_status,
     validate_targets,
 )
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
@@ -130,6 +131,13 @@ def blockers_for(
         portfolio_exposure_after=5_000,
         sizing={"blocked": False, "reason": ""},
         minimum_net_rr=run_context.market_regime.minimum_net_rr,
+        market_session={
+            "phase": "REGULAR",
+            "timestamp": "2026-06-18T10:30-04:00",
+            "can_open_new_buy": True,
+            "regular_session_open": True,
+            "reason": "Regular market session is open.",
+        },
     )
 
 
@@ -161,6 +169,52 @@ def test_target1_too_close_blocks_buy() -> None:
 
 def test_missing_entry_confirmation_blocks_buy() -> None:
     assert "Entry confirmation failed" in reasons(blockers_for(confirmation_passed=False))
+
+
+def test_off_hours_candidate_is_staged_not_bought() -> None:
+    run_context = context("BULL")
+    blockers = buy_blockers(
+        result=result(score=0.70),
+        run_context=run_context,
+        sector_info={"regime": "STRONG", "etf": "XLK", "score": 80},
+        net_rr_info={"net_rr": 2.50, "net_rr_1": 1.20, "net_rr_2": 6.0},
+        earnings_info={"earnings_blackout": False},
+        target_info={"status": "OK"},
+        confirmation={"entry_confirmation_passed": True, "confirmation_reason": "confirmed"},
+        cooldown={"cooldown_active": False, "cooldown_exception_used": False},
+        sector_exposure={"limit_exceeded": False},
+        factor_exposure={"limit_exceeded": False},
+        correlation={"correlation_warning": False},
+        normalized_quality_score=80,
+        portfolio_exposure_after=5_000,
+        sizing={"blocked": False, "reason": ""},
+        minimum_net_rr=run_context.market_regime.minimum_net_rr,
+        market_session={
+            "phase": "PRE_MARKET",
+            "timestamp": "2026-06-18T08:30-04:00",
+            "can_open_new_buy": False,
+            "regular_session_open": False,
+            "reason": "Outside regular market hours.",
+        },
+    )
+    assert blockers[0]["action"] == "WATCH_READY"
+    assert "outside regular market hours" in blockers[0]["reason"].lower()
+
+
+def test_market_session_regular_allows_new_buy() -> None:
+    session = market_session_status(
+        now=pd.Timestamp("2026-06-18T10:30:00-04:00").to_pydatetime(),
+    )
+    assert session["phase"] == "REGULAR"
+    assert session["can_open_new_buy"] is True
+
+
+def test_market_session_weekend_stages_new_buy() -> None:
+    session = market_session_status(
+        now=pd.Timestamp("2026-06-20T10:30:00-04:00").to_pydatetime(),
+    )
+    assert session["phase"] == "WEEKEND"
+    assert session["can_open_new_buy"] is False
 
 
 def test_stop_loss_cooldown_blocks_reentry() -> None:

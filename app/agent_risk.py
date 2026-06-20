@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -21,6 +22,7 @@ MARKET_REGIME_SYMBOLS = {
     "US10Y": "^TNX",
     "DXY": "DX-Y.NYB",
 }
+NY_TZ = ZoneInfo("America/New_York")
 
 
 @dataclass
@@ -68,6 +70,7 @@ class AgentRiskConfig:
     earnings_blackout_after_days: int = 1
     block_unknown_earnings: bool = False
     fees_per_share: float = 0.0
+    allow_off_hours_buys: bool = False
 
     def __post_init__(self) -> None:
         if self.bull_max_exposure is None:
@@ -138,6 +141,8 @@ def build_agent_run_context(
         block_unknown_earnings=os.getenv("MARKET_LENS_BLOCK_UNKNOWN_EARNINGS", "false").lower()
         in {"1", "true", "yes"},
         fees_per_share=float(os.getenv("MARKET_LENS_AGENT_FEES_PER_SHARE", "0")),
+        allow_off_hours_buys=os.getenv("MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS", "false").lower()
+        in {"1", "true", "yes"},
     )
     market_regime = assess_agent_market_regime(config)
     try:
@@ -256,6 +261,7 @@ def evaluate_agent_candidate(
     earnings_info = calculate_earnings_blackout(ticker, config)
     target_info = validate_targets(result, snapshot, config)
     confirmation = calculate_entry_confirmation(result, snapshot, config)
+    market_session = market_session_status(allow_off_hours_buys=config.allow_off_hours_buys)
     cooldown = cooldown_check(
         ticker=ticker,
         result=result,
@@ -355,6 +361,7 @@ def evaluate_agent_candidate(
             portfolio_exposure_after=portfolio_exposure_after_if_buy,
             sizing=sizing,
             minimum_net_rr=minimum_net_rr,
+            market_session=market_session,
         )
         if blockers:
             final_action = downgrade_action_from_blockers(blockers)
@@ -392,6 +399,10 @@ def evaluate_agent_candidate(
         "market_regime_reason": run_context.market_regime.reason,
         "minimum_net_rr_required": minimum_net_rr_for(run_context.market_regime, sector_info, config),
         "market_regime_indicators": run_context.market_regime.indicators,
+        "market_session_phase": market_session["phase"],
+        "market_session_timestamp": market_session["timestamp"],
+        "market_session_can_open_new_buy": market_session["can_open_new_buy"],
+        "market_session_reason": market_session["reason"],
         "sector": sector,
         "sector_etf": sector_info["etf"],
         "sector_regime": sector_info["regime"],
@@ -521,11 +532,25 @@ def buy_blockers(
     portfolio_exposure_after: float,
     sizing: dict[str, Any],
     minimum_net_rr: float,
+    market_session: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     regime = run_context.market_regime
+    session = market_session or market_session_status(
+        allow_off_hours_buys=run_context.config.allow_off_hours_buys
+    )
     if sizing["blocked"]:
         blockers.append({"action": "WATCH", "reason": f"WATCH: {sizing['reason']}"})
+    if not session["can_open_new_buy"]:
+        blockers.append(
+            {
+                "action": "WATCH_READY",
+                "reason": (
+                    "WATCH_READY: Setup is staged outside regular market hours; "
+                    "re-scan after the regular session opens for entry confirmation."
+                ),
+            }
+        )
     if regime.label == "BEAR":
         blockers.append({"action": "SKIP", "reason": "SKIP: Bear market regime blocks new simulated buys."})
     if portfolio_exposure_after > regime.max_total_exposure:
@@ -632,6 +657,49 @@ def buy_blockers(
             }
         )
     return blockers
+
+
+def market_session_status(
+    now: datetime | None = None,
+    *,
+    allow_off_hours_buys: bool = False,
+) -> dict[str, Any]:
+    current = now.astimezone(NY_TZ) if now else datetime.now(NY_TZ)
+    minutes = current.hour * 60 + current.minute
+    if current.weekday() >= 5:
+        phase = "WEEKEND"
+        is_regular = False
+    elif minutes < 4 * 60:
+        phase = "CLOSED"
+        is_regular = False
+    elif minutes < 9 * 60 + 30:
+        phase = "PRE_MARKET"
+        is_regular = False
+    elif minutes <= 16 * 60:
+        phase = "REGULAR"
+        is_regular = True
+    elif minutes <= 20 * 60:
+        phase = "AFTER_HOURS"
+        is_regular = False
+    else:
+        phase = "CLOSED"
+        is_regular = False
+
+    can_open = is_regular or allow_off_hours_buys
+    reason = (
+        "Regular market session is open."
+        if is_regular
+        else "Outside regular market hours; new simulated buys are staged for the next regular-session confirmation."
+    )
+    if allow_off_hours_buys and not is_regular:
+        reason = "Off-hours buys are enabled by config."
+    return {
+        "phase": phase,
+        "timestamp": current.isoformat(timespec="minutes"),
+        "can_open_new_buy": bool(can_open),
+        "regular_session_open": bool(is_regular),
+        "reason": reason,
+    }
 
 
 def minimum_net_rr_for(

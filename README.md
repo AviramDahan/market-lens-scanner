@@ -234,7 +234,9 @@ publish the latest paper portfolio state back into the public app.
 
 The cloud setup has two separate workflows:
 
-- `Market Lens Paper Agent` runs the full UI scan at 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and 16:15 New York time.
+- `Market Lens Paper Agent` runs regular-session confirmation scans at 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and 16:15 New York time.
+- The same agent can also run off-hours staging scans at 06:30, 08:30, 09:10, 16:20, 18:30, 20:15, and 22:30 on weekdays, plus Saturday 11:00 and Sunday 18:30/22:00 New York time.
+- Off-hours scans can save candidates as `WATCH_READY`, but `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false` prevents new `BUY_SIMULATED` entries until a regular-session confirmation scan runs.
 - `Market Lens Position Monitor` checks existing open positions every five minutes from 09:35 through 16:00 New York time.
 
 The position monitor does not open new trades. It reads the current open
