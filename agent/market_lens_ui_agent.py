@@ -16,7 +16,9 @@ from dotenv import load_dotenv
 from openpyxl import load_workbook
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
+from app.charts import write_scan_chart
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
+from app.scanner import scan_ticker_detail
 from app.smart_universe import base_universe, build_sector_health
 from app.strategy import StrategyDecision as Decision
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
@@ -378,6 +380,7 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
 def run_scan(page: Page, deadline: float) -> list[SetupResult]:
     last_error = ""
     for attempt in range(1, 4):
+        page.evaluate("() => { window.marketLensIncludeCharts = false; }")
         page.locator('[data-testid="scan-button"]').click()
         page.wait_for_function(
             "() => !document.querySelector('[data-testid=\"scan-button\"]')?.disabled",
@@ -449,6 +452,8 @@ def apply_chart_retention_policy(
     *,
     base_url: str,
     run_id: str,
+    analysis_period: str,
+    min_rr: float,
     open_position_tickers: set[str],
 ) -> None:
     settings = chart_retention_settings()
@@ -458,7 +463,14 @@ def apply_chart_retention_policy(
         if result.ticker not in selected:
             result.chart_url = ""
             continue
-        if not persist_chart_image(result, base_url, run_id, deadline):
+        if not persist_chart_image(
+            result,
+            base_url,
+            run_id,
+            deadline,
+            analysis_period=analysis_period,
+            min_rr=min_rr,
+        ):
             result.chart_url = ""
 
 
@@ -512,22 +524,68 @@ def select_chart_tickers(
     return selected
 
 
-def persist_chart_image(result: SetupResult, base_url: str, run_id: str, deadline: float) -> bool:
-    if not result.chart_url:
-        return False
-    source_url = urljoin(base_url, result.chart_url)
+def persist_chart_image(
+    result: SetupResult,
+    base_url: str,
+    run_id: str,
+    deadline: float,
+    *,
+    analysis_period: str,
+    min_rr: float,
+) -> bool:
     destination = CHART_DIR / f"market_lens_agent_{run_id}_{result.ticker.lower()}.png"
+    source_url = urljoin(base_url, result.chart_url)
+    if result.chart_url:
+        try:
+            request = Request(source_url, headers={"User-Agent": "market-lens-agent/1.0"})
+            with urlopen(request, timeout=max(1, remaining_ms(deadline, 60_000) // 1000)) as response:
+                content_type = response.headers.get("content-type", "")
+                data = response.read()
+            if data and "image" in content_type.lower():
+                destination.write_bytes(data)
+                result.chart_url = str(destination)
+                return True
+        except Exception:
+            pass
+
+    return generate_local_chart_image(result, destination, analysis_period=analysis_period, min_rr=min_rr)
+
+
+def generate_local_chart_image(
+    result: SetupResult,
+    destination: Path,
+    *,
+    analysis_period: str,
+    min_rr: float,
+) -> bool:
     try:
-        request = Request(source_url, headers={"User-Agent": "market-lens-agent/1.0"})
-        with urlopen(request, timeout=max(1, remaining_ms(deadline, 60_000) // 1000)) as response:
-            content_type = response.headers.get("content-type", "")
-            data = response.read()
-        if not data or "image" not in content_type.lower():
-            return False
-        destination.write_bytes(data)
+        detail = scan_ticker_detail(result.ticker, min_rr=min_rr, analysis_period=analysis_period)
+        update: dict[str, Any] = {
+            "setup_type": result.setup_type,
+            "score": result.score,
+            "current_price": result.current_price,
+            "risk_reward": result.risk_reward,
+        }
+        if result.buy_zone_low is not None and result.buy_zone_high is not None:
+            update["buy_zone"] = (result.buy_zone_low, result.buy_zone_high)
+        if result.stop_loss is not None:
+            update["stop_loss"] = result.stop_loss
+        if result.target_1 is not None:
+            update["target_1"] = result.target_1
+        if result.target_2 is not None:
+            update["target_2"] = result.target_2
+        detail.result = detail.result.model_copy(update=update)
+        generated = write_scan_chart(detail, CHART_DIR)
+        if generated != destination:
+            destination.write_bytes(generated.read_bytes())
+            try:
+                generated.unlink()
+            except OSError:
+                pass
         result.chart_url = str(destination)
         return True
-    except Exception:
+    except Exception as exc:
+        log(f"Chart generation skipped for {result.ticker}: {exc}")
         return False
 
 
@@ -679,6 +737,8 @@ def update_workbook(
         pending_decisions,
         base_url=settings.url,
         run_id=run_id,
+        analysis_period=settings.analysis_period,
+        min_rr=settings.min_rr,
         open_position_tickers=initial_open_position_tickers | set(open_positions),
     )
     for result, decision in pending_decisions:

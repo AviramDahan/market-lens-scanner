@@ -435,7 +435,7 @@ async def scan_with_charts(
         path = write_scan_chart(detail, CHART_DIR)
         return detail.result.ticker, f"/charts/{path.name}"
 
-    if details:
+    if details and request.include_charts:
         max_workers = max(1, min(int(os.getenv("MARKET_LENS_CHART_WORKERS", "6")), len(details)))
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_by_ticker = {executor.submit(build_chart, detail): detail.result.ticker for detail in details}

@@ -170,6 +170,7 @@ form.addEventListener("submit", async (event) => {
         analysis_period: analysisPeriod,
         user_label: currentUserLabel(),
         session_id: sessionId,
+        include_charts: window.marketLensIncludeCharts !== false,
       }),
     });
 

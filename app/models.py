@@ -169,6 +169,7 @@ class ScanRequest(BaseModel):
     analysis_period: str = Field(default="6mo", pattern="^(3mo|6mo|1y|2y)$")
     user_label: str | None = Field(default=None, max_length=80)
     session_id: str | None = Field(default=None, max_length=80)
+    include_charts: bool = True
 
 
 class ScanResponse(BaseModel):
