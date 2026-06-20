@@ -152,7 +152,9 @@ jobs:
             cp -R "$RESULTS_DIR"/. "$TEMP_DIR/$RESULTS_DIR"/
           fi
 
-          TARGET_BRANCH="${GITHUB_REF_NAME:-main}"\n\n          echo "Moving local repo to latest origin/$TARGET_BRANCH..."
+          TARGET_BRANCH="${GITHUB_REF_NAME:-main}"
+
+          echo "Moving local repo to latest origin/$TARGET_BRANCH..."
           git fetch origin "$TARGET_BRANCH"
           git reset --hard "origin/$TARGET_BRANCH"
           git clean -fd
