@@ -100,9 +100,9 @@ def main() -> None:
             login_status = login(page, settings, deadline)
             log(f"Login status: {login_status}")
             log("Configuring scan")
-            configure_scan(page, settings, deadline)
+            scan_tickers = configure_scan(page, settings, deadline)
             log("Running UI scan")
-            results = run_scan(page, deadline)
+            results = run_scan_batches(page, scan_tickers, deadline)
             log(f"Scan completed: {len(results)} results")
             scan_status = f"completed: {len(results)} results"
             log("Saving screenshot")
@@ -267,7 +267,7 @@ def login(page: Page, settings: Settings, deadline: float) -> str:
     raise RuntimeError(f"Login did not complete. Status: {auth_status}. Message: {last_message}")
 
 
-def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
+def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]:
     page.locator('[data-testid="min-rr-input"]').fill(str(settings.min_rr))
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
     open_tickers = read_open_position_tickers(settings.excel_path)
@@ -286,18 +286,15 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
             f"{' ...' if len(skipped_tickers) > 20 else ''})"
         )
     if settings.tickers:
-        page.locator('[data-testid="manual-ticker-input"]').fill(
-            " ".join(unique_tickers(settings.tickers + carry_forward_tickers))
-        )
-        page.locator('[data-testid="add-manual-ticker"]').click()
-        return
+        tickers = unique_tickers(settings.tickers + carry_forward_tickers)
+        set_scan_basket(page, tickers)
+        return tickers
 
     agent_tickers = build_agent_scan_tickers(settings, carry_forward_tickers, skipped_tickers)
     if agent_tickers:
-        page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(agent_tickers))
-        page.locator('[data-testid="add-manual-ticker"]').click()
+        set_scan_basket(page, agent_tickers)
         log(f"Agent selected {len(agent_tickers)} tickers: {' '.join(agent_tickers)}")
-        return
+        return agent_tickers
 
     log("Smart Universe API selection unavailable; falling back to UI select-all flow.")
     page.locator('[data-testid="universe-select"]').select_option(settings.universe)
@@ -310,6 +307,20 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> None:
     if carry_forward_tickers:
         page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(carry_forward_tickers))
         page.locator('[data-testid="add-manual-ticker"]').click()
+    return current_scan_basket(page)
+
+
+def set_scan_basket(page: Page, tickers: list[str]) -> None:
+    page.locator("#clearBasketButton").click()
+    if not tickers:
+        return
+    page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(tickers))
+    page.locator('[data-testid="add-manual-ticker"]').click()
+
+
+def current_scan_basket(page: Page) -> list[str]:
+    value = page.locator("#tickers").input_value()
+    return parse_tickers(value.replace(",", " "))
 
 
 def build_agent_scan_tickers(
@@ -410,6 +421,27 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
           })"""
     )
     return [parse_result(item) for item in extracted]
+
+
+def run_scan_batches(page: Page, tickers: list[str], deadline: float) -> list[SetupResult]:
+    batch_size = max(1, int(os.getenv("MARKET_LENS_AGENT_SCAN_BATCH_SIZE", "20")))
+    if not tickers or len(tickers) <= batch_size:
+        return run_scan(page, deadline)
+
+    batches = list(chunked(tickers, batch_size))
+    combined: dict[str, SetupResult] = {}
+    for index, batch in enumerate(batches, start=1):
+        log(f"Running UI scan batch {index}/{len(batches)} ({len(batch)} tickers): {' '.join(batch)}")
+        set_scan_basket(page, batch)
+        batch_results = run_scan(page, deadline)
+        log(f"Batch {index}/{len(batches)} completed: {len(batch_results)} result cards")
+        for result in batch_results:
+            combined[result.ticker] = result
+    return list(combined.values())
+
+
+def chunked(items: list[str], size: int) -> list[list[str]]:
+    return [items[index : index + size] for index in range(0, len(items), size)]
 
 
 def apply_chart_retention_policy(
