@@ -152,9 +152,9 @@ jobs:
             cp -R "$RESULTS_DIR"/. "$TEMP_DIR/$RESULTS_DIR"/
           fi
 
-          echo "Moving local repo to latest origin/main..."
-          git fetch origin main
-          git reset --hard origin/main
+          TARGET_BRANCH="${GITHUB_REF_NAME:-main}"\n\n          echo "Moving local repo to latest origin/$TARGET_BRANCH..."
+          git fetch origin "$TARGET_BRANCH"
+          git reset --hard "origin/$TARGET_BRANCH"
           git clean -fd
 
           echo "Restoring Agent-generated files on top of latest main..."
@@ -178,11 +178,11 @@ jobs:
           git commit -m "Update Market Lens paper agent results"
 
           echo "Pushing changes..."
-          if ! git push origin HEAD:main; then
-            echo "Push rejected because main changed. Retrying once on top of latest main..."
+          if ! git push origin "HEAD:$TARGET_BRANCH"; then
+            echo "Push rejected because $TARGET_BRANCH changed. Retrying once on top of latest $TARGET_BRANCH..."
 
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin "$TARGET_BRANCH"
+            git reset --hard "origin/$TARGET_BRANCH"
             git clean -fd
 
             if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
@@ -203,5 +203,5 @@ jobs:
             fi
 
             git commit -m "Update Market Lens paper agent results"
-            git push origin HEAD:main
+            git push origin "HEAD:$TARGET_BRANCH"
           fi
