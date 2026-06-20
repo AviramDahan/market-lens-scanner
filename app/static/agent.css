@@ -168,7 +168,7 @@ h2 {
 
 .run-strip {
   display: grid;
-  grid-template-columns: 1.4fr repeat(3, minmax(130px, 0.6fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1px;
   margin-top: 18px;
   overflow: hidden;
@@ -186,6 +186,14 @@ h2 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.run-strip small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .metric-grid {

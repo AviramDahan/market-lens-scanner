@@ -5,10 +5,34 @@ const state = {
   tradesExpanded: false,
   visibleTradeCount: 10,
   liveTimer: null,
+  scheduleTimer: null,
+  nextLiveSyncAt: null,
 };
 
 const ACTIONS_PAGE_SIZE = 10;
 const TRADES_PAGE_SIZE = 10;
+const NEW_YORK_TZ = "America/New_York";
+const ISRAEL_TZ = "Asia/Jerusalem";
+const WEEKDAY_SCAN_TIMES = [
+  "06:30",
+  "08:30",
+  "09:10",
+  "09:45",
+  "10:30",
+  "11:30",
+  "13:30",
+  "14:30",
+  "15:30",
+  "16:15",
+  "16:20",
+  "18:30",
+  "20:15",
+  "22:30",
+];
+const MARKET_CONFIRMATION_TIMES = new Set(["09:45", "10:30", "11:30", "13:30", "14:30", "15:30"]);
+const CLOSE_REVIEW_TIMES = new Set(["16:15"]);
+const SATURDAY_SCAN_TIMES = ["11:00"];
+const SUNDAY_SCAN_TIMES = ["18:30", "22:00"];
 
 let money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -52,6 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   setupMediaModal();
   loadDashboard(selectedDate);
+  updateScheduleIndicators();
+  state.scheduleTimer = window.setInterval(updateScheduleIndicators, 1000);
 });
 
 async function loadDashboard(selectedDate = "") {
@@ -120,15 +146,27 @@ function renderDashboard(data) {
 
 function startLivePrices(selectedDate) {
   stopLivePrices();
-  if (selectedDate || !state.data?.open_positions?.length) return;
+  if (selectedDate || !state.data?.open_positions?.length) {
+    state.nextLiveSyncAt = null;
+    updateScheduleIndicators();
+    return;
+  }
   refreshLivePrices();
-  state.liveTimer = window.setInterval(refreshLivePrices, 60_000);
+  state.nextLiveSyncAt = Date.now() + 60_000;
+  updateScheduleIndicators();
+  state.liveTimer = window.setInterval(async () => {
+    await refreshLivePrices();
+    state.nextLiveSyncAt = Date.now() + 60_000;
+    updateScheduleIndicators();
+  }, 60_000);
 }
 
 function stopLivePrices() {
-  if (!state.liveTimer) return;
-  window.clearInterval(state.liveTimer);
-  state.liveTimer = null;
+  if (state.liveTimer) {
+    window.clearInterval(state.liveTimer);
+    state.liveTimer = null;
+  }
+  state.nextLiveSyncAt = null;
 }
 
 async function refreshLivePrices() {
@@ -146,6 +184,130 @@ async function refreshLivePrices() {
   } catch (_error) {
     // Live refresh is best-effort; the committed tracker remains the fallback.
   }
+}
+
+function updateScheduleIndicators() {
+  const nextScanEl = document.getElementById("nextScan");
+  const nextScanMetaEl = document.getElementById("nextScanMeta");
+  const nextSyncEl = document.getElementById("nextPriceSync");
+  const nextSyncMetaEl = document.getElementById("nextPriceSyncMeta");
+
+  if (nextScanEl && nextScanMetaEl) {
+    const nextScan = findNextAgentScan(new Date());
+    nextScanEl.textContent = formatIsraelDateTime(nextScan.date);
+    nextScanMetaEl.textContent = `${nextScan.label} - ${formatCountdown(nextScan.date.getTime() - Date.now())}`;
+  }
+
+  if (!nextSyncEl || !nextSyncMetaEl) return;
+  if (state.nextLiveSyncAt) {
+    nextSyncEl.textContent = formatCountdown(state.nextLiveSyncAt - Date.now());
+    nextSyncMetaEl.textContent = "Open-position prices";
+  } else if (document.getElementById("historyDate")?.value) {
+    nextSyncEl.textContent = "Paused";
+    nextSyncMetaEl.textContent = "Historical snapshot";
+  } else if (!state.data?.open_positions?.length) {
+    nextSyncEl.textContent = "Paused";
+    nextSyncMetaEl.textContent = "No open positions";
+  } else {
+    nextSyncEl.textContent = "Checking";
+    nextSyncMetaEl.textContent = "Live positions";
+  }
+}
+
+function findNextAgentScan(now) {
+  const nyNow = getZonedParts(now, NEW_YORK_TZ);
+  const baseDate = Date.UTC(nyNow.year, nyNow.month - 1, nyNow.day);
+  for (let dayOffset = 0; dayOffset < 14; dayOffset += 1) {
+    const date = new Date(baseDate + dayOffset * 24 * 60 * 60 * 1000);
+    const day = date.getUTCDay();
+    const times = scanTimesForNyDay(day);
+    for (const time of times) {
+      const [hour, minute] = time.split(":").map(Number);
+      const candidate = zonedTimeToDate(NEW_YORK_TZ, {
+        year: date.getUTCFullYear(),
+        month: date.getUTCMonth() + 1,
+        day: date.getUTCDate(),
+        hour,
+        minute,
+      });
+      if (candidate.getTime() > now.getTime() + 15_000) {
+        return { date: candidate, label: scanLabelFor(time, day) };
+      }
+    }
+  }
+  return { date: now, label: "Schedule unavailable" };
+}
+
+function scanTimesForNyDay(day) {
+  if (day >= 1 && day <= 5) return WEEKDAY_SCAN_TIMES;
+  if (day === 6) return SATURDAY_SCAN_TIMES;
+  return SUNDAY_SCAN_TIMES;
+}
+
+function scanLabelFor(time, day) {
+  if (MARKET_CONFIRMATION_TIMES.has(time)) return "Market confirmation";
+  if (CLOSE_REVIEW_TIMES.has(time)) return "Close review";
+  if (day === 0 || day === 6) return "Weekend staging";
+  return "Off-hours staging";
+}
+
+function zonedTimeToDate(timeZone, parts) {
+  const utcGuess = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, 0));
+  const zoneParts = getZonedParts(utcGuess, timeZone);
+  const zoneAsUtc = Date.UTC(
+    zoneParts.year,
+    zoneParts.month - 1,
+    zoneParts.day,
+    zoneParts.hour,
+    zoneParts.minute,
+    zoneParts.second || 0,
+  );
+  return new Date(utcGuess.getTime() - (zoneAsUtc - utcGuess.getTime()));
+}
+
+function getZonedParts(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const raw = Object.fromEntries(formatter.formatToParts(date).map((part) => [part.type, part.value]));
+  return {
+    year: Number(raw.year),
+    month: Number(raw.month),
+    day: Number(raw.day),
+    hour: Number(raw.hour),
+    minute: Number(raw.minute),
+    second: Number(raw.second || 0),
+  };
+}
+
+function formatIsraelDateTime(date) {
+  return new Intl.DateTimeFormat("en-IL", {
+    timeZone: ISRAEL_TZ,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatCountdown(ms) {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `in ${days}d ${hours}h`;
+  if (hours > 0) return `in ${hours}h ${minutes}m`;
+  if (minutes > 0) return `in ${minutes}m ${seconds}s`;
+  return `in ${seconds}s`;
 }
 
 function renderMetrics(summary) {
