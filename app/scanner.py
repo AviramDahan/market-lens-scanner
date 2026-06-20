@@ -3,7 +3,13 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 
-from app.data import fetch_daily_frame, fetch_next_earnings_date, fetch_spy_returns, fetch_ticker
+from app.data import (
+    fetch_daily_frame,
+    fetch_extended_hours_quote,
+    fetch_next_earnings_date,
+    fetch_spy_returns,
+    fetch_ticker,
+)
 from app.fibonacci import detect_swing_low_confluence, get_best_fib
 from app.indicators import (
     classify_volume_price_scenario,
@@ -16,7 +22,7 @@ from app.indicators import (
     compute_vwap,
     filter_hvn,
 )
-from app.models import ScanResult, VolumeProfile
+from app.models import ExtendedHoursInfo, ScanResult, VolumeProfile
 from app.professional import enrich_professional_context
 from app.setups import detect_setup
 
@@ -121,6 +127,7 @@ def scan_ticker_detail(
         benchmarks=benchmarks,
         earnings_date=earnings_date,
     )
+    result = attach_extended_hours(result, ticker)
     vp_from_date = data.hourly.index[0].strftime("%Y-%m-%d")
     vp_to_date = data.hourly.index[-1].strftime("%Y-%m-%d")
     return ScanDetail(
@@ -140,6 +147,31 @@ def scan_ticker_detail(
         relative_strength=relative_strength,
         benchmarks=benchmarks,
     )
+
+
+def attach_extended_hours(result: ScanResult, ticker: str) -> ScanResult:
+    try:
+        quote = fetch_extended_hours_quote(ticker)
+        info = ExtendedHoursInfo(
+            phase=quote.phase,
+            label=quote.label,
+            price=quote.price,
+            timestamp=quote.timestamp,
+            regular_close=quote.regular_close,
+            change=quote.change,
+            change_pct=quote.change_pct,
+            is_extended=quote.is_extended,
+            source=quote.source,
+            note=quote.note,
+        )
+    except Exception as exc:
+        logger.info("Extended-hours quote unavailable for %s: %s", ticker, exc)
+        info = ExtendedHoursInfo(
+            phase="UNAVAILABLE",
+            label="Extended unavailable",
+            note="Extended-hours quote unavailable from data provider.",
+        )
+    return result.model_copy(update={"extended_hours": info})
 
 
 def fetch_benchmarks(analysis_period: str = "6mo") -> dict[str, "pd.DataFrame"]:

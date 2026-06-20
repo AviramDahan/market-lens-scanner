@@ -561,6 +561,53 @@ button:hover {
   padding: 14px;
 }
 
+.extended-hours {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.extended-hours div {
+  min-width: 0;
+}
+
+.extended-hours span,
+.extended-hours small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.extended-hours strong {
+  display: block;
+  margin-top: 4px;
+  color: #1d2939;
+  font-size: 14px;
+}
+
+.extended-hours.up div:nth-child(2) strong {
+  color: var(--green);
+}
+
+.extended-hours.down div:nth-child(2) strong {
+  color: var(--red);
+}
+
+.extended-hours.flat div:nth-child(2) strong {
+  color: #1d2939;
+}
+
+.extended-hours small {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
 .strategy-panel {
   display: grid;
   gap: 11px;
@@ -895,6 +942,7 @@ dialog::backdrop {
 
   .primary-stats,
   .levels,
+  .extended-hours,
   .strategy-checks,
   .pro-grid,
   .summary,

@@ -116,6 +116,19 @@ class ProfessionalAssessment(BaseModel):
     strengths: list[str] = []
 
 
+class ExtendedHoursInfo(BaseModel):
+    phase: str
+    label: str
+    price: float | None = None
+    timestamp: str | None = None
+    regular_close: float | None = None
+    change: float = 0.0
+    change_pct: float = 0.0
+    is_extended: bool = False
+    source: str = ""
+    note: str = ""
+
+
 class ScanResult(BaseModel):
     ticker: str
     setup_type: str
@@ -144,6 +157,7 @@ class ScanResult(BaseModel):
     event_risk: EventRiskInfo | None = None
     trade_plan: TradePlanInfo | None = None
     professional_assessment: ProfessionalAssessment | None = None
+    extended_hours: ExtendedHoursInfo | None = None
     strategy_action: str | None = None
     strategy_reason: str | None = None
     strategy_decision: dict[str, Any] = Field(default_factory=dict)

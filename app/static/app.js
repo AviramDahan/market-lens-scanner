@@ -669,6 +669,7 @@ function renderCard(result, chartUrl, analysisPeriod) {
             ${stat("Stop", result.stop_loss, "stop")}
             ${stat("Targets", `${formatNumber(result.target_1, 2)} / ${formatNumber(result.target_2, 2)}`, "target")}
           </div>
+          ${renderExtendedHours(result)}
           ${renderStrategyBlock(result)}
           ${renderProfessionalBlock(result)}
           <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
@@ -719,6 +720,7 @@ function renderSavedCard(setup) {
             ${stat("Stop", setup.stop_loss, "stop")}
             ${stat("Targets", `${formatNumber(setup.target_1, 2)} / ${formatNumber(setup.target_2, 2)}`, "target")}
           </div>
+          ${renderExtendedHours(result)}
           ${renderStrategyBlock(result)}
           ${renderProfessionalBlock(result)}
           <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
@@ -734,6 +736,43 @@ function renderSavedCard(setup) {
       </div>
     </article>
   `;
+}
+
+function renderExtendedHours(result) {
+  const extended = result.extended_hours;
+  if (!extended || typeof extended.price !== "number") return "";
+  const direction = extended.change > 0 ? "up" : extended.change < 0 ? "down" : "flat";
+  const timestamp = extended.timestamp ? formatExtendedTime(extended.timestamp) : "";
+  const change = `${extended.change >= 0 ? "+" : ""}${formatNumber(extended.change, 2)} (${extended.change_pct >= 0 ? "+" : ""}${formatNumber(extended.change_pct, 2)}%)`;
+  return `
+    <div class="extended-hours ${direction}" title="${escapeHtml(extended.note || "")}">
+      <div>
+        <span>${escapeHtml(extended.label || "Extended hours")}</span>
+        <strong>${formatNumber(extended.price, 2)}</strong>
+      </div>
+      <div>
+        <span>vs regular close</span>
+        <strong>${escapeHtml(change)}</strong>
+      </div>
+      ${extended.regular_close ? `<div>
+        <span>Regular close</span>
+        <strong>${formatNumber(extended.regular_close, 2)}</strong>
+      </div>` : ""}
+      ${timestamp ? `<small>${escapeHtml(timestamp)}</small>` : ""}
+    </div>
+  `;
+}
+
+function formatExtendedTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
 }
 
 function renderStrategyBlock(result) {
