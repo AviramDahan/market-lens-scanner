@@ -178,7 +178,7 @@ jobs:
           git commit -m "Update Market Lens paper agent results"
 
           echo "Pushing changes..."
-          if ! git push origin HEAD:main; then
+          if ! git push origin HEAD:${GITHUB_REF_NAME:-main}; then
             echo "Push rejected because main changed. Retrying once on top of latest main..."
 
             git fetch origin main
@@ -203,5 +203,5 @@ jobs:
             fi
 
             git commit -m "Update Market Lens paper agent results"
-            git push origin HEAD:main
+            git push origin HEAD:${GITHUB_REF_NAME:-main}
           fi
