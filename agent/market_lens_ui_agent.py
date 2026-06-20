@@ -163,7 +163,7 @@ def main() -> None:
 
 def load_settings() -> Settings:
     load_dotenv(ROOT / ".env")
-    url = os.getenv("MARKET_LENS_URL", "https://market-lens-scanner.onrender.com/?v=latest")
+    url = os.getenv("MARKET_LENS_URL", "https://market-lens-scanner-fb63.onrender.com/?v=latest")
     email = required_env("MARKET_LENS_EMAIL")
     password = required_env("MARKET_LENS_PASSWORD")
     excel_path = Path(required_env("MARKET_LENS_EXCEL_PATH"))
