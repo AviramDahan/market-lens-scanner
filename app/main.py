@@ -3,7 +3,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -207,6 +207,154 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
         "live_price_updated_at": source_time,
         "reason": event.reason,
         "dispatch": dispatch,
+    }
+
+
+@app.get("/agent/monitor-live")
+@app.post("/agent/monitor-live")
+async def monitor_live_positions(
+    x_monitor_secret: str | None = Header(default=None, alias="X-Market-Lens-Cron-Secret"),
+    secret: str | None = Query(default=None, max_length=160),
+) -> dict:
+    protection = validate_monitor_cron_secret(x_monitor_secret, secret)
+    trigger_configured = monitor_trigger_configured()
+    dashboard = build_agent_dashboard(PROJECT_ROOT)
+    if dashboard.get("status") != "ok":
+        return {
+            "status": "skipped",
+            "triggered": False,
+            "trigger_configured": trigger_configured,
+            "protected": protection["protected"],
+            "reason": "Agent dashboard data unavailable.",
+        }
+
+    positions = dashboard.get("open_positions", [])
+    if not positions:
+        return {
+            "status": "skipped",
+            "triggered": False,
+            "trigger_configured": trigger_configured,
+            "protected": protection["protected"],
+            "open_positions": 0,
+            "reason": "No open positions to monitor.",
+        }
+
+    checked = []
+    detected_events = []
+    warnings = {}
+    dispatchable_event = None
+    rate_limited = []
+
+    for position in positions:
+        ticker = str(position.get("ticker") or "").upper().strip()
+        if not ticker:
+            continue
+        try:
+            live_price, source_time = fetch_live_price(ticker)
+        except Exception as exc:
+            warnings[ticker] = str(exc)
+            checked.append({"ticker": ticker, "status": "price_unavailable", "warning": str(exc)})
+            continue
+
+        event = detect_live_monitor_event(position, live_price)
+        checked_item = {
+            "ticker": ticker,
+            "live_price": round(live_price, 4),
+            "live_price_updated_at": source_time,
+            "status": "event_detected" if event else "no_event",
+        }
+        checked.append(checked_item)
+        if not event:
+            continue
+
+        event_payload = live_monitor_event_payload(event)
+        detected_events.append(event_payload)
+        limit_reason = rate_limit_reason(event)
+        if limit_reason:
+            event_payload["rate_limited"] = True
+            event_payload["rate_limit_reason"] = limit_reason
+            rate_limited.append(event_payload)
+            continue
+        if dispatchable_event is None:
+            dispatchable_event = event
+
+    if not detected_events:
+        return {
+            "status": "ok",
+            "triggered": False,
+            "trigger_configured": trigger_configured,
+            "protected": protection["protected"],
+            "open_positions": len(positions),
+            "positions_checked": len(checked),
+            "checked": checked,
+            "warnings": warnings,
+            "reason": "No open position touched stop loss or targets.",
+        }
+
+    if not trigger_configured:
+        return {
+            "status": "not_configured",
+            "triggered": False,
+            "trigger_configured": False,
+            "protected": protection["protected"],
+            "open_positions": len(positions),
+            "positions_checked": len(checked),
+            "detected_events": detected_events,
+            "warnings": warnings,
+            "reason": "GitHub monitor trigger token is not configured on the server.",
+        }
+
+    if dispatchable_event is None:
+        return {
+            "status": "rate_limited",
+            "triggered": False,
+            "trigger_configured": True,
+            "protected": protection["protected"],
+            "open_positions": len(positions),
+            "positions_checked": len(checked),
+            "detected_events": detected_events,
+            "rate_limited": rate_limited,
+            "warnings": warnings,
+            "reason": "Monitor trigger cooldown is active.",
+        }
+
+    try:
+        dispatch = await dispatch_position_monitor(dispatchable_event, source="agent-server-live-monitor")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return {
+        "status": "triggered",
+        "triggered": True,
+        "trigger_configured": True,
+        "protected": protection["protected"],
+        "open_positions": len(positions),
+        "positions_checked": len(checked),
+        "detected_events": detected_events,
+        "dispatched_event": live_monitor_event_payload(dispatchable_event),
+        "warnings": warnings,
+        "reason": dispatchable_event.reason,
+        "dispatch": dispatch,
+    }
+
+
+def validate_monitor_cron_secret(header_secret: str | None, query_secret: str | None) -> dict:
+    expected = os.getenv("MARKET_LENS_MONITOR_CRON_SECRET") or os.getenv("MARKET_LENS_CRON_SECRET") or ""
+    if not expected:
+        return {"protected": False}
+    provided = header_secret or query_secret or ""
+    if provided != expected:
+        raise HTTPException(status_code=401, detail="Invalid monitor cron secret.")
+    return {"protected": True}
+
+
+def live_monitor_event_payload(event) -> dict:
+    return {
+        "ticker": event.ticker,
+        "event_type": event.event_type,
+        "threshold": event.threshold,
+        "live_price": round(event.live_price, 4),
+        "reason": event.reason,
     }
 
 

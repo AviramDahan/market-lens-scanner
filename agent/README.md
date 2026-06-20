@@ -93,11 +93,15 @@ Then open GitHub Actions and run `Market Lens Paper Agent` manually once. The
 workflow is also scheduled for 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and
 16:15 New York time.
 
-The position monitor runs every five minutes during the New York market session.
-It only manages existing open positions. It downloads one-minute intraday
-candles and checks each candle high/low against target 1, target 2, and stop
-loss. If target and stop are touched inside the same candle, the tracker applies
-a conservative stop-first rule because the exact intraminute sequence is not
+The position monitor is the official portfolio updater for existing open
+positions. For full automation without keeping the dashboard open,
+cron-job.org should call the deployed app endpoint `/agent/monitor-live` every
+minute during the New York market session. That lightweight server-side sensor
+checks live prices for open positions and dispatches the GitHub position monitor
+only when target 1, target 2, or stop loss is touched. The monitor then downloads
+one-minute intraday candles and applies the official Excel/dashboard update. If
+target and stop are touched inside the same candle, the tracker applies a
+conservative stop-first rule because the exact intraminute sequence is not
 available.
 
 In the cloud workflow, `MARKET_LENS_MONITOR_SAVE_NOOP=true` is enabled so every

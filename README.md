@@ -237,7 +237,8 @@ The cloud setup has two separate workflows:
 - `Market Lens Paper Agent` runs regular-session confirmation scans at 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and 16:15 New York time.
 - The same agent can also run off-hours staging scans at 06:30, 08:30, 09:10, 16:20, 18:30, 20:15, and 22:30 on weekdays, plus Saturday 11:00 and Sunday 18:30/22:00 New York time.
 - Off-hours scans can save candidates as `WATCH_READY`, but `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false` prevents new `BUY_SIMULATED` entries until a regular-session confirmation scan runs.
-- `Market Lens Position Monitor` checks existing open positions every five minutes from 09:35 through 16:00 New York time.
+- `Market Lens Position Monitor` is the official portfolio updater for open positions.
+- `/agent/monitor-live` is a lightweight server-side TP/SL sensor that can be called by cron-job.org every minute during market hours. It checks only open positions and dispatches the monitor workflow only when a stop or target is touched.
 
 The position monitor does not open new trades. It reads the current open
 positions from the Excel tracker, downloads one-minute intraday candles, and
@@ -246,21 +247,31 @@ was touched. If target and stop are touched in the same one-minute candle, the
 paper tracker applies a conservative stop-first rule because the exact sequence
 inside that candle is unknown.
 
-The `/agent` dashboard also acts as a lightweight live TP/SL sensor while it is
-open in a browser. Its live price sync checks open positions every 60 seconds.
-If a live price touches target 1, target 2, or stop loss, the browser calls the
-server-side `/agent/trigger-monitor` endpoint. The server verifies the open
-position and live price again, rate-limits repeated events, and then dispatches
-the `Market Lens Position Monitor` GitHub Action with `force=true`. The frontend
-never receives the GitHub token. Configure the Render service with:
+The `/agent` dashboard also includes an optional live TP/SL sensor while it is
+open in a browser, but automation does not depend on the browser being open.
+For full automation, configure cron-job.org to call the server-side
+`/agent/monitor-live` endpoint during market hours. The server verifies open
+positions and live prices, rate-limits repeated events, and dispatches the
+`Market Lens Position Monitor` GitHub Action with `force=true` only when a real
+target/stop touch is detected. The frontend never receives the GitHub token.
+Configure the Render service with:
 
 ```text
 GITHUB_ACTIONS_TRIGGER_TOKEN=...
 GITHUB_ACTIONS_REPOSITORY=AviramDahan/market-lens-scanner
 GITHUB_POSITION_MONITOR_WORKFLOW=market-lens-position-monitor.yml
 GITHUB_ACTIONS_REF=main
+MARKET_LENS_MONITOR_CRON_SECRET=...
 MARKET_LENS_MONITOR_TRIGGER_GLOBAL_COOLDOWN_SECONDS=60
 MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS=300
+```
+
+Recommended cron-job.org monitor request:
+
+```text
+GET https://market-lens-scanner-fb63.onrender.com/agent/monitor-live?secret=<MARKET_LENS_MONITOR_CRON_SECRET>
+Timezone: America/New_York
+Schedule: every 1 minute, Monday-Friday, 09:35-16:05
 ```
 
 The cloud monitor uses `MARKET_LENS_MONITOR_SAVE_NOOP=true` so the public

@@ -78,7 +78,7 @@ def test_trigger_monitor_endpoint_dispatches_when_live_price_touches_target(monk
     )
     monkeypatch.setattr(main, "fetch_live_price", lambda ticker: (106.0, "2026-06-18T14:00:00Z"))
 
-    async def fake_dispatch(event):
+    async def fake_dispatch(event, source="agent-ui-live-price"):
         return {"github_status": 204, "workflow": "market-lens-position-monitor.yml", "ticker": event.ticker}
 
     monkeypatch.setattr(main, "dispatch_position_monitor", fake_dispatch)
@@ -93,3 +93,60 @@ def test_trigger_monitor_endpoint_dispatches_when_live_price_touches_target(monk
     assert payload["status"] == "triggered"
     assert payload["triggered"] is True
     assert payload["event_type"] == "TAKE_PARTIAL_PROFIT"
+
+
+def test_monitor_live_endpoint_requires_cron_secret_when_configured(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.setenv("MARKET_LENS_MONITOR_CRON_SECRET", "secret-value")
+    monkeypatch.setattr(main, "build_agent_dashboard", lambda *_args, **_kwargs: {"status": "ok", "open_positions": []})
+
+    client = TestClient(main.app)
+    response = client.get("/agent/monitor-live")
+    assert response.status_code == 401
+
+    response = client.get("/agent/monitor-live", headers={"X-Market-Lens-Cron-Secret": "secret-value"})
+    assert response.status_code == 200
+    assert response.json()["protected"] is True
+
+
+def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    monkeypatch.setattr(
+        main,
+        "build_agent_dashboard",
+        lambda *_args, **_kwargs: {
+            "status": "ok",
+            "open_positions": [
+                {"ticker": "AAA", "stop_loss": 95, "target_1": 105, "target_2": 112},
+                {"ticker": "BBB", "stop_loss": 45, "target_1": 55, "target_2": 60},
+            ],
+        },
+    )
+
+    def fake_live_price(ticker):
+        prices = {
+            "AAA": (100.0, "2026-06-18T14:00:00Z"),
+            "BBB": (55.5, "2026-06-18T14:00:00Z"),
+        }
+        return prices[ticker]
+
+    monkeypatch.setattr(main, "fetch_live_price", fake_live_price)
+    dispatches = []
+
+    async def fake_dispatch(event, source="agent-ui-live-price"):
+        dispatches.append((event.ticker, event.event_type, source))
+        return {"github_status": 204, "workflow": "market-lens-position-monitor.yml", "ticker": event.ticker}
+
+    monkeypatch.setattr(main, "dispatch_position_monitor", fake_dispatch)
+
+    client = TestClient(main.app)
+    response = client.post("/agent/monitor-live")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "triggered"
+    assert payload["triggered"] is True
+    assert payload["positions_checked"] == 2
+    assert payload["dispatched_event"]["ticker"] == "BBB"
+    assert dispatches == [("BBB", "TAKE_PARTIAL_PROFIT", "agent-server-live-monitor")]

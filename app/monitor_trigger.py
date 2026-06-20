@@ -91,7 +91,7 @@ def event_key(event: LiveMonitorEvent) -> str:
     return f"{event.ticker}:{event.event_type}"
 
 
-async def dispatch_position_monitor(event: LiveMonitorEvent) -> dict[str, Any]:
+async def dispatch_position_monitor(event: LiveMonitorEvent, source: str = "agent-ui-live-price") -> dict[str, Any]:
     token = github_actions_token()
     if not token:
         raise RuntimeError("GitHub Actions trigger token is not configured.")
@@ -109,7 +109,7 @@ async def dispatch_position_monitor(event: LiveMonitorEvent) -> dict[str, Any]:
             "force": "true",
             "ticker": event.ticker,
             "event": event.event_type,
-            "source": "agent-ui-live-price",
+            "source": source,
         },
     }
     headers = {
