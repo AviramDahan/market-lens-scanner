@@ -7,10 +7,13 @@ const state = {
   liveTimer: null,
   scheduleTimer: null,
   nextLiveSyncAt: null,
+  monitorTriggerCooldowns: {},
+  lastMonitorTrigger: null,
 };
 
 const ACTIONS_PAGE_SIZE = 10;
 const TRADES_PAGE_SIZE = 10;
+const MONITOR_TRIGGER_COOLDOWN_MS = 5 * 60 * 1000;
 const NEW_YORK_TZ = "America/New_York";
 const ISRAEL_TZ = "Asia/Jerusalem";
 const WEEKDAY_SCAN_TIMES = [
@@ -181,6 +184,7 @@ async function refreshLivePrices() {
     renderPositionsOverview(state.data.open_positions, live.updated_at);
     renderPositions(state.data.open_positions, live.updated_at);
     renderPositionCharts(state.data.open_positions);
+    detectAndTriggerMonitorEvents(state.data.open_positions);
   } catch (_error) {
     // Live refresh is best-effort; the committed tracker remains the fallback.
   }
@@ -212,6 +216,86 @@ function updateScheduleIndicators() {
     nextSyncEl.textContent = "Checking";
     nextSyncMetaEl.textContent = "Live positions";
   }
+  renderMonitorTriggerStatus();
+}
+
+function detectAndTriggerMonitorEvents(positions) {
+  (positions || []).forEach((position) => {
+    const event = touchedPositionEvent(position);
+    if (!event) return;
+    const key = `${position.ticker}:${event.eventType}`;
+    if ((state.monitorTriggerCooldowns[key] || 0) > Date.now()) return;
+    state.monitorTriggerCooldowns[key] = Date.now() + MONITOR_TRIGGER_COOLDOWN_MS;
+    triggerPositionMonitor(position, event);
+  });
+}
+
+function touchedPositionEvent(position) {
+  const price = Number(position.current_price_usd || 0);
+  const stop = Number(position.stop_loss || 0);
+  const target1 = Number(position.target_1 || 0);
+  const target2 = Number(position.target_2 || 0);
+  if (!price || !position.ticker) return null;
+  if (stop > 0 && price <= stop) {
+    return { eventType: "EXIT_STOP", label: "Stop touched", threshold: stop, price };
+  }
+  if (target2 > 0 && price >= target2) {
+    return { eventType: "TAKE_PROFIT", label: "Target 2 touched", threshold: target2, price };
+  }
+  if (target1 > 0 && price >= target1) {
+    return { eventType: "TAKE_PARTIAL_PROFIT", label: "Target 1 touched", threshold: target1, price };
+  }
+  return null;
+}
+
+async function triggerPositionMonitor(position, event) {
+  setMonitorTriggerStatus("Triggering", `${position.ticker} ${event.label}`);
+  try {
+    const response = await fetch("/agent/trigger-monitor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ticker: position.ticker,
+        event_type: event.eventType,
+        live_price: event.price,
+        source: "agent-ui-live-price",
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setMonitorTriggerStatus("Error", payload.detail || `Trigger failed (${response.status})`);
+      return;
+    }
+    if (payload.triggered) {
+      setMonitorTriggerStatus("Triggered", `${payload.ticker} ${payload.event_type}`);
+      return;
+    }
+    setMonitorTriggerStatus(payload.status || "Skipped", payload.reason || "Monitor was not triggered");
+  } catch (error) {
+    setMonitorTriggerStatus("Error", error.message || "Trigger request failed");
+  }
+}
+
+function setMonitorTriggerStatus(status, detail) {
+  state.lastMonitorTrigger = {
+    status,
+    detail,
+    timestamp: Date.now(),
+  };
+  renderMonitorTriggerStatus();
+}
+
+function renderMonitorTriggerStatus() {
+  const statusEl = document.getElementById("monitorTriggerStatus");
+  const metaEl = document.getElementById("monitorTriggerMeta");
+  if (!statusEl || !metaEl) return;
+  if (!state.lastMonitorTrigger) {
+    statusEl.textContent = "Idle";
+    metaEl.textContent = "Live TP/SL sensor";
+    return;
+  }
+  statusEl.textContent = state.lastMonitorTrigger.status;
+  metaEl.textContent = `${state.lastMonitorTrigger.detail} - ${formatElapsed(Date.now() - state.lastMonitorTrigger.timestamp)} ago`;
 }
 
 function findNextAgentScan(now) {
@@ -308,6 +392,18 @@ function formatCountdown(ms) {
   if (hours > 0) return `in ${hours}h ${minutes}m`;
   if (minutes > 0) return `in ${minutes}m ${seconds}s`;
   return `in ${seconds}s`;
+}
+
+function formatElapsed(ms) {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ${minutes % 60}m`;
+  }
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 function renderMetrics(summary) {

@@ -7,6 +7,18 @@ on:
         description: "Run immediately, bypassing the New York market-hours guard"
         required: false
         default: "false"
+      ticker:
+        description: "Optional live-trigger ticker"
+        required: false
+        default: ""
+      event:
+        description: "Optional live-trigger event"
+        required: false
+        default: ""
+      source:
+        description: "Optional trigger source"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -49,6 +61,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Show trigger context
+        if: steps.schedule_time.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          echo "trigger_source=${{ github.event.inputs.source || 'schedule-or-manual' }}"
+          echo "trigger_ticker=${{ github.event.inputs.ticker || '' }}"
+          echo "trigger_event=${{ github.event.inputs.event || '' }}"
 
       - name: Check for open positions
         if: steps.schedule_time.outputs.should_run == 'true'

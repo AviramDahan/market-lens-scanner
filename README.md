@@ -246,6 +246,23 @@ was touched. If target and stop are touched in the same one-minute candle, the
 paper tracker applies a conservative stop-first rule because the exact sequence
 inside that candle is unknown.
 
+The `/agent` dashboard also acts as a lightweight live TP/SL sensor while it is
+open in a browser. Its live price sync checks open positions every 60 seconds.
+If a live price touches target 1, target 2, or stop loss, the browser calls the
+server-side `/agent/trigger-monitor` endpoint. The server verifies the open
+position and live price again, rate-limits repeated events, and then dispatches
+the `Market Lens Position Monitor` GitHub Action with `force=true`. The frontend
+never receives the GitHub token. Configure the Render service with:
+
+```text
+GITHUB_ACTIONS_TRIGGER_TOKEN=...
+GITHUB_ACTIONS_REPOSITORY=AviramDahan/market-lens-scanner
+GITHUB_POSITION_MONITOR_WORKFLOW=market-lens-position-monitor.yml
+GITHUB_ACTIONS_REF=main
+MARKET_LENS_MONITOR_TRIGGER_GLOBAL_COOLDOWN_SECONDS=60
+MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS=300
+```
+
 The cloud monitor uses `MARKET_LENS_MONITOR_SAVE_NOOP=true` so the public
 `/agent` dashboard keeps open-position prices, exposure, and unrealized P/L
 fresh even when no target or stop was touched.

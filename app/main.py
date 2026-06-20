@@ -12,7 +12,13 @@ from app.auth import get_current_user_required, supabase_publishable_key
 from app.charts import write_scan_chart
 from app.config import load_config
 from app.data import fetch_intraday_frame
-from app.models import SaveSetupRequest, ScanRequest, ScanResponse
+from app.models import MonitorTriggerRequest, SaveSetupRequest, ScanRequest, ScanResponse
+from app.monitor_trigger import (
+    detect_live_monitor_event,
+    dispatch_position_monitor,
+    monitor_trigger_configured,
+    rate_limit_reason,
+)
 from app.scanner import scan_tickers
 from app.smart_universe import build_smart_universe
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
@@ -114,6 +120,73 @@ async def get_agent_live_prices() -> dict:
         "open_positions": refreshed,
         "prices": prices,
         "warnings": warnings,
+    }
+
+
+@app.post("/agent/trigger-monitor")
+async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
+    dashboard = build_agent_dashboard(PROJECT_ROOT)
+    if dashboard.get("status") != "ok":
+        return {"status": "skipped", "triggered": False, "reason": "Agent dashboard data unavailable."}
+
+    ticker = request.ticker.upper().strip()
+    positions = dashboard.get("open_positions", [])
+    position = next((item for item in positions if str(item.get("ticker") or "").upper() == ticker), None)
+    if not position:
+        return {"status": "skipped", "triggered": False, "reason": f"No open position for {ticker}."}
+
+    try:
+        live_price, source_time = fetch_live_price(ticker)
+    except Exception as exc:
+        return {"status": "skipped", "triggered": False, "reason": f"Live price unavailable: {exc}"}
+
+    event = detect_live_monitor_event(position, live_price)
+    if event is None:
+        return {
+            "status": "skipped",
+            "triggered": False,
+            "ticker": ticker,
+            "live_price": round(live_price, 4),
+            "live_price_updated_at": source_time,
+            "reason": "Live price has not touched stop loss or targets.",
+        }
+
+    limit_reason = rate_limit_reason(event)
+    if limit_reason:
+        return {
+            "status": "rate_limited",
+            "triggered": False,
+            "ticker": ticker,
+            "event_type": event.event_type,
+            "live_price": round(live_price, 4),
+            "reason": limit_reason,
+        }
+
+    if not monitor_trigger_configured():
+        return {
+            "status": "not_configured",
+            "triggered": False,
+            "ticker": ticker,
+            "event_type": event.event_type,
+            "live_price": round(live_price, 4),
+            "reason": "GitHub monitor trigger token is not configured on the server.",
+        }
+
+    try:
+        dispatch = await dispatch_position_monitor(event)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return {
+        "status": "triggered",
+        "triggered": True,
+        "ticker": ticker,
+        "event_type": event.event_type,
+        "threshold": event.threshold,
+        "live_price": round(live_price, 4),
+        "live_price_updated_at": source_time,
+        "reason": event.reason,
+        "dispatch": dispatch,
     }
 
 

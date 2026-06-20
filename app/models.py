@@ -176,6 +176,13 @@ class ScanResponse(BaseModel):
     errors: dict[str, str] = {}
 
 
+class MonitorTriggerRequest(BaseModel):
+    ticker: str = Field(min_length=1, max_length=12)
+    event_type: str | None = Field(default=None, max_length=40)
+    live_price: float | None = Field(default=None, gt=0)
+    source: str = Field(default="agent-ui-live-price", max_length=80)
+
+
 class SaveSetupRequest(BaseModel):
     result: ScanResult
     analysis_period: str = Field(default="6mo", pattern="^(3mo|6mo|1y|2y)$")
