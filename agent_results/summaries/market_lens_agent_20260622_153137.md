@@ -1,0 +1,96 @@
+Market Lens Agent Update
+
+Date: 2026-06-22T15:34:20
+Run status: OK
+Login status: signed in
+Scan status: completed: 25 results
+Tickers scanned: BALL AMD BA GS BNY UDR GD AXP AMCR BRK-B SAIA ORCL LIN LMT SBAC HST IRM DOC WY PKG AVY JBL FICO NOW DD
+Valid setups found: 19
+Market regime: BULL (0.82) - SPY/QQQ trend is constructive and volatility is acceptable.
+Actions taken: BALL:WATCH, AMD:WATCH, BA:WATCH, GS:WATCH, BNY:WATCH, UDR:WATCH, GD:WATCH, AXP:WATCH, AMCR:WATCH, BRK-B:WATCH, SAIA:WATCH, ORCL:WATCH, LIN:WATCH, LMT:WATCH, SBAC:WATCH, HST:SKIP, IRM:SKIP, DOC:SKIP, WY:SKIP, PKG:SKIP, AVY:WATCH, JBL:WATCH, FICO:WATCH, NOW:WATCH, DD:SKIP
+New simulated buys: None
+Watch ready setups: None
+Positions on watch: BALL, AMD, BA, GS, BNY, UDR, GD, AXP, AMCR, BRK-B, SAIA, ORCL, LIN, LMT, SBAC, AVY, JBL, FICO, NOW
+Positions closed: None
+Cash remaining: 100000.00 USD
+Current exposure: 0.00 USD
+Remaining available budget: 100000.00 USD
+Total open risk: 0.00 USD
+Excel updated: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+Screenshot saved: agent_results/screenshots/market_lens_agent_20260622_153137.png
+Decision JSONL saved: agent_results/decisions/market_lens_agent_20260622_153137.jsonl
+Errors: None
+Agent feedback:
+- BALL: WATCH - WATCH: Entry confirmation failed - Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Strong (71/100); XLB sector regime is strong: 8.8% 3m return, -5.1% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.55; R/R 3.52x; price 58.12 | Market: BULL; Sector regime: STRONG; Net R/R: 2.09; Factors: Materials | Agent action: WATCH - WATCH: Entry confirmation failed - Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+- AMD: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.64 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.30.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (100/100); XLK sector regime is strong: 40.1% 3m return, 26.2% vs SPY | Setup: Breakout + Retest; score 0.52; R/R 1.64x; price 545.24 | Market: BULL; Sector regime: STRONG; Net R/R: 1.30; Factors: AI / Semiconductors, High Beta Growth, Technology | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.64 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.30.
+- BA: WATCH - Gross R/R is valid, but Net R/R 1.90 failed minimum 2.00 after slippage/spread adjustment.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.; WATCH: Entry confirmation failed - Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (75/100); XLI sector regime is strong: 11.5% 3m return, -2.5% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.47; R/R 2.23x; price 221.44 | Market: BULL; Sector regime: STRONG; Net R/R: 1.90; Factors: Industrials | Agent action: WATCH - Gross R/R is valid, but Net R/R 1.90 failed minimum 2.00 after slippage/spread adjustment.
+- GS: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.02.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (71/100); XLF sector regime is strong: 9.2% 3m return, -4.8% vs SPY | Setup: Breakout + Retest; score 0.44; R/R 1.45x; price 1098.51 | Market: BULL; Sector regime: STRONG; Net R/R: 1.02; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.02.
+- BNY: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.29 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.88.
+  Warnings: Earnings data unavailable.; Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (71/100); XLF sector regime is strong: 9.2% 3m return, -4.8% vs SPY | Setup: Breakout + Retest; score 0.43; R/R 1.29x; price 145.60 | Market: BULL; Sector regime: STRONG; Net R/R: 0.88; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.29 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.88.
+- UDR: WATCH - Gross R/R is valid, but Net R/R 1.53 failed minimum 2.00 after slippage/spread adjustment.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.; WATCH: Entry confirmation failed - Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Neutral (47/100); XLRE sector regime is neutral: 8.4% 3m return, -5.6% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.42; R/R 2.49x; price 37.58 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 1.53; Factors: Real Estate | Agent action: WATCH - Gross R/R is valid, but Net R/R 1.53 failed minimum 2.00 after slippage/spread adjustment.
+- GD: WATCH - Gross R/R is valid, but Net R/R 1.64 failed minimum 2.00 after slippage/spread adjustment.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (75/100); XLI sector regime is strong: 11.5% 3m return, -2.5% vs SPY | Setup: Breakout + Retest; score 0.40; R/R 3.10x; price 344.96 | Market: BULL; Sector regime: STRONG; Net R/R: 1.64; Factors: Industrials | Agent action: WATCH - Gross R/R is valid, but Net R/R 1.64 failed minimum 2.00 after slippage/spread adjustment.
+- AXP: WATCH - Gross R/R is valid, but Net R/R 1.36 failed minimum 2.00 after slippage/spread adjustment.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (71/100); XLF sector regime is strong: 9.2% 3m return, -4.8% vs SPY | Setup: Breakout + Retest; score 0.40; R/R 2.04x; price 336.91 | Market: BULL; Sector regime: STRONG; Net R/R: 1.36; Factors: Financials | Agent action: WATCH - Gross R/R is valid, but Net R/R 1.36 failed minimum 2.00 after slippage/spread adjustment.
+- AMCR: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.13 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.74.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Strong (71/100); XLB sector regime is strong: 8.8% 3m return, -5.1% vs SPY | Setup: Breakout + Retest; score 0.38; R/R 1.13x; price 41.16 | Market: BULL; Sector regime: STRONG; Net R/R: 0.74; Factors: Materials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.13 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.74.
+- BRK-B: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.96 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.13.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (71/100); XLF sector regime is strong: 9.2% 3m return, -4.8% vs SPY | Setup: Breakout + Retest; score 0.37; R/R 1.96x; price 488.33 | Market: BULL; Sector regime: STRONG; Net R/R: 1.13; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.96 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.13.
+- SAIA: WATCH - WATCH: BULL market requires setup score (0.36 < 0.40).
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.; WATCH: Neutral sector requires a cleaner setup score.; Gross R/R is valid, but Net R/R 1.53 failed minimum 2.00 after slippage/spread adjustment.; WATCH: Entry confirmation failed - Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Unknown | Setup: Fib 61.8 Confluence Buy Zone; score 0.36; R/R 2.01x; price 438.76 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 1.53 | Agent action: WATCH - WATCH: BULL market requires setup score (0.36 < 0.40).
+- ORCL: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.44.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (100/100); XLK sector regime is strong: 40.1% 3m return, 26.2% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.35; R/R 1.63x; price 178.35 | Market: BULL; Sector regime: STRONG; Net R/R: 1.44; Factors: Technology | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.44.
+- LIN: WATCH - WATCH: BULL market requires setup score (0.33 < 0.40).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Gross R/R is valid, but Net R/R 1.60 failed minimum 2.00 after slippage/spread adjustment.; WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Strong (71/100); XLB sector regime is strong: 8.8% 3m return, -5.1% vs SPY | Setup: Breakout + Retest; score 0.33; R/R 2.67x; price 512.81 | Market: BULL; Sector regime: STRONG; Net R/R: 1.60; Factors: Materials | Agent action: WATCH - WATCH: BULL market requires setup score (0.33 < 0.40).
+- LMT: WATCH - WATCH: Valid setup, but price is not inside the buy zone. Market regime BULL; sector STRONG; net R/R 2.53.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (75/100); XLI sector regime is strong: 11.5% 3m return, -2.5% vs SPY | Setup: Swing Low + Volume Support Buy Zone; score 0.33; R/R 2.69x; price 495.51 | Market: BULL; Sector regime: STRONG; Net R/R: 2.53; Factors: Industrials | Agent action: WATCH - WATCH: Valid setup, but price is not inside the buy zone. Market regime BULL; sector STRONG; net R/R 2.53.
+- SBAC: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.64 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.71.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Neutral (47/100); XLRE sector regime is neutral: 8.4% 3m return, -5.6% vs SPY | Setup: Swing Low + Volume Support Buy Zone; score 0.23; R/R 1.64x; price 187.89 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 1.71; Factors: Real Estate | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.64 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.71.
+- HST: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Neutral (47/100); XLRE sector regime is neutral: 8.4% 3m return, -5.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 25.38 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Real Estate | Agent action: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+- IRM: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Neutral (47/100); XLRE sector regime is neutral: 8.4% 3m return, -5.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 132.61 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Real Estate | Agent action: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+- DOC: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Neutral (47/100); XLRE sector regime is neutral: 8.4% 3m return, -5.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 19.89 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Real Estate | Agent action: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+- WY: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Neutral (47/100); XLRE sector regime is neutral: 8.4% 3m return, -5.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 24.73 | Market: BULL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Real Estate | Agent action: SKIP - SKIP: No Trade result. Market regime BULL; sector NEUTRAL; net R/R 0.00.
+- PKG: SKIP - SKIP: No Trade result. Market regime BULL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Strong (71/100); XLB sector regime is strong: 8.8% 3m return, -5.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 233.30 | Market: BULL; Sector regime: STRONG; Net R/R: 0.00; Factors: Materials | Agent action: SKIP - SKIP: No Trade result. Market regime BULL; sector STRONG; net R/R 0.00.
+- AVY: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.11.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Strong (71/100); XLB sector regime is strong: 8.8% 3m return, -5.1% vs SPY | Setup: Swing Low + Volume Support Buy Zone; score 0.37; R/R 1.53x; price 159.27 | Market: BULL; Sector regime: STRONG; Net R/R: 1.11; Factors: Materials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.11.
+- JBL: WATCH - WATCH: BULL market requires setup score (0.37 < 0.40).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Gross R/R is valid, but Net R/R 1.71 failed minimum 2.00 after slippage/spread adjustment.; WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (100/100); XLK sector regime is strong: 40.1% 3m return, 26.2% vs SPY | Setup: Breakout + Retest; score 0.37; R/R 2.52x; price 372.35 | Market: BULL; Sector regime: STRONG; Net R/R: 1.71; Factors: Technology | Agent action: WATCH - WATCH: BULL market requires setup score (0.37 < 0.40).
+- FICO: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.84 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (100/100); XLK sector regime is strong: 40.1% 3m return, 26.2% vs SPY | Setup: Breakout + Retest; score 0.26; R/R 1.84x; price 1073.01 | Market: BULL; Sector regime: STRONG; Net R/R: 1.31; Factors: Technology | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.84 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
+- NOW: WATCH - WATCH: BULL market requires setup score (0.24 < 0.40).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Gross R/R is valid, but Net R/R 1.49 failed minimum 2.00 after slippage/spread adjustment.; WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (100/100); XLK sector regime is strong: 40.1% 3m return, 26.2% vs SPY | Setup: Breakout + Retest; score 0.24; R/R 2.02x; price 93.30 | Market: BULL; Sector regime: STRONG; Net R/R: 1.49; Factors: High Beta Growth, Technology | Agent action: WATCH - WATCH: BULL market requires setup score (0.24 < 0.40).
+- DD: SKIP - SKIP: No Trade result. Market regime BULL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Strong (71/100); XLB sector regime is strong: 8.8% 3m return, -5.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 48.25 | Market: BULL; Sector regime: STRONG; Net R/R: 0.00; Factors: Materials | Agent action: SKIP - SKIP: No Trade result. Market regime BULL; sector STRONG; net R/R 0.00.
