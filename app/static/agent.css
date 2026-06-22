@@ -946,18 +946,36 @@ td {
   }
 
   .positions-overview-panel {
-    position: sticky;
-    top: 8px;
-    z-index: 10;
+    position: static;
     padding: 14px;
   }
 
   .positions-overview {
     grid-template-columns: 1fr;
+    max-height: min(360px, 42vh);
+    overflow: auto;
+    padding-right: 4px;
+    overscroll-behavior: contain;
+  }
+
+  .position-mini-card {
+    gap: 10px;
+    padding: 12px;
   }
 
   .position-mini-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .position-mini-head {
+    align-items: center;
+  }
+
+  .position-mini-head .badge {
+    min-height: 26px;
+    padding: 0 8px;
+    font-size: 12px;
   }
 
   .action-chart {
