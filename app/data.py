@@ -27,6 +27,7 @@ HOURLY_PERIOD_BY_ANALYSIS_PERIOD = {
     "2y": "60d",
 }
 DATA_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_DATA_CACHE_TTL", "900"))
+EXTENDED_HOURS_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_EXTENDED_HOURS_CACHE_TTL", "45"))
 EARNINGS_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_EARNINGS_CACHE_TTL", "21600"))
 NY_TZ = "America/New_York"
 _FRAME_CACHE: dict[tuple[str, str, str, bool], tuple[float, pd.DataFrame]] = {}
@@ -182,7 +183,7 @@ def fetch_last_price(ticker: str) -> float:
 
 def _fetch_frame(ticker: str, interval: str, period: str, include_prepost: bool = False) -> pd.DataFrame:
     cache_key = (ticker.upper(), interval, period, include_prepost)
-    cached = _get_frame_cache(cache_key)
+    cached = _get_frame_cache(cache_key, _frame_cache_ttl(interval, include_prepost))
     if cached is not None:
         return cached
 
@@ -213,6 +214,12 @@ def _fetch_frame(ticker: str, interval: str, period: str, include_prepost: bool 
 
     _set_frame_cache(cache_key, df)
     return df.copy()
+
+
+def _frame_cache_ttl(interval: str, include_prepost: bool) -> int:
+    if include_prepost and interval in {"1m", "2m", "5m"}:
+        return EXTENDED_HOURS_CACHE_TTL_SECONDS
+    return DATA_CACHE_TTL_SECONDS
 
 
 def _market_phase_for_local_timestamp(timestamp: pd.Timestamp) -> str:
@@ -270,14 +277,14 @@ def _validate_frame(df: pd.DataFrame, ticker: str, interval: str, min_rows: int)
 _CACHE_MISS = object()
 
 
-def _get_frame_cache(key: tuple[str, str, str, bool]) -> pd.DataFrame | None:
+def _get_frame_cache(key: tuple[str, str, str, bool], ttl_seconds: int) -> pd.DataFrame | None:
     now = time.monotonic()
     with _CACHE_LOCK:
         cached = _FRAME_CACHE.get(key)
         if not cached:
             return None
         stored_at, frame = cached
-        if now - stored_at > DATA_CACHE_TTL_SECONDS:
+        if now - stored_at > ttl_seconds:
             _FRAME_CACHE.pop(key, None)
             return None
         return frame.copy()

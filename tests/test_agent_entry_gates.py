@@ -21,6 +21,8 @@ from app.agent_risk import (
     market_session_status,
     validate_targets,
 )
+from app.charts import _quote_line_for_chart
+from app.data import DATA_CACHE_TTL_SECONDS, EXTENDED_HOURS_CACHE_TTL_SECONDS, _frame_cache_ttl
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 
 
@@ -304,6 +306,20 @@ def test_chart_retention_keeps_open_position_chart() -> None:
         open_position_tickers={"OPEN"},
     )
     assert selected == {"OPEN"}
+
+
+def test_scan_chart_marks_premarket_quote_separately() -> None:
+    setup = SimpleNamespace(
+        current_price=100.0,
+        extended_hours=SimpleNamespace(phase="PRE_MARKET", label="Pre-market", price=101.0),
+    )
+    assert _quote_line_for_chart(setup) == ("Pre-market quote", 101.0)
+
+
+def test_extended_hours_quote_cache_uses_short_ttl() -> None:
+    assert _frame_cache_ttl("1m", True) == EXTENDED_HOURS_CACHE_TTL_SECONDS
+    assert EXTENDED_HOURS_CACHE_TTL_SECONDS < DATA_CACHE_TTL_SECONDS
+    assert _frame_cache_ttl("1d", False) == DATA_CACHE_TTL_SECONDS
 
 
 def test_agent_and_user_strategy_decision_share_same_helper() -> None:

@@ -636,6 +636,7 @@ function renderSavedSetups() {
 
 function renderCard(result, chartUrl, analysisPeriod) {
   const hasTrade = result.setup_type !== "No Trade";
+  const priceLabel = hasQuoteMismatch(result) ? "Setup price" : "Price";
   const chart = chartUrl
     ? `<div class="chart-wrap">
         <img class="chart-preview" src="${chartUrl}?v=${Date.now()}" alt="${result.ticker} annotated chart" data-chart="${chartUrl}" data-title="${result.ticker} chart" />
@@ -661,7 +662,7 @@ function renderCard(result, chartUrl, analysisPeriod) {
       <div class="result-body">
         <div class="decision">
           <div class="primary-stats">
-            ${stat("Price", result.current_price)}
+            ${stat(priceLabel, result.current_price)}
             ${stat("R/R", `${formatNumber(result.risk_reward, 2)}x`)}
             ${stat("Strategy", result.strategy_action || result.strategy_decision?.final_action || "-")}
             ${stat("Grade", result.professional_assessment?.grade || "-")}
@@ -762,6 +763,13 @@ function renderExtendedHours(result) {
       ${timestamp ? `<small>${escapeHtml(timestamp)}</small>` : ""}
     </div>
   `;
+}
+
+function hasQuoteMismatch(result) {
+  const extended = result.extended_hours;
+  if (!extended || typeof extended.price !== "number" || typeof result.current_price !== "number") return false;
+  const threshold = Math.max(Math.abs(result.current_price) * 0.0005, 0.01);
+  return Math.abs(extended.price - result.current_price) >= threshold;
 }
 
 function formatExtendedTime(value) {

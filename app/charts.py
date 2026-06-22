@@ -66,7 +66,12 @@ def write_scan_chart(detail: ScanDetail, output_dir: Path | str = "charts") -> P
     ema20 = daily["Close"].ewm(span=20, adjust=False).mean()
     ax.plot(daily.index, ema20, color="#2f6fbb", linewidth=1.6, label="EMA 20")
 
-    _hline(ax, result.current_price, "Current", "#2b2b2b", linewidth=1.4)
+    quote_line = _quote_line_for_chart(result)
+    setup_price_label = "Setup price" if quote_line else "Current"
+    _hline(ax, result.current_price, setup_price_label, "#2b2b2b", linewidth=1.4)
+    if quote_line:
+        quote_label, quote_price = quote_line
+        _hline(ax, quote_price, quote_label, "#0284c7", linewidth=1.6, linestyle="--")
     _hline(ax, detail.vwap, "VWAP", "#7b4cc2", linestyle="--")
     _hline(ax, detail.volume_profile.poc, "POC", "#6b7280", linestyle=":")
     _hline(ax, detail.volume_profile.vah, "VAH", "#9ca3af", linestyle=":", annotate=False)
@@ -102,12 +107,10 @@ def write_scan_chart(detail: ScanDetail, output_dir: Path | str = "charts") -> P
         _hline(ax, result.target_1, "Target 1", "#16803c", linewidth=1.4)
         _hline(ax, result.target_2, "Target 2", "#16803c", linewidth=1.4, linestyle="--")
 
-    ax.set_title(
-        f"{result.ticker} - {result.setup_type} | score {result.score:.2f} | R/R {result.risk_reward:.2f}x",
-        loc="left",
-        fontsize=14,
-        fontweight="bold",
-    )
+    title = f"{result.ticker} - {result.setup_type} | score {result.score:.2f} | R/R {result.risk_reward:.2f}x"
+    if quote_line:
+        title += "\nQuote line is informational; setup logic uses completed regular-session candles."
+    ax.set_title(title, loc="left", fontsize=14, fontweight="bold")
     ax.set_ylabel("Price")
     ax.grid(True, axis="y", color="#e5e7eb", linewidth=0.8)
     ax.legend(loc="upper left", fontsize=8, ncols=2)
@@ -132,6 +135,35 @@ def _hline(ax, y: float, label: str, color: str, **kwargs) -> None:
     labels = getattr(ax, "_market_lens_level_labels", [])
     labels.append({"y": float(y), "label": label, "color": color})
     setattr(ax, "_market_lens_level_labels", labels)
+
+
+def _quote_line_for_chart(result) -> tuple[str, float] | None:
+    quote = getattr(result, "extended_hours", None)
+    if quote is None or getattr(quote, "price", None) in (None, ""):
+        return None
+    try:
+        price = float(quote.price)
+        setup_price = float(getattr(result, "current_price", 0) or 0)
+    except (TypeError, ValueError):
+        return None
+    if price <= 0:
+        return None
+
+    threshold = max(abs(setup_price) * 0.0005, 0.01)
+    if abs(price - setup_price) < threshold:
+        return None
+
+    phase = str(getattr(quote, "phase", "") or "").upper()
+    label = str(getattr(quote, "label", "") or "").strip()
+    if phase == "PRE_MARKET":
+        label = "Pre-market quote"
+    elif phase == "AFTER_HOURS":
+        label = "After-hours quote"
+    elif phase == "REGULAR":
+        label = "Live quote"
+    elif not label:
+        label = "Quote"
+    return label, price
 
 
 def _render_level_labels(ax) -> None:
