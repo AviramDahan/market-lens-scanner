@@ -171,7 +171,94 @@ def attach_extended_hours(result: ScanResult, ticker: str) -> ScanResult:
             label="Extended unavailable",
             note="Extended-hours quote unavailable from data provider.",
         )
-    return result.model_copy(update={"extended_hours": info})
+    updated = result.model_copy(update={"extended_hours": info})
+    return updated.model_copy(update={"extended_hours_impact": calculate_extended_hours_impact(updated)})
+
+
+def calculate_extended_hours_impact(result: ScanResult) -> dict:
+    quote = result.extended_hours
+    if quote is None or quote.price is None or quote.price <= 0:
+        return {
+            "status": "UNAVAILABLE",
+            "informational_only": True,
+            "hint": "Extended-hours quote is unavailable.",
+        }
+
+    price = float(quote.price)
+    setup_price = float(result.current_price or 0)
+    impact = {
+        "status": "INFO_ONLY",
+        "phase": quote.phase,
+        "label": quote.label,
+        "quote_price": round(price, 4),
+        "setup_price": round(setup_price, 4),
+        "price_delta": round(price - setup_price, 4),
+        "price_delta_pct": round(((price - setup_price) / setup_price * 100.0), 4) if setup_price else 0.0,
+        "informational_only": True,
+        "regular_confirmation_required": True,
+        "hint": "Extended-hours quote is informational; re-scan during regular session for entry confirmation.",
+    }
+
+    if result.setup_type == "No Trade":
+        impact["status"] = "NO_ACTIVE_SETUP"
+        impact["hint"] = "No active setup was detected on completed regular-session candles."
+        return impact
+
+    buy_low, buy_high = result.buy_zone
+    stop = float(result.stop_loss or 0)
+    target_1 = float(result.target_1 or 0)
+    target_2 = float(result.target_2 or 0)
+
+    impact.update(
+        {
+            "buy_zone_low": round(float(buy_low), 4),
+            "buy_zone_high": round(float(buy_high), 4),
+            "stop_loss": round(stop, 4),
+            "target_1": round(target_1, 4),
+            "target_2": round(target_2, 4),
+            "inside_buy_zone": bool(buy_low <= price <= buy_high),
+            "below_buy_zone": bool(price < buy_low),
+            "above_buy_zone": bool(price > buy_high),
+            "stop_touched_by_extended": bool(stop > 0 and price <= stop),
+            "target_1_touched_by_extended": bool(target_1 > 0 and price >= target_1),
+            "target_2_touched_by_extended": bool(target_2 > 0 and price >= target_2),
+        }
+    )
+
+    if stop > 0 and price > stop:
+        risk = price - stop
+        rr1 = (target_1 - price) / risk if target_1 > price else 0.0
+        rr2 = (target_2 - price) / risk if target_2 > price else 0.0
+        weighted_rr = (0.80 * rr1) + (0.20 * rr2)
+        impact.update(
+            {
+                "extended_rr_1": round(rr1, 4),
+                "extended_rr_2": round(rr2, 4),
+                "extended_weighted_rr": round(weighted_rr, 4),
+            }
+        )
+
+    if impact["stop_touched_by_extended"]:
+        impact["status"] = "SETUP_INVALIDATED_BY_EXTENDED"
+        impact["hint"] = "Extended-hours price touched or crossed the stop area; re-scan before trusting this setup."
+    elif impact["target_2_touched_by_extended"]:
+        impact["status"] = "TARGET_2_TOUCHED_BY_EXTENDED"
+        impact["hint"] = "Extended-hours price already touched Target 2; the original entry plan may be stale."
+    elif impact["target_1_touched_by_extended"]:
+        impact["status"] = "TARGET_1_TOUCHED_BY_EXTENDED"
+        impact["hint"] = "Extended-hours price already touched Target 1; wait for regular-session structure."
+    elif impact["inside_buy_zone"]:
+        impact["status"] = "INSIDE_BUY_ZONE"
+        impact["hint"] = "Extended-hours price is inside the buy zone; wait for regular-session confirmation before entry."
+    elif impact["below_buy_zone"]:
+        impact["status"] = "BELOW_BUY_ZONE"
+        impact["distance_to_buy_zone_pct"] = round((buy_low - price) / price * 100.0, 4) if price else 0.0
+        impact["hint"] = "Extended-hours price is below the buy zone; the setup may need a reclaim during regular session."
+    else:
+        impact["status"] = "ABOVE_BUY_ZONE"
+        impact["distance_to_buy_zone_pct"] = round((price - buy_high) / price * 100.0, 4) if price else 0.0
+        impact["hint"] = "Extended-hours price is above the buy zone; avoid chasing until regular-session confirmation."
+    return impact
 
 
 def fetch_benchmarks(analysis_period: str = "6mo") -> dict[str, "pd.DataFrame"]:

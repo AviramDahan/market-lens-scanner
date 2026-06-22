@@ -23,6 +23,8 @@ from app.agent_risk import (
 )
 from app.charts import _quote_line_for_chart
 from app.data import DATA_CACHE_TTL_SECONDS, EXTENDED_HOURS_CACHE_TTL_SECONDS, _frame_cache_ttl
+from app.models import ExtendedHoursInfo, ScanResult
+from app.scanner import calculate_extended_hours_impact
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 
 
@@ -320,6 +322,49 @@ def test_extended_hours_quote_cache_uses_short_ttl() -> None:
     assert _frame_cache_ttl("1m", True) == EXTENDED_HOURS_CACHE_TTL_SECONDS
     assert EXTENDED_HOURS_CACHE_TTL_SECONDS < DATA_CACHE_TTL_SECONDS
     assert _frame_cache_ttl("1d", False) == DATA_CACHE_TTL_SECONDS
+
+
+def scan_result_with_extended(price: float, setup_type: str = "Breakout + Retest") -> ScanResult:
+    return ScanResult(
+        ticker="TEST",
+        setup_type=setup_type,
+        score=0.50 if setup_type != "No Trade" else 0,
+        current_price=100.0,
+        buy_zone=(98.0, 102.0) if setup_type != "No Trade" else (0.0, 0.0),
+        stop_loss=95.0 if setup_type != "No Trade" else 0.0,
+        target_1=110.0 if setup_type != "No Trade" else 0.0,
+        target_2=120.0 if setup_type != "No Trade" else 0.0,
+        risk_reward=2.0 if setup_type != "No Trade" else 0.0,
+        reason="test",
+        extended_hours=ExtendedHoursInfo(
+            phase="PRE_MARKET",
+            label="Pre-market",
+            price=price,
+            regular_close=100.0,
+            is_extended=True,
+        ),
+    )
+
+
+def test_extended_hours_impact_marks_inside_buy_zone_without_entry() -> None:
+    impact = calculate_extended_hours_impact(scan_result_with_extended(101.0))
+    assert impact["status"] == "INSIDE_BUY_ZONE"
+    assert impact["inside_buy_zone"] is True
+    assert impact["regular_confirmation_required"] is True
+    assert impact["informational_only"] is True
+    assert impact["extended_weighted_rr"] > 0
+
+
+def test_extended_hours_impact_marks_stop_touch_as_invalidated() -> None:
+    impact = calculate_extended_hours_impact(scan_result_with_extended(94.5))
+    assert impact["status"] == "SETUP_INVALIDATED_BY_EXTENDED"
+    assert impact["stop_touched_by_extended"] is True
+
+
+def test_extended_hours_impact_keeps_no_trade_informational() -> None:
+    impact = calculate_extended_hours_impact(scan_result_with_extended(101.0, setup_type="No Trade"))
+    assert impact["status"] == "NO_ACTIVE_SETUP"
+    assert impact["regular_confirmation_required"] is True
 
 
 def test_agent_and_user_strategy_decision_share_same_helper() -> None:

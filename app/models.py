@@ -158,6 +158,7 @@ class ScanResult(BaseModel):
     trade_plan: TradePlanInfo | None = None
     professional_assessment: ProfessionalAssessment | None = None
     extended_hours: ExtendedHoursInfo | None = None
+    extended_hours_impact: dict[str, Any] = Field(default_factory=dict)
     strategy_action: str | None = None
     strategy_reason: str | None = None
     strategy_decision: dict[str, Any] = Field(default_factory=dict)

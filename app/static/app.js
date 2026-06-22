@@ -746,6 +746,7 @@ function renderExtendedHours(result) {
   const direction = extended.change > 0 ? "up" : extended.change < 0 ? "down" : "flat";
   const timestamp = extended.timestamp ? formatExtendedTime(extended.timestamp) : "";
   const change = `${extended.change >= 0 ? "+" : ""}${formatNumber(extended.change, 2)} (${extended.change_pct >= 0 ? "+" : ""}${formatNumber(extended.change_pct, 2)}%)`;
+  const impact = renderExtendedImpact(result.extended_hours_impact);
   return `
     <div class="extended-hours ${direction}" title="${escapeHtml(extended.note || "")}">
       <div>
@@ -760,9 +761,37 @@ function renderExtendedHours(result) {
         <span>Regular close</span>
         <strong>${formatNumber(extended.regular_close, 2)}</strong>
       </div>` : ""}
+      ${impact}
       ${timestamp ? `<small>${escapeHtml(timestamp)}</small>` : ""}
     </div>
   `;
+}
+
+function renderExtendedImpact(impact) {
+  if (!impact || !impact.status || impact.status === "UNAVAILABLE") return "";
+  const bits = [extendedImpactLabel(impact.status)];
+  if (typeof impact.extended_weighted_rr === "number") {
+    bits.push(`ext R/R ${formatNumber(impact.extended_weighted_rr, 2)}x`);
+  }
+  if (typeof impact.distance_to_buy_zone_pct === "number" && impact.distance_to_buy_zone_pct > 0) {
+    bits.push(`${formatNumber(impact.distance_to_buy_zone_pct, 2)}% from zone`);
+  }
+  const hint = impact.hint ? ` title="${escapeHtml(impact.hint)}"` : "";
+  return `<small class="extended-impact"${hint}><b>Impact</b> ${escapeHtml(bits.join(" | "))}</small>`;
+}
+
+function extendedImpactLabel(status) {
+  const labels = {
+    NO_ACTIVE_SETUP: "No active setup",
+    INSIDE_BUY_ZONE: "Inside buy zone",
+    BELOW_BUY_ZONE: "Below buy zone",
+    ABOVE_BUY_ZONE: "Above buy zone",
+    SETUP_INVALIDATED_BY_EXTENDED: "Stop area touched",
+    TARGET_1_TOUCHED_BY_EXTENDED: "Target 1 touched",
+    TARGET_2_TOUCHED_BY_EXTENDED: "Target 2 touched",
+    INFO_ONLY: "Info only",
+  };
+  return labels[status] || status.replaceAll("_", " ").toLowerCase();
 }
 
 function hasQuoteMismatch(result) {
