@@ -382,6 +382,12 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
         with urlopen(request, timeout=90) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except Exception as exc:
+        if limit > 100:
+            log(
+                "Smart Universe API fetch failed for expanded pool "
+                f"({limit}); retrying compatibility limit 100: {exc}"
+            )
+            return fetch_smart_universe_tickers(settings, 100)
         log(f"Smart Universe API fetch failed: {exc}")
         return []
 
