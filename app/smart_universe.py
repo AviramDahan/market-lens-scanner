@@ -158,7 +158,7 @@ def build_smart_universe(
     limit: int = DEFAULT_LIMIT,
     max_per_sector: int = DEFAULT_MAX_PER_SECTOR,
 ) -> dict[str, Any]:
-    limit = max(5, min(100, int(limit)))
+    limit = max(5, min(300, int(limit)))
     max_per_sector = max(1, min(20, int(max_per_sector)))
     cache_key = (analysis_period, limit, max_per_sector)
     cached = _SMART_CACHE.get(cache_key)

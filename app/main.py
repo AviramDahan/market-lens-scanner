@@ -539,7 +539,7 @@ async def get_watchlists() -> dict:
 
 @app.get("/smart-universe")
 async def get_smart_universe(
-    limit: int = Query(default=35, ge=5, le=100),
+    limit: int = Query(default=35, ge=5, le=300),
     max_per_sector: int = Query(default=5, ge=1, le=20),
     analysis_period: str = Query(default="6mo", pattern="^(3mo|6mo|1y|2y)$"),
 ) -> dict:

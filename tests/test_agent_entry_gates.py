@@ -6,6 +6,7 @@ from agent.market_lens_ui_agent import (
     ChartRetentionSettings,
     Decision,
     SetupResult,
+    build_agent_scan_tickers,
     decide,
     is_auth_failure,
     parse_result,
@@ -60,6 +61,32 @@ def result(score: float = 0.60, setup_type: str = "Breakout + Retest") -> Simple
         target_1=105.0,
         target_2=115.0,
     )
+
+
+def test_agent_universe_overfetches_to_replace_excluded_tickers(monkeypatch) -> None:
+    calls: list[int] = []
+
+    def fake_fetch(_settings: SimpleNamespace, limit: int) -> list[str]:
+        calls.append(limit)
+        return [f"S{i}" for i in range(1, 31)]
+
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "5")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "5")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_MAX_POOL", "20")
+    monkeypatch.setattr(
+        "agent.market_lens_ui_agent.fetch_smart_universe_tickers",
+        fake_fetch,
+    )
+
+    settings = SimpleNamespace(universe="smart-universe", analysis_period="6mo", url="https://example.test")
+    selected = build_agent_scan_tickers(
+        settings,
+        carry_forward_tickers=["S1", "S2"],
+        skipped_tickers=["S3", "S4", "S5"],
+    )
+
+    assert calls == [10]
+    assert selected == ["S6", "S7", "S8", "S9", "S10", "S1", "S2"]
 
 
 def chart_candidate(

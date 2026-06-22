@@ -339,11 +339,23 @@ def build_agent_scan_tickers(
         return []
     target_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "35"))
     pool_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "100"))
-    candidates = fetch_smart_universe_tickers(settings, pool_count)
+    excluded = set(skipped_tickers) | set(carry_forward_tickers)
+    max_pool_count = max(
+        pool_count,
+        target_count,
+        int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_MAX_POOL", "300")),
+    )
+    effective_pool_count = min(max_pool_count, max(pool_count, target_count + len(excluded)))
+    if effective_pool_count > pool_count:
+        log(
+            "Smart agent universe pool expanded for exclusions: "
+            f"{pool_count} -> {effective_pool_count} candidates."
+        )
+
+    candidates = fetch_smart_universe_tickers(settings, effective_pool_count)
     if not candidates:
         return []
 
-    excluded = set(skipped_tickers) | set(carry_forward_tickers)
     base_tickers = [ticker for ticker in candidates if ticker not in excluded][:target_count]
     final_tickers = unique_tickers(base_tickers + carry_forward_tickers)
     log(
@@ -360,7 +372,7 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
     params = urlencode(
         {
             "analysis_period": settings.analysis_period,
-            "limit": max(35, min(100, limit)),
+            "limit": max(35, min(300, limit)),
             "max_per_sector": int(os.getenv("MARKET_LENS_AGENT_MAX_PER_SECTOR", "10")),
         }
     )
