@@ -8,6 +8,7 @@ from agent.market_lens_ui_agent import (
     SetupResult,
     decide,
     is_auth_failure,
+    parse_result,
     select_chart_tickers,
 )
 from app.agent_risk import (
@@ -227,6 +228,24 @@ def test_stop_loss_cooldown_blocks_reentry() -> None:
 
 def test_auth_failure_is_classified_without_fake_scan() -> None:
     assert is_auth_failure("Login did not complete. Status: Auth not configured.")
+
+
+def test_agent_parse_result_accepts_setup_price_label() -> None:
+    parsed = parse_result(
+        {
+            "ticker": "TEST",
+            "setup_type": "Breakout + Retest",
+            "score": "0.62",
+            "setup_price": "101.25",
+            "buy_zone": "100.00 - 102.00",
+            "stop_loss": "95.00",
+            "targets": "110.00 / 120.00",
+            "risk_reward": "2.40x",
+            "reason": "test",
+            "raw_text": "test",
+        }
+    )
+    assert parsed.current_price == 101.25
 
 
 def test_entry_confirmation_uses_completed_candle_not_live_candle() -> None:
