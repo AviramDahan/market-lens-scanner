@@ -123,6 +123,10 @@ jobs:
           MARKET_LENS_SAVE_REJECTED_CHARTS: "false"
           MARKET_LENS_REJECTED_CHART_LIMIT: "5"
           MARKET_LENS_REJECTED_CHART_MIN_SCORE: "0.40"
+          MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
+          MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python agent/market_lens_ui_agent.py
 
       - name: Commit agent results safely

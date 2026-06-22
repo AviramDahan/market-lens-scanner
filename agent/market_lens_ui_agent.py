@@ -22,6 +22,11 @@ from app.scanner import scan_ticker_detail
 from app.smart_universe import base_universe, build_sector_health
 from app.strategy import StrategyDecision as Decision
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
+from app.telegram_notifications import (
+    dashboard_url_from_app_url,
+    format_position_opened_message,
+    send_telegram_message,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -771,6 +776,13 @@ def update_workbook(
         decision_path=decision_path,
     )
     wb.save(settings.excel_path)
+    send_new_buy_notifications(
+        pending_decisions,
+        open_positions=open_positions,
+        settings=settings,
+        run_id=run_id,
+        timestamp=timestamp,
+    )
     return {
         "decisions": decisions,
         "cash": cash,
@@ -785,6 +797,36 @@ def update_workbook(
         "excel_updated": True,
         "run_status": "OK" if not errors else "ISSUES",
     }
+
+
+def send_new_buy_notifications(
+    pending_decisions: list[tuple[SetupResult, Decision]],
+    *,
+    open_positions: dict[str, dict[str, Any]],
+    settings: Settings,
+    run_id: str,
+    timestamp: str,
+) -> None:
+    dashboard_url = dashboard_url_from_app_url(settings.url)
+    for result, decision in pending_decisions:
+        if decision.action != "BUY_SIMULATED":
+            continue
+        position = open_positions.get(result.ticker)
+        if not position:
+            continue
+        message = format_position_opened_message(
+            result=result,
+            decision=decision,
+            position=position,
+            run_id=run_id,
+            timestamp=timestamp,
+            dashboard_url=dashboard_url,
+        )
+        outcome = send_telegram_message(message)
+        if outcome.sent:
+            log(f"Telegram position-open notification sent for {result.ticker}.")
+        elif outcome.status != "not_configured":
+            log(f"Telegram position-open notification skipped for {result.ticker}: {outcome.reason}")
 
 
 def workbook_snapshot(*, settings: Settings, run_status: str) -> dict[str, Any]:
