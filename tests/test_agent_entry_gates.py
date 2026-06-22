@@ -293,6 +293,53 @@ def test_entry_confirmation_uses_completed_candle_not_live_candle() -> None:
     assert confirmation["confirmation_candle_timestamp"].startswith("2026-01-02")
 
 
+def test_entry_confirmation_prefers_completed_intraday_candle_not_live_candle() -> None:
+    intraday = pd.DataFrame(
+        [
+            {"Open": 97, "High": 99, "Low": 96, "Close": 98, "Volume": 1000},
+            {"Open": 99, "High": 104, "Low": 99, "Close": 102, "Volume": 1200},
+            {"Open": 90, "High": 91, "Low": 89, "Close": 89, "Volume": 2000},
+        ],
+        index=pd.to_datetime(
+            [
+                "2026-01-03 10:00:00-05:00",
+                "2026-01-03 10:30:00-05:00",
+                "2026-01-03 11:00:00-05:00",
+            ]
+        ),
+    )
+
+    confirmation = calculate_entry_confirmation(
+        result(),
+        CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
+        config(),
+    )
+
+    assert confirmation["entry_confirmation_passed"] is True
+    assert confirmation["confirmation_timeframe"] == "30m_completed"
+    assert "10:30:00" in confirmation["confirmation_candle_timestamp"]
+
+
+def test_entry_confirmation_falls_back_to_daily_when_intraday_unavailable() -> None:
+    daily = pd.DataFrame(
+        [
+            {"Open": 95, "High": 99, "Low": 94, "Close": 96, "Volume": 1000},
+            {"Open": 98, "High": 103, "Low": 98, "Close": 102, "Volume": 1000},
+            {"Open": 90, "High": 91, "Low": 89, "Close": 89, "Volume": 1000},
+        ],
+        index=pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-03"]),
+    )
+
+    confirmation = calculate_entry_confirmation(
+        result(),
+        CandidateMarketSnapshot(ticker="TEST", daily=daily),
+        config(),
+    )
+
+    assert confirmation["entry_confirmation_passed"] is True
+    assert confirmation["confirmation_timeframe"] == "1d_completed"
+
+
 def test_target1_atr_distance_uses_configured_threshold() -> None:
     close_enough = result()
     close_enough.target_1 = 103.0

@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from app.data import fetch_daily_frame, fetch_next_earnings_date
+from app.data import fetch_daily_frame, fetch_intraday_frame, fetch_next_earnings_date
 from app.indicators import compute_atr
 from app.smart_universe import SECTOR_ETFS, build_sector_health, company_name_for
 
@@ -63,6 +63,9 @@ class AgentRiskConfig:
     preferred_primary_net_rr: float = 1.00
     minimum_target1_atr_distance: float = 0.75
     require_entry_confirmation: bool = True
+    entry_confirmation_intraday_enabled: bool = True
+    entry_confirmation_intraday_interval: str = "30m"
+    entry_confirmation_intraday_period: str = "5d"
     stop_cooldown_days: int = 3
     cooldown_exception_setup_score: float = 0.60
     cooldown_exception_net_rr1: float = 1.20
@@ -109,6 +112,7 @@ class CandidateMarketSnapshot:
     normalized_liquidity_score: float = 50.0
     normalized_quality_score: float = 50.0
     daily: pd.DataFrame | None = None
+    intraday: pd.DataFrame | None = None
     warnings: list[str] = field(default_factory=list)
 
 
@@ -133,6 +137,12 @@ def build_agent_run_context(
         minimum_target1_atr_distance=float(os.getenv("MARKET_LENS_MIN_TARGET1_ATR_DISTANCE", "0.75")),
         require_entry_confirmation=os.getenv("MARKET_LENS_REQUIRE_ENTRY_CONFIRMATION", "true").lower()
         in {"1", "true", "yes"},
+        entry_confirmation_intraday_enabled=os.getenv(
+            "MARKET_LENS_ENTRY_CONFIRMATION_INTRADAY_ENABLED", "true"
+        ).lower()
+        in {"1", "true", "yes"},
+        entry_confirmation_intraday_interval=os.getenv("MARKET_LENS_ENTRY_CONFIRMATION_INTRADAY_INTERVAL", "30m"),
+        entry_confirmation_intraday_period=os.getenv("MARKET_LENS_ENTRY_CONFIRMATION_INTRADAY_PERIOD", "5d"),
         stop_cooldown_days=int(os.getenv("MARKET_LENS_STOP_COOLDOWN_DAYS", "3")),
         cooldown_exception_setup_score=float(
             os.getenv("MARKET_LENS_COOLDOWN_EXCEPTION_SETUP_SCORE", "0.60")
@@ -255,7 +265,7 @@ def evaluate_agent_candidate(
     ticker = str(result.ticker).upper()
     sector = sector_map.get(ticker, "Unknown")
     sector_info = sector_regime_for(sector, run_context.sector_health)
-    snapshot = build_candidate_snapshot(ticker, result.current_price, config.analysis_period)
+    snapshot = build_candidate_snapshot(ticker, result.current_price, config)
     factor_tags = factor_tags_for(ticker, sector, snapshot.market_cap_bucket)
     net_rr_info = calculate_net_rr(result, snapshot, config)
     earnings_info = calculate_earnings_blackout(ticker, config)
@@ -871,16 +881,17 @@ def adjust_candidate_position_size(
     }
 
 
-def build_candidate_snapshot(ticker: str, price: float, analysis_period: str) -> CandidateMarketSnapshot:
+def build_candidate_snapshot(ticker: str, price: float, config: AgentRiskConfig) -> CandidateMarketSnapshot:
     warnings: list[str] = []
     daily = None
+    intraday = None
     atr = 0.0
     atr_pct = 0.0
     avg_dollar_volume = 0.0
     ret_1m = 0.0
     ret_3m = 0.0
     try:
-        daily = fetch_daily_frame(ticker, period=analysis_period)
+        daily = fetch_daily_frame(ticker, period=config.analysis_period)
         close = daily["Close"]
         price = float(close.iloc[-1]) if len(close) else price
         atr = compute_atr(daily)
@@ -891,6 +902,16 @@ def build_candidate_snapshot(ticker: str, price: float, analysis_period: str) ->
         ret_3m = pct_return(close, 63)
     except Exception as exc:
         warnings.append(f"Candidate market data unavailable: {exc}")
+    if config.require_entry_confirmation and config.entry_confirmation_intraday_enabled:
+        try:
+            intraday = fetch_intraday_frame(
+                ticker,
+                period=config.entry_confirmation_intraday_period,
+                interval=config.entry_confirmation_intraday_interval,
+                include_prepost=False,
+            )
+        except Exception as exc:
+            warnings.append(f"Intraday entry confirmation data unavailable: {exc}")
 
     market_profile = fetch_market_profile(ticker, warnings)
     bucket = market_cap_bucket(market_profile["market_cap"])
@@ -911,6 +932,7 @@ def build_candidate_snapshot(ticker: str, price: float, analysis_period: str) ->
         normalized_liquidity_score=normalized_liquidity_score(avg_dollar_volume, bucket),
         normalized_quality_score=50.0,
         daily=daily,
+        intraday=intraday,
         warnings=warnings,
     )
 
@@ -1116,16 +1138,72 @@ def calculate_entry_confirmation(
         "confirmation_candle_timestamp": "",
         "warnings": [],
     }
-    daily = snapshot.daily
     buy_low = getattr(result, "buy_zone_low", None)
     buy_high = getattr(result, "buy_zone_high", None)
-    if daily is None or daily.empty or len(daily) < 3 or buy_low in (None, "") or buy_high in (None, ""):
+    if buy_low in (None, "") or buy_high in (None, ""):
         base["warnings"] = ["Entry confirmation data unavailable; blocking auto-buy."]
         return base
 
-    completed = daily.iloc[:-1]
+    if config.entry_confirmation_intraday_enabled:
+        intraday_confirmation = calculate_entry_confirmation_from_frame(
+            result=result,
+            frame=snapshot.intraday,
+            buy_low=float(buy_low),
+            buy_high=float(buy_high),
+            timeframe=f"{config.entry_confirmation_intraday_interval}_completed",
+            drop_last=True,
+        )
+        if intraday_confirmation["confirmation_status"] != "UNKNOWN":
+            return intraday_confirmation
+        base["warnings"].extend(intraday_confirmation.get("warnings", []))
+
+    daily = snapshot.daily
+    if daily is None or daily.empty or len(daily) < 3 or buy_low in (None, "") or buy_high in (None, ""):
+        if not base["warnings"]:
+            base["warnings"] = ["Entry confirmation data unavailable; blocking auto-buy."]
+        return base
+
+    daily_confirmation = calculate_entry_confirmation_from_frame(
+        result=result,
+        frame=daily,
+        buy_low=float(buy_low),
+        buy_high=float(buy_high),
+        timeframe="1d_completed",
+        drop_last=True,
+    )
+    if daily_confirmation.get("warnings") and base["warnings"]:
+        daily_confirmation["warnings"] = [*base["warnings"], *daily_confirmation["warnings"]]
+    return daily_confirmation
+
+
+def calculate_entry_confirmation_from_frame(
+    *,
+    result: Any,
+    frame: pd.DataFrame | None,
+    buy_low: float,
+    buy_high: float,
+    timeframe: str,
+    drop_last: bool,
+) -> dict[str, Any]:
+    base = {
+        "confirmation_status": "UNKNOWN",
+        "confirmation_reason": "Entry confirmation unavailable.",
+        "trigger_level": 0.0,
+        "close_above_trigger": False,
+        "vwap_reclaimed": False,
+        "retest_held": False,
+        "entry_confirmation_passed": False,
+        "confirmation_timeframe": timeframe,
+        "confirmation_candle_timestamp": "",
+        "warnings": [],
+    }
+    if frame is None or frame.empty or len(frame) < 3:
+        base["warnings"] = [f"Not enough {timeframe} candles for entry confirmation."]
+        return base
+
+    completed = frame.iloc[:-1] if drop_last else frame
     if len(completed) < 2:
-        base["warnings"] = ["Not enough completed candles for entry confirmation; blocking auto-buy."]
+        base["warnings"] = [f"Not enough completed {timeframe} candles for entry confirmation."]
         return base
 
     last = completed.iloc[-1]
@@ -1135,8 +1213,6 @@ def calculate_entry_confirmation(
     low = float(last["Low"])
     high = float(last["High"])
     prev_close = float(prev["Close"])
-    buy_low = float(buy_low)
-    buy_high = float(buy_high)
     setup_type = str(getattr(result, "setup_type", "") or "").lower()
     candle_time = completed.index[-1].isoformat() if hasattr(completed.index[-1], "isoformat") else str(completed.index[-1])
     bullish_or_reclaim = close >= open_ and close >= prev_close
@@ -1184,7 +1260,7 @@ def calculate_entry_confirmation(
         "vwap_reclaimed": bool(vwap_reclaimed),
         "retest_held": bool(retest_held),
         "entry_confirmation_passed": bool(passed),
-        "confirmation_timeframe": "1d_completed",
+        "confirmation_timeframe": timeframe,
         "confirmation_candle_timestamp": candle_time,
         "warnings": [] if passed else [reason],
     }
