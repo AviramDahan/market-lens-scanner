@@ -1,0 +1,79 @@
+Market Lens Agent Update
+
+Date: 2026-06-23T20:18:15
+Run status: OK
+Login status: signed in
+Scan status: completed: 19 results
+Tickers scanned: HON TSM SCHW DE MIDD GD LMT BRK-B GS SNA AXP INTC BA BLDR NOW FICO HUBS SBAC BALL
+Valid setups found: 18
+Market regime: NEUTRAL (0.52) - Market regime is mixed; use lower exposure and higher net R/R.
+Actions taken: HON:WATCH, TSM:WATCH, SCHW:WATCH, DE:WATCH, MIDD:WATCH, GD:WATCH, LMT:WATCH, BRK-B:WATCH, GS:WATCH, SNA:WATCH, AXP:WATCH, INTC:WATCH, BA:EXIT_STOP, BLDR:WATCH, NOW:WATCH, FICO:WATCH, HUBS:WATCH, SBAC:WATCH, BALL:HOLD
+New simulated buys: None
+Watch ready setups: None
+Positions on watch: HON, TSM, SCHW, DE, MIDD, GD, LMT, BRK-B, GS, SNA, AXP, INTC, BLDR, NOW, FICO, HUBS, SBAC
+Positions closed: BA
+Cash remaining: 89842.36 USD
+Current exposure: 10404.28 USD
+Remaining available budget: 89595.72 USD
+Total open risk: 555.56 USD
+Excel updated: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+Screenshot saved: agent_results/screenshots/market_lens_agent_20260623_201642.png
+Decision JSONL saved: agent_results/decisions/market_lens_agent_20260623_201642.jsonl
+Errors: None
+Agent feedback:
+- HON: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+  Warnings: Sector exposure limit would be exceeded.; Factor/theme exposure limit would be exceeded.; Position cannot be opened because market regime exposure cap leaves no executable size.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.54; R/R 2.10x; price 222.37 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.67; Factors: Industrials | Agent action: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- TSM: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Position cannot be opened because market regime exposure cap leaves no executable size.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; WATCH: Market regime exposure limit would be exceeded (20207.71 > 20000.00).
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Semiconductors - Strong (100/100); SMH sector regime is strong: 57.6% 3m return, 45.0% vs SPY | Setup: Breakout + Retest; score 0.50; R/R 2.83x; price 436.39 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 2.10; Factors: AI / Semiconductors, Semiconductors | Agent action: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- SCHW: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.07.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (73/100); XLF sector regime is strong: 9.7% 3m return, -2.9% vs SPY | Setup: Breakout + Retest; score 0.45; R/R 1.58x; price 93.17 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.07; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.07.
+- DE: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.10.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Breakout + Retest; score 0.43; R/R 1.58x; price 591.94 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.10; Factors: Industrials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.10.
+- MIDD: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Sector exposure limit would be exceeded.; Factor/theme exposure limit would be exceeded.; Position cannot be opened because market regime exposure cap leaves no executable size.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Breakout + Retest; score 0.43; R/R 2.36x; price 163.77 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.51; Factors: Industrials | Agent action: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- GD: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Breakout + Retest; score 0.42; R/R 1.72x; price 350.34 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.11; Factors: Industrials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
+- LMT: WATCH - WATCH: Valid setup, but price is not inside the buy zone. Market regime NEUTRAL; sector STRONG; net R/R 2.49.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Swing Low + Volume Support Buy Zone; score 0.42; R/R 2.63x; price 503.67 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 2.49; Factors: Industrials | Agent action: WATCH - WATCH: Valid setup, but price is not inside the buy zone. Market regime NEUTRAL; sector STRONG; net R/R 2.49.
+- BRK-B: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.24 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.77.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (73/100); XLF sector regime is strong: 9.7% 3m return, -2.9% vs SPY | Setup: Breakout + Retest; score 0.41; R/R 1.24x; price 492.80 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.77; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.24 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.77.
+- GS: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (73/100); XLF sector regime is strong: 9.7% 3m return, -2.9% vs SPY | Setup: Breakout + Retest; score 0.39; R/R 1.58x; price 1094.44 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.11; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
+- SNA: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.89.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Breakout + Retest; score 0.38; R/R 1.49x; price 385.85 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.89; Factors: Industrials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.89.
+- AXP: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.24.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Strong (73/100); XLF sector regime is strong: 9.7% 3m return, -2.9% vs SPY | Setup: Breakout + Retest; score 0.37; R/R 1.87x; price 337.62 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.24; Factors: Financials | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.24.
+- INTC: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.14.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 35.5% 3m return, 22.9% vs SPY | Setup: Breakout + Retest; score 0.36; R/R 1.50x; price 132.28 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.14; Factors: AI / Semiconductors, Technology | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.14.
+- BA: EXIT_STOP - Current price reached stop loss.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.36; R/R 2.47x; price 216.71 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.99; Factors: Industrials | Agent action: EXIT_STOP - Current price reached stop loss.
+- BLDR: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Position cannot be opened because market regime exposure cap leaves no executable size.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; WATCH: Market regime exposure limit would be exceeded (20207.71 > 20000.00).
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Strong (72/100); XLI sector regime is strong: 8.9% 3m return, -3.7% vs SPY | Setup: Breakout + Retest; score 0.31; R/R 2.75x; price 76.73 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.87; Factors: Industrials | Agent action: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- NOW: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+  Warnings: Position cannot be opened because market regime exposure cap leaves no executable size.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; WATCH: Market regime exposure limit would be exceeded (20207.71 > 20000.00).; WATCH: NEUTRAL market requires setup score (0.30 < 0.50).
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 35.5% 3m return, 22.9% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.30; R/R 2.50x; price 95.94 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.93; Factors: High Beta Growth, Technology | Agent action: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- FICO: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; Position cannot be opened because market regime exposure cap leaves no executable size.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; WATCH: Market regime exposure limit would be exceeded (20207.71 > 20000.00).
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 35.5% 3m return, 22.9% vs SPY | Setup: Breakout + Retest; score 0.30; R/R 2.17x; price 1099.41 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.53; Factors: Technology | Agent action: WATCH - WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- HUBS: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.27.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 35.5% 3m return, 22.9% vs SPY | Setup: Swing Low + Volume Support Buy Zone; score 0.29; R/R 1.76x; price 173.29 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.27; Factors: Technology | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.27.
+- SBAC: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.61 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.68.
+  Warnings: Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Real Estate - Strong (74/100); XLRE sector regime is strong: 11.8% 3m return, -0.8% vs SPY | Setup: Swing Low + Volume Support Buy Zone; score 0.28; R/R 1.61x; price 189.59 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 1.68; Factors: Real Estate | Agent action: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.61 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.68.
+- BALL: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Materials - Weak (22/100); XLB sector regime is weak: 5.4% 3m return, -7.2% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 60.49 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Materials | Agent action: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
