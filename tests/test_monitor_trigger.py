@@ -1,5 +1,6 @@
 import sys
 import types
+from datetime import datetime
 
 import pandas as pd
 from fastapi.testclient import TestClient
@@ -23,12 +24,15 @@ if "psycopg" not in sys.modules:
 
 import app.main as main
 import app.monitor_trigger as monitor_trigger
+import app.scan_trigger as scan_trigger
 from app.monitor_trigger import detect_live_monitor_event
+from app.scan_trigger import ScanScheduleDecision
 
 
 def reset_rate_limits() -> None:
     monitor_trigger._GLOBAL_TRIGGER_AT = 0.0
     monitor_trigger._EVENT_TRIGGER_AT.clear()
+    scan_trigger._DISPATCHED_SCAN_KEYS.clear()
     main._LIVE_PRICE_CACHE.clear()
 
 
@@ -130,6 +134,97 @@ def test_monitor_live_endpoint_requires_cron_secret_when_configured(monkeypatch)
     response = client.get("/agent/monitor-live", headers={"X-Market-Lens-Cron-Secret": "secret-value"})
     assert response.status_code == 200
     assert response.json()["protected"] is True
+
+
+def test_trigger_scan_endpoint_skips_without_dispatch_outside_scan_time(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_AGENT_CRON_SECRET", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    monkeypatch.setattr(
+        main,
+        "scan_schedule_decision",
+        lambda force=False: ScanScheduleDecision(
+            should_run=False,
+            local_time="02:45",
+            local_date="2026-06-23",
+            local_weekday=2,
+            scan_key="2026-06-23T02:45",
+            reason="Outside configured New York scan times; GitHub Action dispatch skipped.",
+            next_scan_at="2026-06-23T06:30:00-04:00",
+        ),
+    )
+
+    async def fail_dispatch(*_args, **_kwargs):
+        raise AssertionError("dispatch should not be called")
+
+    monkeypatch.setattr(main, "dispatch_agent_scan", fail_dispatch)
+
+    client = TestClient(main.app)
+    response = client.get("/agent/trigger-scan")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "skipped"
+    assert payload["triggered"] is False
+    assert payload["scan_key"] == "2026-06-23T02:45"
+
+
+def test_trigger_scan_endpoint_dispatches_once_at_scan_time(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    decision = ScanScheduleDecision(
+        should_run=True,
+        local_time="09:45",
+        local_date="2026-06-23",
+        local_weekday=2,
+        scan_key="2026-06-23T09:45",
+        reason="Current New York time matches a configured agent scan slot.",
+        next_scan_at="2026-06-23T10:30:00-04:00",
+    )
+    monkeypatch.setattr(main, "scan_schedule_decision", lambda force=False: decision)
+    dispatches = []
+
+    async def fake_dispatch(source="agent-server-scan-scheduler"):
+        dispatches.append(source)
+        return {"github_status": 204, "workflow": "market-lens-agent.yml"}
+
+    monkeypatch.setattr(main, "dispatch_agent_scan", fake_dispatch)
+
+    client = TestClient(main.app)
+    first = client.post("/agent/trigger-scan")
+    second = client.post("/agent/trigger-scan")
+
+    assert first.status_code == 200
+    assert first.json()["status"] == "triggered"
+    assert first.json()["triggered"] is True
+    assert second.status_code == 200
+    assert second.json()["status"] == "skipped"
+    assert second.json()["triggered"] is False
+    assert dispatches == ["agent-server-scan-scheduler"]
+
+
+def test_trigger_scan_endpoint_requires_agent_cron_secret_when_configured(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.setenv("MARKET_LENS_AGENT_CRON_SECRET", "scan-secret")
+    client = TestClient(main.app)
+
+    response = client.get("/agent/trigger-scan")
+    assert response.status_code == 401
+
+    response = client.get("/agent/trigger-scan", headers={"X-Market-Lens-Cron-Secret": "scan-secret"})
+    assert response.status_code == 200
+    assert response.json()["protected"] is True
+
+
+def test_scan_schedule_allows_short_cold_start_window(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
+
+    decision = scan_trigger.scan_schedule_decision(
+        now=datetime.fromisoformat("2026-06-23T09:47:00-04:00"),
+    )
+
+    assert decision.should_run is True
+    assert decision.scan_key == "2026-06-23T09:45"
 
 
 def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch) -> None:

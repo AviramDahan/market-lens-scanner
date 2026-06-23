@@ -238,6 +238,7 @@ The cloud setup has two separate workflows:
 - The same agent can also run off-hours staging scans at 06:30, 08:30, 09:10, 16:20, 18:30, 20:15, and 22:30 on weekdays, plus Saturday 11:00 and Sunday 18:30/22:00 New York time.
 - Off-hours scans can save candidates as `WATCH_READY`, but `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false` prevents new `BUY_SIMULATED` entries until a regular-session confirmation scan runs.
 - `Market Lens Position Monitor` is the official portfolio updater for open positions.
+- `/agent/trigger-scan` is the server-side scan scheduler gate. cron-job.org should call this endpoint instead of calling GitHub Actions directly; the server dispatches `Market Lens Paper Agent` with `force=true` only inside a configured New York scan slot.
 - `/agent/monitor-live` is a lightweight server-side TP/SL sensor that can be called by cron-job.org every minute during market hours. It checks only open positions and dispatches the monitor workflow only when a stop or target is touched.
 
 The position monitor does not open new trades. It reads the current open
@@ -259,12 +260,27 @@ Configure the Render service with:
 ```text
 GITHUB_ACTIONS_TRIGGER_TOKEN=...
 GITHUB_ACTIONS_REPOSITORY=AviramDahan/market-lens-scanner
+GITHUB_AGENT_WORKFLOW=market-lens-agent.yml
 GITHUB_POSITION_MONITOR_WORKFLOW=market-lens-position-monitor.yml
 GITHUB_ACTIONS_REF=main
+MARKET_LENS_AGENT_CRON_SECRET=...
+MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
 MARKET_LENS_MONITOR_CRON_SECRET=...
 MARKET_LENS_MONITOR_TRIGGER_GLOBAL_COOLDOWN_SECONDS=60
 MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS=300
 ```
+
+Recommended cron-job.org scanner request:
+
+```text
+GET https://market-lens-scanner-fb63.onrender.com/agent/trigger-scan?secret=<MARKET_LENS_AGENT_CRON_SECRET>
+Timezone: America/New_York
+Schedule: every 5 minutes, all days
+```
+
+The scanner endpoint returns `skipped` outside the configured scan slots without
+creating a GitHub Actions run. This prevents short 6-9 second GitHub runs that
+only execute the in-workflow schedule guard and then skip all agent tasks.
 
 Recommended cron-job.org monitor request:
 

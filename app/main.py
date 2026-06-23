@@ -20,6 +20,13 @@ from app.monitor_trigger import (
     rate_limit_reason,
 )
 from app.scanner import scan_tickers
+from app.scan_trigger import (
+    dispatch_agent_scan,
+    mark_scan_dispatched,
+    scan_already_dispatched,
+    scan_schedule_decision,
+    scan_trigger_configured,
+)
 from app.smart_universe import build_smart_universe
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
 from app.strategy import apply_strategy_decisions
@@ -338,6 +345,64 @@ async def monitor_live_positions(
     }
 
 
+@app.get("/agent/trigger-scan")
+@app.post("/agent/trigger-scan")
+async def trigger_agent_scan(
+    x_cron_secret: str | None = Header(default=None, alias="X-Market-Lens-Cron-Secret"),
+    secret: str | None = Query(default=None, max_length=160),
+    force: bool = Query(default=False),
+) -> dict:
+    protection = validate_agent_cron_secret(x_cron_secret, secret)
+    decision = scan_schedule_decision(force=force)
+    trigger_configured = scan_trigger_configured()
+
+    base_payload = {
+        "triggered": False,
+        "trigger_configured": trigger_configured,
+        "protected": protection["protected"],
+        "local_date": decision.local_date,
+        "local_time": decision.local_time,
+        "local_weekday": decision.local_weekday,
+        "scan_key": decision.scan_key,
+        "next_scan_at": decision.next_scan_at,
+    }
+
+    if not decision.should_run:
+        return {
+            **base_payload,
+            "status": "skipped",
+            "reason": decision.reason,
+        }
+
+    if not force and scan_already_dispatched(decision.scan_key):
+        return {
+            **base_payload,
+            "status": "skipped",
+            "reason": "This scan slot was already dispatched by the server.",
+        }
+
+    if not trigger_configured:
+        return {
+            **base_payload,
+            "status": "not_configured",
+            "reason": "GitHub agent trigger token is not configured on the server.",
+        }
+
+    try:
+        dispatch = await dispatch_agent_scan(source="agent-server-scan-scheduler")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    mark_scan_dispatched(decision.scan_key)
+    return {
+        **base_payload,
+        "status": "triggered",
+        "triggered": True,
+        "reason": decision.reason,
+        "dispatch": dispatch,
+    }
+
+
 def validate_monitor_cron_secret(header_secret: str | None, query_secret: str | None) -> dict:
     expected = os.getenv("MARKET_LENS_MONITOR_CRON_SECRET") or os.getenv("MARKET_LENS_CRON_SECRET") or ""
     if not expected:
@@ -345,6 +410,21 @@ def validate_monitor_cron_secret(header_secret: str | None, query_secret: str | 
     provided = header_secret or query_secret or ""
     if provided != expected:
         raise HTTPException(status_code=401, detail="Invalid monitor cron secret.")
+    return {"protected": True}
+
+
+def validate_agent_cron_secret(header_secret: str | None, query_secret: str | None) -> dict:
+    expected = (
+        os.getenv("MARKET_LENS_AGENT_CRON_SECRET")
+        or os.getenv("MARKET_LENS_MONITOR_CRON_SECRET")
+        or os.getenv("MARKET_LENS_CRON_SECRET")
+        or ""
+    )
+    if not expected:
+        return {"protected": False}
+    provided = header_secret or query_secret or ""
+    if provided != expected:
+        raise HTTPException(status_code=401, detail="Invalid agent cron secret.")
     return {"protected": True}
 
 
