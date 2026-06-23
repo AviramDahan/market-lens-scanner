@@ -84,7 +84,7 @@ async def get_agent_live_prices() -> dict:
             updated = dict(position)
             updated["current_price_usd"] = round(price, 2)
             updated["live_price_updated_at"] = source_time
-            updated["live_price_source"] = "1m intraday"
+            updated["live_price_source"] = "1m intraday/prepost"
             refreshed_position = with_position_calculations(updated)
             refreshed.append(refreshed_position)
             prices[ticker] = {
@@ -359,20 +359,35 @@ def live_monitor_event_payload(event) -> dict:
 
 
 def fetch_live_price(ticker: str) -> tuple[float, str]:
+    symbol = ticker.upper()
     now = time.monotonic()
-    cached = _LIVE_PRICE_CACHE.get(ticker)
+    cached = _LIVE_PRICE_CACHE.get(symbol)
     if cached and now - cached[0] < LIVE_PRICE_CACHE_TTL_SECONDS:
         return cached[1], cached[2]
 
-    try:
-        frame = fetch_intraday_frame(ticker, period="1d", interval="1m")
-    except Exception:
-        frame = fetch_intraday_frame(ticker, period="5d", interval="1m")
+    errors = []
+    for period, include_prepost in (("5d", True), ("1d", False), ("5d", False)):
+        try:
+            frame = fetch_intraday_frame(
+                symbol,
+                period=period,
+                interval="1m",
+                include_prepost=include_prepost,
+            )
+            break
+        except Exception as exc:
+            errors.append(str(exc))
+    else:
+        raise ValueError(f"{symbol}: live intraday data unavailable ({'; '.join(errors)})")
+
     if frame.empty:
-        raise ValueError(f"{ticker}: no live intraday rows returned")
-    price = float(frame["Close"].dropna().iloc[-1])
-    source_time = frame.index[-1].isoformat()
-    _LIVE_PRICE_CACHE[ticker] = (now, price, source_time)
+        raise ValueError(f"{symbol}: no live intraday rows returned")
+    close = frame["Close"].dropna()
+    if close.empty:
+        raise ValueError(f"{symbol}: live intraday rows have no close prices")
+    price = float(close.iloc[-1])
+    source_time = close.index[-1].isoformat()
+    _LIVE_PRICE_CACHE[symbol] = (now, price, source_time)
     return price, source_time
 
 

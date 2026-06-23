@@ -1,6 +1,7 @@
 import sys
 import types
 
+import pandas as pd
 from fastapi.testclient import TestClient
 
 if "psycopg" not in sys.modules:
@@ -28,6 +29,7 @@ from app.monitor_trigger import detect_live_monitor_event
 def reset_rate_limits() -> None:
     monitor_trigger._GLOBAL_TRIGGER_AT = 0.0
     monitor_trigger._EVENT_TRIGGER_AT.clear()
+    main._LIVE_PRICE_CACHE.clear()
 
 
 def test_detect_live_monitor_event_prefers_stop_first() -> None:
@@ -44,6 +46,27 @@ def test_detect_live_monitor_event_target_2_before_target_1() -> None:
     assert event is not None
     assert event.event_type == "TAKE_PROFIT"
     assert event.threshold == 112
+
+
+def test_fetch_live_price_prefers_extended_hours_intraday(monkeypatch) -> None:
+    reset_rate_limits()
+    calls = []
+    frame = pd.DataFrame(
+        {"Close": [220.84]},
+        index=pd.DatetimeIndex(["2026-06-22T23:15:00Z"]),
+    )
+
+    def fake_fetch_intraday_frame(ticker, period="5d", interval="1m", include_prepost=False):
+        calls.append((ticker, period, interval, include_prepost))
+        return frame
+
+    monkeypatch.setattr(main, "fetch_intraday_frame", fake_fetch_intraday_frame)
+
+    price, source_time = main.fetch_live_price("ba")
+
+    assert price == 220.84
+    assert source_time == "2026-06-22T23:15:00+00:00"
+    assert calls == [("BA", "5d", "1m", True)]
 
 
 def test_trigger_monitor_endpoint_skips_without_open_position(monkeypatch) -> None:
