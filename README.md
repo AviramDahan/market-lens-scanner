@@ -155,6 +155,10 @@ pattern is ranked higher only when the broader context is supportive.
 
 ## How The Agent Works
 
+For a detailed Hebrew explanation of the stock-selection pipeline, setup
+analysis, entry rules, portfolio rules, and monitor behavior, see
+[`docs/market_lens_agent_rules_he.md`](docs/market_lens_agent_rules_he.md).
+
 Market Lens uses one shared strategy engine for manual user scans and for the
 paper-trading agent. The user scan and the agent scan both run through the same
 scanner, setup detection, and strategy decision layer. The difference is that
