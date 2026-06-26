@@ -104,8 +104,22 @@ jobs:
           MARKET_LENS_MONITOR_SAVE_NOOP: "false"
         run: python agent/position_monitor.py
 
-      - name: Commit monitor results safely
+      - name: Check monitor-generated changes
         if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
+        id: monitor_changes
+        shell: bash
+        run: |
+          changes="$(git status --porcelain -- agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx agent_results)"
+          if [ -z "$changes" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No position monitor changes detected."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "$changes"
+          fi
+
+      - name: Commit monitor results safely
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true' && steps.monitor_changes.outputs.changed == 'true'
         shell: bash
         run: |
           set -e
