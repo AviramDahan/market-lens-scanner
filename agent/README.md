@@ -34,13 +34,20 @@ Optional values:
 - `MARKET_LENS_MONITOR_SAVE_NOOP=false`
 
 When `MARKET_LENS_UNIVERSE=smart-universe`, the agent selects the dynamic Smart
-Universe through the UI. The app ranks quality large/liquid names by relative
-strength, trend quality, liquidity, and ATR%, then caps sector concentration
-before the agent scans the selected tickers.
+Universe through the UI. The app builds the broad source universe from S&P 500,
+Nasdaq-100, Russell 1000, Russell 3000, and the curated dropdown sector lists.
+It then filters for common liquid US equities, price, dollar volume, ATR%,
+relative strength, trend quality, and sector health before selecting a
+diversified scan basket. The current cloud target is 100 scanned tickers per
+run with up to 15 per sector, while weak sectors are excluded from new
+candidates.
 
 Open simulated positions are always added to the scan basket, even if they are
 not selected by the current Smart Universe run. This keeps stop and target
 tracking active for existing paper trades.
+
+See the root `README.md` section `How The Agent Works` for the full stock
+selection, entry-gate, portfolio, TP/SL, and automation rules.
 
 Install dependencies and browser runtime:
 
@@ -93,6 +100,11 @@ Then open GitHub Actions and run `Market Lens Paper Agent` manually once. The
 workflow is also scheduled for 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and
 16:15 New York time.
 
+The same scanner can run off-hours staging scans, but those scans can only
+stage `WATCH_READY` candidates while
+`MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false`. New `BUY_SIMULATED`
+entries require regular-session confirmation.
+
 The position monitor is the official portfolio updater for existing open
 positions. For full automation without keeping the dashboard open,
 cron-job.org should call the deployed app endpoint `/agent/monitor-live` every
@@ -114,6 +126,11 @@ monitor run publishes a heartbeat and current-price refresh for open positions.
 - Missing buy zone, stop, or targets are skipped.
 - Valid setups outside the buy zone are placed on watch.
 - Valid setups inside the buy zone can open a simulated buy if portfolio limits allow it.
+- `BULL` requires setup score at least `0.45`.
+- `NEUTRAL` requires setup score at least `0.55`.
+- `BEAR` blocks all new simulated buys.
+- Target 1 net R/R must be at least `0.80`; target 2 cannot justify a trade by itself.
+- Entry confirmation must pass on a completed candle.
 - Existing positions can be held, partially closed, closed at target, or exited at stop.
 
 The agent manages a simulated 100,000 USD paper portfolio using the limits in
