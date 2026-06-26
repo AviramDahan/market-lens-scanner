@@ -6,6 +6,10 @@ const state = {
   visibleTradeCount: 10,
   liveTimer: null,
   scheduleTimer: null,
+  loadingTimer: null,
+  loadingHideTimer: null,
+  loadingStartedAt: null,
+  loadingProgress: 0,
   nextLiveSyncAt: null,
   monitorTriggerCooldowns: {},
   lastMonitorTrigger: null,
@@ -36,6 +40,7 @@ const MARKET_CONFIRMATION_TIMES = new Set(["09:45", "10:30", "11:30", "13:30", "
 const CLOSE_REVIEW_TIMES = new Set(["16:15"]);
 const SATURDAY_SCAN_TIMES = ["11:00"];
 const SUNDAY_SCAN_TIMES = ["18:30", "22:00"];
+const LOADING_STEPS = ["request", "data", "render", "live"];
 
 let money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -84,24 +89,184 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadDashboard(selectedDate = "") {
+  showLoading(selectedDate);
   try {
     const params = new URLSearchParams();
     if (selectedDate) params.set("date", selectedDate);
+    setLoadingStage({
+      step: "request",
+      progress: 12,
+      title: "Requesting agent data",
+      detail: selectedDate
+        ? `Loading historical snapshot for ${selectedDate}.`
+        : "Opening /agent/data and waiting for the latest tracker snapshot.",
+    });
     const response = await fetch(`/agent/data${params.toString() ? `?${params}` : ""}`);
     if (!response.ok) {
       throw new Error(`Agent data failed: ${response.status}`);
     }
+    setLoadingStage({
+      step: "data",
+      progress: 64,
+      title: "Agent data received",
+      detail: "Reading tracker summary, open positions, latest actions, trade log, and chart metadata.",
+    });
     state.data = await response.json();
+    setLoadingStage({
+      step: "render",
+      progress: 82,
+      title: "Rendering dashboard",
+      detail: loadingDataSummary(state.data),
+    });
+    await nextFrame();
     state.actionsExpanded = false;
     state.visibleActionCount = ACTIONS_PAGE_SIZE;
     state.tradesExpanded = false;
     state.visibleTradeCount = TRADES_PAGE_SIZE;
     syncDateUrl(selectedDate);
     renderDashboard(state.data);
+    if (state.data.status !== "ok") {
+      failLoading(new Error(state.data.error || "Agent tracker is not available."));
+      return;
+    }
+    finishLoading(state.data);
   } catch (error) {
     document.getElementById("runStatus").textContent = "Error";
     document.getElementById("summaryText").textContent = error.message;
+    failLoading(error);
   }
+}
+
+function showLoading(selectedDate = "") {
+  const panel = document.getElementById("agentLoadingPanel");
+  if (!panel) return;
+  window.clearTimeout(state.loadingHideTimer);
+  panel.classList.remove("is-hidden", "error");
+  state.loadingStartedAt = Date.now();
+  state.loadingProgress = 0;
+  updateLoadingElapsed();
+  setLoadingSteps("request");
+  setLoadingStage({
+    step: "request",
+    progress: 4,
+    title: "Preparing agent dashboard",
+    detail: selectedDate
+      ? `Preparing historical snapshot request for ${selectedDate}.`
+      : "Preparing the latest portfolio snapshot request.",
+  });
+  if (state.loadingTimer) window.clearInterval(state.loadingTimer);
+  state.loadingTimer = window.setInterval(() => {
+    updateLoadingElapsed();
+    if (state.loadingProgress >= 90) return;
+    const elapsedSeconds = Math.floor((Date.now() - state.loadingStartedAt) / 1000);
+    const nextProgress = Math.min(72, state.loadingProgress + (elapsedSeconds > 8 ? 2 : 1));
+    if (nextProgress > state.loadingProgress) {
+      setLoadingProgress(nextProgress);
+    }
+    if (elapsedSeconds >= 8) {
+      setLoadingDetail("Still waiting for /agent/data. Render may be waking up or the tracker file may be large.");
+    } else if (elapsedSeconds >= 3) {
+      setLoadingDetail("Waiting for tracker, decision JSON, positions, actions, and summary data.");
+    }
+  }, 1000);
+}
+
+function setLoadingStage({ step, progress, title, detail }) {
+  setLoadingSteps(step);
+  if (title) document.getElementById("loadingTitle").textContent = title;
+  if (detail) setLoadingDetail(detail);
+  setLoadingProgress(progress);
+  updateLoadingElapsed();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function setLoadingSteps(activeStep) {
+  const activeIndex = LOADING_STEPS.indexOf(activeStep);
+  LOADING_STEPS.forEach((step, index) => {
+    const el = document.getElementById(`loadingStep${capitalize(step)}`);
+    if (!el) return;
+    el.classList.toggle("done", activeIndex > index);
+    el.classList.toggle("active", activeIndex === index);
+    el.classList.remove("error");
+  });
+}
+
+function setLoadingProgress(value) {
+  state.loadingProgress = Math.max(0, Math.min(100, Number(value) || 0));
+  const bar = document.getElementById("loadingBar");
+  const percent = document.getElementById("loadingPercent");
+  if (bar) bar.style.width = `${state.loadingProgress}%`;
+  if (percent) percent.textContent = `${Math.round(state.loadingProgress)}%`;
+}
+
+function setLoadingDetail(detail) {
+  const detailEl = document.getElementById("loadingDetail");
+  if (detailEl) detailEl.textContent = detail;
+}
+
+function updateLoadingElapsed() {
+  const elapsedEl = document.getElementById("loadingElapsed");
+  if (!elapsedEl || !state.loadingStartedAt) return;
+  elapsedEl.textContent = `${Math.max(0, Math.floor((Date.now() - state.loadingStartedAt) / 1000))}s elapsed`;
+}
+
+function finishLoading(data) {
+  const openPositions = data?.open_positions?.length || 0;
+  const selectedDate = data?.snapshot?.selected_date || "";
+  setLoadingStage({
+    step: "live",
+    progress: 100,
+    title: "Dashboard loaded",
+    detail: selectedDate
+      ? `Loaded historical snapshot for ${selectedDate}. Live price sync is paused for history view.`
+      : openPositions
+      ? `Loaded ${openPositions} open position${openPositions === 1 ? "" : "s"} and started live price sync.`
+      : "Dashboard loaded. Live price sync is paused because there are no open positions.",
+  });
+  if (state.loadingTimer) {
+    window.clearInterval(state.loadingTimer);
+    state.loadingTimer = null;
+  }
+  state.loadingHideTimer = window.setTimeout(() => {
+    document.getElementById("agentLoadingPanel")?.classList.add("is-hidden");
+  }, 900);
+}
+
+function failLoading(error) {
+  if (state.loadingTimer) {
+    window.clearInterval(state.loadingTimer);
+    state.loadingTimer = null;
+  }
+  const panel = document.getElementById("agentLoadingPanel");
+  panel?.classList.add("error");
+  LOADING_STEPS.forEach((step) => {
+    document.getElementById(`loadingStep${capitalize(step)}`)?.classList.remove("active", "done");
+  });
+  document.getElementById("loadingStepRequest")?.classList.add("error");
+  setLoadingProgress(100);
+  document.getElementById("loadingTitle").textContent = "Dashboard load failed";
+  setLoadingDetail(error.message || "Agent dashboard data could not be loaded.");
+  updateLoadingElapsed();
+}
+
+function loadingDataSummary(data) {
+  if (!data || data.status !== "ok") {
+    return data?.error || "Tracker response received, but dashboard data is not available.";
+  }
+  const latest = data.latest_run || {};
+  const tickers = latest.tickers?.length || 0;
+  const setups = latest.valid_setups || 0;
+  const positions = data.open_positions?.length || 0;
+  const trades = (data.recent_trades?.length || 0) + (data.closed_trades?.length || 0);
+  return `Loaded ${tickers} scanned tickers, ${setups} technical setups, ${positions} open positions, and ${trades} trade log rows.`;
+}
+
+function nextFrame() {
+  return new Promise((resolve) => window.requestAnimationFrame(resolve));
+}
+
+function capitalize(value) {
+  return String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1);
 }
 
 function renderDashboard(data) {
