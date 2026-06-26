@@ -50,8 +50,8 @@ class AgentRiskConfig:
     neutral_min_net_rr: float = 2.5
     bear_min_net_rr: float = 999.0
     neutral_strong_sector_min_net_rr: float = 2.2
-    bull_min_setup_score: float = 0.40
-    neutral_min_setup_score: float = 0.50
+    bull_min_setup_score: float = 0.45
+    neutral_min_setup_score: float = 0.55
     sector_exposure_bull_pct: float = 0.40
     sector_exposure_neutral_pct: float = 0.30
     factor_exposure_bull_pct: float = 0.50
@@ -128,8 +128,8 @@ def build_agent_run_context(
         default_max_total_exposure=default_max_total_exposure,
         max_position=max_position,
         analysis_period=analysis_period,
-        bull_min_setup_score=float(os.getenv("MARKET_LENS_BULL_MIN_SETUP_SCORE", "0.40")),
-        neutral_min_setup_score=float(os.getenv("MARKET_LENS_NEUTRAL_MIN_SETUP_SCORE", "0.50")),
+        bull_min_setup_score=float(os.getenv("MARKET_LENS_BULL_MIN_SETUP_SCORE", "0.45")),
+        neutral_min_setup_score=float(os.getenv("MARKET_LENS_NEUTRAL_MIN_SETUP_SCORE", "0.55")),
         primary_rr_weight=float(os.getenv("MARKET_LENS_PRIMARY_RR_WEIGHT", "0.80")),
         stretch_rr_weight=float(os.getenv("MARKET_LENS_STRETCH_RR_WEIGHT", "0.20")),
         minimum_primary_net_rr=float(os.getenv("MARKET_LENS_MIN_PRIMARY_NET_RR", "0.80")),
@@ -1243,13 +1243,28 @@ def calculate_entry_confirmation_from_frame(
             else "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
         )
     else:
-        retest_held = low <= buy_high and close >= buy_low
-        close_above_trigger = close >= buy_high or bullish_or_reclaim
-        passed = retest_held and close_above_trigger and not falling_into_zone
+        zone_width = max(0.0, buy_high - buy_low)
+        zone_mid = buy_low + (zone_width * 0.50)
+        candle_range = max(high - low, 0.0001)
+        close_position = (close - low) / candle_range
+        touched_zone = low <= buy_high and high >= buy_low
+        strong_bullish_reclaim = (
+            touched_zone
+            and close >= max(buy_low, zone_mid)
+            and close > open_
+            and close >= prev_close
+            and close_position >= 0.60
+        )
+        retest_held = touched_zone and close >= buy_low
+        close_above_trigger = close >= buy_high
+        passed = retest_held and not falling_into_zone and (close_above_trigger or strong_bullish_reclaim)
         reason = (
-            "Completed candle bounced/reclaimed from the buy zone."
+            "Completed candle closed above the buy zone or showed a strong bullish reclaim from the zone."
             if passed
-            else "Support/Fib setup requires completed bounce or reclaim from the zone, not a falling candle."
+            else (
+                "Support/Fib setup requires completed close above the buy zone or a strong bullish "
+                "reclaim from the zone; weak or falling candles are blocked."
+            )
         )
 
     return {

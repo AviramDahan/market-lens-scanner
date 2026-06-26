@@ -966,7 +966,7 @@ function entryChecklist(item) {
 function buildEntryChecklistItems(item) {
   const d = item.decision_json || {};
   const minNetRr = Number(d.minimum_net_rr_required ?? (d.market_regime === "NEUTRAL" ? 2.5 : d.market_regime === "BULL" ? 2.0 : Infinity));
-  const minSetupScore = d.market_regime === "NEUTRAL" ? 0.45 : 0;
+  const minSetupScore = d.market_regime === "NEUTRAL" ? 0.55 : d.market_regime === "BULL" ? 0.45 : 0;
   const hasSetup = String(item.setup_type || d.setup_type || "") !== "No Trade";
   const setupScore = Number(d.setup_score ?? item.score ?? 0);
   const netRr = Number(d.net_rr ?? 0);

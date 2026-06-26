@@ -178,11 +178,11 @@ def reasons(blockers: list[dict[str, str]]) -> str:
 
 
 def test_bull_setup_score_below_floor_must_not_buy() -> None:
-    assert "BULL market requires setup score" in reasons(blockers_for(score=0.39, regime="BULL"))
+    assert "BULL market requires setup score" in reasons(blockers_for(score=0.44, regime="BULL"))
 
 
 def test_neutral_setup_score_below_floor_must_not_buy() -> None:
-    assert "NEUTRAL market requires setup score" in reasons(blockers_for(score=0.49, regime="NEUTRAL", net_rr=3.0))
+    assert "NEUTRAL market requires setup score" in reasons(blockers_for(score=0.54, regime="NEUTRAL", net_rr=3.0))
 
 
 def test_bear_blocks_all_new_buys() -> None:
@@ -338,6 +338,58 @@ def test_entry_confirmation_falls_back_to_daily_when_intraday_unavailable() -> N
 
     assert confirmation["entry_confirmation_passed"] is True
     assert confirmation["confirmation_timeframe"] == "1d_completed"
+
+
+def test_fib_entry_confirmation_blocks_weak_inside_zone_candle() -> None:
+    intraday = pd.DataFrame(
+        [
+            {"Open": 97.0, "High": 99.0, "Low": 96.0, "Close": 98.0, "Volume": 1000},
+            {"Open": 98.3, "High": 100.4, "Low": 98.2, "Close": 98.8, "Volume": 1200},
+            {"Open": 101.0, "High": 102.0, "Low": 100.0, "Close": 101.5, "Volume": 2000},
+        ],
+        index=pd.to_datetime(
+            [
+                "2026-01-03 10:00:00-05:00",
+                "2026-01-03 10:30:00-05:00",
+                "2026-01-03 11:00:00-05:00",
+            ]
+        ),
+    )
+
+    confirmation = calculate_entry_confirmation(
+        result(setup_type="Fib 61.8 Confluence Buy Zone"),
+        CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
+        config(),
+    )
+
+    assert confirmation["entry_confirmation_passed"] is False
+    assert "strong bullish reclaim" in confirmation["confirmation_reason"]
+
+
+def test_fib_entry_confirmation_accepts_clear_zone_reclaim() -> None:
+    intraday = pd.DataFrame(
+        [
+            {"Open": 97.0, "High": 99.0, "Low": 96.0, "Close": 98.0, "Volume": 1000},
+            {"Open": 98.3, "High": 100.5, "Low": 98.2, "Close": 100.2, "Volume": 1200},
+            {"Open": 99.0, "High": 99.5, "Low": 98.5, "Close": 99.1, "Volume": 2000},
+        ],
+        index=pd.to_datetime(
+            [
+                "2026-01-03 10:00:00-05:00",
+                "2026-01-03 10:30:00-05:00",
+                "2026-01-03 11:00:00-05:00",
+            ]
+        ),
+    )
+
+    confirmation = calculate_entry_confirmation(
+        result(setup_type="Fib 61.8 Confluence Buy Zone"),
+        CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
+        config(),
+    )
+
+    assert confirmation["entry_confirmation_passed"] is True
+    assert "buy zone" in confirmation["confirmation_reason"]
 
 
 def test_target1_atr_distance_uses_configured_threshold() -> None:
