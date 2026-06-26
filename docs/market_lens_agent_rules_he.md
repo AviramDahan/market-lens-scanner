@@ -241,6 +241,819 @@ Extended-hours:
 - הוא לא פותח BUY_SIMULATED לבד.
 - כניסה דורשת confirmation של regular session כאשר `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false`.
 
+## טכניקות הסריקה הטכניות הקיימות במערכת
+
+המערכת לא מסתמכת על אינדיקטור אחד. היא בונה תמונת מצב מכמה טכניקות טכניות, ואז מחברת אותן ל-Setup Score ולחוקי כניסה.
+
+חשוב: אף טכניקה לא פותחת עסקה לבד. Fibonacci, VWAP, Volume Profile או Breakout הם רק שכבות ניתוח. BUY_SIMULATED דורש גם Market Regime, Sector Regime, R/R נטו, confirmation, סיכון, חשיפה וקורלציה.
+
+### ATR - Average True Range
+
+ATR הוא מדד התנודתיות המרכזי במערכת.
+
+החישוב:
+
+- משתמש ב-14 נרות יומיים כברירת מחדל.
+- מחשב True Range לכל יום:
+  - High - Low
+  - abs(High - Previous Close)
+  - abs(Low - Previous Close)
+- לוקח את המקסימום מבין השלושה.
+- מחליק את הסדרה ב-EWM לפי alpha = 1 / 14.
+
+שימושים במערכת:
+
+- סינון מניות לפי ATR%.
+- קביעת proximity לרמות Volume Profile.
+- קביעת proximity ל-VWAP.
+- בניית Fibonacci zone סביב Fib 61.8.
+- קביעת Stop מתחת לרמות טכניות.
+- קביעת Targets מינימליים וסבירים.
+- בדיקת Target feasibility.
+- זיהוי אם יעד קרוב מדי או רחוק מדי.
+- חישוב תנודתיות לניקוד Smart Universe.
+
+ספי ATR% ב-Smart Universe:
+
+```text
+MIN_ATR_PCT = 1.2%
+MAX_ATR_PCT = 8.0%
+```
+
+המשמעות:
+
+- מתחת 1.2%: המניה עלולה להיות איטית מדי לסווינג.
+- מעל 8%: המניה עלולה להיות תנודתית ורועשת מדי.
+
+### Volume Profile
+
+המערכת מחשבת Volume Profile על בסיס נרות Hourly.
+
+החישוב:
+
+- מחלקת את טווח המחירים ל-50 buckets.
+- לכל bucket מחושב נפח לפי Volume.
+- POC הוא bucket עם הנפח הגבוה ביותר.
+- Value Area נבנית מה-buckets בעלי הנפח הגבוה ביותר עד שמצטברים ל-70% מהנפח.
+- VAL הוא הגבול התחתון של Value Area.
+- VAH הוא הגבול העליון של Value Area.
+- HVN הם High Volume Nodes: buckets עם נפח לפחות 60% מנפח ה-POC, עד 3 רמות.
+- HVN שקרוב מדי ל-POC, פחות מ-0.2 ATR, מסונן כדי לא לספור את אותה רמה פעמיים.
+
+רמות Volume Profile:
+
+- POC - Point of Control, אזור המחיר שבו עבר הכי הרבה נפח.
+- VAL - Value Area Low, תחתית אזור הערך.
+- VAH - Value Area High, תקרת אזור הערך.
+- HVN - אזורי נפח גבוה משניים.
+
+שימושים:
+
+- Confluence ל-Fibonacci.
+- תמיכה ל-Swing Low.
+- יעד פוטנציאלי ל-Liquidity Trap.
+- Target 2 או target structure.
+- ניקוד Setup.
+- זיהוי אם מחיר נמצא בתוך Value Area.
+
+ספי קרבה:
+
+```text
+price vs POC / VAL / HVN <= 0.5 ATR
+```
+
+ניקוד:
+
+- POC confluence: +25
+- VAL confluence: +12
+- HVN confluence: +8
+- מחיר בתוך Value Area: -20
+
+ההיגיון:
+
+- POC/VAL/HVN מייצגים אזורים שבהם שחקנים גדולים פעלו בעבר.
+- כאשר Fib / Swing / VWAP מתחברים לאותה רמה, ה-Setup איכותי יותר.
+- מחיר בתוך Value Area מקבל עונש כי הוא פחות ברור כנקודת כניסה; הוא יכול להיות "באמצע הרעש".
+
+### VWAP - Session VWAP
+
+המערכת מחשבת Session VWAP מנרות Hourly.
+
+החישוב:
+
+- Typical Price = (High + Low + Close) / 3.
+- VWAP מחושב רק ליום המסחר האחרון.
+- החישוב מתאפס בתחילת כל יום.
+- אם אין Volume, המערכת משתמשת ב-Close האחרון כ-fallback.
+
+שימושים:
+
+- זיהוי VWAP Reclaim Setup.
+- Confluence ל-Fib 61.8.
+- יעד ראשון ב-Fib setup אם VWAP מעל entry.
+- יעד ראשון ב-Swing Volume אם VWAP מעל entry.
+- ניקוד קרבה ל-VWAP.
+
+סף קרבה:
+
+```text
+abs(price - VWAP) <= 0.3 ATR
+```
+
+ניקוד:
+
+- VWAP proximity: +8
+- Volume confirmed VWAP reclaim: +12
+
+היגיון:
+
+- VWAP משמש כקו "מחיר הוגן" תוך-יומי.
+- Reclaim מעל VWAP יכול להראות שהקונים מחזירים שליטה.
+- Touch בלבד לא מספיק. נדרש reclaim/close מעל VWAP בשכבת Entry Confirmation.
+
+### Anchored VWAP
+
+בנוסף ל-Session VWAP, קיימת בדיקת Anchored VWAP בהקשר של VWAP Reclaim.
+
+החישוב:
+
+- מסתכלת על עד 63 נרות יומיים אחרונים.
+- מוצאת את ה-swing low הנמוך ביותר בחלון.
+- מחשבת VWAP מהנקודה הזו ועד היום.
+
+שימוש:
+
+- לא משמש כ-trigger עצמאי.
+- משמש כהקשר ל-VWAP Reclaim.
+- VWAP Reclaim נחשב איכותי יותר אם המחיר מעל או קרוב ל-Anchored VWAP.
+
+תנאי:
+
+```text
+current_price >= anchored_vwap - 0.3 ATR
+```
+
+אם המחיר מתחת ל-Anchored VWAP בצורה ברורה, ה-VWAP reclaim פחות איכותי.
+
+### EMA20
+
+המערכת מחשבת EMA20 על בסיס Daily candles.
+
+שימושים:
+
+- price_above_ema.
+- Trend filter.
+- ניקוד Setup.
+
+ניקוד:
+
+- מחיר מעל EMA20: +8
+- מחיר מתחת EMA20: -15
+
+היגיון:
+
+- כניסה Long מעל EMA20 מקבלת תמיכה של מומנטום קצר.
+- מחיר מתחת EMA20 מקבל עונש כי setup long בתוך חולשה קצרה פחות איכותי.
+
+### Weekly MA200
+
+המערכת מחשבת MA200 על בסיס Weekly candles.
+
+שימושים:
+
+- פילטר שוק רחב למניה עצמה.
+- ניקוד setup.
+
+ניקוד:
+
+- מחיר מעל Weekly MA200: +10
+- מחיר מתחת Weekly MA200: -25
+
+היגיון:
+
+- Weekly MA200 משמש הקשר מגמה ארוך.
+- מניה מתחת MA200 שבועי מקבלת עונש משמעותי כי סווינג Long נגד מגמה ארוכה מסוכן יותר.
+
+### Market Structure - HH/HL מול LH/LL
+
+המערכת מזהה מבנה שוק לפי pivots יומיים.
+
+החישוב:
+
+- מוצאת pivot highs ו-pivot lows עם חלון של 5 נרות.
+- בודקת את שני ה-pivot highs האחרונים ואת שני ה-pivot lows האחרונים.
+
+סיווג:
+
+- Uptrend: Higher High + Higher Low.
+- Downtrend: Lower High + Lower Low.
+- Ranging: כל מצב אחר.
+
+ניקוד:
+
+- Uptrend: +12
+- Downtrend: -20
+- Ranging: ללא תוספת.
+
+היגיון:
+
+- Long setup בתוך uptrend איכותי יותר.
+- Long setup בתוך downtrend דורש זהירות, ולכן מקבל עונש.
+
+### Pivot High / Pivot Low
+
+המערכת משתמשת ב-pivots כדי לזהות מבנים:
+
+- Fibonacci impulse.
+- Breakout resistance.
+- Swing low support.
+- Market structure.
+
+Pivot high:
+
+- High של נר גבוה יותר מ-5 נרות לפניו ומ-5 נרות אחריו.
+
+Pivot low:
+
+- Low של נר נמוך יותר מ-5 נרות לפניו ומ-5 נרות אחריו.
+
+המשמעות:
+
+- Pivot הוא לא כל High/Low רגיל.
+- הוא נקודת מבנה יחסית ברורה בתוך הגרף.
+
+### Fibonacci Impulse + Fib 61.8
+
+המערכת מזהה מהלך אימפולסיבי ואז מחשבת Fibonacci.
+
+שלבים:
+
+1. מוצאת pivot lows ו-pivot highs.
+2. בונה impulse move מ-pivot low אל pivot high הבא אחריו.
+3. impulse תקף רק אם גודל המהלך לפחות 2 ATR.
+4. אם יש כמה impulses, הם מדורגים לפי:
+   - 60% recency.
+   - 40% move size.
+5. נבחרים עד שני impulses מובילים.
+6. מחושבות רמות:
+   - Fib 38.2
+   - Fib 50.0
+   - Fib 61.8
+   - Fib 78.6
+
+חישוב הרמות:
+
+```text
+fib_382 = swing_high - 0.382 * range
+fib_500 = swing_high - 0.500 * range
+fib_618 = swing_high - 0.618 * range
+fib_786 = swing_high - 0.786 * range
+```
+
+אזור קנייה סביב Fib 61.8:
+
+```text
+zone_low  = fib_618 - 0.25 ATR
+zone_high = fib_618 + 0.25 ATR
+```
+
+המניה נחשבת near fib אם המחיר בתוך zone_low-zone_high.
+
+שימושים:
+
+- Fib 61.8 Confluence Buy Zone.
+- Stop מתחת Fib 78.6.
+- Target לפי Fib 50 / swing high.
+- Confluence עם POC / VAL / VWAP.
+- ניקוד proximity ל-Fib 61.8.
+
+ניקוד:
+
+- Fib 61.8 proximity: עד +20, לפי קרבה.
+- Fib zone swept and reclaimed: +20.
+
+היגיון:
+
+- Fib 61.8 משמש כאזור pullback בתוך מהלך קודם.
+- המערכת לא קונה רק בגלל Fib. היא דורשת confluence עם רמות נוספות ואישור כניסה.
+
+### ICT/OTE-style Fib Sweep
+
+בתוך Fib setup יש בדיקה האם אזור ה-Fib נשטף ונכבש מחדש.
+
+הבדיקה:
+
+- נר Hourly או Daily ירד מתחת ל-zone_low.
+- אותו נר או נר רלוונטי נסגר חזרה מעל הרמה.
+
+ניקוד:
+
+```text
+fib_zone_swept = +20
+```
+
+היגיון:
+
+- sweep מתחת לאזור יכול להראות ניקוי נזילות.
+- reclaim חזרה פנימה משפר את איכות ה-setup.
+
+### Swing Low + Volume Support
+
+המערכת מחפשת swing low שמתחבר לרמת Volume Profile.
+
+השלבים:
+
+1. מוצאים impulses תקפים.
+2. לוקחים עד 3 swing lows אחרונים מתוך impulses תקפים.
+3. בודקים האם swing low קרוב ל:
+   - POC
+   - VAL
+   - HVN
+4. קרבה נדרשת:
+
+```text
+abs(swing_low - volume_level) <= 0.25 ATR
+```
+
+5. בודקים אם המחיר הנוכחי קרוב ל-swing low:
+
+```text
+abs(current_price - swing_low) <= 0.3 ATR
+```
+
+6. בודקים sweep:
+   - Hourly low מתחת swing_low וסגירה מעליו.
+   - או Daily low מתחת swing_low וסגירה מעליו ב-10 ימים אחרונים.
+
+אם המחיר מתחת ל-swing low ביותר מ-0.1 ATR ואין reclaim:
+
+```text
+accepted_below = true
+```
+
+וזה מקבל עונש.
+
+שימוש:
+
+- Swing Low + Volume Support Buy Zone.
+- ניקוד Swing proximity.
+- ניקוד Sweep.
+- עונש אם המחיר התקבל מתחת לרמה.
+
+ניקוד:
+
+- Swing low proximity: +10
+- Sweep and reclaim: +30
+- Daily sweep bonus: +5
+- Accepted below: -20
+
+### Liquidity Sweep / Sweep And Reclaim
+
+המערכת מחפשת wick מתחת לרמת תמיכה וסגירה חזרה מעליה.
+
+סוגי sweep:
+
+- Sweep מתחת VAL.
+- Sweep מתחת swing low.
+- Sweep מתחת Fib zone.
+
+בדיקה Hourly:
+
+```text
+low < support AND close > support
+```
+
+בדיקה Daily:
+
+```text
+daily low < support AND daily close > support
+```
+
+ניקוד:
+
+- Sweep and reclaim: +30
+- Daily sweep bonus: +5
+
+היגיון:
+
+- Stop hunt / liquidity grab.
+- אם המחיר חוזר מעל הרמה, זה יכול להיות סימן לכשל שבירה.
+
+### Liquidity Trap
+
+Liquidity Trap הוא Setup שמשתמש ב-Sweep And Reclaim סביב VAL/POC.
+
+שני מצבים:
+
+1. איכות גבוהה יותר:
+   - המחיר swept below VAL.
+   - המחיר reclaimed VAL.
+   - POC מספק תמיכה מבנית.
+
+2. איכות נמוכה יותר:
+   - המחיר מתחת VAL, קרוב ל-POC.
+   - ה-wipe עדיין בתהליך.
+
+המערכת מחמירה עם ה-Setup הזה:
+
+- ב-BEAR לא קונים.
+- בסקטור WEAK לא קונים.
+- צריך confirmation.
+- אם אין reclaim חזק, זה WATCH ולא BUY.
+
+### Breakout + Retest
+
+המערכת מזהה resistance מפריצה קודמת.
+
+שלבים:
+
+1. מוצאת pivot highs ב-60 נרות אחרונים.
+2. עבור כל pivot high, מחפשת Close מעל אותה רמת resistance.
+3. בודקת האם הייתה פריצה אמיתית.
+4. בודקת נפח ביום הפריצה:
+
+```text
+breakout_volume >= 1.5 * average_volume_20d
+```
+
+5. בודקת האם המחיר הנוכחי נמצא ב-retest zone:
+
+```text
+retest_low  = resistance - 1.0 ATR
+retest_high = resistance + 0.5 ATR
+```
+
+6. בודקת שלא הייתה שבירה עמוקה אחרי הפריצה:
+
+```text
+invalidation_level = resistance - 1.5 ATR
+אין close מתחת לרמה הזו אחרי הפריצה
+```
+
+Stop:
+
+```text
+stop_loss = resistance - 1.5 ATR
+```
+
+Target 1:
+
+- קודם לפי nearest structure target.
+- fallback לפי measured move:
+
+```text
+resistance + (resistance - stop_loss)
+```
+
+Target 2:
+
+- VAH או swing high.
+
+ניקוד:
+
+- Breakout volume confirmation: +15
+- Market structure uptrend: +12
+- Price above EMA20 / MA200 תורמים.
+
+Entry Confirmation:
+
+- close מעל trigger.
+- retest held.
+- אין falling candle.
+
+### VWAP Reclaim
+
+המערכת מזהה חזרה מעל VWAP אחרי שהמחיר היה מתחתיו.
+
+תנאים:
+
+- היה Close מתחת VWAP באחד הנרות האחרונים.
+- המחיר הנוכחי קרוב ל-VWAP:
+
+```text
+abs(current_price - vwap) <= 0.3 ATR
+```
+
+- Volume לא יורד בצורה בעייתית.
+- Anchored VWAP context לא שלילי.
+
+Stop:
+
+- מתחת ל-VWAP/רמת תמיכה, עם התאמת ATR.
+- אם יש Fib, Stop יכול להיצמד נמוך יותר לפי Fib 78.6.
+
+Target 1:
+
+```text
+vwap + 0.5 ATR
+```
+
+Target 2:
+
+- VAH.
+- לאחר מכן target normalization יכול להרחיב/לתקן.
+
+Entry Confirmation:
+
+- close מעל VWAP proxy.
+- close >= open.
+- close >= previous close.
+- hold/follow-through.
+
+### Volume-Price Scenario
+
+המערכת מסווגת את התנהגות המחיר והנפח בארבעת המצבים הקלאסיים.
+
+החישוב:
+
+- משווה את 5 הנרות האחרונים מול 5 הנרות שלפניהם.
+- בודקת האם המחיר עלה או ירד.
+- בודקת האם הנפח הממוצע עלה או ירד.
+
+סיווגים:
+
+- price_up_vol_up
+- price_up_vol_down
+- price_down_vol_down
+- price_down_vol_up
+
+ניקוד:
+
+- price_up_vol_up: +8
+- price_down_vol_down: +8
+- price_down_vol_up: -10
+
+היגיון:
+
+- עלייה במחיר עם עלייה בנפח יכולה להראות ביקוש.
+- ירידה במחיר עם ירידה בנפח יכולה להראות pullback בריא.
+- ירידה במחיר עם עלייה בנפח יכולה להראות מכירה מוסדית ולכן מקבלת עונש.
+
+### Relative Strength
+
+יש שתי שכבות Relative Strength:
+
+1. בסורק הטכני:
+   - משווה תשואה של המניה מול SPY ב-20 ימים.
+   - יחס מעל 1.0 אומר שהמניה חזקה מ-SPY.
+
+2. ב-Smart Universe:
+   - משווה תשואה של 3 חודשים מול SPY ו-QQQ.
+   - משקל: 65% SPY ו-35% QQQ.
+
+ניקוד Setup:
+
+- Relative Strength > 1.3: +10
+- Relative Strength < 0.7: -8
+
+היגיון:
+
+- Long setups במניות שמובילות את השוק עדיפים על מניות מפגרות.
+
+### Professional Market Regime
+
+בנוסף ל-Agent Market Regime, יש שכבת Professional Context בתוך תוצאת הסריקה.
+
+היא בודקת:
+
+- SPY trend.
+- QQQ trend.
+- IWM trend.
+
+סיווג:
+
+- Risk-on
+- Mixed
+- Risk-off
+
+השפעה:
+
+- לא מחליפה את Agent Market Regime.
+- משפיעה על quality score שמוצג למשתמש.
+- מוסיפה warnings/strengths.
+
+### Liquidity Quality
+
+המערכת בודקת נזילות גם אחרי הסינון הראשוני.
+
+המדדים:
+
+- מחיר נוכחי.
+- Average Volume ל-20 ימים.
+- Average Dollar Volume ל-20 ימים.
+
+סיווג:
+
+- Institutional liquidity
+- Tradable
+- Thin
+
+ב-Professional Context:
+
+- מחיר מעל 10 דולר מקבל חלק מהניקוד.
+- Dollar volume מעל 20 מיליון דולר ו-volume מעל 300,000 מקבלים ניקוד נזילות.
+
+הערה:
+
+- Smart Universe מחמיר יותר: הוא דורש 100 מיליון דולר average dollar volume.
+- Professional Context משמש להסבר/ציון בתוך תוצאת הסריקה.
+
+### Trend Quality
+
+המערכת בודקת איכות מגמה:
+
+- מחיר מעל MA20.
+- מחיר מעל MA50.
+- מחיר מעל MA200.
+- MA20 מעל MA50.
+- MA50 מעל MA200.
+- slope חיובי של MA20.
+
+ניקוד Professional Context:
+
+- מעל MA20: 0.18
+- מעל MA50: 0.20
+- מעל MA200: 0.20
+- MA20 מעל MA50: 0.18
+- MA50 מעל MA200: 0.14
+- slope חיובי: 0.10
+
+סיווג:
+
+- Clean uptrend
+- Constructive
+- Messy
+
+השפעה:
+
+- Setup טכני עם Trend Quality חלש יקבל ציון איכות נמוך יותר.
+- אם trend quality הוא Messy, המערכת מוסיפה warning.
+
+### Volume Confirmation
+
+המערכת בודקת האם הנפח תומך ב-Setup.
+
+המדדים:
+
+- יחס נפח הנר האחרון מול ממוצע 20 ימים.
+- מספר ימי accumulation.
+- מספר ימי distribution.
+- האם pullback מתרחש בנפח יורד.
+
+Accumulation day:
+
+```text
+return > 0.5% AND volume > avg20
+```
+
+Distribution day:
+
+```text
+return < -0.5% AND volume > avg20
+```
+
+ניקוד:
+
+- volume ratio >= 1.1 מוסיף ניקוד.
+- accumulation >= distribution מוסיף ניקוד.
+- pullback volume contracting מוסיף ניקוד.
+
+סיווג:
+
+- Confirmed
+- Neutral
+- Distribution risk
+
+### Event Risk
+
+המערכת בודקת אירועים שעלולים לעוות Setup.
+
+נבדק:
+
+- Earnings date.
+- האם הדוחות קרובים.
+- gap גדול ב-20 ימים אחרונים.
+
+סיווג:
+
+- Earnings risk
+- Recent gap risk
+- No major event flag
+
+השפעה:
+
+- ב-Professional Context, דוחות קרובים מורידים quality.
+- ב-Agent Risk Layer, Earnings Blackout יכול לחסום BUY לגמרי.
+
+### Extended-Hours Analysis
+
+המערכת מושכת quote ל-pre-market / after-hours כאשר זמין.
+
+מה נשמר:
+
+- phase.
+- label.
+- quote_price.
+- timestamp.
+- regular_close.
+- change.
+- change_pct.
+- האם זה extended.
+
+המערכת גם מחשבת impact:
+
+- האם המחיר extended בתוך buy zone.
+- האם המחיר extended מתחת buy zone.
+- האם המחיר extended מעל buy zone.
+- האם extended נגע ב-stop.
+- האם extended נגע ב-target 1.
+- האם extended נגע ב-target 2.
+- R/R לפי המחיר extended לצורכי מידע.
+
+חשוב:
+
+```text
+Extended-hours quote is informational only.
+```
+
+כלומר:
+
+- הוא מוצג למשתמש.
+- הוא יכול לסמן שה-setup השתנה.
+- הוא לא פותח BUY_SIMULATED בלי confirmation בזמן regular session.
+
+### Target Normalization
+
+אחרי שה-Setup מציע targets, המערכת מתקנת אותם אם צריך.
+
+מטרות:
+
+- לוודא ש-Target 1 מעל entry.
+- לוודא ש-Target 1 לא קרוב מדי.
+- לוודא ש-Target 2 מעל Target 1.
+- להשתמש במבנה שוק אם אפשר.
+
+כללים:
+
+```text
+minimum_t1_atr = 1.2 ATR
+fallback_t1 = entry + 2.0 ATR
+fallback_t2 = entry + 4.0 ATR
+```
+
+אם Target 1 מתחת entry:
+
+```text
+target_1 = entry + 2 ATR
+```
+
+אם Target 1 קרוב מדי:
+
+```text
+target_1 = entry + 1.2 ATR
+```
+
+אם Target 2 לא מעל Target 1:
+
+```text
+target_2 = max(structure_target, entry + 4 ATR, target_1 + ATR)
+```
+
+### Nearest Structure Target
+
+כאשר ניתן, יעד נבחר לפי מבנה ולא רק נוסחה מכנית.
+
+החישוב:
+
+- מסתכל על עד 63 ימים אחורה.
+- מחפש highs קודמים מעל entry + 0.75 ATR.
+- בוחר את ההתנגדות הקרובה ביותר מעל המחיר.
+
+אם אין resistance מתאים:
+
+- משתמש ב-fallback מכני לפי ATR / measured move.
+
+### Trade Plan
+
+לכל setup שאינו No Trade, המערכת בונה Trade Plan.
+
+הוא כולל:
+
+- entry_trigger.
+- trigger_price.
+- invalidation.
+- stop_loss.
+- target_1.
+- target_2.
+
+דוגמאות:
+
+- Breakout: close above resistance / reclaim.
+- VWAP: hold VWAP and break above trigger.
+- Fib/support: break above prior-day high after holding buy zone.
+
+Trade Plan הוא הסבר ותיעוד. הוא לא מחליף את Agent Risk Layer.
+
 ## סוגי Setups שהמערכת מזהה
 
 ### 1. No Trade
