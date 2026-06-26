@@ -585,7 +585,7 @@ def append_update_log(
     ws.cell(row, 7, exposure)
     ws.cell(row, 8, open_risk)
     ws.cell(row, 9, open_positions)
-    ws.cell(row, 10, str(summary_path))
+    ws.cell(row, 10, portable_path(summary_path))
     ws.cell(row, 11, "")
 
 
@@ -669,6 +669,13 @@ def next_row(ws: Any) -> int:
         if ws.cell(row, 1).value is None:
             return row
     return ws.max_row + 1
+
+
+def portable_path(path: Path) -> str:
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
 
 
 if __name__ == "__main__":

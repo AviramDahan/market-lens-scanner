@@ -80,6 +80,9 @@ def first_cell_text(row: ET.Element, shared_strings: list[str]) -> str:
     if not cells:
         return ""
     first = cells[0]
+    if first.attrib.get("t") == "inlineStr":
+        return "".join(text.text or "" for text in first.findall(".//main:t", NS)).strip()
+
     value = first.find("main:v", NS)
     if value is None or value.text is None:
         return ""
