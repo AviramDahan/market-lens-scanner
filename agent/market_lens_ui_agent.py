@@ -18,7 +18,9 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sy
 
 from app.charts import write_scan_chart
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
+from app.performance_summary import write_performance_summaries
 from app.scanner import scan_ticker_detail
+from app.shadow_strategies import evaluate_shadow_strategies
 from app.smart_universe import base_universe, build_sector_health
 from app.strategy import StrategyDecision as Decision
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
@@ -734,6 +736,8 @@ def update_workbook(
             decision.feedback = final_reason
             decision.decision_json = decision_json
         enrich_decision_analytics(decision_json, run_id=run_id, result=result, final_action=final_action)
+        decision_json["active_strategy"] = "CURRENT_AGENT_GATES"
+        decision_json["shadow_strategies"] = evaluate_shadow_strategies(result, decision_json)
         result.selection_context = build_selection_context(
             result,
             decision,
@@ -778,6 +782,30 @@ def update_workbook(
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
+    performance_summary_paths: dict[str, Path] = {}
+    try:
+        performance_summary_paths = write_performance_summaries(
+            summary_dir=SUMMARY_DIR,
+            decision_dir=DECISION_DIR,
+            current_decision_path=decision_path,
+            run_id=run_id,
+            timestamp=timestamp,
+            portfolio={
+                "currency": currency,
+                "starting_capital": starting_capital,
+                "open_positions_start": len(initial_open_position_tickers),
+                "open_positions_end": len(open_positions),
+                "cash": cash,
+                "exposure": exposure,
+                "open_risk": open_risk,
+                "total_portfolio_value": round(cash + exposure, 2),
+                "daily_return_pct": round(((cash + exposure) - starting_capital) / starting_capital * 100, 4)
+                if starting_capital
+                else None,
+            },
+        )
+    except Exception as exc:
+        errors.append(f"PERFORMANCE_SUMMARY_FAILED: {exc}")
     append_update_log(
         wb,
         timestamp=timestamp,
@@ -812,6 +840,9 @@ def update_workbook(
         "currency": currency,
         "decision_path": decision_path,
         "market_regime": run_context.market_regime,
+        "performance_summary_paths": performance_summary_paths,
+        "daily_summary_path": performance_summary_paths.get("daily_summary_json"),
+        "weekly_summary_path": performance_summary_paths.get("weekly_summary_json"),
         "excel_updated": True,
         "run_status": "OK" if not errors else "ISSUES",
     }
@@ -1487,6 +1518,8 @@ def write_summary(
         excel_line,
         f"Screenshot saved: {screenshot_path}",
         decision_line,
+        f"Daily summary saved: {workbook_context.get('daily_summary_path') or 'skipped'}",
+        f"Weekly summary saved: {workbook_context.get('weekly_summary_path') or 'skipped'}",
         f"Errors: {'; '.join(errors) if errors else 'None'}",
         "Agent feedback:",
     ]
