@@ -213,7 +213,7 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
         "live_price": round(live_price, 4),
         "live_price_updated_at": source_time,
         "reason": event.reason,
-        "dispatch": dispatch,
+        "dispatch": compact_dispatch_payload(dispatch),
     }
 
 
@@ -341,7 +341,7 @@ async def monitor_live_positions(
         "dispatched_event": live_monitor_event_payload(dispatchable_event),
         "warnings": warnings,
         "reason": dispatchable_event.reason,
-        "dispatch": dispatch,
+        "dispatch": compact_dispatch_payload(dispatch),
     }
 
 
@@ -353,13 +353,16 @@ async def trigger_agent_scan(
     force: bool = Query(default=False),
 ) -> dict:
     protection = validate_agent_cron_secret(x_cron_secret, secret)
-    decision = scan_schedule_decision(force=force)
+    force_applied = force and trigger_scan_force_enabled()
+    decision = scan_schedule_decision(force=force_applied)
     trigger_configured = scan_trigger_configured()
 
     base_payload = {
         "triggered": False,
         "trigger_configured": trigger_configured,
         "protected": protection["protected"],
+        "force_requested": force,
+        "force_applied": force_applied,
         "local_date": decision.local_date,
         "local_time": decision.local_time,
         "local_weekday": decision.local_weekday,
@@ -374,7 +377,7 @@ async def trigger_agent_scan(
             "reason": decision.reason,
         }
 
-    if not force and scan_already_dispatched(decision.scan_key):
+    if not force_applied and scan_already_dispatched(decision.scan_key):
         return {
             **base_payload,
             "status": "skipped",
@@ -399,7 +402,7 @@ async def trigger_agent_scan(
         "status": "triggered",
         "triggered": True,
         "reason": decision.reason,
-        "dispatch": dispatch,
+        "dispatch": compact_dispatch_payload(dispatch),
     }
 
 
@@ -469,6 +472,17 @@ def fetch_live_price(ticker: str) -> tuple[float, str]:
     source_time = close.index[-1].isoformat()
     _LIVE_PRICE_CACHE[symbol] = (now, price, source_time)
     return price, source_time
+
+
+def compact_dispatch_payload(dispatch: dict | None) -> dict:
+    if not isinstance(dispatch, dict):
+        return {}
+    allowed = ("github_status", "workflow", "ref", "repo", "source")
+    return {key: dispatch[key] for key in allowed if key in dispatch}
+
+
+def trigger_scan_force_enabled() -> bool:
+    return os.getenv("MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 @app.get("/agent/tracker")

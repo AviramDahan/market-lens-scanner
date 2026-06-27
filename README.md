@@ -572,6 +572,7 @@ GITHUB_POSITION_MONITOR_WORKFLOW=market-lens-position-monitor.yml
 GITHUB_ACTIONS_REF=main
 MARKET_LENS_AGENT_CRON_SECRET=...
 MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
+MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=false
 MARKET_LENS_MONITOR_CRON_SECRET=...
 MARKET_LENS_MONITOR_TRIGGER_GLOBAL_COOLDOWN_SECONDS=60
 MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS=300
@@ -588,6 +589,11 @@ Schedule: every 5 minutes, all days
 The scanner endpoint returns `skipped` outside the configured scan slots without
 creating a GitHub Actions run. This prevents short 6-9 second GitHub runs that
 only execute the in-workflow schedule guard and then skip all agent tasks.
+Do not add `force=true` to the cron-job.org scanner URL. The server dispatches
+the workflow with `force=true` internally only when the current New York time is
+inside a configured scan slot. Query-string force is ignored by default unless
+`MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=true` is explicitly configured for manual
+debugging.
 
 Recommended cron-job.org monitor request:
 

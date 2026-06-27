@@ -203,6 +203,83 @@ def test_trigger_scan_endpoint_dispatches_once_at_scan_time(monkeypatch) -> None
     assert dispatches == ["agent-server-scan-scheduler"]
 
 
+def test_trigger_scan_endpoint_returns_compact_dispatch_payload(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    decision = ScanScheduleDecision(
+        should_run=True,
+        local_time="09:45",
+        local_date="2026-06-23",
+        local_weekday=2,
+        scan_key="2026-06-23T09:45",
+        reason="Current New York time matches a configured agent scan slot.",
+        next_scan_at="2026-06-23T10:30:00-04:00",
+    )
+    monkeypatch.setattr(main, "scan_schedule_decision", lambda force=False: decision)
+
+    async def fake_dispatch(source="agent-server-scan-scheduler"):
+        return {
+            "github_status": 204,
+            "workflow": "market-lens-agent.yml",
+            "ref": "main",
+            "repo": "AviramDahan/market-lens-scanner",
+            "source": source,
+            "raw_response": "x" * 100_000,
+        }
+
+    monkeypatch.setattr(main, "dispatch_agent_scan", fake_dispatch)
+
+    client = TestClient(main.app)
+    response = client.post("/agent/trigger-scan")
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert len(response.content) < 1_000
+    assert payload["status"] == "triggered"
+    assert payload["dispatch"] == {
+        "github_status": 204,
+        "workflow": "market-lens-agent.yml",
+        "ref": "main",
+        "repo": "AviramDahan/market-lens-scanner",
+        "source": "agent-server-scan-scheduler",
+    }
+
+
+def test_trigger_scan_force_query_is_ignored_by_default(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    force_values = []
+
+    def fake_decision(force=False):
+        force_values.append(force)
+        return ScanScheduleDecision(
+            should_run=False,
+            local_time="02:45",
+            local_date="2026-06-23",
+            local_weekday=2,
+            scan_key="2026-06-23T02:45",
+            reason="Outside configured New York scan times; GitHub Action dispatch skipped.",
+            next_scan_at="2026-06-23T06:30:00-04:00",
+        )
+
+    async def fail_dispatch(*_args, **_kwargs):
+        raise AssertionError("dispatch should not be called")
+
+    monkeypatch.setattr(main, "scan_schedule_decision", fake_decision)
+    monkeypatch.setattr(main, "dispatch_agent_scan", fail_dispatch)
+
+    client = TestClient(main.app)
+    response = client.get("/agent/trigger-scan?force=true")
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert payload["status"] == "skipped"
+    assert payload["force_requested"] is True
+    assert payload["force_applied"] is False
+    assert force_values == [False]
+
+
 def test_trigger_scan_endpoint_requires_agent_cron_secret_when_configured(monkeypatch) -> None:
     reset_rate_limits()
     monkeypatch.setenv("MARKET_LENS_AGENT_CRON_SECRET", "scan-secret")
