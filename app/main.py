@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard, with_position_calculations
-from app.auth import get_current_user_required, supabase_publishable_key
+from app.auth import auth_is_configured, auth_is_open, get_current_user_required, supabase_publishable_key
 from app.charts import write_scan_chart
 from app.config import load_config
 from app.data import fetch_intraday_frame
@@ -598,15 +598,15 @@ async def create_saved_setup(
     request: SaveSetupRequest,
     user: dict = Depends(get_current_user_required),
 ) -> dict:
-    if using_external_storage() and not user.get("id"):
+    if using_external_storage() and not auth_is_open() and not user.get("id"):
         raise HTTPException(status_code=401, detail="Sign in required to save setups.")
 
     saved = save_setup(
         request.result,
         analysis_period=request.analysis_period,
         chart_url=request.chart_url,
-        source="manual",
-        user_label=user.get("email") or request.user_label,
+        source="auto" if auth_is_open() else "manual",
+        user_label=user.get("email") or request.user_label or "open-access",
         session_id=request.session_id,
         user_id=user.get("id"),
     )
@@ -637,7 +637,8 @@ async def get_auth_config() -> dict:
     return {
         "supabase_url": os.getenv("SUPABASE_URL", ""),
         "publishable_key": publishable_key,
-        "enabled": bool(os.getenv("SUPABASE_URL") and publishable_key),
+        "enabled": auth_is_configured(),
+        "mode": "open" if auth_is_open() else "supabase",
     }
 
 

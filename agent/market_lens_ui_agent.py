@@ -248,10 +248,12 @@ def open_app(page: Page, url: str, run_deadline: float) -> None:
 def login(page: Page, settings: Settings, deadline: float) -> str:
     page.wait_for_selector(APP_READY_SELECTOR, timeout=remaining_ms(deadline, 30_000))
     page.wait_for_function(
-        "() => Boolean(window.supabase) && document.querySelector('#authStatus')?.textContent?.trim().length > 0",
+        "() => document.querySelector('#authStatus')?.textContent?.trim().length > 0",
         timeout=remaining_ms(deadline, 60_000),
     )
     auth_status = page.locator("#authStatus").inner_text(timeout=remaining_ms(deadline, 10_000))
+    if "open access" in auth_status.lower() or "auth not configured" in auth_status.lower():
+        return "open access"
     if settings.email.lower() in auth_status.lower():
         return "already signed in"
 

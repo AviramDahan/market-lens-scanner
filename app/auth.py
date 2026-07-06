@@ -9,7 +9,13 @@ def supabase_publishable_key() -> str:
     return os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or ""
 
 
+def auth_is_open() -> bool:
+    return os.getenv("MARKET_LENS_AUTH_MODE", "open").strip().lower() in {"open", "disabled", "off", "public"}
+
+
 def auth_is_configured() -> bool:
+    if auth_is_open():
+        return False
     return bool(os.getenv("SUPABASE_URL") and supabase_publishable_key())
 
 
@@ -47,8 +53,8 @@ async def get_current_user_optional(
 async def get_current_user_required(
     user: dict[str, Any] | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
-    if not auth_is_configured():
-        return {"id": None, "email": "local-dev"}
+    if auth_is_open() or not auth_is_configured():
+        return {"id": None, "email": "open-access"}
     if user is None:
         raise HTTPException(status_code=401, detail="Sign in required.")
     return user

@@ -42,6 +42,7 @@ let supabaseClient = null;
 let authSession = null;
 let authUser = null;
 let authConfigured = false;
+let authOpenAccess = false;
 let scanTimer = null;
 let scanStartedAt = 0;
 const sessionId = getSessionId();
@@ -192,7 +193,12 @@ async function initAuth() {
   try {
     const response = await fetch("/auth/config");
     const config = await response.json();
+    authOpenAccess = config.mode === "open";
     authConfigured = Boolean(config.enabled && window.supabase);
+    if (authOpenAccess) {
+      updateAuthUi("Open access");
+      return;
+    }
     if (!authConfigured) {
       updateAuthUi("Auth not configured");
       return;
@@ -276,12 +282,13 @@ async function signOut() {
 
 function updateAuthUi(fallbackText = "") {
   const signedIn = Boolean(authUser);
-  authStatus.textContent = signedIn ? authUser.email : (fallbackText || "Sign in required");
-  authStatus.classList.toggle("signed-in", signedIn);
-  authEmailInput.classList.toggle("hidden", signedIn);
-  authPasswordInput.classList.toggle("hidden", signedIn);
-  signInButton.classList.toggle("hidden", signedIn);
-  signUpButton.classList.toggle("hidden", signedIn);
+  const openAccess = authOpenAccess && !authConfigured;
+  authStatus.textContent = openAccess ? "Open access" : signedIn ? authUser.email : (fallbackText || "Sign in required");
+  authStatus.classList.toggle("signed-in", signedIn || openAccess);
+  authEmailInput.classList.toggle("hidden", signedIn || openAccess);
+  authPasswordInput.classList.toggle("hidden", signedIn || openAccess);
+  signInButton.classList.toggle("hidden", signedIn || openAccess);
+  signUpButton.classList.toggle("hidden", signedIn || openAccess);
   signOutButton.classList.toggle("hidden", !signedIn);
   applyProductGate();
 }
@@ -301,7 +308,7 @@ function currentUserLabel() {
 }
 
 function isLocked() {
-  return authConfigured && !authUser;
+  return !authOpenAccess && authConfigured && !authUser;
 }
 
 function applyProductGate() {
