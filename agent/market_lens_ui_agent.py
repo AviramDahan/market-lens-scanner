@@ -231,6 +231,13 @@ def is_auth_failure(message: str) -> bool:
     return any(marker in text for marker in auth_markers)
 
 
+def auth_config_is_open(config: Any) -> bool:
+    if not isinstance(config, dict):
+        return False
+    mode = str(config.get("mode", "")).strip().lower()
+    return mode in {"open", "disabled", "off", "public"} or config.get("enabled") is False
+
+
 def open_app(page: Page, url: str, run_deadline: float) -> None:
     deadline = min(time.monotonic() + 180, run_deadline)
     last_error = ""
@@ -247,6 +254,18 @@ def open_app(page: Page, url: str, run_deadline: float) -> None:
 
 def login(page: Page, settings: Settings, deadline: float) -> str:
     page.wait_for_selector(APP_READY_SELECTOR, timeout=remaining_ms(deadline, 30_000))
+    try:
+        auth_config = page.evaluate(
+            """async () => {
+                const response = await fetch('/auth/config', { cache: 'no-store' });
+                return await response.json();
+            }"""
+        )
+        if auth_config_is_open(auth_config):
+            return "open access"
+    except Exception as exc:
+        log(f"Auth config check unavailable; falling back to UI login flow: {exc}")
+
     page.wait_for_function(
         "() => document.querySelector('#authStatus')?.textContent?.trim().length > 0",
         timeout=remaining_ms(deadline, 60_000),

@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 import app.main as main
+from agent.market_lens_ui_agent import auth_config_is_open
 
 
 def scan_result_payload() -> dict:
@@ -32,6 +33,14 @@ def test_auth_config_defaults_to_open_even_when_supabase_env_exists(monkeypatch)
     assert response.status_code == 200
     assert payload["enabled"] is False
     assert payload["mode"] == "open"
+
+
+def test_agent_treats_open_auth_config_as_open_access() -> None:
+    assert auth_config_is_open({"enabled": False, "mode": "open"})
+    assert auth_config_is_open({"enabled": False})
+    assert auth_config_is_open({"enabled": True, "mode": "disabled"})
+    assert not auth_config_is_open({"enabled": True, "mode": "supabase"})
+    assert not auth_config_is_open(None)
 
 
 def test_scan_endpoint_allows_anonymous_open_access(monkeypatch) -> None:
