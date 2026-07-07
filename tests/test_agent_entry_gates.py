@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 import pandas as pd
@@ -8,6 +9,7 @@ from agent.market_lens_ui_agent import (
     SetupResult,
     build_agent_scan_tickers,
     decide,
+    fetch_smart_universe_tickers,
     is_auth_failure,
     parse_result,
     select_chart_tickers,
@@ -87,6 +89,60 @@ def test_agent_universe_overfetches_to_replace_excluded_tickers(monkeypatch) -> 
 
     assert calls == [10]
     assert selected == ["S6", "S7", "S8", "S9", "S10", "S1", "S2"]
+
+
+def test_agent_universe_uses_recent_skip_as_fallback_when_fresh_pool_is_short(monkeypatch) -> None:
+    def fake_fetch(_settings: SimpleNamespace, _limit: int) -> list[str]:
+        return [f"S{i}" for i in range(1, 9)]
+
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "5")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "5")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_MAX_POOL", "8")
+    monkeypatch.setenv("MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK", "true")
+    monkeypatch.setattr(
+        "agent.market_lens_ui_agent.fetch_smart_universe_tickers",
+        fake_fetch,
+    )
+
+    settings = SimpleNamespace(
+        universe="smart-universe",
+        analysis_period="6mo",
+        url="https://example.test",
+    )
+    selected = build_agent_scan_tickers(
+        settings,
+        carry_forward_tickers=["S1"],
+        skipped_tickers=["S2", "S3", "S4", "S5", "S6", "S7", "S8"],
+    )
+
+    assert selected == ["S2", "S3", "S4", "S5", "S6", "S1"]
+
+
+def test_smart_universe_fetch_prefers_full_companies_payload(monkeypatch) -> None:
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            payload = {
+                "companies": [{"ticker": f"C{i}"} for i in range(1, 121)],
+                "ranked": [{"ticker": f"R{i}"} for i in range(1, 4)],
+            }
+            return json.dumps(payload).encode("utf-8")
+
+    monkeypatch.setattr(
+        "agent.market_lens_ui_agent.urlopen",
+        lambda *_args, **_kwargs: FakeResponse(),
+    )
+
+    settings = SimpleNamespace(url="https://example.test", analysis_period="6mo")
+    selected = fetch_smart_universe_tickers(settings, 120)
+
+    assert selected[:3] == ["C1", "C2", "C3"]
+    assert "C120" in selected
 
 
 def chart_candidate(

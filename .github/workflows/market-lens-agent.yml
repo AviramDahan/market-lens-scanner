@@ -38,7 +38,7 @@ jobs:
           # Weekday off-hours staging scans plus regular-session confirmation scans.
           if [ "$local_day" -le 5 ]; then
             case "$local_time" in
-              "06:30"|"08:30"|"09:10"|"09:45"|"10:30"|"11:30"|"13:30"|"14:30"|"15:30"|"16:15"|"16:20"|"18:30"|"20:15"|"22:30")
+              "06:30"|"07:30"|"08:30"|"09:10"|"09:35"|"09:45"|"10:00"|"10:30"|"11:00"|"11:30"|"12:00"|"12:30"|"13:00"|"13:30"|"14:00"|"14:30"|"15:00"|"15:30"|"15:55"|"16:15"|"16:20"|"18:30"|"20:15"|"22:30")
                 should_run=true
                 ;;
             esac
@@ -107,6 +107,7 @@ jobs:
           MARKET_LENS_AGENT_UNIVERSE_MAX_POOL: "300"
           MARKET_LENS_AGENT_MAX_PER_SECTOR: "15"
           MARKET_LENS_AGENT_SCAN_BATCH_SIZE: "20"
+          MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK: "true"
           MARKET_LENS_SKIP_COOLDOWN_HOURS: "8"
           MARKET_LENS_WATCH_CARRY_FORWARD_DAYS: "14"
           MARKET_LENS_BULL_MIN_SETUP_SCORE: "0.45"

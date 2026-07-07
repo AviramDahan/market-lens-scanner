@@ -352,6 +352,33 @@ def test_scan_schedule_allows_short_cold_start_window(monkeypatch) -> None:
     assert decision.scan_key == "2026-06-23T09:45"
 
 
+def test_scan_schedule_includes_added_midday_slots(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
+
+    decision = scan_trigger.scan_schedule_decision(
+        now=datetime.fromisoformat("2026-06-23T12:02:00-04:00"),
+    )
+
+    assert decision.should_run is True
+    assert decision.scan_key == "2026-06-23T12:00"
+
+
+def test_scan_schedule_times_can_be_overridden_by_env(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_WEEKDAY_SCAN_TIMES", "10:07")
+    monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
+
+    inside = scan_trigger.scan_schedule_decision(
+        now=datetime.fromisoformat("2026-06-23T10:09:00-04:00")
+    )
+    outside = scan_trigger.scan_schedule_decision(
+        now=datetime.fromisoformat("2026-06-23T09:45:00-04:00")
+    )
+
+    assert inside.should_run is True
+    assert inside.scan_key == "2026-06-23T10:07"
+    assert outside.should_run is False
+
+
 def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)

@@ -12,24 +12,34 @@ from app.monitor_trigger import github_actions_token
 
 NEW_YORK_TZ = ZoneInfo("America/New_York")
 
-WEEKDAY_SCAN_TIMES = {
+DEFAULT_WEEKDAY_SCAN_TIMES = {
     "06:30",
+    "07:30",
     "08:30",
     "09:10",
+    "09:35",
     "09:45",
+    "10:00",
     "10:30",
+    "11:00",
     "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
     "13:30",
+    "14:00",
     "14:30",
+    "15:00",
     "15:30",
+    "15:55",
     "16:15",
     "16:20",
     "18:30",
     "20:15",
     "22:30",
 }
-SATURDAY_SCAN_TIMES = {"11:00"}
-SUNDAY_SCAN_TIMES = {"18:30", "22:00"}
+DEFAULT_SATURDAY_SCAN_TIMES = {"11:00"}
+DEFAULT_SUNDAY_SCAN_TIMES = {"18:30", "22:00"}
 
 _DISPATCHED_SCAN_KEYS: set[str] = set()
 
@@ -95,12 +105,41 @@ def scan_schedule_decision(now: datetime | None = None, force: bool = False) -> 
 
 def scan_times_for_weekday(weekday: int) -> set[str]:
     if 1 <= weekday <= 5:
-        return WEEKDAY_SCAN_TIMES
+        return configured_scan_times(
+            "MARKET_LENS_AGENT_WEEKDAY_SCAN_TIMES",
+            DEFAULT_WEEKDAY_SCAN_TIMES,
+        )
     if weekday == 6:
-        return SATURDAY_SCAN_TIMES
+        return configured_scan_times(
+            "MARKET_LENS_AGENT_SATURDAY_SCAN_TIMES",
+            DEFAULT_SATURDAY_SCAN_TIMES,
+        )
     if weekday == 7:
-        return SUNDAY_SCAN_TIMES
+        return configured_scan_times(
+            "MARKET_LENS_AGENT_SUNDAY_SCAN_TIMES",
+            DEFAULT_SUNDAY_SCAN_TIMES,
+        )
     return set()
+
+
+def configured_scan_times(env_name: str, defaults: set[str]) -> set[str]:
+    raw_value = os.getenv(env_name, "").strip()
+    if not raw_value:
+        return defaults
+    parsed = {value.strip() for value in raw_value.replace(";", ",").split(",") if value.strip()}
+    valid = {value for value in parsed if is_scan_time_value(value)}
+    return valid or defaults
+
+
+def is_scan_time_value(value: str) -> bool:
+    if len(value) != 5 or value[2] != ":":
+        return False
+    hour_text, minute_text = value.split(":", maxsplit=1)
+    if not hour_text.isdigit() or not minute_text.isdigit():
+        return False
+    hour = int(hour_text)
+    minute = int(minute_text)
+    return 0 <= hour <= 23 and 0 <= minute <= 59
 
 
 def current_scan_slot(now: datetime) -> datetime | None:

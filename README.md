@@ -183,8 +183,15 @@ Default cloud scan configuration:
 - `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=300`
 - `MARKET_LENS_AGENT_MAX_PER_SECTOR=15`
 - `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=20`
+- `MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK=true`
 - `MARKET_LENS_WATCH_CARRY_FORWARD_DAYS=14`
 - `MARKET_LENS_SKIP_COOLDOWN_HOURS=8`
+
+Recent `WATCH` tickers are carried forward outside the fresh-universe quota.
+Recent `SKIP` tickers are excluded first, but the agent can use them as a
+fallback when the fresh candidate pool is too small. This keeps the scan near
+the configured target count instead of shrinking to a small basket after several
+runs in the same day.
 
 The broad source universe is assembled from:
 
@@ -594,6 +601,19 @@ the workflow with `force=true` internally only when the current New York time is
 inside a configured scan slot. Query-string force is ignored by default unless
 `MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=true` is explicitly configured for manual
 debugging.
+
+Default New York weekday scan slots:
+
+```text
+06:30, 07:30, 08:30, 09:10,
+09:35, 09:45, 10:00, 10:30, 11:00, 11:30,
+12:00, 12:30, 13:00, 13:30, 14:00, 14:30,
+15:00, 15:30, 15:55, 16:15, 16:20,
+18:30, 20:15, 22:30
+```
+
+Override with `MARKET_LENS_AGENT_WEEKDAY_SCAN_TIMES` on Render if a narrower or
+wider schedule is needed.
 
 Recommended cron-job.org monitor request:
 

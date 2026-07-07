@@ -362,13 +362,17 @@ def build_agent_scan_tickers(
         return []
     target_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "35"))
     pool_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "100"))
-    excluded = set(skipped_tickers) | set(carry_forward_tickers)
+    hard_excluded = set(carry_forward_tickers)
+    soft_excluded = set(skipped_tickers)
     max_pool_count = max(
         pool_count,
         target_count,
         int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_MAX_POOL", "300")),
     )
-    effective_pool_count = min(max_pool_count, max(pool_count, target_count + len(excluded)))
+    effective_pool_count = min(
+        max_pool_count,
+        max(pool_count, target_count + len(hard_excluded) + len(soft_excluded)),
+    )
     if effective_pool_count > pool_count:
         log(
             "Smart agent universe pool expanded for exclusions: "
@@ -379,11 +383,28 @@ def build_agent_scan_tickers(
     if not candidates:
         return []
 
-    base_tickers = [ticker for ticker in candidates if ticker not in excluded][:target_count]
+    base_tickers = [ticker for ticker in candidates if ticker not in hard_excluded and ticker not in soft_excluded][
+        :target_count
+    ]
+    fallback_tickers: list[str] = []
+    if len(base_tickers) < target_count and env_bool("MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK", True):
+        needed = target_count - len(base_tickers)
+        fallback_tickers = [
+            ticker
+            for ticker in candidates
+            if ticker not in hard_excluded and ticker not in base_tickers
+        ][:needed]
+        base_tickers = unique_tickers(base_tickers + fallback_tickers)[:target_count]
+        if fallback_tickers:
+            log(
+                "Recent SKIP fallback used to preserve scan breadth: "
+                f"{len(fallback_tickers)} tickers ({' '.join(fallback_tickers[:20])}"
+                f"{' ...' if len(fallback_tickers) > 20 else ''})."
+            )
     final_tickers = unique_tickers(base_tickers + carry_forward_tickers)
     log(
         "Smart agent universe built: "
-        f"{len(base_tickers)} fresh base tickers + "
+        f"{len(base_tickers)} base scan tickers + "
         f"{len([ticker for ticker in carry_forward_tickers if ticker not in base_tickers])} carry-forward tickers."
     )
     if len(base_tickers) < target_count:
@@ -414,7 +435,7 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
         log(f"Smart Universe API fetch failed: {exc}")
         return []
 
-    ranked = payload.get("ranked") or payload.get("companies") or []
+    ranked = (payload.get("companies") or []) + (payload.get("ranked") or [])
     tickers: list[str] = []
     for item in ranked:
         ticker = item.get("ticker") if isinstance(item, dict) else item
