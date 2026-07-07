@@ -581,7 +581,7 @@ MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS=300
 Recommended cron-job.org scanner request:
 
 ```text
-GET https://market-lens-scanner-fb63.onrender.com/agent/trigger-scan?secret=<MARKET_LENS_AGENT_CRON_SECRET>
+GET https://market-lens-scanner-fb63.onrender.com/agent/trigger-scan?secret=<MARKET_LENS_AGENT_CRON_SECRET>&compact=1
 Timezone: America/New_York
 Schedule: every 5 minutes, all days
 ```
@@ -598,10 +598,13 @@ debugging.
 Recommended cron-job.org monitor request:
 
 ```text
-GET https://market-lens-scanner-fb63.onrender.com/agent/monitor-live?secret=<MARKET_LENS_MONITOR_CRON_SECRET>
+GET https://market-lens-scanner-fb63.onrender.com/agent/monitor-live?secret=<MARKET_LENS_MONITOR_CRON_SECRET>&compact=1
 Timezone: America/New_York
 Schedule: every 1 minute, Monday-Friday, 09:35-16:05
 ```
+
+The `compact=1` query parameter keeps cron-job.org responses intentionally
+small so successful skip/no-op checks are not disabled as "output too large".
 
 The cloud monitor uses `MARKET_LENS_MONITOR_SAVE_NOOP=true` so the public
 `/agent` dashboard keeps open-position prices, exposure, and unrealized P/L
