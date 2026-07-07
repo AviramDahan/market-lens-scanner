@@ -199,6 +199,10 @@ the scanner does not grow without bound during active days. If a transient
 Render/yfinance error such as 502/503/504 occurs, the agent retries and can
 split the failed batch into smaller chunks.
 
+If the deployed `/smart-universe` endpoint is temporarily unavailable, the
+agent falls back to the curated sector universe instead of timing out in the UI
+select-all flow.
+
 The broad source universe is assembled from:
 
 - S&P 500

@@ -466,19 +466,20 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
 
 def local_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
     safe_limit = max(35, min(300, limit))
-    max_per_sector = int(os.getenv("MARKET_LENS_AGENT_MAX_PER_SECTOR", "10"))
-    try:
-        payload = build_smart_universe(
-            analysis_period=settings.analysis_period,
-            limit=safe_limit,
-            max_per_sector=max_per_sector,
-        )
-        tickers = tickers_from_smart_payload(payload)
-        if tickers:
-            log(f"Local Smart Universe fallback produced {len(tickers)} tickers.")
-            return tickers
-    except Exception as exc:
-        log(f"Local Smart Universe fallback failed: {exc}")
+    if env_bool("MARKET_LENS_AGENT_LOCAL_SMART_FALLBACK", False):
+        max_per_sector = int(os.getenv("MARKET_LENS_AGENT_MAX_PER_SECTOR", "10"))
+        try:
+            payload = build_smart_universe(
+                analysis_period=settings.analysis_period,
+                limit=safe_limit,
+                max_per_sector=max_per_sector,
+            )
+            tickers = tickers_from_smart_payload(payload)
+            if tickers:
+                log(f"Local Smart Universe fallback produced {len(tickers)} tickers.")
+                return tickers
+        except Exception as exc:
+            log(f"Local Smart Universe fallback failed: {exc}")
 
     fallback = unique_tickers(list(curated_universe().keys()))[:safe_limit]
     if fallback:
