@@ -11,6 +11,7 @@ from agent.market_lens_ui_agent import (
     decide,
     fetch_smart_universe_tickers,
     is_auth_failure,
+    limited_carry_forward_tickers,
     parse_result,
     select_chart_tickers,
 )
@@ -143,6 +144,17 @@ def test_smart_universe_fetch_prefers_full_companies_payload(monkeypatch) -> Non
 
     assert selected[:3] == ["C1", "C2", "C3"]
     assert "C120" in selected
+
+
+def test_carry_forward_limit_keeps_open_positions_and_caps_watch(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT", "4")
+
+    selected = limited_carry_forward_tickers(
+        open_tickers=["OPEN1", "OPEN2"],
+        watch_tickers=["WATCH1", "WATCH2", "WATCH3", "WATCH4"],
+    )
+
+    assert selected == ["OPEN1", "OPEN2", "WATCH1", "WATCH2"]
 
 
 def chart_candidate(

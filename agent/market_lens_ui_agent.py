@@ -302,7 +302,7 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
     open_tickers = read_open_position_tickers(settings.excel_path)
     watch_tickers = read_recent_watch_tickers(settings.excel_path)
-    carry_forward_tickers = unique_tickers(open_tickers + watch_tickers)
+    carry_forward_tickers = limited_carry_forward_tickers(open_tickers, watch_tickers)
     skipped_tickers = read_recent_skip_tickers(settings.excel_path)
     if carry_forward_tickers:
         log(
@@ -338,6 +338,24 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
         page.locator('[data-testid="manual-ticker-input"]').fill(" ".join(carry_forward_tickers))
         page.locator('[data-testid="add-manual-ticker"]').click()
     return current_scan_basket(page)
+
+
+def limited_carry_forward_tickers(open_tickers: list[str], watch_tickers: list[str]) -> list[str]:
+    open_unique = unique_tickers(open_tickers)
+    watch_unique = [ticker for ticker in unique_tickers(watch_tickers) if ticker not in open_unique]
+    limit = int(os.getenv("MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT", "30"))
+    if limit <= 0:
+        return unique_tickers(open_unique + watch_unique)
+
+    remaining = max(0, limit - len(open_unique))
+    selected_watch = watch_unique[:remaining]
+    dropped = len(watch_unique) - len(selected_watch)
+    if dropped > 0:
+        log(
+            "Carry-forward WATCH tickers limited to protect scan stability: "
+            f"kept {len(selected_watch)} and deferred {dropped}."
+        )
+    return unique_tickers(open_unique + selected_watch)
 
 
 def set_scan_basket(page: Page, tickers: list[str]) -> None:
@@ -503,11 +521,34 @@ def run_scan_batches(page: Page, tickers: list[str], deadline: float) -> list[Se
     for index, batch in enumerate(batches, start=1):
         log(f"Running UI scan batch {index}/{len(batches)} ({len(batch)} tickers): {' '.join(batch)}")
         set_scan_basket(page, batch)
-        batch_results = run_scan(page, deadline)
+        batch_results = run_scan_batch_resilient(page, batch, deadline)
         log(f"Batch {index}/{len(batches)} completed: {len(batch_results)} result cards")
         for result in batch_results:
             combined[result.ticker] = result
     return list(combined.values())
+
+
+def run_scan_batch_resilient(page: Page, batch: list[str], deadline: float) -> list[SetupResult]:
+    try:
+        return run_scan(page, deadline)
+    except RuntimeError as exc:
+        message = str(exc)
+        min_split_size = max(2, int(os.getenv("MARKET_LENS_AGENT_MIN_SPLIT_BATCH_SIZE", "6")))
+        if len(batch) <= min_split_size or not is_transient_scan_error(message):
+            raise
+
+        midpoint = max(1, len(batch) // 2)
+        parts = [batch[:midpoint], batch[midpoint:]]
+        log(
+            "Transient scan error; splitting batch into smaller retries: "
+            f"{message}; parts={len(parts)} size={len(parts[0])}/{len(parts[1])}."
+        )
+        results: dict[str, SetupResult] = {}
+        for part in parts:
+            set_scan_basket(page, part)
+            for result in run_scan_batch_resilient(page, part, deadline):
+                results[result.ticker] = result
+        return list(results.values())
 
 
 def chunked(items: list[str], size: int) -> list[list[str]]:

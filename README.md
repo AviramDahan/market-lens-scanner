@@ -182,8 +182,9 @@ Default cloud scan configuration:
 - `MARKET_LENS_AGENT_UNIVERSE_POOL=100`
 - `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=300`
 - `MARKET_LENS_AGENT_MAX_PER_SECTOR=15`
-- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=20`
+- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=15`
 - `MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK=true`
+- `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT=30`
 - `MARKET_LENS_WATCH_CARRY_FORWARD_DAYS=14`
 - `MARKET_LENS_SKIP_COOLDOWN_HOURS=8`
 
@@ -192,6 +193,11 @@ Recent `SKIP` tickers are excluded first, but the agent can use them as a
 fallback when the fresh candidate pool is too small. This keeps the scan near
 the configured target count instead of shrinking to a small basket after several
 runs in the same day.
+
+The carry-forward list is capped by `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT` so
+the scanner does not grow without bound during active days. If a transient
+Render/yfinance error such as 502/503/504 occurs, the agent retries and can
+split the failed batch into smaller chunks.
 
 The broad source universe is assembled from:
 
