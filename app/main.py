@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard, with_position_calculations
@@ -222,29 +222,30 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
 async def monitor_live_positions(
     x_monitor_secret: str | None = Header(default=None, alias="X-Market-Lens-Cron-Secret"),
     secret: str | None = Query(default=None, max_length=160),
-) -> dict:
+    compact: bool = Query(default=False),
+):
     protection = validate_monitor_cron_secret(x_monitor_secret, secret)
     trigger_configured = monitor_trigger_configured()
     dashboard = build_agent_dashboard(PROJECT_ROOT)
     if dashboard.get("status") != "ok":
-        return {
+        return compact_cron_response({
             "status": "skipped",
             "triggered": False,
             "trigger_configured": trigger_configured,
             "protected": protection["protected"],
             "reason": "Agent dashboard data unavailable.",
-        }
+        }, compact)
 
     positions = dashboard.get("open_positions", [])
     if not positions:
-        return {
+        return compact_cron_response({
             "status": "skipped",
             "triggered": False,
             "trigger_configured": trigger_configured,
             "protected": protection["protected"],
             "open_positions": 0,
             "reason": "No open positions to monitor.",
-        }
+        }, compact)
 
     checked = []
     detected_events = []
@@ -286,7 +287,7 @@ async def monitor_live_positions(
             dispatchable_event = event
 
     if not detected_events:
-        return {
+        return compact_cron_response({
             "status": "ok",
             "triggered": False,
             "trigger_configured": trigger_configured,
@@ -296,10 +297,10 @@ async def monitor_live_positions(
             "checked": checked,
             "warnings": warnings,
             "reason": "No open position touched stop loss or targets.",
-        }
+        }, compact)
 
     if not trigger_configured:
-        return {
+        return compact_cron_response({
             "status": "not_configured",
             "triggered": False,
             "trigger_configured": False,
@@ -309,10 +310,10 @@ async def monitor_live_positions(
             "detected_events": detected_events,
             "warnings": warnings,
             "reason": "GitHub monitor trigger token is not configured on the server.",
-        }
+        }, compact)
 
     if dispatchable_event is None:
-        return {
+        return compact_cron_response({
             "status": "rate_limited",
             "triggered": False,
             "trigger_configured": True,
@@ -323,14 +324,14 @@ async def monitor_live_positions(
             "rate_limited": rate_limited,
             "warnings": warnings,
             "reason": "Monitor trigger cooldown is active.",
-        }
+        }, compact)
 
     try:
         dispatch = await dispatch_position_monitor(dispatchable_event, source="agent-server-live-monitor")
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    return {
+    return compact_cron_response({
         "status": "triggered",
         "triggered": True,
         "trigger_configured": True,
@@ -342,7 +343,7 @@ async def monitor_live_positions(
         "warnings": warnings,
         "reason": dispatchable_event.reason,
         "dispatch": compact_dispatch_payload(dispatch),
-    }
+    }, compact)
 
 
 @app.get("/agent/trigger-scan")
@@ -351,7 +352,8 @@ async def trigger_agent_scan(
     x_cron_secret: str | None = Header(default=None, alias="X-Market-Lens-Cron-Secret"),
     secret: str | None = Query(default=None, max_length=160),
     force: bool = Query(default=False),
-) -> dict:
+    compact: bool = Query(default=False),
+):
     protection = validate_agent_cron_secret(x_cron_secret, secret)
     force_applied = force and trigger_scan_force_enabled()
     decision = scan_schedule_decision(force=force_applied)
@@ -371,25 +373,25 @@ async def trigger_agent_scan(
     }
 
     if not decision.should_run:
-        return {
+        return compact_cron_response({
             **base_payload,
             "status": "skipped",
             "reason": decision.reason,
-        }
+        }, compact)
 
     if not force_applied and scan_already_dispatched(decision.scan_key):
-        return {
+        return compact_cron_response({
             **base_payload,
             "status": "skipped",
             "reason": "This scan slot was already dispatched by the server.",
-        }
+        }, compact)
 
     if not trigger_configured:
-        return {
+        return compact_cron_response({
             **base_payload,
             "status": "not_configured",
             "reason": "GitHub agent trigger token is not configured on the server.",
-        }
+        }, compact)
 
     try:
         dispatch = await dispatch_agent_scan(source="agent-server-scan-scheduler")
@@ -397,13 +399,13 @@ async def trigger_agent_scan(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     mark_scan_dispatched(decision.scan_key)
-    return {
+    return compact_cron_response({
         **base_payload,
         "status": "triggered",
         "triggered": True,
         "reason": decision.reason,
         "dispatch": compact_dispatch_payload(dispatch),
-    }
+    }, compact)
 
 
 def validate_monitor_cron_secret(header_secret: str | None, query_secret: str | None) -> dict:
@@ -479,6 +481,15 @@ def compact_dispatch_payload(dispatch: dict | None) -> dict:
         return {}
     allowed = ("github_status", "workflow", "ref", "repo", "source")
     return {key: dispatch[key] for key in allowed if key in dispatch}
+
+
+def compact_cron_response(payload: dict, compact: bool) -> dict | PlainTextResponse:
+    if not compact:
+        return payload
+    status = str(payload.get("status") or "ok").replace("\n", " ")[:40]
+    triggered = "true" if payload.get("triggered") else "false"
+    reason = str(payload.get("reason") or "").replace("\n", " ")[:180]
+    return PlainTextResponse(f"status={status};triggered={triggered};reason={reason}\n")
 
 
 def trigger_scan_force_enabled() -> bool:
