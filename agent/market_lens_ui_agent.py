@@ -21,7 +21,7 @@ from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.performance_summary import write_performance_summaries
 from app.scanner import scan_ticker_detail
 from app.shadow_strategies import evaluate_shadow_strategies
-from app.smart_universe import base_universe, build_sector_health
+from app.smart_universe import base_universe, build_sector_health, build_smart_universe, curated_universe
 from app.strategy import StrategyDecision as Decision
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 from app.telegram_notifications import (
@@ -449,9 +449,11 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
                 "Smart Universe API fetch failed for expanded pool "
                 f"({limit}); retrying compatibility limit 100: {exc}"
             )
-            return fetch_smart_universe_tickers(settings, 100)
-        log(f"Smart Universe API fetch failed: {exc}")
-        return []
+            compatibility = fetch_smart_universe_tickers(settings, 100)
+            if compatibility:
+                return compatibility
+        log(f"Smart Universe API fetch failed; using local fallback: {exc}")
+        return local_smart_universe_tickers(settings, limit)
 
     ranked = (payload.get("companies") or []) + (payload.get("ranked") or [])
     tickers: list[str] = []
@@ -460,6 +462,32 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
         if ticker:
             tickers.append(str(ticker).upper().strip())
     return unique_tickers(tickers)
+
+
+def local_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
+    safe_limit = max(35, min(300, limit))
+    max_per_sector = int(os.getenv("MARKET_LENS_AGENT_MAX_PER_SECTOR", "10"))
+    try:
+        payload = build_smart_universe(
+            analysis_period=settings.analysis_period,
+            limit=safe_limit,
+            max_per_sector=max_per_sector,
+        )
+        tickers = tickers_from_smart_payload(payload)
+        if tickers:
+            log(f"Local Smart Universe fallback produced {len(tickers)} tickers.")
+            return tickers
+    except Exception as exc:
+        log(f"Local Smart Universe fallback failed: {exc}")
+
+    fallback = unique_tickers(list(curated_universe().keys()))[:safe_limit]
+    if fallback:
+        log(f"Curated universe fallback produced {len(fallback)} tickers.")
+    return fallback
+
+
+def tickers_from_smart_payload(payload: dict[str, Any]) -> list[str]:
+    return tickers_from_smart_payload(payload)
 
 
 def run_scan(page: Page, deadline: float) -> list[SetupResult]:

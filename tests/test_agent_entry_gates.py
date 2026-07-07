@@ -146,6 +146,21 @@ def test_smart_universe_fetch_prefers_full_companies_payload(monkeypatch) -> Non
     assert "C120" in selected
 
 
+def test_smart_universe_fetch_uses_local_fallback_on_api_error(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "agent.market_lens_ui_agent.urlopen",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("502")),
+    )
+    monkeypatch.setattr(
+        "agent.market_lens_ui_agent.local_smart_universe_tickers",
+        lambda _settings, limit: [f"LOCAL{limit}"],
+    )
+
+    settings = SimpleNamespace(url="https://example.test", analysis_period="6mo")
+
+    assert fetch_smart_universe_tickers(settings, 50) == ["LOCAL50"]
+
+
 def test_carry_forward_limit_keeps_open_positions_and_caps_watch(monkeypatch) -> None:
     monkeypatch.setenv("MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT", "4")
 
