@@ -236,6 +236,72 @@ def build_smart_universe(
     return payload
 
 
+def build_curated_universe_fallback(
+    *,
+    analysis_period: str = "6mo",
+    limit: int = DEFAULT_LIMIT,
+    max_per_sector: int = DEFAULT_MAX_PER_SECTOR,
+    reason: str = "Smart Universe calculation was unavailable.",
+) -> dict[str, Any]:
+    limit = max(5, min(300, int(limit)))
+    max_per_sector = max(1, min(20, int(max_per_sector)))
+    source = curated_source_universe()
+    selected: list[dict[str, Any]] = []
+    counts: dict[str, int] = {}
+    for ticker, item in source.items():
+        sector = item.get("sector", "")
+        if counts.get(sector, 0) >= max_per_sector:
+            continue
+        selected.append(
+            {
+                "ticker": ticker,
+                "name": item.get("name", ticker),
+                "sector": sector,
+                "score": 0,
+                "price": 0,
+                "avg_dollar_volume": 0,
+                "atr_pct": 0,
+                "return_1m": 0,
+                "return_3m": 0,
+                "return_6m": 0,
+                "relative_strength": 0,
+                "trend_score": 0,
+                "sector_health_score": 0,
+                "sector_health_label": "Fallback",
+                "reason": reason,
+            }
+        )
+        counts[sector] = counts.get(sector, 0) + 1
+        if len(selected) >= limit:
+            break
+
+    return {
+        "id": "smart-universe",
+        "name": "Smart Universe",
+        "description": "Curated fallback returned because the full Smart Universe calculation was unavailable.",
+        "analysis_period": analysis_period,
+        "limit": limit,
+        "max_per_sector": max_per_sector,
+        "source": "curated-fallback",
+        "source_name": "curated fallback",
+        "source_url": "",
+        "source_urls": [],
+        "source_parts": ["dropdown sector lists"],
+        "base_count": len(source),
+        "scored_base_count": 0,
+        "eligible_count": len(selected),
+        "count": len(selected),
+        "tickers": [item["ticker"] for item in selected],
+        "companies": selected,
+        "ranked": selected,
+        "sector_counts": dict(sorted(counts.items())),
+        "sector_health": {},
+        "errors": {"fallback": reason},
+        "generated_at": int(time.time()),
+        "fallback": True,
+    }
+
+
 def base_universe() -> dict[str, str]:
     source = external_source_universe() if DEFAULT_SOURCE in {"broad", "sp500", "external"} else {}
     if source:

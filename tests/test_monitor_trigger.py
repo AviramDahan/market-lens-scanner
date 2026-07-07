@@ -379,6 +379,22 @@ def test_scan_schedule_times_can_be_overridden_by_env(monkeypatch) -> None:
     assert outside.should_run is False
 
 
+def test_smart_universe_endpoint_returns_fallback_on_error(monkeypatch) -> None:
+    def broken_smart_universe(**_kwargs):
+        raise RuntimeError("source unavailable")
+
+    monkeypatch.setattr(main, "build_smart_universe", broken_smart_universe)
+
+    client = TestClient(main.app)
+    response = client.get("/smart-universe?limit=10&max_per_sector=3&analysis_period=6mo")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["fallback"] is True
+    assert payload["count"] > 0
+    assert payload["companies"]
+
+
 def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)

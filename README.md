@@ -203,6 +203,11 @@ If the deployed `/smart-universe` endpoint is temporarily unavailable, the
 agent falls back to the curated sector universe instead of timing out in the UI
 select-all flow.
 
+The public `/smart-universe` endpoint also has a bounded timeout
+(`MARKET_LENS_SMART_UNIVERSE_TIMEOUT_SECONDS`, default `25`). If the full broad
+universe calculation is too slow for the host, the endpoint returns a curated
+fallback payload instead of a 502.
+
 The broad source universe is assembled from:
 
 - S&P 500

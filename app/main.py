@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -27,7 +28,7 @@ from app.scan_trigger import (
     scan_schedule_decision,
     scan_trigger_configured,
 )
-from app.smart_universe import build_smart_universe
+from app.smart_universe import build_curated_universe_fallback, build_smart_universe
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
 from app.strategy import apply_strategy_decisions
 from app.watchlists import list_watchlists
@@ -664,11 +665,24 @@ async def get_smart_universe(
     max_per_sector: int = Query(default=5, ge=1, le=20),
     analysis_period: str = Query(default="6mo", pattern="^(3mo|6mo|1y|2y)$"),
 ) -> dict:
-    return build_smart_universe(
-        analysis_period=analysis_period,
-        limit=limit,
-        max_per_sector=max_per_sector,
-    )
+    timeout_seconds = float(os.getenv("MARKET_LENS_SMART_UNIVERSE_TIMEOUT_SECONDS", "25"))
+    try:
+        return await asyncio.wait_for(
+            asyncio.to_thread(
+                build_smart_universe,
+                analysis_period=analysis_period,
+                limit=limit,
+                max_per_sector=max_per_sector,
+            ),
+            timeout=timeout_seconds,
+        )
+    except Exception as exc:
+        return build_curated_universe_fallback(
+            analysis_period=analysis_period,
+            limit=limit,
+            max_per_sector=max_per_sector,
+            reason=f"Smart Universe fallback used: {type(exc).__name__}",
+        )
 
 
 @app.get("/health")
