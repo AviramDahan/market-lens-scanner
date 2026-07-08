@@ -23,6 +23,7 @@ from app.agent_risk import (
     buy_blockers,
     calculate_entry_confirmation,
     cooldown_check,
+    evaluate_agent_candidate,
     market_session_status,
     validate_targets,
 )
@@ -336,6 +337,174 @@ def test_stop_loss_cooldown_blocks_reentry() -> None:
     assert "Stop-loss cooldown active" in reasons(blockers_for(cooldown_active=True))
 
 
+def _net_rr_payload(net_rr: float = 2.05) -> dict[str, object]:
+    return {
+        "gross_rr": 2.40,
+        "gross_rr_1": 1.80,
+        "gross_rr_2": 4.80,
+        "gross_rr_decision": 2.40,
+        "theoretical_entry": 100.0,
+        "executable_entry": 100.0,
+        "gross_risk_per_share": 5.0,
+        "gross_reward_1_per_share": 9.0,
+        "gross_reward_2_per_share": 24.0,
+        "estimated_spread": 0.05,
+        "estimated_slippage": 0.10,
+        "estimated_fees": 0.0,
+        "spread_source": "test",
+        "execution_liquidity_bucket": "large_liquid",
+        "net_entry": 100.1,
+        "net_stop_assumption": 94.9,
+        "net_target_1_assumption": 109.0,
+        "net_target_2_assumption": 124.0,
+        "net_risk_per_share": 5.2,
+        "net_reward_1_per_share": 8.9,
+        "net_reward_2_per_share": 23.9,
+        "net_rr_1": 1.71,
+        "net_rr_2": 4.59,
+        "net_rr": net_rr,
+        "warnings": [],
+    }
+
+
+def _patch_risk_dependencies(monkeypatch, *, net_rr: float = 2.05, confirmation_passed: bool = True) -> None:
+    monkeypatch.setattr(
+        "app.agent_risk.build_candidate_snapshot",
+        lambda ticker, price, config: CandidateMarketSnapshot(
+            ticker=ticker,
+            price=price,
+            atr=2.0,
+            atr_pct=2.0,
+            avg_dollar_volume=600_000_000,
+            market_cap=50_000_000_000,
+            market_cap_bucket="Large Cap",
+            normalized_momentum_score=80,
+            normalized_atr_score=70,
+            normalized_liquidity_score=85,
+        ),
+    )
+    monkeypatch.setattr("app.agent_risk.calculate_net_rr", lambda result, snapshot, config: _net_rr_payload(net_rr))
+    monkeypatch.setattr(
+        "app.agent_risk.calculate_earnings_blackout",
+        lambda ticker, config: {
+            "earnings_date": "",
+            "days_to_earnings": None,
+            "earnings_blackout": False,
+            "warnings": [],
+        },
+    )
+    monkeypatch.setattr(
+        "app.agent_risk.validate_targets",
+        lambda result, snapshot, config: {
+            "target_1_atr_distance": 2.0,
+            "target_2_atr_distance": 4.0,
+            "status": "OK",
+            "market_structure_status": "OK",
+            "previous_resistance": 0.0,
+            "prior_high_20": 0.0,
+            "prior_high_63": 0.0,
+            "warnings": [],
+        },
+    )
+    monkeypatch.setattr(
+        "app.agent_risk.calculate_entry_confirmation",
+        lambda result, snapshot, config: {
+            "confirmation_status": "PASSED" if confirmation_passed else "FAILED",
+            "confirmation_reason": "test confirmation",
+            "trigger_level": 100.0,
+            "close_above_trigger": confirmation_passed,
+            "vwap_reclaimed": False,
+            "retest_held": confirmation_passed,
+            "entry_confirmation_passed": confirmation_passed,
+            "confirmation_timeframe": "30m_completed",
+            "confirmation_candle_timestamp": "2026-07-08T10:30:00-04:00",
+            "confirmation_window_used": 1,
+            "warnings": [] if confirmation_passed else ["test confirmation failed"],
+        },
+    )
+    monkeypatch.setattr(
+        "app.agent_risk.market_session_status",
+        lambda allow_off_hours_buys=False: {
+            "phase": "REGULAR",
+            "timestamp": "2026-07-08T10:30-04:00",
+            "can_open_new_buy": True,
+            "regular_session_open": True,
+            "reason": "Regular market session is open.",
+        },
+    )
+    monkeypatch.setattr(
+        "app.agent_risk.correlation_check",
+        lambda **kwargs: {
+            "correlation_warning": False,
+            "highest_correlation_ticker": "",
+            "highest_correlation_value": None,
+            "warnings": [],
+        },
+    )
+
+
+def test_neutral_pilot_can_buy_half_size_when_only_strict_neutral_score_blocks(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.05, confirmation_passed=True)
+    run_context = context("NEUTRAL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test strong sector"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T10:30:00",
+        result=result(score=0.49),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=100_000,
+        portfolio_exposure_before=0,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+        neutral_pilot_trades_today=0,
+    )
+
+    assert decision["final_action"] == "BUY_SIMULATED"
+    assert decision["entry_mode"] == "neutral_pilot"
+    assert decision["position_size"] == 50
+    assert decision["adjusted_cash_out"] == 5_000
+    assert decision["minimum_setup_score_required"] == 0.45
+    assert decision["minimum_net_rr_required"] == 2.0
+
+
+def test_neutral_pilot_daily_limit_blocks_second_pilot_trade(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.05, confirmation_passed=True)
+    run_context = context("NEUTRAL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test strong sector"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T10:30:00",
+        result=result(score=0.49),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=100_000,
+        portfolio_exposure_before=0,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+        neutral_pilot_trades_today=1,
+    )
+
+    assert decision["final_action"] == "WATCH"
+    assert decision["entry_mode"] == "standard"
+    assert decision["position_size"] == 0
+    assert "daily limit reached" in " ".join(decision["warnings"])
+
+
 def test_auth_failure_is_classified_without_fake_scan() -> None:
     assert is_auth_failure("Login did not complete. Status: Auth not configured.")
 
@@ -473,6 +642,63 @@ def test_fib_entry_confirmation_accepts_clear_zone_reclaim() -> None:
 
     assert confirmation["entry_confirmation_passed"] is True
     assert "buy zone" in confirmation["confirmation_reason"]
+
+
+def test_entry_confirmation_uses_recent_completed_window_when_latest_stays_relevant() -> None:
+    intraday = pd.DataFrame(
+        [
+            {"Open": 97.0, "High": 99.0, "Low": 96.0, "Close": 98.0, "Volume": 1000},
+            {"Open": 98.5, "High": 100.8, "Low": 98.3, "Close": 100.3, "Volume": 1400},
+            {"Open": 100.5, "High": 100.6, "Low": 99.2, "Close": 99.4, "Volume": 1200},
+            {"Open": 90.0, "High": 91.0, "Low": 89.0, "Close": 89.5, "Volume": 2000},
+        ],
+        index=pd.to_datetime(
+            [
+                "2026-01-03 10:00:00-05:00",
+                "2026-01-03 10:30:00-05:00",
+                "2026-01-03 11:00:00-05:00",
+                "2026-01-03 11:30:00-05:00",
+            ]
+        ),
+    )
+
+    confirmation = calculate_entry_confirmation(
+        result(setup_type="Fib 61.8 Confluence Buy Zone"),
+        CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
+        config(),
+    )
+
+    assert confirmation["entry_confirmation_passed"] is True
+    assert confirmation["confirmation_window_used"] == 2
+    assert "10:30:00" in confirmation["confirmation_candle_timestamp"]
+
+
+def test_entry_confirmation_window_rejects_stale_confirmation_after_zone_break() -> None:
+    intraday = pd.DataFrame(
+        [
+            {"Open": 97.0, "High": 99.0, "Low": 96.0, "Close": 98.0, "Volume": 1000},
+            {"Open": 98.5, "High": 100.8, "Low": 98.3, "Close": 100.3, "Volume": 1400},
+            {"Open": 100.5, "High": 100.6, "Low": 96.8, "Close": 97.4, "Volume": 1200},
+            {"Open": 90.0, "High": 91.0, "Low": 89.0, "Close": 89.5, "Volume": 2000},
+        ],
+        index=pd.to_datetime(
+            [
+                "2026-01-03 10:00:00-05:00",
+                "2026-01-03 10:30:00-05:00",
+                "2026-01-03 11:00:00-05:00",
+                "2026-01-03 11:30:00-05:00",
+            ]
+        ),
+    )
+
+    confirmation = calculate_entry_confirmation(
+        result(setup_type="Fib 61.8 Confluence Buy Zone"),
+        CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
+        config(),
+    )
+
+    assert confirmation["entry_confirmation_passed"] is False
+    assert "last 2 candles" in " ".join(confirmation["warnings"])
 
 
 def test_target1_atr_distance_uses_configured_threshold() -> None:

@@ -795,6 +795,7 @@ def update_workbook(
     )
     sector_health = run_context.sector_health or build_sector_health(settings.analysis_period)
     recent_stop_events = read_recent_stop_events(wb, run_context.config.stop_cooldown_days)
+    neutral_pilot_buys_today = count_neutral_pilot_buys_today(wb)
 
     open_positions = read_open_positions(wb)
     cash = compute_cash(wb, starting_capital)
@@ -834,6 +835,7 @@ def update_workbook(
             sector_map=sector_map,
             run_context=run_context,
             recent_stop_events=recent_stop_events,
+            neutral_pilot_trades_today=neutral_pilot_buys_today,
         )
         decision_json["scan_source"] = scan_source_text(settings)
         final_action = str(decision_json.get("final_action") or decision.action)
@@ -865,6 +867,8 @@ def update_workbook(
         if decision.action == "BUY_SIMULATED":
             open_positions[result.ticker] = position_from_buy(result, decision, currency_rate, timestamp, screenshot_path)
             new_buy_tickers.add(result.ticker)
+            if decision_json.get("entry_mode") == "neutral_pilot":
+                neutral_pilot_buys_today += 1
             cash -= decision.cash_out_ils
             exposure += decision.cash_out_ils
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
@@ -1257,6 +1261,23 @@ def read_recent_stop_events(wb: Any, cooldown_days: int) -> dict[str, dict[str, 
             "days_remaining": max(0, cooldown_days - elapsed),
         }
     return events
+
+
+def count_neutral_pilot_buys_today(wb: Any) -> int:
+    if "Trade Log" not in wb.sheetnames:
+        return 0
+    ws = wb["Trade Log"]
+    today = datetime.now().date()
+    count = 0
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        timestamp = parse_agent_timestamp(row[0] if row else None)
+        action = str(row[1] or "").upper().strip() if len(row) > 1 else ""
+        if timestamp is None or timestamp.date() != today or action != "BUY_SIMULATED":
+            continue
+        decision_json = parse_json_cell(row[19] if len(row) > 19 else "")
+        if decision_json.get("entry_mode") == "neutral_pilot":
+            count += 1
+    return count
 
 
 def business_days_between(start: datetime, end: datetime) -> int:

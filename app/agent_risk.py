@@ -66,6 +66,12 @@ class AgentRiskConfig:
     entry_confirmation_intraday_enabled: bool = True
     entry_confirmation_intraday_interval: str = "30m"
     entry_confirmation_intraday_period: str = "5d"
+    entry_confirmation_lookback_candles: int = 3
+    neutral_pilot_enabled: bool = True
+    neutral_pilot_min_setup_score: float = 0.45
+    neutral_pilot_min_net_rr: float = 2.0
+    neutral_pilot_position_pct: float = 0.50
+    neutral_pilot_max_trades_per_day: int = 1
     stop_cooldown_days: int = 3
     cooldown_exception_setup_score: float = 0.60
     cooldown_exception_net_rr1: float = 1.20
@@ -84,6 +90,9 @@ class AgentRiskConfig:
         if total_rr_weight <= 0:
             self.primary_rr_weight = 0.80
             self.stretch_rr_weight = 0.20
+        self.entry_confirmation_lookback_candles = max(1, int(self.entry_confirmation_lookback_candles or 1))
+        self.neutral_pilot_position_pct = min(max(float(self.neutral_pilot_position_pct or 0.0), 0.0), 1.0)
+        self.neutral_pilot_max_trades_per_day = max(0, int(self.neutral_pilot_max_trades_per_day or 0))
 
 
 @dataclass
@@ -143,6 +152,15 @@ def build_agent_run_context(
         in {"1", "true", "yes"},
         entry_confirmation_intraday_interval=os.getenv("MARKET_LENS_ENTRY_CONFIRMATION_INTRADAY_INTERVAL", "30m"),
         entry_confirmation_intraday_period=os.getenv("MARKET_LENS_ENTRY_CONFIRMATION_INTRADAY_PERIOD", "5d"),
+        entry_confirmation_lookback_candles=int(
+            os.getenv("MARKET_LENS_ENTRY_CONFIRMATION_LOOKBACK_CANDLES", "3")
+        ),
+        neutral_pilot_enabled=os.getenv("MARKET_LENS_NEUTRAL_PILOT_ENABLED", "true").lower()
+        in {"1", "true", "yes"},
+        neutral_pilot_min_setup_score=float(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MIN_SETUP_SCORE", "0.45")),
+        neutral_pilot_min_net_rr=float(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MIN_NET_RR", "2.0")),
+        neutral_pilot_position_pct=float(os.getenv("MARKET_LENS_NEUTRAL_PILOT_POSITION_PCT", "0.50")),
+        neutral_pilot_max_trades_per_day=int(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MAX_TRADES_PER_DAY", "1")),
         stop_cooldown_days=int(os.getenv("MARKET_LENS_STOP_COOLDOWN_DAYS", "3")),
         cooldown_exception_setup_score=float(
             os.getenv("MARKET_LENS_COOLDOWN_EXCEPTION_SETUP_SCORE", "0.60")
@@ -260,6 +278,7 @@ def evaluate_agent_candidate(
     sector_map: dict[str, str],
     run_context: AgentRunRiskContext,
     recent_stop_events: dict[str, dict[str, Any]] | None = None,
+    neutral_pilot_trades_today: int = 0,
 ) -> dict[str, Any]:
     config = run_context.config
     ticker = str(result.ticker).upper()
@@ -288,14 +307,44 @@ def evaluate_agent_candidate(
         ),
         2,
     )
+    neutral_pilot = neutral_pilot_status(
+        initial_action=initial_action,
+        result=result,
+        run_context=run_context,
+        sector_info=sector_info,
+        net_rr_info=net_rr_info,
+        earnings_info=earnings_info,
+        confirmation=confirmation,
+        market_session=market_session,
+        neutral_pilot_trades_today=neutral_pilot_trades_today,
+    )
+    sizing_quantity = quantity
+    sizing_cash_out = cash_out
+    sizing_risk_amount = risk_amount
+    pilot_sizing = neutral_pilot_position_scale(
+        quantity=quantity,
+        cash_out=cash_out,
+        risk_amount=risk_amount,
+        position_pct=1.0,
+    )
+    if neutral_pilot["eligible"]:
+        pilot_sizing = neutral_pilot_position_scale(
+            quantity=quantity,
+            cash_out=cash_out,
+            risk_amount=risk_amount,
+            position_pct=config.neutral_pilot_position_pct,
+        )
+        sizing_quantity = pilot_sizing["quantity"]
+        sizing_cash_out = pilot_sizing["cash_out"]
+        sizing_risk_amount = pilot_sizing["risk_amount"]
     sizing = adjust_candidate_position_size(
         ticker=ticker,
         sector=sector,
         factor_tags=factor_tags,
         initial_action=initial_action,
-        quantity=quantity,
-        cash_out=cash_out,
-        risk_amount=risk_amount,
+        quantity=sizing_quantity,
+        cash_out=sizing_cash_out,
+        risk_amount=sizing_risk_amount,
         cash_available=cash_available,
         portfolio_exposure_before=portfolio_exposure_before,
         open_positions=open_positions,
@@ -348,13 +397,22 @@ def evaluate_agent_candidate(
     warnings.extend(factor_exposure["warnings"])
     if sizing["adjusted"]:
         warnings.append(sizing["reason"])
+    if pilot_sizing["adjusted"]:
+        warnings.append(pilot_sizing["reason"])
+    warnings.extend(neutral_pilot["warnings"])
     if earnings_info["earnings_blackout"]:
         warnings.append("Earnings blackout active.")
 
     final_action = initial_action
     final_reason = initial_reason
     if initial_action == "BUY_SIMULATED":
-        minimum_net_rr = minimum_net_rr_for(run_context.market_regime, sector_info, config)
+        base_minimum_net_rr = minimum_net_rr_for(run_context.market_regime, sector_info, config)
+        minimum_net_rr = config.neutral_pilot_min_net_rr if neutral_pilot["eligible"] else base_minimum_net_rr
+        minimum_setup_score = (
+            config.neutral_pilot_min_setup_score
+            if neutral_pilot["eligible"]
+            else run_context.market_regime.min_setup_score
+        )
         blockers = buy_blockers(
             result=result,
             run_context=run_context,
@@ -371,6 +429,8 @@ def evaluate_agent_candidate(
             portfolio_exposure_after=portfolio_exposure_after_if_buy,
             sizing=sizing,
             minimum_net_rr=minimum_net_rr,
+            minimum_setup_score=minimum_setup_score,
+            entry_mode=neutral_pilot["entry_mode"],
             market_session=market_session,
         )
         if blockers:
@@ -378,11 +438,18 @@ def evaluate_agent_candidate(
             final_reason = blockers[0]["reason"]
             warnings.extend(blocker["reason"] for blocker in blockers[1:])
         else:
-            final_reason = (
-                f"BUY_SIMULATED: {run_context.market_regime.label} market regime, "
-                f"{sector_info['regime']} sector, valid setup, net R/R {net_rr_info['net_rr']:.2f}, "
-                "no earnings blackout, correlation acceptable, and risk limits allow entry."
-            )
+            if neutral_pilot["eligible"]:
+                final_reason = (
+                    f"BUY_SIMULATED: NEUTRAL_PILOT entry, STRONG sector, confirmation passed, "
+                    f"setup score {float(result.score or 0):.2f}, net R/R {net_rr_info['net_rr']:.2f}, "
+                    "pilot-sized position, no earnings blackout, correlation acceptable, and risk limits allow entry."
+                )
+            else:
+                final_reason = (
+                    f"BUY_SIMULATED: {run_context.market_regime.label} market regime, "
+                    f"{sector_info['regime']} sector, valid setup, net R/R {net_rr_info['net_rr']:.2f}, "
+                    "no earnings blackout, correlation acceptable, and risk limits allow entry."
+                )
             if sizing["adjusted"]:
                 final_reason += f" Position size reduced to {effective_quantity} shares to fit exposure caps."
     elif initial_action == "WATCH":
@@ -407,7 +474,17 @@ def evaluate_agent_candidate(
         "market_regime": run_context.market_regime.label,
         "market_regime_score": run_context.market_regime.score,
         "market_regime_reason": run_context.market_regime.reason,
-        "minimum_net_rr_required": minimum_net_rr_for(run_context.market_regime, sector_info, config),
+        "minimum_net_rr_required": (
+            config.neutral_pilot_min_net_rr
+            if neutral_pilot["eligible"]
+            else minimum_net_rr_for(run_context.market_regime, sector_info, config)
+        ),
+        "base_minimum_net_rr_required": minimum_net_rr_for(run_context.market_regime, sector_info, config),
+        "minimum_setup_score_required": (
+            config.neutral_pilot_min_setup_score
+            if neutral_pilot["eligible"]
+            else run_context.market_regime.min_setup_score
+        ),
         "market_regime_indicators": run_context.market_regime.indicators,
         "market_session_phase": market_session["phase"],
         "market_session_timestamp": market_session["timestamp"],
@@ -449,6 +526,18 @@ def evaluate_agent_candidate(
         "entry_confirmation_passed": confirmation["entry_confirmation_passed"],
         "confirmation_timeframe": confirmation["confirmation_timeframe"],
         "confirmation_candle_timestamp": confirmation["confirmation_candle_timestamp"],
+        "confirmation_lookback_candles": config.entry_confirmation_lookback_candles,
+        "confirmation_window_used": confirmation.get("confirmation_window_used", 1),
+        "entry_mode": neutral_pilot["entry_mode"],
+        "neutral_pilot_enabled": config.neutral_pilot_enabled,
+        "neutral_pilot_eligible": neutral_pilot["eligible"],
+        "neutral_pilot_reason": neutral_pilot["reason"],
+        "neutral_pilot_trades_today": neutral_pilot_trades_today,
+        "neutral_pilot_max_trades_per_day": config.neutral_pilot_max_trades_per_day,
+        "neutral_pilot_min_setup_score": config.neutral_pilot_min_setup_score,
+        "neutral_pilot_min_net_rr": config.neutral_pilot_min_net_rr,
+        "neutral_pilot_position_pct": config.neutral_pilot_position_pct,
+        "neutral_pilot_size_reduction_applied": pilot_sizing["adjusted"],
         "gross_rr": net_rr_info["gross_rr"],
         "gross_rr_1": net_rr_info["gross_rr_1"],
         "gross_rr_2": net_rr_info["gross_rr_2"],
@@ -501,6 +590,9 @@ def evaluate_agent_candidate(
         "original_position_size": quantity,
         "original_cash_out": round(cash_out, 2),
         "original_risk_amount": round(risk_amount, 2),
+        "pre_cap_position_size": sizing_quantity,
+        "pre_cap_cash_out": round(sizing_cash_out, 2),
+        "pre_cap_risk_amount": round(sizing_risk_amount, 2),
         "position_size_adjusted": sizing["adjusted"],
         "adjusted_position_size": effective_quantity,
         "adjusted_cash_out": round(effective_cash_out, 2),
@@ -525,6 +617,114 @@ def evaluate_agent_candidate(
     return decision
 
 
+def neutral_pilot_status(
+    *,
+    initial_action: str,
+    result: Any,
+    run_context: AgentRunRiskContext,
+    sector_info: dict[str, Any],
+    net_rr_info: dict[str, Any],
+    earnings_info: dict[str, Any],
+    confirmation: dict[str, Any],
+    market_session: dict[str, Any],
+    neutral_pilot_trades_today: int,
+) -> dict[str, Any]:
+    config = run_context.config
+    reasons: list[str] = []
+    warnings: list[str] = []
+    if not config.neutral_pilot_enabled:
+        reasons.append("Neutral pilot mode is disabled.")
+    if initial_action != "BUY_SIMULATED":
+        reasons.append("Base setup did not produce a candidate BUY before the risk layer.")
+    if run_context.market_regime.label != "NEUTRAL":
+        reasons.append("Neutral pilot only applies in a NEUTRAL market regime.")
+    if not market_session.get("regular_session_open"):
+        reasons.append("Neutral pilot only opens during the regular market session.")
+    if sector_info.get("regime") != "STRONG":
+        reasons.append("Neutral pilot requires a STRONG sector regime.")
+    if float(getattr(result, "score", 0) or 0) < config.neutral_pilot_min_setup_score:
+        reasons.append(
+            f"Setup score is below the neutral pilot floor "
+            f"({float(getattr(result, 'score', 0) or 0):.2f} < {config.neutral_pilot_min_setup_score:.2f})."
+        )
+    if float(net_rr_info.get("net_rr") or 0) < config.neutral_pilot_min_net_rr:
+        reasons.append(
+            f"Net R/R is below the neutral pilot floor "
+            f"({float(net_rr_info.get('net_rr') or 0):.2f} < {config.neutral_pilot_min_net_rr:.2f})."
+        )
+    if not confirmation.get("entry_confirmation_passed"):
+        reasons.append("Entry confirmation has not passed.")
+    if earnings_info.get("earnings_blackout"):
+        reasons.append("Earnings blackout is active.")
+    if (
+        config.neutral_pilot_max_trades_per_day > 0
+        and neutral_pilot_trades_today >= config.neutral_pilot_max_trades_per_day
+    ):
+        reasons.append(
+            f"Neutral pilot daily limit reached "
+            f"({neutral_pilot_trades_today}/{config.neutral_pilot_max_trades_per_day})."
+        )
+
+    eligible = not reasons
+    if eligible:
+        reason = (
+            "Neutral pilot eligible: regular session, STRONG sector, confirmation passed, "
+            f"setup score >= {config.neutral_pilot_min_setup_score:.2f}, "
+            f"net R/R >= {config.neutral_pilot_min_net_rr:.2f}."
+        )
+    else:
+        reason = " ".join(reasons)
+        if (
+            config.neutral_pilot_enabled
+            and initial_action == "BUY_SIMULATED"
+            and run_context.market_regime.label == "NEUTRAL"
+        ):
+            warnings.append(f"Neutral pilot not used: {reason}")
+    return {
+        "eligible": bool(eligible),
+        "entry_mode": "neutral_pilot" if eligible else "standard",
+        "reason": reason,
+        "warnings": warnings,
+    }
+
+
+def neutral_pilot_position_scale(
+    *,
+    quantity: int,
+    cash_out: float,
+    risk_amount: float,
+    position_pct: float,
+) -> dict[str, Any]:
+    position_pct = min(max(float(position_pct or 0.0), 0.0), 1.0)
+    original = {
+        "quantity": quantity,
+        "cash_out": cash_out,
+        "risk_amount": risk_amount,
+        "original_quantity": quantity,
+        "original_cash_out": cash_out,
+        "original_risk_amount": risk_amount,
+        "adjusted": False,
+        "reason": "",
+    }
+    if quantity <= 0 or cash_out <= 0 or position_pct >= 1.0:
+        return original
+    adjusted_quantity = max(1, math.floor(quantity * position_pct))
+    if adjusted_quantity >= quantity:
+        return original
+    scale = adjusted_quantity / quantity
+    return {
+        **original,
+        "quantity": adjusted_quantity,
+        "cash_out": round(cash_out * scale, 2),
+        "risk_amount": round(risk_amount * scale, 2),
+        "adjusted": True,
+        "reason": (
+            f"Neutral pilot position size reduced to {position_pct:.0%} "
+            f"({quantity} -> {adjusted_quantity} shares)."
+        ),
+    }
+
+
 def buy_blockers(
     *,
     result: Any,
@@ -542,6 +742,8 @@ def buy_blockers(
     portfolio_exposure_after: float,
     sizing: dict[str, Any],
     minimum_net_rr: float,
+    minimum_setup_score: float | None = None,
+    entry_mode: str = "standard",
     market_session: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
@@ -573,13 +775,15 @@ def buy_blockers(
                 ),
             }
         )
-    if regime.label in {"BULL", "NEUTRAL"} and float(result.score or 0) < regime.min_setup_score:
+    score_floor = regime.min_setup_score if minimum_setup_score is None else minimum_setup_score
+    if regime.label in {"BULL", "NEUTRAL"} and float(result.score or 0) < score_floor:
+        score_label = "NEUTRAL pilot" if entry_mode == "neutral_pilot" else f"{regime.label} market"
         blockers.append(
             {
                 "action": "WATCH",
                 "reason": (
-                    f"WATCH: {regime.label} market requires setup score "
-                    f"({float(result.score or 0):.2f} < {regime.min_setup_score:.2f})."
+                    f"WATCH: {score_label} requires setup score "
+                    f"({float(result.score or 0):.2f} < {score_floor:.2f})."
                 ),
             }
         )
@@ -1152,6 +1356,7 @@ def calculate_entry_confirmation(
             buy_high=float(buy_high),
             timeframe=f"{config.entry_confirmation_intraday_interval}_completed",
             drop_last=True,
+            lookback_candles=config.entry_confirmation_lookback_candles,
         )
         if intraday_confirmation["confirmation_status"] != "UNKNOWN":
             return intraday_confirmation
@@ -1170,6 +1375,7 @@ def calculate_entry_confirmation(
         buy_high=float(buy_high),
         timeframe="1d_completed",
         drop_last=True,
+        lookback_candles=config.entry_confirmation_lookback_candles,
     )
     if daily_confirmation.get("warnings") and base["warnings"]:
         daily_confirmation["warnings"] = [*base["warnings"], *daily_confirmation["warnings"]]
@@ -1184,6 +1390,7 @@ def calculate_entry_confirmation_from_frame(
     buy_high: float,
     timeframe: str,
     drop_last: bool,
+    lookback_candles: int = 1,
 ) -> dict[str, Any]:
     base = {
         "confirmation_status": "UNKNOWN",
@@ -1195,6 +1402,7 @@ def calculate_entry_confirmation_from_frame(
         "entry_confirmation_passed": False,
         "confirmation_timeframe": timeframe,
         "confirmation_candle_timestamp": "",
+        "confirmation_window_used": 1,
         "warnings": [],
     }
     if frame is None or frame.empty or len(frame) < 3:
@@ -1206,15 +1414,69 @@ def calculate_entry_confirmation_from_frame(
         base["warnings"] = [f"Not enough completed {timeframe} candles for entry confirmation."]
         return base
 
-    last = completed.iloc[-1]
-    prev = completed.iloc[-2]
+    window = max(1, min(int(lookback_candles or 1), len(completed) - 1))
+    attempts: list[dict[str, Any]] = []
+    for offset in range(1, window + 1):
+        last = completed.iloc[-offset]
+        prev = completed.iloc[-offset - 1]
+        attempt = entry_confirmation_from_candles(
+            result=result,
+            last=last,
+            prev=prev,
+            candle_time=completed.index[-offset],
+            buy_low=buy_low,
+            buy_high=buy_high,
+            timeframe=timeframe,
+            confirmation_window_used=offset,
+            vwap=rolling_vwap(completed.iloc[: len(completed) - offset + 1]),
+        )
+        attempts.append(attempt)
+        if not attempt["entry_confirmation_passed"]:
+            continue
+        if offset == 1 or latest_candle_keeps_setup_relevant(
+            latest=completed.iloc[-1],
+            buy_low=buy_low,
+            buy_high=buy_high,
+            setup_type=str(getattr(result, "setup_type", "") or ""),
+        ):
+            if offset > 1:
+                attempt["confirmation_reason"] += (
+                    f" Confirmation accepted from the last {offset} completed candles; "
+                    "the latest completed candle kept the setup relevant."
+                )
+            return attempt
+
+    failed = attempts[0] if attempts else base
+    if window > 1:
+        failed["confirmation_window_used"] = window
+        failed["warnings"] = unique_strings(
+            [
+                *failed.get("warnings", []),
+                f"No completed candle in the last {window} candles confirmed entry while the setup stayed relevant.",
+            ]
+        )
+    return failed
+
+
+def entry_confirmation_from_candles(
+    *,
+    result: Any,
+    last: pd.Series,
+    prev: pd.Series,
+    candle_time: Any,
+    buy_low: float,
+    buy_high: float,
+    timeframe: str,
+    confirmation_window_used: int,
+    vwap: float | None = None,
+) -> dict[str, Any]:
     close = float(last["Close"])
     open_ = float(last["Open"])
     low = float(last["Low"])
     high = float(last["High"])
     prev_close = float(prev["Close"])
     setup_type = str(getattr(result, "setup_type", "") or "").lower()
-    candle_time = completed.index[-1].isoformat() if hasattr(completed.index[-1], "isoformat") else str(completed.index[-1])
+    candle_timestamp = candle_time.isoformat() if hasattr(candle_time, "isoformat") else str(candle_time)
     bullish_or_reclaim = close >= open_ and close >= prev_close
     falling_into_zone = close < open_ and close < prev_close
 
@@ -1231,7 +1493,6 @@ def calculate_entry_confirmation_from_frame(
             else "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
         )
     elif "vwap" in setup_type:
-        vwap = rolling_vwap(completed)
         vwap_reclaimed = bool(vwap and close >= vwap and close >= open_ and close >= prev_close)
         trigger_level = float(vwap or trigger_level)
         close_above_trigger = bool(vwap and close >= vwap)
@@ -1276,9 +1537,31 @@ def calculate_entry_confirmation_from_frame(
         "retest_held": bool(retest_held),
         "entry_confirmation_passed": bool(passed),
         "confirmation_timeframe": timeframe,
-        "confirmation_candle_timestamp": candle_time,
+        "confirmation_candle_timestamp": candle_timestamp,
+        "confirmation_window_used": confirmation_window_used,
         "warnings": [] if passed else [reason],
     }
+
+
+def latest_candle_keeps_setup_relevant(
+    *,
+    latest: pd.Series,
+    buy_low: float,
+    buy_high: float,
+    setup_type: str,
+) -> bool:
+    close = float(latest["Close"])
+    open_ = float(latest["Open"])
+    low = float(latest["Low"])
+    high = float(latest["High"])
+    setup = setup_type.lower()
+    if close < buy_low:
+        return False
+    if "breakout" in setup:
+        return close >= buy_low and high >= buy_high
+    if "vwap" in setup:
+        return close >= buy_low and close >= open_
+    return high >= buy_low and close >= buy_low
 
 
 def rolling_vwap(frame: pd.DataFrame, lookback: int = 20) -> float | None:

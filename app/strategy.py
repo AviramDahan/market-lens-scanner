@@ -86,6 +86,7 @@ def apply_strategy_decisions(
     )
     sector_health = run_context.sector_health or build_sector_health(analysis_period)
     timestamp = datetime.now().isoformat(timespec="seconds")
+    neutral_pilot_trades_today = 0
 
     enriched = []
     running_cash = cash
@@ -120,6 +121,7 @@ def apply_strategy_decisions(
             sector_map=sector_map,
             run_context=run_context,
             recent_stop_events=recent_stop_events or {},
+            neutral_pilot_trades_today=neutral_pilot_trades_today,
         )
         final_action = str(decision_json.get("final_action") or decision.action)
         final_reason = str(decision_json.get("reason") or decision.feedback)
@@ -128,6 +130,8 @@ def apply_strategy_decisions(
         decision.feedback = final_reason
         enriched.append(enrich_result_with_strategy(result, final_action, final_reason, decision_json))
         if final_action == "BUY_SIMULATED":
+            if decision_json.get("entry_mode") == "neutral_pilot":
+                neutral_pilot_trades_today += 1
             running_cash -= float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0)
             running_exposure += float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0)
             simulated_positions[candidate.ticker] = {

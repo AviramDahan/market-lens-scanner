@@ -128,9 +128,14 @@ monitor run publishes a heartbeat and current-price refresh for open positions.
 - Valid setups inside the buy zone can open a simulated buy if portfolio limits allow it.
 - `BULL` requires setup score at least `0.45`.
 - `NEUTRAL` requires setup score at least `0.55`.
+- `NEUTRAL_PILOT` can open at setup score `0.45` only during regular session,
+  only in a `STRONG` sector, only after entry confirmation, with net R/R at
+  least `2.0`, half-size allocation, and a maximum of one pilot trade per day.
 - `BEAR` blocks all new simulated buys.
 - Target 1 net R/R must be at least `0.80`; target 2 cannot justify a trade by itself.
-- Entry confirmation must pass on a completed candle.
+- Entry confirmation must pass on a completed candle. The agent can look back
+  across the most recent completed candles when the latest candle still keeps
+  the setup relevant.
 - Existing positions can be held, partially closed, closed at target, or exited at stop.
 
 The agent manages a simulated 100,000 USD paper portfolio using the limits in
