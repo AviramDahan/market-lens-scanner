@@ -297,6 +297,9 @@ Extended-hours prices are displayed as live context, but strategy confirmation
 uses completed regular-session candles. Off-hours scans can stage a candidate
 as `WATCH_READY`; they cannot open a new `BUY_SIMULATED` while
 `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false`.
+Decision JSON records this explicitly with `off_hours_entry_policy`,
+`off_hours_candidate`, `regular_session_confirmation_required`, and
+`off_hours_staging_reason`.
 
 ### Entry Gates
 

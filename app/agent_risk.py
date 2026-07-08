@@ -466,6 +466,11 @@ def evaluate_agent_candidate(
             final_reason = f"HOLD: Existing simulated position remains open. {run_context.market_regime.label} regime recorded."
 
     portfolio_exposure_after = portfolio_exposure_after_if_buy if final_action == "BUY_SIMULATED" else portfolio_exposure_before
+    off_hours_candidate = bool(
+        initial_action == "BUY_SIMULATED"
+        and not market_session["regular_session_open"]
+        and not config.allow_off_hours_buys
+    )
     decision = {
         "timestamp": timestamp,
         "ticker": ticker,
@@ -490,6 +495,14 @@ def evaluate_agent_candidate(
         "market_session_timestamp": market_session["timestamp"],
         "market_session_can_open_new_buy": market_session["can_open_new_buy"],
         "market_session_reason": market_session["reason"],
+        "off_hours_entry_policy": "STAGE_ONLY" if off_hours_candidate else "REGULAR_SESSION_ONLY",
+        "off_hours_candidate": off_hours_candidate,
+        "regular_session_confirmation_required": off_hours_candidate,
+        "off_hours_staging_reason": (
+            "Off-hours candidate only: BUY_SIMULATED is blocked until a regular-session confirmation scan."
+            if off_hours_candidate
+            else ""
+        ),
         "sector": sector,
         "sector_etf": sector_info["etf"],
         "sector_regime": sector_info["regime"],

@@ -103,7 +103,9 @@ workflow is also scheduled for 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and
 The same scanner can run off-hours staging scans, but those scans can only
 stage `WATCH_READY` candidates while
 `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false`. New `BUY_SIMULATED`
-entries require regular-session confirmation.
+entries require regular-session confirmation. Each staged off-hours candidate is
+marked in Decision JSON with `off_hours_entry_policy=STAGE_ONLY`,
+`off_hours_candidate=true`, and `regular_session_confirmation_required=true`.
 
 The position monitor is the official portfolio updater for existing open
 positions. For full automation without keeping the dashboard open,
