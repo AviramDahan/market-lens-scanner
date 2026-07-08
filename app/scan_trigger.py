@@ -13,6 +13,12 @@ from app.monitor_trigger import github_actions_token
 NEW_YORK_TZ = ZoneInfo("America/New_York")
 
 DEFAULT_WEEKDAY_SCAN_TIMES = {
+    "00:30",
+    "01:30",
+    "02:30",
+    "03:30",
+    "04:30",
+    "05:30",
     "06:30",
     "07:30",
     "08:30",
@@ -34,9 +40,13 @@ DEFAULT_WEEKDAY_SCAN_TIMES = {
     "15:55",
     "16:15",
     "16:20",
+    "17:30",
     "18:30",
+    "19:30",
     "20:15",
+    "21:30",
     "22:30",
+    "23:30",
 }
 DEFAULT_SATURDAY_SCAN_TIMES = {"11:00"}
 DEFAULT_SUNDAY_SCAN_TIMES = {"18:30", "22:00"}

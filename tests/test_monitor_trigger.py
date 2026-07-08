@@ -363,6 +363,28 @@ def test_scan_schedule_includes_added_midday_slots(monkeypatch) -> None:
     assert decision.scan_key == "2026-06-23T12:00"
 
 
+def test_scan_schedule_includes_after_market_slots(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
+
+    decision = scan_trigger.scan_schedule_decision(
+        now=datetime.fromisoformat("2026-06-23T19:32:00-04:00"),
+    )
+
+    assert decision.should_run is True
+    assert decision.scan_key == "2026-06-23T19:30"
+
+
+def test_scan_schedule_includes_night_slots(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
+
+    decision = scan_trigger.scan_schedule_decision(
+        now=datetime.fromisoformat("2026-06-23T02:33:00-04:00"),
+    )
+
+    assert decision.should_run is True
+    assert decision.scan_key == "2026-06-23T02:30"
+
+
 def test_scan_schedule_times_can_be_overridden_by_env(monkeypatch) -> None:
     monkeypatch.setenv("MARKET_LENS_AGENT_WEEKDAY_SCAN_TIMES", "10:07")
     monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
