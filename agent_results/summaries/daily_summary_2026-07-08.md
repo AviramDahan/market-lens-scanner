@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-08
-Total scans: 13
-Tickers scanned: 1544
+Total scans: 14
+Tickers scanned: 1664
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 463
-SKIP: 1081
-NO_TRADE: 917
+WATCH: 496
+SKIP: 1168
+NO_TRADE: 992
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100371.5
@@ -16,9 +16,9 @@ Worst ticker: DUK
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 3
-- RELATIVE_STRENGTH_LEADER: 126
-- TREND_PULLBACK_RECLAIM: 15
+- BREAKOUT_CONTINUATION: 4
+- RELATIVE_STRENGTH_LEADER: 134
+- TREND_PULLBACK_RECLAIM: 16
 - VWAP_RECLAIM: 34
 
 Top rejected candidates:
