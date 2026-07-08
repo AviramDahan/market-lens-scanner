@@ -90,6 +90,7 @@ jobs:
 
       - name: Run Market Lens UI agent
         if: steps.schedule_time.outputs.should_run == 'true'
+        timeout-minutes: 18
         env:
           MARKET_LENS_URL: https://market-lens-scanner-fb63.onrender.com/?v=latest
           MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}
@@ -106,7 +107,7 @@ jobs:
           MARKET_LENS_AGENT_UNIVERSE_POOL: "100"
           MARKET_LENS_AGENT_UNIVERSE_MAX_POOL: "300"
           MARKET_LENS_AGENT_MAX_PER_SECTOR: "15"
-          MARKET_LENS_AGENT_SCAN_BATCH_SIZE: "15"
+          MARKET_LENS_AGENT_SCAN_BATCH_SIZE: "8"
           MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK: "true"
           MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT: "30"
           MARKET_LENS_AGENT_MIN_SPLIT_BATCH_SIZE: "6"
