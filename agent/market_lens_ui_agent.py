@@ -420,6 +420,15 @@ def build_agent_scan_tickers(
                 f"{' ...' if len(fallback_tickers) > 20 else ''})."
             )
     final_tickers = unique_tickers(base_tickers + carry_forward_tickers)
+    total_limit = int(os.getenv("MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT", "0") or "0")
+    if total_limit > 0 and len(final_tickers) > total_limit:
+        deferred = final_tickers[total_limit:]
+        final_tickers = final_tickers[:total_limit]
+        log(
+            "Agent total scan limit applied: "
+            f"kept {len(final_tickers)} tickers and deferred {len(deferred)} "
+            f"to protect production stability."
+        )
     log(
         "Smart agent universe built: "
         f"{len(base_tickers)} base scan tickers + "
@@ -542,6 +551,7 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
 
 def run_scan_batches(page: Page, tickers: list[str], deadline: float) -> list[SetupResult]:
     batch_size = max(1, int(os.getenv("MARKET_LENS_AGENT_SCAN_BATCH_SIZE", "20")))
+    batch_pause_ms = max(0, int(os.getenv("MARKET_LENS_AGENT_BATCH_PAUSE_MS", "0") or "0"))
     if not tickers or len(tickers) <= batch_size:
         return run_scan(page, deadline)
 
@@ -554,6 +564,8 @@ def run_scan_batches(page: Page, tickers: list[str], deadline: float) -> list[Se
         log(f"Batch {index}/{len(batches)} completed: {len(batch_results)} result cards")
         for result in batch_results:
             combined[result.ticker] = result
+        if batch_pause_ms and index < len(batches):
+            page.wait_for_timeout(remaining_ms(deadline, batch_pause_ms))
     return list(combined.values())
 
 
@@ -572,6 +584,9 @@ def run_scan_batch_resilient(page: Page, batch: list[str], deadline: float) -> l
             "Transient scan error; splitting batch into smaller retries: "
             f"{message}; parts={len(parts)} size={len(parts[0])}/{len(parts[1])}."
         )
+        retry_pause_ms = max(0, int(os.getenv("MARKET_LENS_AGENT_RETRY_PAUSE_MS", "15000") or "0"))
+        if retry_pause_ms:
+            page.wait_for_timeout(remaining_ms(deadline, retry_pause_ms))
         results: dict[str, SetupResult] = {}
         for part in parts:
             set_scan_basket(page, part)

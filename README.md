@@ -178,13 +178,17 @@ Universe, then chooses a diversified scan basket from that universe.
 
 Default cloud scan configuration:
 
-- `MARKET_LENS_AGENT_UNIVERSE_TARGET=100`
+- `MARKET_LENS_AGENT_UNIVERSE_TARGET=55`
 - `MARKET_LENS_AGENT_UNIVERSE_POOL=100`
 - `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=300`
-- `MARKET_LENS_AGENT_MAX_PER_SECTOR=15`
-- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=15`
+- `MARKET_LENS_AGENT_MAX_PER_SECTOR=12`
+- `MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=70`
+- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=4`
+- `MARKET_LENS_AGENT_BATCH_PAUSE_MS=2500`
+- `MARKET_LENS_AGENT_RETRY_PAUSE_MS=20000`
 - `MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK=true`
-- `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT=30`
+- `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT=15`
+- `MARKET_LENS_AGENT_MIN_SPLIT_BATCH_SIZE=2`
 - `MARKET_LENS_WATCH_CARRY_FORWARD_DAYS=14`
 - `MARKET_LENS_SKIP_COOLDOWN_HOURS=8`
 
@@ -194,10 +198,11 @@ fallback when the fresh candidate pool is too small. This keeps the scan near
 the configured target count instead of shrinking to a small basket after several
 runs in the same day.
 
-The carry-forward list is capped by `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT` so
-the scanner does not grow without bound during active days. If a transient
-Render/yfinance error such as 502/503/504 occurs, the agent retries and can
-split the failed batch into smaller chunks.
+The carry-forward list is capped by `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT`, and
+`MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT` caps the final list after carry-forward so
+the scanner does not grow without bound during active market hours. If a
+transient Render/yfinance error such as 502/503/504 occurs, the agent retries,
+waits briefly, and can split the failed batch into smaller chunks.
 
 If the deployed `/smart-universe` endpoint is temporarily unavailable, the
 agent falls back to the curated sector universe instead of timing out in the UI

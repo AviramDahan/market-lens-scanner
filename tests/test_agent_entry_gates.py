@@ -120,6 +120,26 @@ def test_agent_universe_uses_recent_skip_as_fallback_when_fresh_pool_is_short(mo
     assert selected == ["S2", "S3", "S4", "S5", "S6", "S1"]
 
 
+def test_agent_total_scan_limit_caps_after_carry_forward(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "5")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "10")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_MAX_POOL", "20")
+    monkeypatch.setenv("MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT", "6")
+    monkeypatch.setattr(
+        "agent.market_lens_ui_agent.fetch_smart_universe_tickers",
+        lambda _settings, _limit: [f"S{i}" for i in range(1, 16)],
+    )
+
+    settings = SimpleNamespace(universe="smart-universe", analysis_period="6mo", url="https://example.test")
+    selected = build_agent_scan_tickers(
+        settings,
+        carry_forward_tickers=["WATCH1", "WATCH2", "WATCH3"],
+        skipped_tickers=[],
+    )
+
+    assert selected == ["S1", "S2", "S3", "S4", "S5", "WATCH1"]
+
+
 def test_smart_universe_fetch_prefers_full_companies_payload(monkeypatch) -> None:
     class FakeResponse:
         def __enter__(self):
