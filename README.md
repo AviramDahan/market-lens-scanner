@@ -192,6 +192,10 @@ Default cloud scan configuration:
 - `MARKET_LENS_WATCH_CARRY_FORWARD_DAYS=14`
 - `MARKET_LENS_SKIP_COOLDOWN_HOURS=8`
 
+In GitHub Actions, the agent starts a local `uvicorn` copy of Market Lens and
+scans `http://127.0.0.1:8000` instead of scanning through the public Render URL.
+This keeps the public dashboard available while the paper-trading worker scans.
+
 Recent `WATCH` tickers are carried forward outside the fresh-universe quota.
 Recent `SKIP` tickers are excluded first, but the agent can use them as a
 fallback when the fresh candidate pool is too small. This keeps the scan near

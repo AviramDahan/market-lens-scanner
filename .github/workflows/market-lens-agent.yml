@@ -88,11 +88,30 @@ jobs:
           python -m pip install -e .
           python -m playwright install --with-deps chromium
 
+      - name: Start local Market Lens app
+        if: steps.schedule_time.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/market-lens-app.log 2>&1 &
+          echo $! > /tmp/market-lens-app.pid
+
+          for attempt in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null; then
+              echo "Local Market Lens app is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Local Market Lens app did not become ready."
+          cat /tmp/market-lens-app.log || true
+          exit 1
+
       - name: Run Market Lens UI agent
         if: steps.schedule_time.outputs.should_run == 'true'
         timeout-minutes: 18
         env:
-          MARKET_LENS_URL: https://market-lens-scanner-fb63.onrender.com/?v=latest
+          MARKET_LENS_URL: http://127.0.0.1:8000/?v=agent
           MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}
           MARKET_LENS_PASSWORD: ${{ secrets.MARKET_LENS_PASSWORD }}
           MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
