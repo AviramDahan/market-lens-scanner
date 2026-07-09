@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-06
-Total scans: 69
-Tickers scanned: 7365
+Total scans: 70
+Tickers scanned: 7433
 BUY_SIMULATED: 2
 WATCH_READY: 0
-WATCH: 2525
-SKIP: 4820
-NO_TRADE: 4114
+WATCH: 2554
+SKIP: 4858
+NO_TRADE: 4152
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100208.06
@@ -17,8 +17,8 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 14
-- RELATIVE_STRENGTH_LEADER: 738
-- TREND_PULLBACK_RECLAIM: 135
+- RELATIVE_STRENGTH_LEADER: 746
+- TREND_PULLBACK_RECLAIM: 136
 - VWAP_RECLAIM: 68
 
 Top rejected candidates:
@@ -31,7 +31,7 @@ Top rejected candidates:
 - BA: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - BA: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - BA: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
-- NI: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.16.
+- BA: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
