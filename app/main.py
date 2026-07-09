@@ -46,6 +46,8 @@ init_storage()
 
 LIVE_PRICE_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_LIVE_PRICE_CACHE_TTL", "45"))
 _LIVE_PRICE_CACHE: dict[str, tuple[float, float, str]] = {}
+DASHBOARD_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_AGENT_DASHBOARD_CACHE_TTL", "120"))
+_AGENT_DASHBOARD_CACHE: dict[tuple[str, int, int], tuple[float, dict]] = {}
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/charts", StaticFiles(directory=CHART_DIR), name="charts")
@@ -67,14 +69,36 @@ async def agent_ui_trailing() -> FileResponse:
     return FileResponse(STATIC_DIR / "agent.html")
 
 
+def dashboard_cache_key(selected_date: str | None = None) -> tuple[str, int, int]:
+    tracker_path = AGENT_TRACKER_DIR / TRACKER_NAME
+    try:
+        stat = tracker_path.stat()
+        return (selected_date or "", stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return (selected_date or "", 0, 0)
+
+
+def cached_agent_dashboard(selected_date: str | None = None) -> dict:
+    key = dashboard_cache_key(selected_date)
+    now = time.time()
+    cached = _AGENT_DASHBOARD_CACHE.get(key)
+    if cached and now - cached[0] <= DASHBOARD_CACHE_TTL_SECONDS:
+        return cached[1]
+
+    dashboard = build_agent_dashboard(PROJECT_ROOT, selected_date=selected_date)
+    _AGENT_DASHBOARD_CACHE.clear()
+    _AGENT_DASHBOARD_CACHE[key] = (now, dashboard)
+    return dashboard
+
+
 @app.get("/agent/data")
 async def get_agent_dashboard(date: str | None = Query(default=None)) -> dict:
-    return build_agent_dashboard(PROJECT_ROOT, selected_date=date)
+    return cached_agent_dashboard(date)
 
 
 @app.get("/agent/live-prices")
 async def get_agent_live_prices() -> dict:
-    dashboard = build_agent_dashboard(PROJECT_ROOT)
+    dashboard = cached_agent_dashboard()
     if dashboard.get("status") != "ok":
         return dashboard
 
@@ -134,7 +158,7 @@ async def get_agent_live_prices() -> dict:
 @app.post("/agent/trigger-monitor")
 async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
     trigger_configured = monitor_trigger_configured()
-    dashboard = build_agent_dashboard(PROJECT_ROOT)
+    dashboard = cached_agent_dashboard()
     if dashboard.get("status") != "ok":
         return {
             "status": "skipped",
@@ -227,7 +251,7 @@ async def monitor_live_positions(
 ):
     protection = validate_monitor_cron_secret(x_monitor_secret, secret)
     trigger_configured = monitor_trigger_configured()
-    dashboard = build_agent_dashboard(PROJECT_ROOT)
+    dashboard = cached_agent_dashboard()
     if dashboard.get("status") != "ok":
         return compact_cron_response({
             "status": "skipped",

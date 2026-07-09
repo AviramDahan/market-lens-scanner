@@ -34,6 +34,7 @@ def reset_rate_limits() -> None:
     monitor_trigger._EVENT_TRIGGER_AT.clear()
     scan_trigger._DISPATCHED_SCAN_KEYS.clear()
     main._LIVE_PRICE_CACHE.clear()
+    main._AGENT_DASHBOARD_CACHE.clear()
 
 
 def test_detect_live_monitor_event_prefers_stop_first() -> None:
@@ -42,6 +43,35 @@ def test_detect_live_monitor_event_prefers_stop_first() -> None:
     assert event is not None
     assert event.event_type == "EXIT_STOP"
     assert event.threshold == 95
+
+
+def test_agent_dashboard_cache_reuses_until_tracker_changes(monkeypatch, tmp_path) -> None:
+    reset_rate_limits()
+    tracker_dir = tmp_path / "agent_tracker"
+    tracker_dir.mkdir()
+    tracker = tracker_dir / main.TRACKER_NAME
+    tracker.write_text("first", encoding="utf-8")
+    calls = []
+
+    def fake_build(project_root, selected_date=None):
+        calls.append((project_root, selected_date))
+        return {"status": "ok", "call": len(calls), "selected_date": selected_date or ""}
+
+    monkeypatch.setattr(main, "AGENT_TRACKER_DIR", tracker_dir)
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "DASHBOARD_CACHE_TTL_SECONDS", 120)
+    monkeypatch.setattr(main, "build_agent_dashboard", fake_build)
+
+    first = main.cached_agent_dashboard()
+    second = main.cached_agent_dashboard()
+    assert first is second
+    assert first["call"] == 1
+    assert len(calls) == 1
+
+    tracker.write_text("tracker changed", encoding="utf-8")
+    third = main.cached_agent_dashboard()
+    assert third["call"] == 2
+    assert len(calls) == 2
 
 
 def test_detect_live_monitor_event_target_2_before_target_1() -> None:
