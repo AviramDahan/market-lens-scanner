@@ -168,7 +168,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Update Market Lens position monitor"
+          git commit -m "Update Market Lens position monitor [skip render]"
 
           echo "Pushing changes..."
           if ! git push origin HEAD:main; then
@@ -195,6 +195,6 @@ jobs:
               exit 0
             fi
 
-            git commit -m "Update Market Lens position monitor"
+            git commit -m "Update Market Lens position monitor [skip render]"
             git push origin HEAD:main
           fi
