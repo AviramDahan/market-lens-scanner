@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-06
-Total scans: 78
-Tickers scanned: 7977
+Total scans: 79
+Tickers scanned: 8045
 BUY_SIMULATED: 2
-WATCH_READY: 6
-WATCH: 2884
-SKIP: 5058
-NO_TRADE: 4350
+WATCH_READY: 7
+WATCH: 2928
+SKIP: 5080
+NO_TRADE: 4372
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100208.06
@@ -17,8 +17,8 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 14
-- RELATIVE_STRENGTH_LEADER: 810
-- TREND_PULLBACK_RECLAIM: 150
+- RELATIVE_STRENGTH_LEADER: 818
+- TREND_PULLBACK_RECLAIM: 152
 - VWAP_RECLAIM: 68
 
 Top rejected candidates:
