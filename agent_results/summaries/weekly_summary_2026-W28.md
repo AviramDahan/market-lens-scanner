@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-06
-Total scans: 103
-Tickers scanned: 9685
+Total scans: 104
+Tickers scanned: 9752
 BUY_SIMULATED: 3
 WATCH_READY: 15
-WATCH: 3647
-SKIP: 5952
-NO_TRADE: 5240
+WATCH: 3676
+SKIP: 5988
+NO_TRADE: 5276
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100407.41
@@ -17,12 +17,13 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 16
-- RELATIVE_STRENGTH_LEADER: 962
-- TREND_PULLBACK_RECLAIM: 182
-- VWAP_RECLAIM: 68
+- RELATIVE_STRENGTH_LEADER: 972
+- TREND_PULLBACK_RECLAIM: 183
+- VWAP_RECLAIM: 69
 
 Top rejected candidates:
 - ETN: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
+- ETN: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 - ETN: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 - ETN: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 - ETN: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
@@ -31,7 +32,6 @@ Top rejected candidates:
 - ETN: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 - ETN: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 - NI: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.16.
-- BA: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
