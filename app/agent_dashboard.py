@@ -30,7 +30,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "tracker_url": "/agent/tracker",
         }
 
-    wb = load_workbook(tracker_path, data_only=True)
+    wb = load_workbook(tracker_path, data_only=True, read_only=True)
     settings = read_settings(wb)
     currency = str(settings.get("budget_currency") or "USD").upper()
     starting_capital = to_float(
@@ -40,11 +40,17 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
 
     updates = read_updates(wb)
     trades = read_trades(wb)
-    setup_rows = read_setup_rows(wb)
     latest_update = select_update(updates, selected_date)
     latest_run_timestamp = latest_update.get("timestamp")
     latest_scan_update = select_latest_scan_update(updates, latest_update)
     latest_scan_timestamp = latest_scan_update.get("timestamp")
+    setup_rows = (
+        read_setup_rows(wb, cutoff=latest_run_timestamp)
+        if selected_date
+        else read_setup_rows(wb, run_date=latest_scan_timestamp)
+    )
+    if not setup_rows and not selected_date:
+        setup_rows = read_setup_rows(wb, recent_limit=25)
     scoped_updates = filter_records_until(updates, latest_run_timestamp)
     scoped_trades = filter_records_until(trades, latest_run_timestamp)
     current_snapshot = not selected_date and latest_update == (updates[-1] if updates else {})
@@ -254,10 +260,27 @@ def read_trades(wb: Any) -> list[dict[str, Any]]:
     return rows
 
 
-def read_setup_rows(wb: Any) -> list[dict[str, Any]]:
-    rows = []
+def read_setup_rows(
+    wb: Any,
+    *,
+    run_date: Any = None,
+    cutoff: Any = None,
+    recent_limit: int | None = None,
+) -> list[dict[str, Any]]:
+    raw_rows = []
     ws = wb["Setup Watchlist"]
+    cutoff_time = parse_timestamp(cutoff) if cutoff else None
     for row in data_rows(ws):
+        if run_date and row[0] != run_date:
+            continue
+        if cutoff_time and parse_timestamp(row[0]) > cutoff_time:
+            continue
+        raw_rows.append(row)
+    if recent_limit and len(raw_rows) > recent_limit:
+        raw_rows = raw_rows[-recent_limit:]
+
+    rows = []
+    for row in raw_rows:
         setup = with_ticker_meta(
             {
                 "run_date": row[0],
