@@ -35,7 +35,6 @@ def sync_dashboard_snapshot_if_enabled(project_root: Path) -> dict[str, Any]:
     repo = os.getenv("GITHUB_ACTIONS_REPOSITORY", "AviramDahan/market-lens-scanner")
     ref = os.getenv("GITHUB_ACTIONS_REF", "main")
     target = "agent_results/dashboard_snapshot.json"
-    state = load_state(project_root)
     result: dict[str, Any] = {
         "enabled": True,
         "repo": repo,
@@ -48,17 +47,10 @@ def sync_dashboard_snapshot_if_enabled(project_root: Path) -> dict[str, Any]:
         meta = github_file_metadata(repo, ref, target)
         sha = str(meta.get("sha") or "")
         local_path = project_root / target
-        if local_path.exists() and sha and state.get(target) == sha:
-            result["skipped"] = True
-        else:
-            download_url = str(meta.get("download_url") or "")
-            if not download_url:
-                raise RuntimeError("missing download_url")
-            download_to_path(download_url, local_path)
-            if sha:
-                state[target] = sha
-                save_state(project_root, state)
-            result["downloaded"] = True
+        download_url = raw_github_url(repo, ref, target, sha)
+        download_to_path(download_url, local_path)
+        result["downloaded"] = True
+        result["sha"] = sha
     except Exception as exc:
         result["enabled"] = False
         result["reason"] = f"snapshot sync failed: {exc}"
@@ -268,6 +260,14 @@ def github_file_metadata(repo: str, ref: str, path: str) -> dict[str, Any]:
     if not isinstance(data, dict) or data.get("type") != "file":
         raise RuntimeError("GitHub path is not a file")
     return data
+
+
+def raw_github_url(repo: str, ref: str, path: str, cache_bust: str = "") -> str:
+    encoded_path = "/".join(urllib.parse.quote(part) for part in path.split("/"))
+    encoded_ref = urllib.parse.quote(ref, safe="")
+    url = f"https://raw.githubusercontent.com/{repo}/{encoded_ref}/{encoded_path}"
+    bust = cache_bust or str(int(time.time()))
+    return f"{url}?market_lens_sync={urllib.parse.quote(bust)}"
 
 
 def github_json(repo: str, ref: str, path: str) -> Any:
