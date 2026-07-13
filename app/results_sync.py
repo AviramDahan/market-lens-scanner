@@ -65,53 +65,67 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
     downloaded: list[str] = []
     skipped = 0
     warnings: list[str] = []
+    download_limit = int_env("MARKET_LENS_RESULTS_SYNC_MAX_DOWNLOADS_PER_REQUEST", 45)
 
-    targets = [
-        "agent_tracker/" + TRACKER_NAME,
-        *limited_directory_targets(
-            repo,
-            ref,
-            "agent_results/decisions",
-            int_env("MARKET_LENS_RESULTS_SYNC_DECISION_LIMIT", 220),
-            {".jsonl"},
-        ),
-        *limited_directory_targets(
+    targets: list[dict[str, Any]] = []
+    add_file_target(targets, repo, ref, "agent_tracker/" + TRACKER_NAME, warnings)
+    targets.extend(
+        limited_directory_file_metadata(
             repo,
             ref,
             "agent_results/summaries",
-            int_env("MARKET_LENS_RESULTS_SYNC_SUMMARY_LIMIT", 260),
+            int_env("MARKET_LENS_RESULTS_SYNC_SUMMARY_LIMIT", 25),
             {".json", ".md"},
-        ),
-        *limited_directory_targets(
+        )
+    )
+    targets.extend(
+        limited_directory_file_metadata(
             repo,
             ref,
             "agent_results/position_monitor",
-            int_env("MARKET_LENS_RESULTS_SYNC_MONITOR_LIMIT", 80),
+            int_env("MARKET_LENS_RESULTS_SYNC_MONITOR_LIMIT", 20),
             {".md"},
-        ),
-        *limited_directory_targets(
-            repo,
-            ref,
-            "agent_results/charts",
-            int_env("MARKET_LENS_RESULTS_SYNC_CHART_LIMIT", 30),
-            {".png", ".jpg", ".jpeg"},
-        ),
-        *limited_directory_targets(
+        )
+    )
+    targets.extend(
+        limited_directory_file_metadata(
             repo,
             ref,
             "agent_results/screenshots",
-            int_env("MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT", 8),
+            int_env("MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT", 5),
             {".png", ".jpg", ".jpeg"},
+        )
+    )
+    targets.extend(
+        limited_directory_file_metadata(
+            repo,
+            ref,
+            "agent_results/charts",
+            int_env("MARKET_LENS_RESULTS_SYNC_CHART_LIMIT", 10),
+            {".png", ".jpg", ".jpeg"},
+        )
+    )
+    targets.extend(
+        limited_directory_file_metadata(
+            repo,
+            ref,
+            "agent_results/decisions",
+            int_env("MARKET_LENS_RESULTS_SYNC_DECISION_LIMIT", 20),
+            {".jsonl"},
         ),
-    ]
+    )
 
     seen: set[str] = set()
-    for target in targets:
+    download_limit_reached = False
+    for meta in targets:
+        target = str(meta.get("path") or "")
         if target in seen:
             continue
         seen.add(target)
+        if download_limit > 0 and len(downloaded) >= download_limit:
+            download_limit_reached = True
+            break
         try:
-            meta = github_file_metadata(repo, ref, target)
             local_path = project_root / target
             sha = str(meta.get("sha") or "")
             if local_path.exists() and sha and state.get(target) == sha:
@@ -135,19 +149,30 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
         "ref": ref,
         "downloaded": len(downloaded),
         "skipped": skipped,
+        "download_limit": download_limit,
+        "download_limit_reached": download_limit_reached,
         "warnings": warnings[:10],
         "downloaded_paths": downloaded[:20],
         "synced_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
 
-def limited_directory_targets(
+def add_file_target(targets: list[dict[str, Any]], repo: str, ref: str, path: str, warnings: list[str]) -> None:
+    try:
+        meta = github_file_metadata(repo, ref, path)
+        meta["path"] = path
+        targets.append(meta)
+    except Exception as exc:
+        warnings.append(f"{path}: {exc}")
+
+
+def limited_directory_file_metadata(
     repo: str,
     ref: str,
     directory: str,
     limit: int,
     suffixes: set[str],
-) -> list[str]:
+) -> list[dict[str, Any]]:
     if limit <= 0:
         return []
     try:
@@ -155,11 +180,11 @@ def limited_directory_targets(
     except Exception:
         return []
     files = [
-        str(item.get("path") or "")
+        item
         for item in items
         if item.get("type") == "file" and Path(str(item.get("name") or "")).suffix.lower() in suffixes
     ]
-    return sorted([path for path in files if path], reverse=True)[:limit]
+    return sorted(files, key=lambda item: str(item.get("path") or ""), reverse=True)[:limit]
 
 
 def github_directory(repo: str, ref: str, directory: str) -> list[dict[str, Any]]:

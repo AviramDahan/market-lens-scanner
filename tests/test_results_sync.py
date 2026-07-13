@@ -26,11 +26,13 @@ def test_results_sync_downloads_tracker_and_recent_results(monkeypatch, tmp_path
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
     monkeypatch.setenv("MARKET_LENS_RESULTS_SYNC_TTL_SECONDS", "0")
 
-    def fake_limited_directory_targets(repo, ref, directory, limit, suffixes):
+    def fake_limited_directory_file_metadata(repo, ref, directory, limit, suffixes):
         if directory == "agent_results/decisions":
-            return ["agent_results/decisions/market_lens_agent_latest.jsonl"]
+            path = "agent_results/decisions/market_lens_agent_latest.jsonl"
+            return [{"type": "file", "path": path, "sha": f"sha-{path}", "download_url": f"https://example.test/{path}"}]
         if directory == "agent_results/summaries":
-            return ["agent_results/summaries/daily_summary_latest.json"]
+            path = "agent_results/summaries/daily_summary_latest.json"
+            return [{"type": "file", "path": path, "sha": f"sha-{path}", "download_url": f"https://example.test/{path}"}]
         return []
 
     def fake_metadata(repo, ref, path):
@@ -40,7 +42,7 @@ def test_results_sync_downloads_tracker_and_recent_results(monkeypatch, tmp_path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"downloaded {url}", encoding="utf-8")
 
-    monkeypatch.setattr(results_sync, "limited_directory_targets", fake_limited_directory_targets)
+    monkeypatch.setattr(results_sync, "limited_directory_file_metadata", fake_limited_directory_file_metadata)
     monkeypatch.setattr(results_sync, "github_file_metadata", fake_metadata)
     monkeypatch.setattr(results_sync, "download_to_path", fake_download)
 
@@ -58,7 +60,7 @@ def test_results_sync_skips_unchanged_files(monkeypatch, tmp_path: Path) -> None
     monkeypatch.setenv("MARKET_LENS_RESULTS_SYNC_ENABLED", "true")
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
     monkeypatch.setenv("MARKET_LENS_RESULTS_SYNC_TTL_SECONDS", "0")
-    monkeypatch.setattr(results_sync, "limited_directory_targets", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(results_sync, "limited_directory_file_metadata", lambda *_args, **_kwargs: [])
 
     tracker = tmp_path / "agent_tracker" / results_sync.TRACKER_NAME
     tracker.parent.mkdir(parents=True)
