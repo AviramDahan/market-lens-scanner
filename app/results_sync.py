@@ -93,14 +93,14 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
             repo,
             ref,
             "agent_results/charts",
-            int_env("MARKET_LENS_RESULTS_SYNC_CHART_LIMIT", 120),
+            int_env("MARKET_LENS_RESULTS_SYNC_CHART_LIMIT", 30),
             {".png", ".jpg", ".jpeg"},
         ),
         *limited_directory_targets(
             repo,
             ref,
             "agent_results/screenshots",
-            int_env("MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT", 40),
+            int_env("MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT", 8),
             {".png", ".jpg", ".jpeg"},
         ),
     ]
