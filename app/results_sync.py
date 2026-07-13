@@ -65,7 +65,9 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
     downloaded: list[str] = []
     skipped = 0
     warnings: list[str] = []
-    download_limit = int_env("MARKET_LENS_RESULTS_SYNC_MAX_DOWNLOADS_PER_REQUEST", 45)
+    started_at = time.monotonic()
+    download_limit = int_env("MARKET_LENS_RESULTS_SYNC_MAX_DOWNLOADS_PER_REQUEST", 10)
+    time_budget = int_env("MARKET_LENS_RESULTS_SYNC_TIME_BUDGET_SECONDS", 18)
 
     targets: list[dict[str, Any]] = []
     add_file_target(targets, repo, ref, "agent_tracker/" + TRACKER_NAME, warnings)
@@ -74,7 +76,7 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
             repo,
             ref,
             "agent_results/summaries",
-            int_env("MARKET_LENS_RESULTS_SYNC_SUMMARY_LIMIT", 25),
+            int_env("MARKET_LENS_RESULTS_SYNC_SUMMARY_LIMIT", 8),
             {".json", ".md"},
         )
     )
@@ -83,7 +85,7 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
             repo,
             ref,
             "agent_results/position_monitor",
-            int_env("MARKET_LENS_RESULTS_SYNC_MONITOR_LIMIT", 20),
+            int_env("MARKET_LENS_RESULTS_SYNC_MONITOR_LIMIT", 5),
             {".md"},
         )
     )
@@ -92,7 +94,7 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
             repo,
             ref,
             "agent_results/screenshots",
-            int_env("MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT", 5),
+            int_env("MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT", 2),
             {".png", ".jpg", ".jpeg"},
         )
     )
@@ -101,7 +103,7 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
             repo,
             ref,
             "agent_results/charts",
-            int_env("MARKET_LENS_RESULTS_SYNC_CHART_LIMIT", 10),
+            int_env("MARKET_LENS_RESULTS_SYNC_CHART_LIMIT", 3),
             {".png", ".jpg", ".jpeg"},
         )
     )
@@ -110,7 +112,7 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
             repo,
             ref,
             "agent_results/decisions",
-            int_env("MARKET_LENS_RESULTS_SYNC_DECISION_LIMIT", 20),
+            int_env("MARKET_LENS_RESULTS_SYNC_DECISION_LIMIT", 5),
             {".jsonl"},
         ),
     )
@@ -122,6 +124,9 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
         if target in seen:
             continue
         seen.add(target)
+        if time_budget > 0 and time.monotonic() - started_at >= time_budget:
+            download_limit_reached = True
+            break
         if download_limit > 0 and len(downloaded) >= download_limit:
             download_limit_reached = True
             break
@@ -151,6 +156,7 @@ def sync_agent_results(project_root: Path) -> dict[str, Any]:
         "skipped": skipped,
         "download_limit": download_limit,
         "download_limit_reached": download_limit_reached,
+        "time_budget_seconds": time_budget,
         "warnings": warnings[:10],
         "downloaded_paths": downloaded[:20],
         "synced_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -205,7 +211,7 @@ def github_json(repo: str, ref: str, path: str) -> Any:
     encoded_path = "/".join(urllib.parse.quote(part) for part in path.split("/"))
     url = f"https://api.github.com/repos/{repo}/contents/{encoded_path}?ref={urllib.parse.quote(ref)}"
     request = urllib.request.Request(url, headers=github_headers())
-    with urllib.request.urlopen(request, timeout=int_env("MARKET_LENS_RESULTS_SYNC_TIMEOUT_SECONDS", 25)) as response:
+    with urllib.request.urlopen(request, timeout=int_env("MARKET_LENS_RESULTS_SYNC_TIMEOUT_SECONDS", 12)) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
@@ -213,7 +219,7 @@ def download_to_path(url: str, path: Path) -> None:
     request = urllib.request.Request(url, headers=github_headers())
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = path.with_suffix(path.suffix + ".tmp")
-    with urllib.request.urlopen(request, timeout=int_env("MARKET_LENS_RESULTS_SYNC_TIMEOUT_SECONDS", 25)) as response:
+    with urllib.request.urlopen(request, timeout=int_env("MARKET_LENS_RESULTS_SYNC_TIMEOUT_SECONDS", 12)) as response:
         temp_path.write_bytes(response.read())
     temp_path.replace(path)
 
