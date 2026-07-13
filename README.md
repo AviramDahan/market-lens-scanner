@@ -573,6 +573,13 @@ It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
 `agent_results/` from the repository, so each successful GitHub Actions run can
 publish the latest paper portfolio state back into the public app.
 
+Agent result commits use `[skip render]` so every scan does not trigger a full
+Render deploy. The deployed dashboard keeps itself current by syncing the latest
+tracker, decisions, summaries, and a bounded number of charts/screenshots from
+GitHub when `/agent/data`, `/agent/live-prices`, or `/agent/tracker` is read.
+This requires a Render-side GitHub token with repository read access, using
+`GITHUB_ACTIONS_TRIGGER_TOKEN` or `MARKET_LENS_GITHUB_ACTIONS_TOKEN`.
+
 The cloud setup has two separate workflows:
 
 - `Market Lens Paper Agent` runs regular-session confirmation scans at 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and 16:15 New York time.
@@ -604,6 +611,12 @@ GITHUB_ACTIONS_REPOSITORY=AviramDahan/market-lens-scanner
 GITHUB_AGENT_WORKFLOW=market-lens-agent.yml
 GITHUB_POSITION_MONITOR_WORKFLOW=market-lens-position-monitor.yml
 GITHUB_ACTIONS_REF=main
+MARKET_LENS_RESULTS_SYNC_ENABLED=true
+MARKET_LENS_RESULTS_SYNC_TTL_SECONDS=60
+MARKET_LENS_RESULTS_SYNC_DECISION_LIMIT=220
+MARKET_LENS_RESULTS_SYNC_SUMMARY_LIMIT=260
+MARKET_LENS_RESULTS_SYNC_CHART_LIMIT=120
+MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT=40
 MARKET_LENS_AGENT_CRON_SECRET=...
 MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
 MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=false

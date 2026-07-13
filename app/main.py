@@ -20,6 +20,7 @@ from app.monitor_trigger import (
     monitor_trigger_configured,
     rate_limit_reason,
 )
+from app.results_sync import sync_agent_results_if_enabled
 from app.scanner import scan_tickers
 from app.scan_trigger import (
     dispatch_agent_scan,
@@ -79,13 +80,16 @@ def dashboard_cache_key(selected_date: str | None = None) -> tuple[str, int, int
 
 
 def cached_agent_dashboard(selected_date: str | None = None) -> dict:
+    sync_status = sync_agent_results_if_enabled(PROJECT_ROOT)
     key = dashboard_cache_key(selected_date)
     now = time.time()
     cached = _AGENT_DASHBOARD_CACHE.get(key)
     if cached and now - cached[0] <= DASHBOARD_CACHE_TTL_SECONDS:
+        cached[1]["results_sync"] = sync_status
         return cached[1]
 
     dashboard = build_agent_dashboard(PROJECT_ROOT, selected_date=selected_date)
+    dashboard["results_sync"] = sync_status
     _AGENT_DASHBOARD_CACHE.clear()
     _AGENT_DASHBOARD_CACHE[key] = (now, dashboard)
     return dashboard
@@ -523,6 +527,7 @@ def trigger_scan_force_enabled() -> bool:
 
 @app.get("/agent/tracker")
 async def get_agent_tracker() -> FileResponse:
+    sync_agent_results_if_enabled(PROJECT_ROOT)
     tracker_path = AGENT_TRACKER_DIR / TRACKER_NAME
     if not tracker_path.exists():
         raise HTTPException(status_code=404, detail="Agent tracker not found")
