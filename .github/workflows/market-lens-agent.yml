@@ -165,6 +165,21 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python agent/market_lens_ui_agent.py
 
+      - name: Write dashboard snapshot
+        if: steps.schedule_time.outputs.should_run == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from app.agent_dashboard import build_agent_dashboard
+
+          snapshot = build_agent_dashboard(Path("."))
+          output = Path("agent_results/dashboard_snapshot.json")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(json.dumps(snapshot, default=str, separators=(",", ":")), encoding="utf-8")
+          print(f"Wrote {output}")
+          PY
+
       - name: Commit agent results safely
         if: steps.schedule_time.outputs.should_run == 'true'
         shell: bash

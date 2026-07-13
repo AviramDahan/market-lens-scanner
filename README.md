@@ -574,11 +574,11 @@ It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
 publish the latest paper portfolio state back into the public app.
 
 Agent result commits use `[skip render]` so every scan does not trigger a full
-Render deploy. The code includes an optional GitHub result sync for the deployed
-dashboard, but it is disabled by default because pulling result files during a
-normal dashboard request can be too heavy for a free Render instance. Enable it
-only when the service has enough headroom, using `MARKET_LENS_RESULTS_SYNC_ENABLED=true`
-and a Render-side GitHub token with repository read access.
+Render deploy. Each Agent/monitor run writes `agent_results/dashboard_snapshot.json`,
+and the deployed dashboard reads that compact snapshot instead of rebuilding the
+entire Excel workbook on every request. Render can optionally refresh just this
+single snapshot from GitHub with `MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED=true`.
+The heavier multi-file result sync remains disabled by default.
 
 The cloud setup has two separate workflows:
 
@@ -619,6 +619,8 @@ MARKET_LENS_RESULTS_SYNC_DECISION_LIMIT=5
 MARKET_LENS_RESULTS_SYNC_SUMMARY_LIMIT=8
 MARKET_LENS_RESULTS_SYNC_CHART_LIMIT=3
 MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT=2
+MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED=true
+MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS=45
 MARKET_LENS_AGENT_CRON_SECRET=...
 MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
 MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=false

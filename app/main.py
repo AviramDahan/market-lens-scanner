@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -20,7 +21,7 @@ from app.monitor_trigger import (
     monitor_trigger_configured,
     rate_limit_reason,
 )
-from app.results_sync import sync_agent_results_if_enabled
+from app.results_sync import sync_agent_results_if_enabled, sync_dashboard_snapshot_if_enabled
 from app.scanner import scan_tickers
 from app.scan_trigger import (
     dispatch_agent_scan,
@@ -41,6 +42,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 CHART_DIR = PROJECT_ROOT / "charts"
 AGENT_RESULTS_DIR = PROJECT_ROOT / "agent_results"
 AGENT_TRACKER_DIR = PROJECT_ROOT / "agent_tracker"
+DASHBOARD_SNAPSHOT_PATH = AGENT_RESULTS_DIR / "dashboard_snapshot.json"
 CHART_DIR.mkdir(exist_ok=True)
 AGENT_RESULTS_DIR.mkdir(exist_ok=True)
 init_storage()
@@ -95,14 +97,29 @@ def cached_agent_dashboard(selected_date: str | None = None) -> dict:
     return dashboard
 
 
+def current_agent_dashboard() -> dict:
+    sync_status = sync_dashboard_snapshot_if_enabled(PROJECT_ROOT)
+    if DASHBOARD_SNAPSHOT_PATH.exists():
+        try:
+            dashboard = json.loads(DASHBOARD_SNAPSHOT_PATH.read_text(encoding="utf-8"))
+            if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
+                dashboard["results_sync"] = sync_status
+                return dashboard
+        except Exception:
+            pass
+    return cached_agent_dashboard()
+
+
 @app.get("/agent/data")
 async def get_agent_dashboard(date: str | None = Query(default=None)) -> dict:
+    if not date:
+        return current_agent_dashboard()
     return cached_agent_dashboard(date)
 
 
 @app.get("/agent/live-prices")
 async def get_agent_live_prices() -> dict:
-    dashboard = cached_agent_dashboard()
+    dashboard = current_agent_dashboard()
     if dashboard.get("status") != "ok":
         return dashboard
 

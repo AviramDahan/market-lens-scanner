@@ -15,6 +15,68 @@ STATE_FILE = ".agent_results_sync_state.json"
 _LOCK = threading.Lock()
 _LAST_SYNC_AT = 0.0
 _LAST_SYNC_RESULT: dict[str, Any] = {"enabled": False, "reason": "not run yet"}
+_LAST_SNAPSHOT_SYNC_AT = 0.0
+_LAST_SNAPSHOT_SYNC_RESULT: dict[str, Any] = {"enabled": False, "reason": "not run yet"}
+
+
+def sync_dashboard_snapshot_if_enabled(project_root: Path) -> dict[str, Any]:
+    global _LAST_SNAPSHOT_SYNC_AT, _LAST_SNAPSHOT_SYNC_RESULT
+
+    enabled, reason = snapshot_sync_enabled()
+    if not enabled:
+        _LAST_SNAPSHOT_SYNC_RESULT = {"enabled": False, "reason": reason}
+        return _LAST_SNAPSHOT_SYNC_RESULT
+
+    now = time.time()
+    ttl = int_env("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS", 45)
+    if now - _LAST_SNAPSHOT_SYNC_AT < ttl:
+        return {**_LAST_SNAPSHOT_SYNC_RESULT, "cached": True}
+
+    repo = os.getenv("GITHUB_ACTIONS_REPOSITORY", "AviramDahan/market-lens-scanner")
+    ref = os.getenv("GITHUB_ACTIONS_REF", "main")
+    target = "agent_results/dashboard_snapshot.json"
+    state = load_state(project_root)
+    result: dict[str, Any] = {
+        "enabled": True,
+        "repo": repo,
+        "ref": ref,
+        "target": target,
+        "downloaded": False,
+        "synced_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    try:
+        meta = github_file_metadata(repo, ref, target)
+        sha = str(meta.get("sha") or "")
+        local_path = project_root / target
+        if local_path.exists() and sha and state.get(target) == sha:
+            result["skipped"] = True
+        else:
+            download_url = str(meta.get("download_url") or "")
+            if not download_url:
+                raise RuntimeError("missing download_url")
+            download_to_path(download_url, local_path)
+            if sha:
+                state[target] = sha
+                save_state(project_root, state)
+            result["downloaded"] = True
+    except Exception as exc:
+        result["enabled"] = False
+        result["reason"] = f"snapshot sync failed: {exc}"
+
+    _LAST_SNAPSHOT_SYNC_AT = time.time()
+    _LAST_SNAPSHOT_SYNC_RESULT = result
+    return result
+
+
+def snapshot_sync_enabled() -> tuple[bool, str]:
+    configured = os.getenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED")
+    if configured is not None and not truthy(configured):
+        return False, "disabled by MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED"
+    if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
+        return False, "disabled inside GitHub Actions"
+    if not github_token():
+        return False, "missing GitHub token"
+    return True, "enabled"
 
 
 def sync_agent_results_if_enabled(project_root: Path) -> dict[str, Any]:
