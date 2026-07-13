@@ -574,11 +574,11 @@ It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
 publish the latest paper portfolio state back into the public app.
 
 Agent result commits use `[skip render]` so every scan does not trigger a full
-Render deploy. The deployed dashboard keeps itself current by syncing the latest
-tracker, decisions, summaries, and a bounded number of charts/screenshots from
-GitHub when `/agent/data`, `/agent/live-prices`, or `/agent/tracker` is read.
-This requires a Render-side GitHub token with repository read access, using
-`GITHUB_ACTIONS_TRIGGER_TOKEN` or `MARKET_LENS_GITHUB_ACTIONS_TOKEN`.
+Render deploy. The code includes an optional GitHub result sync for the deployed
+dashboard, but it is disabled by default because pulling result files during a
+normal dashboard request can be too heavy for a free Render instance. Enable it
+only when the service has enough headroom, using `MARKET_LENS_RESULTS_SYNC_ENABLED=true`
+and a Render-side GitHub token with repository read access.
 
 The cloud setup has two separate workflows:
 
@@ -611,7 +611,7 @@ GITHUB_ACTIONS_REPOSITORY=AviramDahan/market-lens-scanner
 GITHUB_AGENT_WORKFLOW=market-lens-agent.yml
 GITHUB_POSITION_MONITOR_WORKFLOW=market-lens-position-monitor.yml
 GITHUB_ACTIONS_REF=main
-MARKET_LENS_RESULTS_SYNC_ENABLED=true
+MARKET_LENS_RESULTS_SYNC_ENABLED=false
 MARKET_LENS_RESULTS_SYNC_TTL_SECONDS=60
 MARKET_LENS_RESULTS_SYNC_MAX_DOWNLOADS_PER_REQUEST=10
 MARKET_LENS_RESULTS_SYNC_TIME_BUDGET_SECONDS=18

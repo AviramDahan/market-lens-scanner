@@ -47,11 +47,12 @@ def sync_agent_results_if_enabled(project_root: Path) -> dict[str, Any]:
 
 def sync_enabled() -> tuple[bool, str]:
     configured = os.getenv("MARKET_LENS_RESULTS_SYNC_ENABLED")
-    if configured is not None:
-        if not truthy(configured):
-            return False, "disabled by MARKET_LENS_RESULTS_SYNC_ENABLED"
-    elif os.getenv("GITHUB_ACTIONS", "").lower() == "true":
-        return False, "disabled inside GitHub Actions"
+    if configured is None:
+        if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
+            return False, "disabled inside GitHub Actions"
+        return False, "disabled by default; set MARKET_LENS_RESULTS_SYNC_ENABLED=true to enable"
+    if not truthy(configured):
+        return False, "disabled by MARKET_LENS_RESULTS_SYNC_ENABLED"
 
     if not github_token():
         return False, "missing GitHub token"
