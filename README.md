@@ -544,6 +544,11 @@ Agent outputs:
 - `agent_results/decisions/*.jsonl`
 - `agent_results/position_monitor/*.md`
 
+Agent media retention keeps repository size under control. Decision JSONL,
+summaries, Excel, and the dashboard snapshot are retained for analysis, while
+older PNG media is pruned by `agent/cleanup_agent_results.py`. The default
+cloud workflow keeps the latest 240 chart files and latest 60 screenshots.
+
 Before a new `BUY_SIMULATED` is accepted, the agent now adds a risk and
 transparency layer on top of the existing scanner decision. The original setup
 detection still runs first, then the agent records a structured decision for
@@ -621,6 +626,9 @@ MARKET_LENS_RESULTS_SYNC_CHART_LIMIT=3
 MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT=2
 MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED=true
 MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS=45
+MARKET_LENS_AGENT_MEDIA_RETENTION_ENABLED=true
+MARKET_LENS_AGENT_CHART_RETENTION_MAX_FILES=240
+MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_FILES=60
 MARKET_LENS_AGENT_CRON_SECRET=...
 MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
 MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=false

@@ -165,6 +165,14 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python agent/market_lens_ui_agent.py
 
+      - name: Apply Agent media retention
+        if: steps.schedule_time.outputs.should_run == 'true'
+        env:
+          MARKET_LENS_AGENT_MEDIA_RETENTION_ENABLED: "true"
+          MARKET_LENS_AGENT_CHART_RETENTION_MAX_FILES: "240"
+          MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_FILES: "60"
+        run: python agent/cleanup_agent_results.py
+
       - name: Write dashboard snapshot
         if: steps.schedule_time.outputs.should_run == 'true'
         run: |
