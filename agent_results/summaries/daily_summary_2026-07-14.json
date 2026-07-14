@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 163,
-  "SKIP_count": 163,
+  "NO_TRADE_count": 177,
+  "SKIP_count": 186,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 313,
+  "WATCH_count": 356,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.6412,
-    "RELATIVE_STRENGTH_LEADER": 0.7221,
-    "TREND_PULLBACK_RECLAIM": 0.607,
-    "VWAP_RECLAIM": 0.6486
+    "BREAKOUT_CONTINUATION": 0.6404,
+    "RELATIVE_STRENGTH_LEADER": 0.7189,
+    "TREND_PULLBACK_RECLAIM": 0.6083,
+    "VWAP_RECLAIM": 0.6482
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.8222,
-  "average_rr_to_target_2": 2.2124,
-  "average_setup_score": 0.2522,
+  "average_rr_to_target_1": 0.8359,
+  "average_rr_to_target_2": 2.2742,
+  "average_setup_score": 0.2584,
   "average_winner": null,
   "best_sector": "Healthcare",
   "best_setup_type": "No Trade",
@@ -110,43 +110,43 @@
   "daily_return_pct": 0.4401,
   "data_quality_issues": [
     {
-      "count": 180,
+      "count": 208,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 163,
+      "count": 177,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 163,
+      "count": 177,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 138,
+      "count": 154,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 98,
+      "count": 111,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 74,
+      "count": 82,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
     },
     {
-      "count": 66,
+      "count": 73,
       "name": "Earnings blackout active."
     },
     {
-      "count": 64,
+      "count": 72,
       "name": "Factor/theme exposure limit would be exceeded."
     },
     {
-      "count": 64,
+      "count": 72,
       "name": "WATCH: Factor/theme exposure limit would be exceeded by this trade."
     },
     {
-      "count": 63,
+      "count": 70,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     }
   ],
@@ -158,69 +158,81 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 168,
+      "count": 196,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 156,
+      "count": 169,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 74,
+      "count": 82,
       "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
     },
     {
-      "count": 36,
+      "count": 38,
       "name": "WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size"
     },
     {
-      "count": 28,
+      "count": 34,
       "name": "WATCH: Position cannot be opened because Industrials sector exposure cap leaves no executable size"
     },
     {
-      "count": 14,
+      "count": 15,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation"
+    },
+    {
+      "count": 6,
+      "name": "SKIP: Consumer sector regime is weak (21/100); skip new entry"
+    },
+    {
+      "count": 1,
+      "name": "SKIP: Materials sector regime is weak (16/100); skip new entry"
+    },
+    {
+      "count": 1,
+      "name": "SKIP: Communication Services sector regime is weak (16/100); skip new entry"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 180,
+      "count": 208,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 163,
+      "count": 177,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 163,
+      "count": 177,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 138,
+      "count": 154,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 98,
+      "count": 111,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 74,
+      "count": 82,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
     },
     {
-      "count": 66,
+      "count": 73,
       "name": "Earnings blackout active."
     },
     {
-      "count": 64,
+      "count": 72,
       "name": "Factor/theme exposure limit would be exceeded."
     },
     {
-      "count": 64,
+      "count": 72,
       "name": "WATCH: Factor/theme exposure limit would be exceeded by this trade."
     },
     {
-      "count": 63,
+      "count": 70,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     }
   ],
@@ -228,21 +240,22 @@
   "open_positions_start": 2,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "NEUTRAL": 490
+    "NEUTRAL": 558
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 153,
-    "STRONG": 337
+    "NEUTRAL": 179,
+    "STRONG": 363,
+    "WEAK": 16
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 101,
-    "0.50-0.59": 35,
-    "<0.40": 354
+    "0.40-0.49": 121,
+    "0.50-0.59": 39,
+    "<0.40": 398
   },
   "performance_by_shadow_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 49,
-    "TREND_PULLBACK_RECLAIM": 21,
-    "VWAP_RECLAIM": 7
+    "RELATIVE_STRENGTH_LEADER": 59,
+    "TREND_PULLBACK_RECLAIM": 23,
+    "VWAP_RECLAIM": 8
   },
   "positions_closed_today": 0,
   "positions_opened_today": 0,
@@ -259,10 +272,11 @@
       "agent_results/decisions/market_lens_agent_20260714_033200.jsonl",
       "agent_results/decisions/market_lens_agent_20260714_043201.jsonl",
       "agent_results/decisions/market_lens_agent_20260714_053200.jsonl",
-      "agent_results/decisions/market_lens_agent_20260714_063217.jsonl"
+      "agent_results/decisions/market_lens_agent_20260714_063217.jsonl",
+      "agent_results/decisions/market_lens_agent_20260714_073210.jsonl"
     ],
-    "records": 490,
-    "run_id": "20260714_063217"
+    "records": 558,
+    "run_id": "20260714_073210"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -511,9 +525,9 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 49,
-    "TREND_PULLBACK_RECLAIM": 21,
-    "VWAP_RECLAIM": 7
+    "RELATIVE_STRENGTH_LEADER": 59,
+    "TREND_PULLBACK_RECLAIM": 23,
+    "VWAP_RECLAIM": 8
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
@@ -568,10 +582,10 @@
     },
     {
       "final_action": "WATCH",
-      "net_rr": 1.7734,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "net_rr": 1.7813,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.78.",
       "setup_score": 0.56,
-      "ticker": "EXR"
+      "ticker": "AMD"
     },
     {
       "final_action": "WATCH",
@@ -592,15 +606,15 @@
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 100440.06,
-  "total_result_cards_read": 490,
-  "total_scans": 7,
-  "total_tickers_scanned": 490,
+  "total_result_cards_read": 558,
+  "total_scans": 8,
+  "total_tickers_scanned": 558,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
   "week_start": null,
   "win_rate": null,
-  "worst_sector": "Semiconductors",
+  "worst_sector": "Consumer",
   "worst_setup_type": null,
   "worst_shadow_strategy": "TREND_PULLBACK_RECLAIM",
   "worst_ticker": "O"
