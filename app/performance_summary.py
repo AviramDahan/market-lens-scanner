@@ -80,6 +80,15 @@ def build_period_summary(
     gross_profit = sum(winners)
     gross_loss = abs(sum(losers))
     week_start, week_end = iso_week_bounds(target_date)
+    positions_opened = actions.get("BUY_SIMULATED", 0)
+    positions_closed = actions.get("TAKE_PROFIT", 0) + actions.get("EXIT_STOP", 0)
+    open_positions_end = portfolio.get("open_positions_end")
+    open_positions_start = infer_open_positions_start(
+        open_positions_end=open_positions_end,
+        positions_opened=positions_opened,
+        positions_closed=positions_closed,
+        fallback=portfolio.get("open_positions_start"),
+    )
 
     summary = {
         "summary_type": period,
@@ -96,10 +105,10 @@ def build_period_summary(
         "WATCH_count": actions.get("WATCH", 0),
         "SKIP_count": actions.get("SKIP", 0),
         "NO_TRADE_count": setups.get("No Trade", 0),
-        "open_positions_start": portfolio.get("open_positions_start"),
-        "open_positions_end": portfolio.get("open_positions_end"),
-        "positions_opened_today": actions.get("BUY_SIMULATED", 0),
-        "positions_closed_today": actions.get("TAKE_PROFIT", 0) + actions.get("EXIT_STOP", 0),
+        "open_positions_start": open_positions_start,
+        "open_positions_end": open_positions_end,
+        "positions_opened_today": positions_opened,
+        "positions_closed_today": positions_closed,
         "TP1_hits": actions.get("TAKE_PARTIAL_PROFIT", 0),
         "TP2_hits": actions.get("TAKE_PROFIT", 0),
         "SL_hits": actions.get("EXIT_STOP", 0),
@@ -155,6 +164,19 @@ def build_period_summary(
         "recommendations_for_next_week": recommendations(actions, shadow),
     }
     return summary
+
+
+def infer_open_positions_start(
+    *,
+    open_positions_end: Any,
+    positions_opened: int,
+    positions_closed: int,
+    fallback: Any,
+) -> Any:
+    end = to_float(open_positions_end)
+    if open_positions_end is None:
+        return fallback
+    return max(0, int(round(end)) - positions_opened + positions_closed)
 
 
 def collect_records(decision_dir: Path, *, period: str, target_date: date) -> tuple[list[dict[str, Any]], list[Path]]:

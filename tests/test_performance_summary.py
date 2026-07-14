@@ -113,3 +113,45 @@ def test_summary_generation_does_not_mutate_decisions(tmp_path: Path) -> None:
     )
 
     assert records == before
+
+
+def test_summary_infers_period_start_positions_from_actions(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260714_133000.jsonl"
+    records = sample_records() + [
+        {
+            "timestamp": "2026-07-14T13:39:55",
+            "ticker": "GILD",
+            "final_action": "BUY_SIMULATED",
+            "setup_type": "Fib 61.8 Confluence Buy Zone",
+            "setup_score": 0.57,
+            "sector": "Healthcare",
+            "net_rr": 3.67,
+            "net_rr_1": 3.4,
+            "net_rr_2": 4.77,
+            "reason": "BUY_SIMULATED: valid setup.",
+            "warnings": [],
+            "shadow_strategies": [],
+        }
+    ]
+    write_decisions(decision_path, records)
+
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260714_133000",
+        timestamp="2026-07-14T13:30:00",
+        portfolio={
+            "open_positions_start": 3,
+            "open_positions_end": 3,
+            "total_portfolio_value": 100400,
+        },
+    )
+
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+
+    assert daily["positions_opened_today"] == 1
+    assert daily["open_positions_end"] == 3
+    assert daily["open_positions_start"] == 2
