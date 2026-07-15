@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-07-15
-Total scans: 20
-Tickers scanned: 1395
+Total scans: 21
+Tickers scanned: 1464
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 633
-SKIP: 702
-NO_TRADE: 720
+WATCH: 657
+SKIP: 744
+NO_TRADE: 760
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100560.88
+Portfolio value: 100490.86
 Best ticker: BSX
 Worst ticker: SRE
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- RELATIVE_STRENGTH_LEADER: 75
-- TREND_PULLBACK_RECLAIM: 43
+- RELATIVE_STRENGTH_LEADER: 78
+- TREND_PULLBACK_RECLAIM: 47
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
