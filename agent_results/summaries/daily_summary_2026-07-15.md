@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-15
-Total scans: 5
-Tickers scanned: 350
+Total scans: 6
+Tickers scanned: 420
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 186
-SKIP: 149
-NO_TRADE: 146
+WATCH: 218
+SKIP: 184
+NO_TRADE: 182
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100541.9
@@ -16,8 +16,8 @@ Worst ticker: SRE
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 30
-- TREND_PULLBACK_RECLAIM: 14
+- RELATIVE_STRENGTH_LEADER: 32
+- TREND_PULLBACK_RECLAIM: 16
 
 Top rejected candidates:
 - EXC: WATCH score=0.62 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
@@ -25,9 +25,9 @@ Top rejected candidates:
 - EXC: WATCH score=0.62 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - EXC: WATCH score=0.62 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - AMD: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.78.
+- AMD: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.78.
 - SRE: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.08.
-- DE: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- DE: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- SRE: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.08.
 - DE: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - DE: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 
