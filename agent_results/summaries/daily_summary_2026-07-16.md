@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-07-16
-Total scans: 16
-Tickers scanned: 1103
+Total scans: 17
+Tickers scanned: 1171
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 682
-SKIP: 373
-NO_TRADE: 359
+WATCH: 707
+SKIP: 413
+NO_TRADE: 401
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100622.4
+Portfolio value: 100547.95
 Best ticker: MDLZ
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 82
-- TREND_PULLBACK_RECLAIM: 43
+- BREAKOUT_CONTINUATION: 2
+- RELATIVE_STRENGTH_LEADER: 84
+- TREND_PULLBACK_RECLAIM: 46
 - VWAP_RECLAIM: 57
 
 Top rejected candidates:
