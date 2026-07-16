@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-16
-Total scans: 7
-Tickers scanned: 482
+Total scans: 8
+Tickers scanned: 551
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 317
-SKIP: 144
-NO_TRADE: 134
+WATCH: 363
+SKIP: 164
+NO_TRADE: 152
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100346.08
@@ -16,9 +16,9 @@ Worst ticker: BLK
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 39
-- TREND_PULLBACK_RECLAIM: 18
-- VWAP_RECLAIM: 29
+- RELATIVE_STRENGTH_LEADER: 44
+- TREND_PULLBACK_RECLAIM: 21
+- VWAP_RECLAIM: 33
 
 Top rejected candidates:
 - AMD: WATCH score=0.61 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
@@ -29,7 +29,7 @@ Top rejected candidates:
 - ASML: SKIP score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ASML: SKIP score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ASML: SKIP score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- EPD: WATCH score=0.54 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- ASML: SKIP score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - EPD: WATCH score=0.54 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 
 Recommendations:
