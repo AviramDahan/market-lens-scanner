@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-13
-Total scans: 131
-Tickers scanned: 9057
+Total scans: 132
+Tickers scanned: 9126
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 4161
-SKIP: 4551
-NO_TRADE: 4556
+WATCH: 4197
+SKIP: 4582
+NO_TRADE: 4587
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100798.63
@@ -17,11 +17,12 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 24
-- RELATIVE_STRENGTH_LEADER: 685
-- TREND_PULLBACK_RECLAIM: 262
+- RELATIVE_STRENGTH_LEADER: 688
+- TREND_PULLBACK_RECLAIM: 263
 - VWAP_RECLAIM: 147
 
 Top rejected candidates:
+- EXC: WATCH score=0.68 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - EXC: WATCH score=0.68 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - EXC: WATCH score=0.68 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - EXC: WATCH score=0.68 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
@@ -30,7 +31,6 @@ Top rejected candidates:
 - EXC: WATCH score=0.62 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - EXC: WATCH score=0.62 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - EXC: WATCH score=0.62 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- ETN: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 - ETN: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 
 Recommendations:
