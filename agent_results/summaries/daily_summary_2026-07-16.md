@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-16
-Total scans: 11
-Tickers scanned: 758
+Total scans: 12
+Tickers scanned: 827
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 502
-SKIP: 223
-NO_TRADE: 209
+WATCH: 548
+SKIP: 243
+NO_TRADE: 229
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100346.08
@@ -16,9 +16,9 @@ Worst ticker: BLK
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 60
-- TREND_PULLBACK_RECLAIM: 30
-- VWAP_RECLAIM: 45
+- RELATIVE_STRENGTH_LEADER: 66
+- TREND_PULLBACK_RECLAIM: 33
+- VWAP_RECLAIM: 49
 
 Top rejected candidates:
 - AMD: WATCH score=0.61 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
