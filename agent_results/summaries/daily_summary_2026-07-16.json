@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 269,
-  "SKIP_count": 283,
+  "NO_TRADE_count": 310,
+  "SKIP_count": 326,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 640,
+  "WATCH_count": 663,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.6349,
-    "RELATIVE_STRENGTH_LEADER": 0.6978,
-    "TREND_PULLBACK_RECLAIM": 0.5683,
-    "VWAP_RECLAIM": 0.6499
+    "BREAKOUT_CONTINUATION": 0.6291,
+    "RELATIVE_STRENGTH_LEADER": 0.6921,
+    "TREND_PULLBACK_RECLAIM": 0.5645,
+    "VWAP_RECLAIM": 0.6425
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.6953,
-  "average_rr_to_target_2": 2.3285,
-  "average_setup_score": 0.2642,
+  "average_rr_to_target_1": 0.6749,
+  "average_rr_to_target_2": 2.2433,
+  "average_setup_score": 0.2573,
   "average_winner": null,
   "best_sector": "Consumer",
   "best_setup_type": "Breakout + Retest",
@@ -107,38 +107,38 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.3461,
+  "daily_return_pct": 0.4493,
   "data_quality_issues": [
     {
-      "count": 496,
+      "count": 514,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 269,
+      "count": 310,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 269,
+      "count": 310,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 253,
+      "count": 258,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
+    },
+    {
+      "count": 258,
+      "name": "WATCH: Market regime exposure limit would be exceeded (29747.03 > 20000.00)."
     },
     {
       "count": 253,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 253,
-      "name": "WATCH: Market regime exposure limit would be exceeded (29747.03 > 20000.00)."
-    },
-    {
-      "count": 218,
+      "count": 226,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 192,
+      "count": 201,
       "name": "Earnings blackout active."
     },
     {
@@ -158,20 +158,24 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 385,
+      "count": 404,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 269,
+      "count": 308,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 253,
+      "count": 258,
       "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
     },
     {
       "count": 14,
       "name": "WATCH: Valid setup, but price is not inside the buy zone"
+    },
+    {
+      "count": 3,
+      "name": "SKIP: Technology sector regime is weak (38/100); skip new entry"
     },
     {
       "count": 1,
@@ -184,35 +188,35 @@
   ],
   "most_common_warnings": [
     {
-      "count": 496,
+      "count": 514,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 269,
+      "count": 310,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 269,
+      "count": 310,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 253,
+      "count": 258,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
+    },
+    {
+      "count": 258,
+      "name": "WATCH: Market regime exposure limit would be exceeded (29747.03 > 20000.00)."
     },
     {
       "count": 253,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 253,
-      "name": "WATCH: Market regime exposure limit would be exceeded (29747.03 > 20000.00)."
-    },
-    {
-      "count": 218,
+      "count": 226,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 192,
+      "count": 201,
       "name": "Earnings blackout active."
     },
     {
@@ -228,22 +232,22 @@
   "open_positions_start": 3,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "NEUTRAL": 965
+    "NEUTRAL": 1034
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 528,
-    "STRONG": 433,
-    "WEAK": 4
+    "NEUTRAL": 553,
+    "STRONG": 470,
+    "WEAK": 11
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 190,
-    "0.50-0.59": 52,
+    "0.40-0.49": 204,
+    "0.50-0.59": 53,
     "0.60-0.69": 1,
-    "<0.40": 722
+    "<0.40": 776
   },
   "performance_by_shadow_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 78,
-    "TREND_PULLBACK_RECLAIM": 39,
+    "RELATIVE_STRENGTH_LEADER": 79,
+    "TREND_PULLBACK_RECLAIM": 41,
     "VWAP_RECLAIM": 57
   },
   "positions_closed_today": 0,
@@ -268,10 +272,11 @@
       "agent_results/decisions/market_lens_agent_20260716_103222.jsonl",
       "agent_results/decisions/market_lens_agent_20260716_113227.jsonl",
       "agent_results/decisions/market_lens_agent_20260716_123228.jsonl",
-      "agent_results/decisions/market_lens_agent_20260716_131211.jsonl"
+      "agent_results/decisions/market_lens_agent_20260716_131211.jsonl",
+      "agent_results/decisions/market_lens_agent_20260716_133703.jsonl"
     ],
-    "records": 965,
-    "run_id": "20260716_131211"
+    "records": 1034,
+    "run_id": "20260716_133703"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -520,8 +525,8 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 78,
-    "TREND_PULLBACK_RECLAIM": 39,
+    "RELATIVE_STRENGTH_LEADER": 79,
+    "TREND_PULLBACK_RECLAIM": 41,
     "VWAP_RECLAIM": 57
   },
   "summary_type": "daily",
@@ -600,17 +605,17 @@
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
-  "total_portfolio_value": 100346.08,
-  "total_result_cards_read": 965,
-  "total_scans": 14,
-  "total_tickers_scanned": 965,
+  "total_portfolio_value": 100449.34,
+  "total_result_cards_read": 1034,
+  "total_scans": 15,
+  "total_tickers_scanned": 1034,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
   "week_start": null,
   "win_rate": null,
-  "worst_sector": "Financials",
+  "worst_sector": "Consumer Defensive",
   "worst_setup_type": null,
   "worst_shadow_strategy": "TREND_PULLBACK_RECLAIM",
-  "worst_ticker": "BLK"
+  "worst_ticker": "NLY"
 }
