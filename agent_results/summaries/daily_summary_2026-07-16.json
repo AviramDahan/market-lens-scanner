@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 57,
-  "SKIP_count": 63,
+  "NO_TRADE_count": 77,
+  "SKIP_count": 84,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 134,
+  "WATCH_count": 179,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.6311,
-    "RELATIVE_STRENGTH_LEADER": 0.6861,
-    "TREND_PULLBACK_RECLAIM": 0.5624,
-    "VWAP_RECLAIM": 0.6529
+    "BREAKOUT_CONTINUATION": 0.6315,
+    "RELATIVE_STRENGTH_LEADER": 0.6897,
+    "TREND_PULLBACK_RECLAIM": 0.5631,
+    "VWAP_RECLAIM": 0.6515
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.7027,
-  "average_rr_to_target_2": 2.4223,
-  "average_setup_score": 0.2616,
+  "average_rr_to_target_1": 0.6989,
+  "average_rr_to_target_2": 2.3866,
+  "average_setup_score": 0.2612,
   "average_winner": null,
   "best_sector": "Consumer",
   "best_setup_type": "Breakout + Retest",
@@ -110,43 +110,43 @@
   "daily_return_pct": 0.3461,
   "data_quality_issues": [
     {
-      "count": 103,
+      "count": 138,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 57,
+      "count": 77,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 57,
+      "count": 77,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "WATCH: Market regime exposure limit would be exceeded (29747.03 > 20000.00)."
     },
     {
-      "count": 46,
+      "count": 61,
       "name": "Earnings blackout active."
     },
     {
-      "count": 45,
+      "count": 61,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 37,
+      "count": 49,
       "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
     },
     {
-      "count": 33,
+      "count": 43,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     }
   ],
@@ -158,19 +158,19 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 81,
+      "count": 108,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 57,
+      "count": 77,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
     },
     {
-      "count": 3,
+      "count": 4,
       "name": "WATCH: Valid setup, but price is not inside the buy zone"
     },
     {
@@ -184,43 +184,43 @@
   ],
   "most_common_warnings": [
     {
-      "count": 103,
+      "count": 138,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 57,
+      "count": 77,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 57,
+      "count": 77,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 54,
+      "count": 72,
       "name": "WATCH: Market regime exposure limit would be exceeded (29747.03 > 20000.00)."
     },
     {
-      "count": 46,
+      "count": 61,
       "name": "Earnings blackout active."
     },
     {
-      "count": 45,
+      "count": 61,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 37,
+      "count": 49,
       "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
     },
     {
-      "count": 33,
+      "count": 43,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     }
   ],
@@ -228,23 +228,23 @@
   "open_positions_start": 3,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "NEUTRAL": 206
+    "NEUTRAL": 275
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 119,
-    "STRONG": 83,
+    "NEUTRAL": 155,
+    "STRONG": 116,
     "WEAK": 4
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 40,
-    "0.50-0.59": 8,
+    "0.40-0.49": 53,
+    "0.50-0.59": 12,
     "0.60-0.69": 1,
-    "<0.40": 157
+    "<0.40": 209
   },
   "performance_by_shadow_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 19,
-    "TREND_PULLBACK_RECLAIM": 6,
-    "VWAP_RECLAIM": 13
+    "RELATIVE_STRENGTH_LEADER": 24,
+    "TREND_PULLBACK_RECLAIM": 9,
+    "VWAP_RECLAIM": 17
   },
   "positions_closed_today": 0,
   "positions_opened_today": 0,
@@ -257,10 +257,11 @@
     "decision_files": [
       "agent_results/decisions/market_lens_agent_20260716_001658.jsonl",
       "agent_results/decisions/market_lens_agent_20260716_013227.jsonl",
-      "agent_results/decisions/market_lens_agent_20260716_023222.jsonl"
+      "agent_results/decisions/market_lens_agent_20260716_023222.jsonl",
+      "agent_results/decisions/market_lens_agent_20260716_033222.jsonl"
     ],
-    "records": 206,
-    "run_id": "20260716_023222"
+    "records": 275,
+    "run_id": "20260716_033222"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -509,9 +510,9 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 19,
-    "TREND_PULLBACK_RECLAIM": 6,
-    "VWAP_RECLAIM": 13
+    "RELATIVE_STRENGTH_LEADER": 24,
+    "TREND_PULLBACK_RECLAIM": 9,
+    "VWAP_RECLAIM": 17
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
@@ -544,55 +545,55 @@
       "ticker": "ASML"
     },
     {
-      "final_action": "WATCH",
-      "net_rr": 1.3788,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
-      "setup_score": 0.52,
-      "ticker": "NVDA"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.3788,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
-      "setup_score": 0.52,
-      "ticker": "NVDA"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.3788,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
-      "setup_score": 0.52,
-      "ticker": "NVDA"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 0.8267,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.09 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.83.",
-      "setup_score": 0.5,
-      "ticker": "HIMS"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 0.8267,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.09 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.83.",
-      "setup_score": 0.5,
-      "ticker": "HIMS"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.3516,
+      "final_action": "SKIP",
+      "net_rr": 3.0569,
       "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
-      "setup_score": 0.49,
-      "ticker": "AIG"
+      "setup_score": 0.55,
+      "ticker": "ASML"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.5256,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.54,
+      "ticker": "EPD"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.3788,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
+      "setup_score": 0.52,
+      "ticker": "NVDA"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.3788,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
+      "setup_score": 0.52,
+      "ticker": "NVDA"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.3788,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
+      "setup_score": 0.52,
+      "ticker": "NVDA"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.3788,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.38.",
+      "setup_score": 0.52,
+      "ticker": "NVDA"
     }
   ],
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 100346.08,
-  "total_result_cards_read": 206,
-  "total_scans": 3,
-  "total_tickers_scanned": 206,
+  "total_result_cards_read": 275,
+  "total_scans": 4,
+  "total_tickers_scanned": 275,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
