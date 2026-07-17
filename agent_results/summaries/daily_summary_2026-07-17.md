@@ -1,23 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-07-17
-Total scans: 15
-Tickers scanned: 1033
+Total scans: 16
+Tickers scanned: 1101
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 524
-SKIP: 479
-NO_TRADE: 478
+WATCH: 544
+SKIP: 525
+NO_TRADE: 526
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101034.79
-Best ticker: ISRG
+Portfolio value: 101073.14
+Best ticker: BSX
 Worst ticker: DUK
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 32
+- BREAKOUT_CONTINUATION: 3
+- RELATIVE_STRENGTH_LEADER: 36
 - TREND_PULLBACK_RECLAIM: 2
 
 Top rejected candidates:
