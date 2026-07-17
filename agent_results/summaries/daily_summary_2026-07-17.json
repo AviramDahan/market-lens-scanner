@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 88,
-  "SKIP_count": 91,
+  "NO_TRADE_count": 120,
+  "SKIP_count": 122,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 109,
+  "WATCH_count": 145,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5874,
-    "RELATIVE_STRENGTH_LEADER": 0.6829,
-    "TREND_PULLBACK_RECLAIM": 0.5215,
-    "VWAP_RECLAIM": 0.6044
+    "BREAKOUT_CONTINUATION": 0.5861,
+    "RELATIVE_STRENGTH_LEADER": 0.683,
+    "TREND_PULLBACK_RECLAIM": 0.5195,
+    "VWAP_RECLAIM": 0.6018
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.4636,
-  "average_rr_to_target_2": 1.5712,
-  "average_setup_score": 0.2115,
+  "average_rr_to_target_1": 0.4539,
+  "average_rr_to_target_2": 1.5293,
+  "average_setup_score": 0.2088,
   "average_winner": null,
   "best_sector": "Energy",
   "best_setup_type": "No Trade",
@@ -89,48 +89,64 @@
       "strategy": "RELATIVE_STRENGTH_LEADER",
       "ticker": "V",
       "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GS",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "V",
+      "would_buy": true
     }
   ],
   "daily_return_pct": 0.7986,
   "data_quality_issues": [
     {
-      "count": 88,
+      "count": 120,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 88,
+      "count": 120,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 77,
+      "count": 101,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 41,
+      "count": 54,
       "name": "Earnings blackout active."
     },
     {
-      "count": 33,
+      "count": 43,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 27,
+      "count": 36,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 23,
+      "count": 30,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 18,
+      "count": 23,
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 17,
+      "count": 22,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 15,
+      "count": 18,
       "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
     }
   ],
@@ -142,27 +158,27 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 85,
+      "count": 116,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 79,
+      "count": 105,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 13,
-      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation"
-    },
-    {
-      "count": 13,
+      "count": 17,
       "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
     },
     {
-      "count": 6,
+      "count": 16,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation"
+    },
+    {
+      "count": 8,
       "name": "WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size"
     },
     {
-      "count": 3,
+      "count": 4,
       "name": "WATCH: Position cannot be opened because Utilities sector exposure cap leaves no executable size"
     },
     {
@@ -172,43 +188,43 @@
   ],
   "most_common_warnings": [
     {
-      "count": 88,
+      "count": 120,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 88,
+      "count": 120,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 77,
+      "count": 101,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 41,
+      "count": 54,
       "name": "Earnings blackout active."
     },
     {
-      "count": 33,
+      "count": 43,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 27,
+      "count": 36,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 23,
+      "count": 30,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 18,
+      "count": 23,
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 17,
+      "count": 22,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 15,
+      "count": 18,
       "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
     }
   ],
@@ -216,20 +232,20 @@
   "open_positions_start": 2,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "NEUTRAL": 206
+    "NEUTRAL": 275
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 91,
-    "STRONG": 115
+    "NEUTRAL": 119,
+    "STRONG": 156
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 36,
-    "0.50-0.59": 7,
-    "0.60-0.69": 3,
-    "<0.40": 160
+    "0.40-0.49": 48,
+    "0.50-0.59": 9,
+    "0.60-0.69": 4,
+    "<0.40": 214
   },
   "performance_by_shadow_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 6,
+    "RELATIVE_STRENGTH_LEADER": 8,
     "TREND_PULLBACK_RECLAIM": 2
   },
   "positions_closed_today": 0,
@@ -243,10 +259,11 @@
     "decision_files": [
       "agent_results/decisions/market_lens_agent_20260717_001700.jsonl",
       "agent_results/decisions/market_lens_agent_20260717_013219.jsonl",
-      "agent_results/decisions/market_lens_agent_20260717_023212.jsonl"
+      "agent_results/decisions/market_lens_agent_20260717_023212.jsonl",
+      "agent_results/decisions/market_lens_agent_20260717_033213.jsonl"
     ],
-    "records": 206,
-    "run_id": "20260717_023212"
+    "records": 275,
+    "run_id": "20260717_033213"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -394,6 +411,22 @@
       "strategy": "RELATIVE_STRENGTH_LEADER",
       "ticker": "V",
       "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GS",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "V",
+      "would_buy": true
     }
   ],
   "shadow_strategies_top_candidates": [
@@ -463,23 +496,23 @@
     },
     {
       "active_final_action": "WATCH",
-      "confidence": 0.8571,
-      "reason": "Trend pullback reclaim: shadow buy blocked because reclaim or completed confirmation exists.",
-      "strategy": "TREND_PULLBACK_RECLAIM",
-      "ticker": "COKE",
-      "would_buy": false
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GS",
+      "would_buy": true
     },
     {
       "active_final_action": "WATCH",
-      "confidence": 0.8571,
-      "reason": "Trend pullback reclaim: shadow buy blocked because reclaim or completed confirmation exists.",
-      "strategy": "TREND_PULLBACK_RECLAIM",
-      "ticker": "EXC",
-      "would_buy": false
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "V",
+      "would_buy": true
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 6,
+    "RELATIVE_STRENGTH_LEADER": 8,
     "TREND_PULLBACK_RECLAIM": 2
   },
   "summary_type": "daily",
@@ -507,6 +540,20 @@
     },
     {
       "final_action": "WATCH",
+      "net_rr": 2.3927,
+      "reason": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.",
+      "setup_score": 0.68,
+      "ticker": "EXC"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.6238,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.92 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.62.",
+      "setup_score": 0.53,
+      "ticker": "CVX"
+    },
+    {
+      "final_action": "WATCH",
       "net_rr": 1.6238,
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.92 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.62.",
       "setup_score": 0.53,
@@ -539,29 +586,15 @@
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.15 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.73.",
       "setup_score": 0.53,
       "ticker": "SRE"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.1157,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.12.",
-      "setup_score": 0.51,
-      "ticker": "DUK"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.1157,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.12.",
-      "setup_score": 0.51,
-      "ticker": "DUK"
     }
   ],
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 100798.63,
-  "total_result_cards_read": 206,
-  "total_scans": 3,
-  "total_tickers_scanned": 206,
+  "total_result_cards_read": 275,
+  "total_scans": 4,
+  "total_tickers_scanned": 275,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
