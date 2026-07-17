@@ -1,22 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-07-17
-Total scans: 14
-Tickers scanned: 965
+Total scans: 15
+Tickers scanned: 1033
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 505
-SKIP: 432
-NO_TRADE: 429
+WATCH: 524
+SKIP: 479
+NO_TRADE: 478
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100798.63
+Portfolio value: 101034.79
 Best ticker: ISRG
-Worst ticker: KIM
+Worst ticker: DUK
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 28
+- BREAKOUT_CONTINUATION: 1
+- RELATIVE_STRENGTH_LEADER: 32
 - TREND_PULLBACK_RECLAIM: 2
 
 Top rejected candidates:
