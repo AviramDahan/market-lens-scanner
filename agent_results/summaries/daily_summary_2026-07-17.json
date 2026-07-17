@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 883,
-  "SKIP_count": 886,
+  "NO_TRADE_count": 928,
+  "SKIP_count": 931,
   "SL_hits": 1,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 714,
+  "WATCH_count": 737,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5703,
-    "RELATIVE_STRENGTH_LEADER": 0.6656,
-    "TREND_PULLBACK_RECLAIM": 0.5048,
-    "VWAP_RECLAIM": 0.5766
+    "BREAKOUT_CONTINUATION": 0.5696,
+    "RELATIVE_STRENGTH_LEADER": 0.6641,
+    "TREND_PULLBACK_RECLAIM": 0.504,
+    "VWAP_RECLAIM": 0.5756
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.3882,
-  "average_rr_to_target_2": 1.3288,
-  "average_setup_score": 0.1746,
+  "average_rr_to_target_1": 0.3855,
+  "average_rr_to_target_2": 1.3241,
+  "average_setup_score": 0.1726,
   "average_winner": null,
   "best_sector": "Energy",
   "best_setup_type": "No Trade",
@@ -107,26 +107,26 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.7326,
+  "daily_return_pct": 0.6997,
   "data_quality_issues": [
     {
-      "count": 883,
+      "count": 928,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 883,
+      "count": 928,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 468,
+      "count": 480,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 318,
+      "count": 333,
       "name": "Earnings blackout active."
     },
     {
-      "count": 200,
+      "count": 205,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -134,7 +134,7 @@
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 122,
+      "count": 129,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -158,11 +158,11 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 856,
+      "count": 901,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 519,
+      "count": 536,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -174,7 +174,7 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation"
     },
     {
-      "count": 44,
+      "count": 50,
       "name": "WATCH: NEUTRAL market requires setup score (0"
     },
     {
@@ -200,23 +200,23 @@
   ],
   "most_common_warnings": [
     {
-      "count": 883,
+      "count": 928,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 883,
+      "count": 928,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 468,
+      "count": 480,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 318,
+      "count": 333,
       "name": "Earnings blackout active."
     },
     {
-      "count": 200,
+      "count": 205,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -224,7 +224,7 @@
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 122,
+      "count": 129,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -244,23 +244,23 @@
   "open_positions_start": 2,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "NEUTRAL": 1648
+    "NEUTRAL": 1717
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 546,
-    "STRONG": 1075,
+    "NEUTRAL": 564,
+    "STRONG": 1126,
     "WEAK": 27
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 269,
-    "0.50-0.59": 47,
+    "0.40-0.49": 278,
+    "0.50-0.59": 48,
     "0.60-0.69": 14,
-    "<0.40": 1318
+    "<0.40": 1377
   },
   "performance_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 5,
-    "RELATIVE_STRENGTH_LEADER": 55,
-    "TREND_PULLBACK_RECLAIM": 17
+    "BREAKOUT_CONTINUATION": 6,
+    "RELATIVE_STRENGTH_LEADER": 57,
+    "TREND_PULLBACK_RECLAIM": 18
   },
   "positions_closed_today": 1,
   "positions_opened_today": 0,
@@ -294,10 +294,11 @@
       "agent_results/decisions/market_lens_agent_20260717_163232.jsonl",
       "agent_results/decisions/market_lens_agent_20260717_170240.jsonl",
       "agent_results/decisions/market_lens_agent_20260717_173236.jsonl",
-      "agent_results/decisions/market_lens_agent_20260717_180233.jsonl"
+      "agent_results/decisions/market_lens_agent_20260717_180233.jsonl",
+      "agent_results/decisions/market_lens_agent_20260717_183251.jsonl"
     ],
-    "records": 1648,
-    "run_id": "20260717_180233"
+    "records": 1717,
+    "run_id": "20260717_183251"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -546,9 +547,9 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "BREAKOUT_CONTINUATION": 5,
-    "RELATIVE_STRENGTH_LEADER": 55,
-    "TREND_PULLBACK_RECLAIM": 17
+    "BREAKOUT_CONTINUATION": 6,
+    "RELATIVE_STRENGTH_LEADER": 57,
+    "TREND_PULLBACK_RECLAIM": 18
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
@@ -626,10 +627,10 @@
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 1,
-  "total_portfolio_value": 100732.55,
-  "total_result_cards_read": 1648,
-  "total_scans": 24,
-  "total_tickers_scanned": 1648,
+  "total_portfolio_value": 100699.68,
+  "total_result_cards_read": 1717,
+  "total_scans": 25,
+  "total_tickers_scanned": 1717,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
