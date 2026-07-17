@@ -17,6 +17,10 @@ _LAST_SYNC_AT = 0.0
 _LAST_SYNC_RESULT: dict[str, Any] = {"enabled": False, "reason": "not run yet"}
 _LAST_SNAPSHOT_SYNC_AT = 0.0
 _LAST_SNAPSHOT_SYNC_RESULT: dict[str, Any] = {"enabled": False, "reason": "not run yet"}
+_LAST_SNAPSHOT_ASSET_SYNC_AT = 0.0
+_LAST_SNAPSHOT_ASSET_SYNC_RESULT: dict[str, Any] = {"enabled": False, "reason": "not run yet"}
+
+SNAPSHOT_ASSET_SUFFIXES = {".json", ".jsonl", ".md", ".png", ".jpg", ".jpeg"}
 
 
 def sync_dashboard_snapshot_if_enabled(project_root: Path) -> dict[str, Any]:
@@ -69,6 +73,129 @@ def snapshot_sync_enabled() -> tuple[bool, str]:
     if not github_token():
         return False, "missing GitHub token"
     return True, "enabled"
+
+
+def sync_dashboard_snapshot_assets_if_enabled(project_root: Path, dashboard: dict[str, Any]) -> dict[str, Any]:
+    """Download media and report files referenced by the current dashboard snapshot.
+
+    The live Render service can refresh `dashboard_snapshot.json` without a deploy.
+    That snapshot may point at newly committed charts/screenshots, so the server
+    needs to pull those referenced files too before the browser tries to render them.
+    """
+    global _LAST_SNAPSHOT_ASSET_SYNC_AT, _LAST_SNAPSHOT_ASSET_SYNC_RESULT
+
+    enabled, reason = snapshot_sync_enabled()
+    if not enabled:
+        _LAST_SNAPSHOT_ASSET_SYNC_RESULT = {"enabled": False, "reason": reason}
+        return _LAST_SNAPSHOT_ASSET_SYNC_RESULT
+
+    referenced_paths = dashboard_asset_paths(dashboard)
+    if not referenced_paths:
+        _LAST_SNAPSHOT_ASSET_SYNC_RESULT = {
+            "enabled": True,
+            "downloaded": 0,
+            "skipped": 0,
+            "missing_before_sync": 0,
+            "reason": "snapshot references no agent result assets",
+        }
+        return _LAST_SNAPSHOT_ASSET_SYNC_RESULT
+
+    missing_paths = [path for path in referenced_paths if not (project_root / path).exists()]
+    ttl = int_env("MARKET_LENS_DASHBOARD_ASSET_SYNC_TTL_SECONDS", 45)
+    now = time.time()
+    if not missing_paths and now - _LAST_SNAPSHOT_ASSET_SYNC_AT < ttl:
+        return {**_LAST_SNAPSHOT_ASSET_SYNC_RESULT, "cached": True}
+
+    repo = os.getenv("GITHUB_ACTIONS_REPOSITORY", "AviramDahan/market-lens-scanner")
+    ref = os.getenv("GITHUB_ACTIONS_REF", "main")
+    state = load_state(project_root)
+    limit = int_env("MARKET_LENS_DASHBOARD_ASSET_SYNC_LIMIT", 40)
+    time_budget = int_env("MARKET_LENS_DASHBOARD_ASSET_SYNC_TIME_BUDGET_SECONDS", 15)
+    started_at = time.monotonic()
+    downloaded: list[str] = []
+    skipped = 0
+    warnings: list[str] = []
+    limit_reached = False
+
+    for target in referenced_paths[:limit]:
+        if time_budget > 0 and time.monotonic() - started_at >= time_budget:
+            limit_reached = True
+            break
+        try:
+            local_path = project_root / target
+            if local_path.exists():
+                skipped += 1
+                continue
+            meta = github_file_metadata(repo, ref, target)
+            sha = str(meta.get("sha") or "")
+            download_url = raw_github_url(repo, ref, target, sha)
+            download_to_path(download_url, local_path)
+            if sha:
+                state[target] = sha
+            downloaded.append(target)
+        except Exception as exc:  # pragma: no cover - depends on live GitHub/network state
+            warnings.append(f"{target}: {exc}")
+
+    if len(referenced_paths) > limit:
+        limit_reached = True
+
+    save_state(project_root, state)
+    result = {
+        "enabled": True,
+        "repo": repo,
+        "ref": ref,
+        "referenced": len(referenced_paths),
+        "missing_before_sync": len(missing_paths),
+        "downloaded": len(downloaded),
+        "skipped": skipped,
+        "download_limit": limit,
+        "download_limit_reached": limit_reached,
+        "time_budget_seconds": time_budget,
+        "warnings": warnings[:10],
+        "downloaded_paths": downloaded[:20],
+        "synced_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    _LAST_SNAPSHOT_ASSET_SYNC_AT = time.time()
+    _LAST_SNAPSHOT_ASSET_SYNC_RESULT = result
+    return result
+
+
+def dashboard_asset_paths(value: Any) -> list[str]:
+    seen: set[str] = set()
+    paths: list[str] = []
+
+    def visit(item: Any) -> None:
+        if isinstance(item, dict):
+            for child in item.values():
+                visit(child)
+            return
+        if isinstance(item, list):
+            for child in item:
+                visit(child)
+            return
+        if not isinstance(item, str):
+            return
+        path = agent_result_path_from_url(item)
+        if path and path not in seen:
+            seen.add(path)
+            paths.append(path)
+
+    visit(value)
+    return paths
+
+
+def agent_result_path_from_url(value: str) -> str:
+    text = value.strip()
+    if not text.startswith("/agent-results/"):
+        return ""
+    path = "agent_results/" + text.split("/agent-results/", 1)[1].split("?", 1)[0].split("#", 1)[0]
+    suffix = Path(path).suffix.lower()
+    if suffix not in SNAPSHOT_ASSET_SUFFIXES:
+        return ""
+    normalized = Path(path)
+    if normalized.is_absolute() or ".." in normalized.parts:
+        return ""
+    return path.replace("\\", "/")
 
 
 def sync_agent_results_if_enabled(project_root: Path) -> dict[str, Any]:

@@ -583,7 +583,10 @@ Render deploy. Each Agent/monitor run writes `agent_results/dashboard_snapshot.j
 and the deployed dashboard reads that compact snapshot instead of rebuilding the
 entire Excel workbook on every request. Render can optionally refresh just this
 single snapshot from GitHub with `MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED=true`.
-The heavier multi-file result sync remains disabled by default.
+When a refreshed snapshot points at new chart or screenshot files, Render also
+downloads those referenced `/agent-results/...` assets so the dashboard images
+do not break between deploys. The heavier multi-file result sync remains
+disabled by default.
 
 The cloud setup has two separate workflows:
 
@@ -626,6 +629,9 @@ MARKET_LENS_RESULTS_SYNC_CHART_LIMIT=3
 MARKET_LENS_RESULTS_SYNC_SCREENSHOT_LIMIT=2
 MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED=true
 MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS=45
+MARKET_LENS_DASHBOARD_ASSET_SYNC_TTL_SECONDS=45
+MARKET_LENS_DASHBOARD_ASSET_SYNC_LIMIT=40
+MARKET_LENS_DASHBOARD_ASSET_SYNC_TIME_BUDGET_SECONDS=15
 MARKET_LENS_AGENT_MEDIA_RETENTION_ENABLED=true
 MARKET_LENS_AGENT_CHART_RETENTION_MAX_FILES=240
 MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_FILES=60

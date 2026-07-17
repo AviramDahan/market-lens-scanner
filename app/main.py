@@ -21,7 +21,11 @@ from app.monitor_trigger import (
     monitor_trigger_configured,
     rate_limit_reason,
 )
-from app.results_sync import sync_agent_results_if_enabled, sync_dashboard_snapshot_if_enabled
+from app.results_sync import (
+    sync_agent_results_if_enabled,
+    sync_dashboard_snapshot_assets_if_enabled,
+    sync_dashboard_snapshot_if_enabled,
+)
 from app.scanner import scan_tickers
 from app.scan_trigger import (
     dispatch_agent_scan,
@@ -103,7 +107,8 @@ def current_agent_dashboard() -> dict:
         try:
             dashboard = json.loads(DASHBOARD_SNAPSHOT_PATH.read_text(encoding="utf-8"))
             if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
-                dashboard["results_sync"] = sync_status
+                asset_sync_status = sync_dashboard_snapshot_assets_if_enabled(PROJECT_ROOT, dashboard)
+                dashboard["results_sync"] = {**sync_status, "asset_sync": asset_sync_status}
                 return dashboard
         except Exception:
             pass
