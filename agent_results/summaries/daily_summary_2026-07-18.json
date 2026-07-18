@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 69,
-  "SKIP_count": 70,
+  "NO_TRADE_count": 100,
+  "SKIP_count": 101,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 66,
+  "WATCH_count": 103,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5809,
-    "RELATIVE_STRENGTH_LEADER": 0.6486,
-    "TREND_PULLBACK_RECLAIM": 0.5114,
-    "VWAP_RECLAIM": 0.5978
+    "BREAKOUT_CONTINUATION": 0.5878,
+    "RELATIVE_STRENGTH_LEADER": 0.6578,
+    "TREND_PULLBACK_RECLAIM": 0.5204,
+    "VWAP_RECLAIM": 0.6031
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.4383,
-  "average_rr_to_target_2": 1.6176,
-  "average_setup_score": 0.1805,
+  "average_rr_to_target_1": 0.4562,
+  "average_rr_to_target_2": 1.6485,
+  "average_setup_score": 0.1875,
   "average_winner": null,
   "best_sector": "Real Estate",
   "best_setup_type": "No Trade",
@@ -65,48 +65,80 @@
       "strategy": "RELATIVE_STRENGTH_LEADER",
       "ticker": "V",
       "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "KDP",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MS",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "ETN",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "V",
+      "would_buy": true
     }
   ],
   "daily_return_pct": 0.6773,
   "data_quality_issues": [
     {
-      "count": 69,
+      "count": 100,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 69,
+      "count": 100,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 36,
+      "count": 55,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 28,
+      "count": 40,
       "name": "Earnings blackout active."
     },
     {
-      "count": 18,
+      "count": 28,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 12,
+      "count": 18,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 6,
+      "count": 9,
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 6,
+      "count": 9,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 4,
+      "count": 6,
       "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.35 < 0.4"
     },
     {
-      "count": 4,
+      "count": 6,
       "name": "WATCH: NEUTRAL market requires setup score (0.35 < 0.55)."
     }
   ],
@@ -118,61 +150,61 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 69,
+      "count": 100,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 49,
+      "count": 77,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 16,
+      "count": 24,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation"
     },
     {
-      "count": 2,
+      "count": 3,
       "name": "WATCH: Position cannot be opened because Industrials sector exposure cap leaves no executable size"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 69,
+      "count": 100,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 69,
+      "count": 100,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 36,
+      "count": 55,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 28,
+      "count": 40,
       "name": "Earnings blackout active."
     },
     {
-      "count": 18,
+      "count": 28,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 12,
+      "count": 18,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 6,
+      "count": 9,
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 6,
+      "count": 9,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 4,
+      "count": 6,
       "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.35 < 0.4"
     },
     {
-      "count": 4,
+      "count": 6,
       "name": "WATCH: NEUTRAL market requires setup score (0.35 < 0.55)."
     }
   ],
@@ -180,18 +212,19 @@
   "open_positions_start": 1,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "NEUTRAL": 138
+    "NEUTRAL": 207
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 45,
-    "STRONG": 93
+    "NEUTRAL": 68,
+    "STRONG": 139
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 26,
-    "<0.40": 112
+    "0.40-0.49": 42,
+    "<0.40": 165
   },
   "performance_by_shadow_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 5
+    "RELATIVE_STRENGTH_LEADER": 8,
+    "TREND_PULLBACK_RECLAIM": 1
   },
   "positions_closed_today": 0,
   "positions_opened_today": 0,
@@ -203,10 +236,11 @@
   "runtime_metrics": {
     "decision_files": [
       "agent_results/decisions/market_lens_agent_20260718_001705.jsonl",
-      "agent_results/decisions/market_lens_agent_20260718_013220.jsonl"
+      "agent_results/decisions/market_lens_agent_20260718_013220.jsonl",
+      "agent_results/decisions/market_lens_agent_20260718_023206.jsonl"
     ],
-    "records": 138,
-    "run_id": "20260718_013220"
+    "records": 207,
+    "run_id": "20260718_023206"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -330,6 +364,38 @@
       "strategy": "RELATIVE_STRENGTH_LEADER",
       "ticker": "V",
       "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "KDP",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MS",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "ETN",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "V",
+      "would_buy": true
     }
   ],
   "shadow_strategies_top_candidates": [
@@ -375,47 +441,48 @@
     },
     {
       "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "KDP",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MS",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "ETN",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "V",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
       "confidence": 0.8571,
       "reason": "Trend pullback reclaim: shadow buy blocked because setup score is at least 0.40.",
       "strategy": "TREND_PULLBACK_RECLAIM",
       "ticker": "MS",
       "would_buy": false
-    },
-    {
-      "active_final_action": "WATCH",
-      "confidence": 0.8571,
-      "reason": "Trend pullback reclaim: shadow buy blocked because primary net R/R is acceptable.",
-      "strategy": "TREND_PULLBACK_RECLAIM",
-      "ticker": "EXC",
-      "would_buy": false
-    },
-    {
-      "active_final_action": "WATCH",
-      "confidence": 0.8571,
-      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
-      "strategy": "TREND_PULLBACK_RECLAIM",
-      "ticker": "VICI",
-      "would_buy": false
-    },
-    {
-      "active_final_action": "WATCH",
-      "confidence": 0.8571,
-      "reason": "Trend pullback reclaim: shadow buy blocked because setup score is at least 0.40.",
-      "strategy": "TREND_PULLBACK_RECLAIM",
-      "ticker": "BSX",
-      "would_buy": false
-    },
-    {
-      "active_final_action": "WATCH",
-      "confidence": 0.8571,
-      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
-      "strategy": "TREND_PULLBACK_RECLAIM",
-      "ticker": "OXY",
-      "would_buy": false
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 5
+    "RELATIVE_STRENGTH_LEADER": 8,
+    "TREND_PULLBACK_RECLAIM": 1
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
@@ -435,6 +502,13 @@
     },
     {
       "final_action": "WATCH",
+      "net_rr": 2.2345,
+      "reason": "WATCH: Position cannot be opened because Industrials sector exposure cap leaves no executable size.",
+      "setup_score": 0.49,
+      "ticker": "CAT"
+    },
+    {
+      "final_action": "WATCH",
       "net_rr": 1.1561,
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.16.",
       "setup_score": 0.49,
@@ -446,6 +520,20 @@
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.16.",
       "setup_score": 0.49,
       "ticker": "CVX"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.1561,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.16.",
+      "setup_score": 0.49,
+      "ticker": "CVX"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.8702,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.29 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.87.",
+      "setup_score": 0.49,
+      "ticker": "EXC"
     },
     {
       "final_action": "WATCH",
@@ -467,36 +555,15 @@
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.",
       "setup_score": 0.47,
       "ticker": "KDP"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 0.906,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.36 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.91.",
-      "setup_score": 0.47,
-      "ticker": "CHD"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 0.906,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.36 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.91.",
-      "setup_score": 0.47,
-      "ticker": "CHD"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.3744,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.91 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.37.",
-      "setup_score": 0.46,
-      "ticker": "COP"
     }
   ],
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 100677.26,
-  "total_result_cards_read": 138,
-  "total_scans": 2,
-  "total_tickers_scanned": 138,
+  "total_result_cards_read": 207,
+  "total_scans": 3,
+  "total_tickers_scanned": 207,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
