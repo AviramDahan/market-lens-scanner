@@ -38,9 +38,10 @@ Universe through the UI. The app builds the broad source universe from S&P 500,
 Nasdaq-100, Russell 1000, Russell 3000, and the curated dropdown sector lists.
 It then filters for common liquid US equities, price, dollar volume, ATR%,
 relative strength, trend quality, and sector health before selecting a
-diversified scan basket. The current cloud target is 100 scanned tickers per
-run with up to 15 per sector, while weak sectors are excluded from new
-candidates.
+diversified scan basket. The current cloud target is 100 fresh tickers per run
+with up to 15 per sector, while weak sectors are excluded from new candidates.
+Recent WATCH/WATCH_READY names and near-miss SKIP names are carried forward
+outside that fresh quota, bounded by the production stability cap.
 
 Open simulated positions are always added to the scan basket, even if they are
 not selected by the current Smart Universe run. This keeps stop and target

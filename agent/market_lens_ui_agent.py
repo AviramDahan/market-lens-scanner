@@ -6,11 +6,12 @@ import re
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, time as datetime_time, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode, urljoin
 from urllib.request import Request, urlopen
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from openpyxl import load_workbook
@@ -38,6 +39,7 @@ SUMMARY_DIR = RUN_DIR / "summaries"
 CHART_DIR = RUN_DIR / "charts"
 DECISION_DIR = RUN_DIR / "decisions"
 APP_READY_SELECTOR = '[data-testid="auth-email"], #authStatus'
+NEW_YORK_TZ = ZoneInfo("America/New_York")
 
 
 @dataclass
@@ -302,12 +304,19 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
     open_tickers = read_open_position_tickers(settings.excel_path)
     watch_tickers = read_recent_watch_tickers(settings.excel_path)
-    carry_forward_tickers = limited_carry_forward_tickers(open_tickers, watch_tickers)
+    near_miss_tickers = read_recent_near_miss_tickers(settings.excel_path)
+    carry_forward_tickers = limited_carry_forward_tickers(open_tickers, watch_tickers, near_miss_tickers)
     skipped_tickers = read_recent_skip_tickers(settings.excel_path)
     if carry_forward_tickers:
         log(
             "Carry-forward tickers added outside universe quota: "
             f"{len(carry_forward_tickers)} ({' '.join(carry_forward_tickers)})"
+        )
+    if near_miss_tickers:
+        log(
+            "Near-miss SKIP tickers kept in follow-up queue: "
+            f"{len(near_miss_tickers)} ({' '.join(near_miss_tickers[:20])}"
+            f"{' ...' if len(near_miss_tickers) > 20 else ''})"
         )
     if skipped_tickers:
         log(
@@ -340,22 +349,41 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
     return current_scan_basket(page)
 
 
-def limited_carry_forward_tickers(open_tickers: list[str], watch_tickers: list[str]) -> list[str]:
+def limited_carry_forward_tickers(
+    open_tickers: list[str],
+    watch_tickers: list[str],
+    near_miss_tickers: list[str] | None = None,
+) -> list[str]:
+    near_miss_tickers = near_miss_tickers or []
     open_unique = unique_tickers(open_tickers)
     watch_unique = [ticker for ticker in unique_tickers(watch_tickers) if ticker not in open_unique]
+    near_unique = [
+        ticker
+        for ticker in unique_tickers(near_miss_tickers)
+        if ticker not in open_unique and ticker not in watch_unique
+    ]
     limit = int(os.getenv("MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT", "30"))
     if limit <= 0:
-        return unique_tickers(open_unique + watch_unique)
+        selected_watch = watch_unique
+    else:
+        remaining = max(0, limit - len(open_unique))
+        selected_watch = watch_unique[:remaining]
+        dropped = len(watch_unique) - len(selected_watch)
+        if dropped > 0:
+            log(
+                "Carry-forward WATCH tickers limited to protect scan stability: "
+                f"kept {len(selected_watch)} and deferred {dropped}."
+            )
 
-    remaining = max(0, limit - len(open_unique))
-    selected_watch = watch_unique[:remaining]
-    dropped = len(watch_unique) - len(selected_watch)
-    if dropped > 0:
+    near_limit = int(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_LIMIT", "20"))
+    selected_near = near_unique if near_limit <= 0 else near_unique[:near_limit]
+    near_dropped = len(near_unique) - len(selected_near)
+    if near_dropped > 0:
         log(
-            "Carry-forward WATCH tickers limited to protect scan stability: "
-            f"kept {len(selected_watch)} and deferred {dropped}."
+            "Near-miss carry-forward limited to protect scan stability: "
+            f"kept {len(selected_near)} and deferred {near_dropped}."
         )
-    return unique_tickers(open_unique + selected_watch)
+    return unique_tickers(open_unique + selected_watch + selected_near)
 
 
 def set_scan_basket(page: Page, tickers: list[str]) -> None:
@@ -378,7 +406,7 @@ def build_agent_scan_tickers(
 ) -> list[str]:
     if settings.universe != "smart-universe":
         return []
-    target_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "35"))
+    target_count = agent_target_count()
     pool_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "100"))
     hard_excluded = set(carry_forward_tickers)
     soft_excluded = set(skipped_tickers)
@@ -422,12 +450,20 @@ def build_agent_scan_tickers(
     final_tickers = unique_tickers(base_tickers + carry_forward_tickers)
     total_limit = int(os.getenv("MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT", "0") or "0")
     if total_limit > 0 and len(final_tickers) > total_limit:
-        deferred = final_tickers[total_limit:]
-        final_tickers = final_tickers[:total_limit]
+        carry_set = set(carry_forward_tickers)
+        carry_part = [ticker for ticker in final_tickers if ticker in carry_set]
+        base_part = [ticker for ticker in final_tickers if ticker not in carry_set]
+        allowed_base = max(0, total_limit - len(carry_part))
+        if allowed_base > 0:
+            deferred = base_part[allowed_base:]
+            final_tickers = unique_tickers(base_part[:allowed_base] + carry_part)
+        else:
+            deferred = base_part + carry_part[total_limit:]
+            final_tickers = carry_part[:total_limit]
         log(
             "Agent total scan limit applied: "
             f"kept {len(final_tickers)} tickers and deferred {len(deferred)} "
-            f"to protect production stability."
+            f"to protect production stability while preserving carry-forward names."
         )
     log(
         "Smart agent universe built: "
@@ -437,6 +473,30 @@ def build_agent_scan_tickers(
     if len(base_tickers) < target_count:
         log(f"Smart agent universe warning: only {len(base_tickers)} fresh tickers available after exclusions.")
     return final_tickers
+
+
+def agent_target_count() -> int:
+    target_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "100"))
+    if env_bool("MARKET_LENS_AGENT_OFF_HOURS_DISCOVERY_ENABLED", False) and agent_market_session() != "regular":
+        extra = max(0, int(os.getenv("MARKET_LENS_AGENT_OFF_HOURS_EXTRA_TARGET", "0") or "0"))
+        if extra:
+            log(f"Off-hours discovery expansion active: {target_count} + {extra} fresh candidates.")
+        target_count += extra
+    return target_count
+
+
+def agent_market_session(now: datetime | None = None) -> str:
+    current = (now or datetime.now(tz=NEW_YORK_TZ)).astimezone(NEW_YORK_TZ)
+    if current.isoweekday() > 5:
+        return "weekend"
+    current_time = current.time()
+    if datetime_time(9, 30) <= current_time <= datetime_time(16, 0):
+        return "regular"
+    if datetime_time(4, 0) <= current_time < datetime_time(9, 30):
+        return "pre_market"
+    if datetime_time(16, 0) < current_time <= datetime_time(20, 0):
+        return "after_market"
+    return "overnight"
 
 
 def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
@@ -1242,6 +1302,52 @@ def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_CARRY_FORWARD_DAYS", "14"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
     return read_recent_action_tickers(excel_path, {"WATCH", "WATCH_READY"}, cutoff)
+
+
+def read_recent_near_miss_tickers(excel_path: Path, days: int | None = None) -> list[str]:
+    lookback_days = days or int(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_DAYS", "5"))
+    if lookback_days <= 0:
+        return []
+    cutoff = datetime.now() - timedelta(days=lookback_days)
+    min_score = float(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_MIN_SETUP_SCORE", "0.35"))
+    min_net_rr = float(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_MIN_NET_RR", "1.50"))
+    try:
+        wb = load_workbook(excel_path, read_only=True, data_only=True)
+        ws = wb["Setup Watchlist"]
+    except Exception:
+        return []
+    try:
+        latest: dict[str, tuple[datetime, bool]] = {}
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            ticker = str(row[1] or "").upper().strip() if len(row) > 1 else ""
+            action = str(row[12] or "").upper().strip() if len(row) > 12 else ""
+            timestamp = parse_agent_timestamp(row[0] if row else None)
+            if not ticker or action != "SKIP" or timestamp is None or timestamp < cutoff:
+                continue
+            decision_json = parse_json_cell(row[17] if len(row) > 17 else "")
+            setup_type = str(decision_json.get("setup_type") or row[2] or "").strip().lower()
+            if setup_type in {"", "no trade", "no_trade"}:
+                near_miss = False
+            else:
+                setup_score = parse_optional_float(decision_json.get("setup_score"))
+                display_score = parse_optional_float(decision_json.get("final_display_score"))
+                net_rr = parse_optional_float(decision_json.get("net_rr"))
+                net_rr_1 = parse_optional_float(decision_json.get("net_rr_1"))
+                near_miss = (
+                    max(setup_score or 0.0, display_score or 0.0) >= min_score
+                    or max(net_rr or 0.0, net_rr_1 or 0.0) >= min_net_rr
+                )
+            current = latest.get(ticker)
+            if current is None or timestamp > current[0]:
+                latest[ticker] = (timestamp, near_miss)
+        matching = {
+            ticker: event_time
+            for ticker, (event_time, is_near_miss) in latest.items()
+            if is_near_miss
+        }
+        return sorted(matching, key=lambda ticker: matching[ticker], reverse=True)
+    finally:
+        wb.close()
 
 
 def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list[str]:

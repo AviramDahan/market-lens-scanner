@@ -137,7 +137,7 @@ def test_agent_total_scan_limit_caps_after_carry_forward(monkeypatch) -> None:
         skipped_tickers=[],
     )
 
-    assert selected == ["S1", "S2", "S3", "S4", "S5", "WATCH1"]
+    assert selected == ["S1", "S2", "S3", "WATCH1", "WATCH2", "WATCH3"]
 
 
 def test_smart_universe_fetch_prefers_full_companies_payload(monkeypatch) -> None:

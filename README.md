@@ -178,16 +178,22 @@ Universe, then chooses a diversified scan basket from that universe.
 
 Default cloud scan configuration:
 
-- `MARKET_LENS_AGENT_UNIVERSE_TARGET=55`
-- `MARKET_LENS_AGENT_UNIVERSE_POOL=100`
-- `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=300`
-- `MARKET_LENS_AGENT_MAX_PER_SECTOR=12`
-- `MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=70`
-- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=4`
-- `MARKET_LENS_AGENT_BATCH_PAUSE_MS=2500`
+- `MARKET_LENS_AGENT_UNIVERSE_TARGET=100`
+- `MARKET_LENS_AGENT_UNIVERSE_POOL=220`
+- `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=450`
+- `MARKET_LENS_AGENT_MAX_PER_SECTOR=15`
+- `MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=150`
+- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=6`
+- `MARKET_LENS_AGENT_BATCH_PAUSE_MS=1500`
 - `MARKET_LENS_AGENT_RETRY_PAUSE_MS=20000`
 - `MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK=true`
-- `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT=15`
+- `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT=30`
+- `MARKET_LENS_AGENT_NEAR_MISS_LIMIT=20`
+- `MARKET_LENS_AGENT_NEAR_MISS_DAYS=5`
+- `MARKET_LENS_AGENT_NEAR_MISS_MIN_SETUP_SCORE=0.35`
+- `MARKET_LENS_AGENT_NEAR_MISS_MIN_NET_RR=1.50`
+- `MARKET_LENS_AGENT_OFF_HOURS_DISCOVERY_ENABLED=true`
+- `MARKET_LENS_AGENT_OFF_HOURS_EXTRA_TARGET=25`
 - `MARKET_LENS_AGENT_MIN_SPLIT_BATCH_SIZE=2`
 - `MARKET_LENS_WATCH_CARRY_FORWARD_DAYS=14`
 - `MARKET_LENS_SKIP_COOLDOWN_HOURS=8`
@@ -196,17 +202,23 @@ In GitHub Actions, the agent starts a local `uvicorn` copy of Market Lens and
 scans `http://127.0.0.1:8000` instead of scanning through the public Render URL.
 This keeps the public dashboard available while the paper-trading worker scans.
 
-Recent `WATCH` tickers are carried forward outside the fresh-universe quota.
-Recent `SKIP` tickers are excluded first, but the agent can use them as a
-fallback when the fresh candidate pool is too small. This keeps the scan near
-the configured target count instead of shrinking to a small basket after several
-runs in the same day.
+Recent `WATCH` and `WATCH_READY` tickers are carried forward outside the
+fresh-universe quota. Recent `SKIP` tickers are normally excluded for the skip
+cooldown window, but a separate near-miss queue keeps SKIP names that had a real
+setup and were close by score or net R/R. This prevents the agent from spending
+new-candidate capacity on repeated weak rejects while still following names
+that may become actionable after one or two more candles.
 
-The carry-forward list is capped by `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT`, and
-`MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT` caps the final list after carry-forward so
-the scanner does not grow without bound during active market hours. If a
-transient Render/yfinance error such as 502/503/504 occurs, the agent retries,
-waits briefly, and can split the failed batch into smaller chunks.
+The carry-forward list is capped by `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT`.
+Near-miss carry-forward is capped separately by
+`MARKET_LENS_AGENT_NEAR_MISS_LIMIT`. `MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT` caps
+the final list after carry-forward so the scanner does not grow without bound,
+but carry-forward names are preserved first and fresh names are deferred if the
+stability cap is reached. Off-hours runs can add a small extra discovery target
+through `MARKET_LENS_AGENT_OFF_HOURS_EXTRA_TARGET`; this only expands scanning
+coverage and does not change BUY gates. If a transient Render/yfinance error
+such as 502/503/504 occurs, the agent retries, waits briefly, and can split the
+failed batch into smaller chunks.
 
 If the deployed `/smart-universe` endpoint is temporarily unavailable, the
 agent falls back to the curated sector universe instead of timing out in the UI
@@ -529,7 +541,9 @@ By default the cloud agent uses `Smart Universe`, not a fixed sector. The app
 builds this list from broad US equity sources plus the curated dropdown sector
 lists, filters for price, dollar volume, ATR%, relative strength, trend quality,
 and sector health, then limits concentration to keep the final scan diversified
-across sectors. The current cloud target is 100 scanned tickers per run.
+across sectors. The current cloud target is 100 fresh tickers per run, with
+recent WATCH/WATCH_READY and near-miss candidates added outside that fresh
+quota and bounded by a 150-name stability cap.
 Sector scan quota is dynamic: strong sectors can receive more names, neutral
 sectors stay tighter, and weak sectors are excluded from new candidates.
 
