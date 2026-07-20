@@ -115,6 +115,25 @@ def current_agent_dashboard() -> dict:
     return cached_agent_dashboard()
 
 
+def monitor_agent_dashboard() -> dict:
+    """Load only the lightweight dashboard snapshot needed for TP/SL checks.
+
+    The cron monitor is called every minute and must stay below cron-job.org's
+    30-second timeout. Avoid syncing chart assets or rebuilding the full Excel
+    dashboard here; the public `/agent/data` endpoint handles rich UI assets.
+    """
+    sync_status = sync_dashboard_snapshot_if_enabled(PROJECT_ROOT)
+    if DASHBOARD_SNAPSHOT_PATH.exists():
+        try:
+            dashboard = json.loads(DASHBOARD_SNAPSHOT_PATH.read_text(encoding="utf-8"))
+            if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
+                dashboard["results_sync"] = sync_status
+                return dashboard
+        except Exception:
+            pass
+    return cached_agent_dashboard()
+
+
 @app.get("/agent/data")
 async def get_agent_dashboard(date: str | None = Query(default=None)) -> dict:
     if not date:
@@ -277,7 +296,7 @@ async def monitor_live_positions(
 ):
     protection = validate_monitor_cron_secret(x_monitor_secret, secret)
     trigger_configured = monitor_trigger_configured()
-    dashboard = cached_agent_dashboard()
+    dashboard = monitor_agent_dashboard()
     if dashboard.get("status") != "ok":
         return compact_cron_response({
             "status": "skipped",

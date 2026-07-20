@@ -196,6 +196,39 @@ def test_monitor_live_endpoint_defaults_to_tiny_cron_response(monkeypatch) -> No
     assert "triggered=false" in response.text
 
 
+def test_monitor_live_endpoint_uses_lightweight_snapshot(monkeypatch, tmp_path) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_text('{"status":"ok","open_positions":[]}', encoding="utf-8")
+
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": True, "downloaded": False, "project_root": str(project_root)},
+    )
+
+    def fail_build(*_args, **_kwargs):
+        raise AssertionError("monitor-live should not rebuild the full dashboard when a snapshot exists")
+
+    def fail_live_price(*_args, **_kwargs):
+        raise AssertionError("monitor-live should not fetch live prices when the snapshot has no open positions")
+
+    monkeypatch.setattr(main, "build_agent_dashboard", fail_build)
+    monkeypatch.setattr(main, "fetch_live_price", fail_live_price)
+
+    client = TestClient(main.app)
+    response = client.get("/agent/monitor-live")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert "status=skipped" in response.text
+    assert "No open positions" in response.text
+
+
 def test_trigger_scan_endpoint_skips_without_dispatch_outside_scan_time(monkeypatch) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_AGENT_CRON_SECRET", raising=False)
@@ -495,10 +528,17 @@ def test_smart_universe_endpoint_returns_fallback_on_error(monkeypatch) -> None:
     assert payload["companies"]
 
 
-def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch) -> None:
+def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch, tmp_path) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", tmp_path / "agent_results" / "dashboard_snapshot.json")
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": False, "reason": "disabled in test"},
+    )
     monkeypatch.setattr(
         main,
         "build_agent_dashboard",
