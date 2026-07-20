@@ -273,7 +273,7 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
 async def monitor_live_positions(
     x_monitor_secret: str | None = Header(default=None, alias="X-Market-Lens-Cron-Secret"),
     secret: str | None = Query(default=None, max_length=160),
-    compact: bool = Query(default=False),
+    compact: bool = Query(default=True),
 ):
     protection = validate_monitor_cron_secret(x_monitor_secret, secret)
     trigger_configured = monitor_trigger_configured()
@@ -403,7 +403,7 @@ async def trigger_agent_scan(
     x_cron_secret: str | None = Header(default=None, alias="X-Market-Lens-Cron-Secret"),
     secret: str | None = Query(default=None, max_length=160),
     force: bool = Query(default=False),
-    compact: bool = Query(default=False),
+    compact: bool = Query(default=True),
 ):
     protection = validate_agent_cron_secret(x_cron_secret, secret)
     force_applied = force and trigger_scan_force_enabled()

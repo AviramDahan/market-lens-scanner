@@ -682,8 +682,10 @@ Timezone: America/New_York
 Schedule: every 1 minute, Monday-Friday, 09:35-16:05
 ```
 
-The `compact=1` query parameter keeps cron-job.org responses intentionally
-small so successful skip/no-op checks are not disabled as "output too large".
+The cron endpoints return compact text by default so cron-job.org does not
+disable successful skip/no-op checks as "output too large". Keep `compact=1` in
+the external URLs as an explicit reminder; use `compact=false` only for manual
+debugging when a full JSON payload is needed.
 
 The cloud monitor uses `MARKET_LENS_MONITOR_SAVE_NOOP=true` so the public
 `/agent` dashboard keeps open-position prices, exposure, and unrealized P/L

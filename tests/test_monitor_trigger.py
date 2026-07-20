@@ -161,7 +161,7 @@ def test_monitor_live_endpoint_requires_cron_secret_when_configured(monkeypatch)
     response = client.get("/agent/monitor-live")
     assert response.status_code == 401
 
-    response = client.get("/agent/monitor-live", headers={"X-Market-Lens-Cron-Secret": "secret-value"})
+    response = client.get("/agent/monitor-live?compact=false", headers={"X-Market-Lens-Cron-Secret": "secret-value"})
     assert response.status_code == 200
     assert response.json()["protected"] is True
 
@@ -173,6 +173,21 @@ def test_monitor_live_endpoint_supports_tiny_cron_response(monkeypatch) -> None:
 
     client = TestClient(main.app)
     response = client.get("/agent/monitor-live?compact=1")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert len(response.content) < 260
+    assert "status=skipped" in response.text
+    assert "triggered=false" in response.text
+
+
+def test_monitor_live_endpoint_defaults_to_tiny_cron_response(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
+    monkeypatch.setattr(main, "build_agent_dashboard", lambda *_args, **_kwargs: {"status": "ok", "open_positions": []})
+
+    client = TestClient(main.app)
+    response = client.get("/agent/monitor-live")
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain")
@@ -205,7 +220,7 @@ def test_trigger_scan_endpoint_skips_without_dispatch_outside_scan_time(monkeypa
     monkeypatch.setattr(main, "dispatch_agent_scan", fail_dispatch)
 
     client = TestClient(main.app)
-    response = client.get("/agent/trigger-scan")
+    response = client.get("/agent/trigger-scan?compact=false")
 
     assert response.status_code == 200
     payload = response.json()
@@ -247,6 +262,39 @@ def test_trigger_scan_endpoint_supports_tiny_cron_response(monkeypatch) -> None:
     assert "triggered=false" in response.text
 
 
+def test_trigger_scan_endpoint_defaults_to_tiny_cron_response(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_AGENT_CRON_SECRET", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
+    monkeypatch.setattr(
+        main,
+        "scan_schedule_decision",
+        lambda force=False: ScanScheduleDecision(
+            should_run=False,
+            local_time="02:45",
+            local_date="2026-06-23",
+            local_weekday=2,
+            scan_key="2026-06-23T02:45",
+            reason="Outside configured New York scan times; GitHub Action dispatch skipped.",
+            next_scan_at="2026-06-23T06:30:00-04:00",
+        ),
+    )
+
+    async def fail_dispatch(*_args, **_kwargs):
+        raise AssertionError("dispatch should not be called")
+
+    monkeypatch.setattr(main, "dispatch_agent_scan", fail_dispatch)
+
+    client = TestClient(main.app)
+    response = client.get("/agent/trigger-scan")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert len(response.content) < 260
+    assert "status=skipped" in response.text
+    assert "triggered=false" in response.text
+
+
 def test_trigger_scan_endpoint_dispatches_once_at_scan_time(monkeypatch) -> None:
     reset_rate_limits()
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
@@ -269,8 +317,8 @@ def test_trigger_scan_endpoint_dispatches_once_at_scan_time(monkeypatch) -> None
     monkeypatch.setattr(main, "dispatch_agent_scan", fake_dispatch)
 
     client = TestClient(main.app)
-    first = client.post("/agent/trigger-scan")
-    second = client.post("/agent/trigger-scan")
+    first = client.post("/agent/trigger-scan?compact=false")
+    second = client.post("/agent/trigger-scan?compact=false")
 
     assert first.status_code == 200
     assert first.json()["status"] == "triggered"
@@ -308,7 +356,7 @@ def test_trigger_scan_endpoint_returns_compact_dispatch_payload(monkeypatch) -> 
     monkeypatch.setattr(main, "dispatch_agent_scan", fake_dispatch)
 
     client = TestClient(main.app)
-    response = client.post("/agent/trigger-scan")
+    response = client.post("/agent/trigger-scan?compact=false")
     payload = response.json()
 
     assert response.status_code == 200
@@ -348,7 +396,7 @@ def test_trigger_scan_force_query_is_ignored_by_default(monkeypatch) -> None:
     monkeypatch.setattr(main, "dispatch_agent_scan", fail_dispatch)
 
     client = TestClient(main.app)
-    response = client.get("/agent/trigger-scan?force=true")
+    response = client.get("/agent/trigger-scan?force=true&compact=false")
     payload = response.json()
 
     assert response.status_code == 200
@@ -366,7 +414,7 @@ def test_trigger_scan_endpoint_requires_agent_cron_secret_when_configured(monkey
     response = client.get("/agent/trigger-scan")
     assert response.status_code == 401
 
-    response = client.get("/agent/trigger-scan", headers={"X-Market-Lens-Cron-Secret": "scan-secret"})
+    response = client.get("/agent/trigger-scan?compact=false", headers={"X-Market-Lens-Cron-Secret": "scan-secret"})
     assert response.status_code == 200
     assert response.json()["protected"] is True
 
@@ -480,7 +528,7 @@ def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(
     monkeypatch.setattr(main, "dispatch_position_monitor", fake_dispatch)
 
     client = TestClient(main.app)
-    response = client.post("/agent/monitor-live")
+    response = client.post("/agent/monitor-live?compact=false")
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "triggered"
