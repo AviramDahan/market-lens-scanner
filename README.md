@@ -194,6 +194,7 @@ Default cloud scan configuration:
 - `MARKET_LENS_AGENT_NEAR_MISS_MIN_NET_RR=1.50`
 - `MARKET_LENS_AGENT_OFF_HOURS_DISCOVERY_ENABLED=true`
 - `MARKET_LENS_AGENT_OFF_HOURS_EXTRA_TARGET=25`
+- `MARKET_LENS_AGENT_SUPPLEMENT_CURATED_UNIVERSE=true`
 - `MARKET_LENS_AGENT_MIN_SPLIT_BATCH_SIZE=2`
 - `MARKET_LENS_WATCH_CARRY_FORWARD_DAYS=14`
 - `MARKET_LENS_SKIP_COOLDOWN_HOURS=8`
@@ -216,9 +217,11 @@ the final list after carry-forward so the scanner does not grow without bound,
 but carry-forward names are preserved first and fresh names are deferred if the
 stability cap is reached. Off-hours runs can add a small extra discovery target
 through `MARKET_LENS_AGENT_OFF_HOURS_EXTRA_TARGET`; this only expands scanning
-coverage and does not change BUY gates. If a transient Render/yfinance error
-such as 502/503/504 occurs, the agent retries, waits briefly, and can split the
-failed batch into smaller chunks.
+coverage and does not change BUY gates. If the fully scored Smart Universe is
+too narrow to fill the target, the agent can supplement from the curated quality
+universe while still applying the same setup and risk gates. If a transient
+Render/yfinance error such as 502/503/504 occurs, the agent retries, waits
+briefly, and can split the failed batch into smaller chunks.
 
 If the deployed `/smart-universe` endpoint is temporarily unavailable, the
 agent falls back to the curated sector universe instead of timing out in the UI

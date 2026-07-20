@@ -524,13 +524,21 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
         log(f"Smart Universe API fetch failed; using local fallback: {exc}")
         return local_smart_universe_tickers(settings, limit)
 
-    ranked = (payload.get("companies") or []) + (payload.get("ranked") or [])
-    tickers: list[str] = []
-    for item in ranked:
-        ticker = item.get("ticker") if isinstance(item, dict) else item
-        if ticker:
-            tickers.append(str(ticker).upper().strip())
-    return unique_tickers(tickers)
+    tickers = tickers_from_smart_payload(payload)
+    if (
+        len(tickers) < limit
+        and env_bool("MARKET_LENS_AGENT_SUPPLEMENT_CURATED_UNIVERSE", True)
+    ):
+        fallback = unique_tickers(list(curated_universe().keys()))
+        supplement = [ticker for ticker in fallback if ticker not in tickers]
+        if supplement:
+            before = len(tickers)
+            tickers = unique_tickers(tickers + supplement)[:limit]
+            log(
+                "Smart Universe supplemented from curated quality universe: "
+                f"{before} -> {len(tickers)} candidates."
+            )
+    return tickers
 
 
 def local_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
@@ -557,7 +565,13 @@ def local_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
 
 
 def tickers_from_smart_payload(payload: dict[str, Any]) -> list[str]:
-    return tickers_from_smart_payload(payload)
+    ranked = (payload.get("companies") or []) + (payload.get("ranked") or [])
+    tickers: list[str] = []
+    for item in ranked:
+        ticker = item.get("ticker") if isinstance(item, dict) else item
+        if ticker:
+            tickers.append(str(ticker).upper().strip())
+    return unique_tickers(tickers)
 
 
 def run_scan(page: Page, deadline: float) -> list[SetupResult]:

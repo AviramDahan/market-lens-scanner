@@ -64,6 +64,29 @@ def test_off_hours_discovery_can_expand_fresh_target(monkeypatch, tmp_path) -> N
     assert tickers == candidates[:8]
 
 
+def test_smart_universe_fetch_supplements_short_payload_from_curated_universe(monkeypatch, tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    payload = {"companies": [{"ticker": "AAA"}, {"ticker": "BBB"}], "ranked": [{"ticker": "AAA"}]}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps(payload).encode("utf-8")
+
+    monkeypatch.setenv("MARKET_LENS_AGENT_SUPPLEMENT_CURATED_UNIVERSE", "true")
+    monkeypatch.setattr(agent, "urlopen", lambda *_args, **_kwargs: FakeResponse())
+    monkeypatch.setattr(agent, "curated_universe", lambda: {"CCC": "Tech", "DDD": "Energy", "EEE": "Finance"})
+
+    tickers = agent.fetch_smart_universe_tickers(settings, limit=5)
+
+    assert tickers == ["AAA", "BBB", "CCC", "DDD", "EEE"]
+
+
 def test_read_recent_near_miss_tickers_ignores_ordinary_skip_and_no_trade(monkeypatch, tmp_path) -> None:
     tracker = tmp_path / "tracker.xlsx"
     wb = Workbook()
