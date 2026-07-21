@@ -6,6 +6,8 @@ from app import results_sync
 def reset_results_sync_cache() -> None:
     results_sync._LAST_SYNC_AT = 0.0
     results_sync._LAST_SYNC_RESULT = {"enabled": False, "reason": "test reset"}
+    results_sync._LAST_SNAPSHOT_SYNC_AT = 0.0
+    results_sync._LAST_SNAPSHOT_SYNC_RESULT = {"enabled": False, "reason": "test reset"}
     results_sync._LAST_SNAPSHOT_ASSET_SYNC_AT = 0.0
     results_sync._LAST_SNAPSHOT_ASSET_SYNC_RESULT = {"enabled": False, "reason": "test reset"}
 
@@ -152,3 +154,33 @@ def test_dashboard_snapshot_asset_sync_downloads_missing_assets(monkeypatch, tmp
     assert (tmp_path / "agent_results" / "screenshots" / "latest.png").exists()
     assert (tmp_path / "agent_results" / "charts" / "latest_aapl.png").exists()
     assert existing.read_bytes() == b"already here"
+
+
+def test_dashboard_snapshot_sync_downloads_exact_blob(monkeypatch, tmp_path: Path) -> None:
+    reset_results_sync_cache()
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS", "0")
+
+    def fake_metadata(repo, ref, path):
+        return {"type": "file", "sha": "snapshot-blob-sha", "download_url": "https://example.test/stale-raw"}
+
+    def fake_blob_download(repo, sha, path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('{"status":"ok","source":"blob"}', encoding="utf-8")
+
+    def fail_raw_download(*_args, **_kwargs):
+        raise AssertionError("dashboard snapshot should sync by exact blob sha")
+
+    monkeypatch.setattr(results_sync, "github_file_metadata", fake_metadata)
+    monkeypatch.setattr(results_sync, "download_github_blob_to_path", fake_blob_download)
+    monkeypatch.setattr(results_sync, "download_to_path", fail_raw_download)
+
+    result = results_sync.sync_dashboard_snapshot_if_enabled(tmp_path)
+
+    assert result["enabled"] is True
+    assert result["downloaded"] is True
+    assert result["sha"] == "snapshot-blob-sha"
+    assert (tmp_path / "agent_results" / "dashboard_snapshot.json").read_text(encoding="utf-8") == (
+        '{"status":"ok","source":"blob"}'
+    )

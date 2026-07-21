@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import threading
@@ -51,8 +52,7 @@ def sync_dashboard_snapshot_if_enabled(project_root: Path) -> dict[str, Any]:
         meta = github_file_metadata(repo, ref, target)
         sha = str(meta.get("sha") or "")
         local_path = project_root / target
-        download_url = raw_github_url(repo, ref, target, sha)
-        download_to_path(download_url, local_path)
+        download_github_blob_to_path(repo, sha, local_path)
         result["downloaded"] = True
         result["sha"] = sha
     except Exception as exc:
@@ -387,6 +387,30 @@ def github_file_metadata(repo: str, ref: str, path: str) -> dict[str, Any]:
     if not isinstance(data, dict) or data.get("type") != "file":
         raise RuntimeError("GitHub path is not a file")
     return data
+
+
+def github_blob(repo: str, sha: str) -> dict[str, Any]:
+    if not sha:
+        raise RuntimeError("missing blob sha")
+    url = f"https://api.github.com/repos/{repo}/git/blobs/{urllib.parse.quote(sha, safe='')}"
+    request = urllib.request.Request(url, headers=github_headers())
+    with urllib.request.urlopen(request, timeout=int_env("MARKET_LENS_RESULTS_SYNC_TIMEOUT_SECONDS", 12)) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    if not isinstance(data, dict) or data.get("sha") != sha:
+        raise RuntimeError("GitHub blob response did not match requested sha")
+    return data
+
+
+def download_github_blob_to_path(repo: str, sha: str, path: Path) -> None:
+    data = github_blob(repo, sha)
+    content = str(data.get("content") or "")
+    encoding = str(data.get("encoding") or "")
+    if encoding != "base64" or not content:
+        raise RuntimeError("GitHub blob content is not base64 encoded")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path.write_bytes(base64.b64decode("".join(content.split())))
+    temp_path.replace(path)
 
 
 def raw_github_url(repo: str, ref: str, path: str, cache_bust: str = "") -> str:
