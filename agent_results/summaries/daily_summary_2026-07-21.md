@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-21
-Total scans: 16
-Tickers scanned: 2340
-BUY_SIMULATED: 0
+Total scans: 17
+Tickers scanned: 2485
+BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 598
-SKIP: 1742
-NO_TRADE: 1102
+WATCH: 634
+SKIP: 1850
+NO_TRADE: 1191
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100657.5
@@ -17,8 +17,8 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 15
-- RELATIVE_STRENGTH_LEADER: 156
-- TREND_PULLBACK_RECLAIM: 15
+- RELATIVE_STRENGTH_LEADER: 164
+- TREND_PULLBACK_RECLAIM: 21
 - VWAP_RECLAIM: 3
 
 Top rejected candidates:
@@ -30,8 +30,8 @@ Top rejected candidates:
 - FANG: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - GILD: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - HON: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
+- HON: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.77 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.39.
 - CRWD: WATCH score=0.52 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- NVDA: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
