@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-20
-Total scans: 11
-Tickers scanned: 1368
+Total scans: 12
+Tickers scanned: 1515
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 351
-SKIP: 1016
-NO_TRADE: 657
+WATCH: 387
+SKIP: 1127
+NO_TRADE: 724
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100657.5
@@ -16,9 +16,9 @@ Worst ticker: D
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 10
-- RELATIVE_STRENGTH_LEADER: 105
-- TREND_PULLBACK_RECLAIM: 7
+- BREAKOUT_CONTINUATION: 11
+- RELATIVE_STRENGTH_LEADER: 115
+- TREND_PULLBACK_RECLAIM: 8
 
 Top rejected candidates:
 - COP: WATCH score=0.48 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
@@ -29,7 +29,7 @@ Top rejected candidates:
 - COP: WATCH score=0.48 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - COP: WATCH score=0.48 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - COP: WATCH score=0.48 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- HON: WATCH score=0.46 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- COP: WATCH score=0.48 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - HON: WATCH score=0.46 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 
 Recommendations:
