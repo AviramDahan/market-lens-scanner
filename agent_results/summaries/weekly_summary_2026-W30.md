@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-07-20
-Total scans: 35
-Tickers scanned: 4839
+Total scans: 36
+Tickers scanned: 4980
 BUY_SIMULATED: 2
 WATCH_READY: 1
-WATCH: 1183
-SKIP: 3640
-NO_TRADE: 2539
+WATCH: 1224
+SKIP: 3739
+NO_TRADE: 2609
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100991.81
+Portfolio value: 101000.83
 Best ticker: BSX
-Worst ticker: CTRE
+Worst ticker: MAA
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 23
-- RELATIVE_STRENGTH_LEADER: 317
-- TREND_PULLBACK_RECLAIM: 70
-- VWAP_RECLAIM: 5
+- RELATIVE_STRENGTH_LEADER: 322
+- TREND_PULLBACK_RECLAIM: 73
+- VWAP_RECLAIM: 6
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
