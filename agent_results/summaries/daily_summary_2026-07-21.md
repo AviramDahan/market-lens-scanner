@@ -1,27 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-07-21
-Total scans: 18
-Tickers scanned: 2627
+Total scans: 19
+Tickers scanned: 2770
 BUY_SIMULATED: 2
 WATCH_READY: 0
-WATCH: 671
-SKIP: 1953
-NO_TRADE: 1273
+WATCH: 701
+SKIP: 2064
+NO_TRADE: 1361
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100607.67
+Portfolio value: 100688.7
 Best ticker: BSX
 Worst ticker: CTRE
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 16
-- RELATIVE_STRENGTH_LEADER: 172
-- TREND_PULLBACK_RECLAIM: 27
+- BREAKOUT_CONTINUATION: 17
+- RELATIVE_STRENGTH_LEADER: 179
+- TREND_PULLBACK_RECLAIM: 30
 - VWAP_RECLAIM: 3
 
 Top rejected candidates:
+- ASML: WATCH score=0.59 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
 - GILD: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - IRM: WATCH score=0.57 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - AMD: WATCH score=0.55 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -31,7 +32,6 @@ Top rejected candidates:
 - GILD: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - HON: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - HON: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.77 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.39.
-- CRWD: WATCH score=0.52 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
