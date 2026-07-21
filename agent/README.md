@@ -121,6 +121,10 @@ target and stop are touched inside the same candle, the tracker applies a
 conservative stop-first rule because the exact intraminute sequence is not
 available.
 
+When Telegram is configured, the monitor also sends paper-trading alerts for
+`TAKE_PARTIAL_PROFIT`, `TAKE_PROFIT`, and `EXIT_STOP`. These notifications are
+read-only alerts; the monitor still only updates the simulated portfolio.
+
 In the cloud workflow, `MARKET_LENS_MONITOR_SAVE_NOOP=true` is enabled so every
 monitor run publishes a heartbeat and current-price refresh for open positions.
 

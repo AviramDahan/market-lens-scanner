@@ -2,11 +2,14 @@ import json
 from types import SimpleNamespace
 
 import agent.market_lens_ui_agent as ui_agent
+import agent.position_monitor as position_monitor
 from agent.market_lens_ui_agent import Settings, SetupResult, send_new_buy_notifications
 from app.telegram_notifications import (
     TelegramSettings,
     TelegramSendResult,
     dashboard_url_from_app_url,
+    dashboard_url_from_env,
+    format_position_event_message,
     format_position_opened_message,
     send_telegram_message,
     telegram_configured,
@@ -118,6 +121,13 @@ def test_dashboard_url_from_app_url() -> None:
     )
 
 
+def test_dashboard_url_from_env_prefers_public_url(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_PUBLIC_URL", "https://market-lens-scanner-fb63.onrender.com")
+    assert dashboard_url_from_env("http://127.0.0.1:8000/?v=agent") == (
+        "https://market-lens-scanner-fb63.onrender.com/agent"
+    )
+
+
 def test_telegram_configured_requires_token_and_chat() -> None:
     assert telegram_configured(TelegramSettings(bot_token="token", chat_id="-1")) is True
     assert telegram_configured(TelegramSettings(bot_token="token", chat_id="", enabled=True)) is False
@@ -197,3 +207,82 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
     assert "BUY_SIMULATED opened" in sent_messages[0]
     assert "BUY" in sent_messages[0]
     assert "WATCH" not in sent_messages[0]
+
+
+def test_position_event_message_contains_exit_details() -> None:
+    position = {
+        "ticker": "BA",
+        "entry_price": 200,
+        "stop_loss": 190,
+        "target_1": 215,
+        "target_2": 230,
+    }
+    event = position_monitor.PositionEvent(
+        ticker="BA",
+        action="TAKE_PARTIAL_PROFIT",
+        triggered_at="2026-06-22T15:31:00+00:00",
+        trigger_price=215,
+        high=216,
+        low=211,
+        close=214,
+        quantity=5,
+        cash_in=1075,
+        note="Target 1 touched by intraday high; taking partial profit and moving stop to breakeven.",
+    )
+
+    message = format_position_event_message(
+        position=position,
+        event=event,
+        run_id="monitor-1",
+        timestamp="2026-06-22T15:32:00+00:00",
+        dashboard_url="https://example.com/agent",
+    )
+
+    assert "TP1 hit - partial profit" in message
+    assert "BA" in message
+    assert "$215.00" in message
+    assert "+$75.00" in message
+    assert "stop moves to breakeven" in message
+    assert "https://example.com/agent" in message
+
+
+def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_path) -> None:
+    sent_messages = []
+
+    def fake_send(message: str):
+        sent_messages.append(message)
+        return TelegramSendResult(True, "sent")
+
+    monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
+    settings = position_monitor.MonitorSettings(
+        excel_path=tmp_path / "tracker.xlsx",
+        run_dir=tmp_path / "agent_results",
+        period="5d",
+        interval="1m",
+        save_noop=False,
+        dashboard_url="https://example.com/agent",
+    )
+    event = position_monitor.PositionEvent(
+        ticker="MSFT",
+        action="EXIT_STOP",
+        triggered_at="2026-06-22T15:31:00+00:00",
+        trigger_price=95,
+        high=101,
+        low=94,
+        close=96,
+        quantity=3,
+        cash_in=285,
+        note="Stop loss touched by intraday low.",
+    )
+
+    position_monitor.send_position_event_notifications(
+        [({"ticker": "MSFT", "entry_price": 100, "stop_loss": 95, "target_1": 110, "target_2": 120}, event)],
+        settings=settings,
+        run_id="monitor-1",
+        timestamp="2026-06-22T15:32:00+00:00",
+    )
+
+    assert len(sent_messages) == 1
+    assert "Stop hit - position closed" in sent_messages[0]
+    assert "MSFT" in sent_messages[0]
+    assert "-$15.00" in sent_messages[0]

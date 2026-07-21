@@ -26,7 +26,7 @@ from app.smart_universe import base_universe, build_sector_health, build_smart_u
 from app.strategy import StrategyDecision as Decision
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 from app.telegram_notifications import (
-    dashboard_url_from_app_url,
+    dashboard_url_from_env,
     format_position_opened_message,
     send_telegram_message,
 )
@@ -1061,7 +1061,7 @@ def send_new_buy_notifications(
     run_id: str,
     timestamp: str,
 ) -> None:
-    dashboard_url = dashboard_url_from_app_url(settings.url)
+    dashboard_url = dashboard_url_from_env(settings.url)
     for result, decision in pending_decisions:
         if decision.action != "BUY_SIMULATED":
             continue

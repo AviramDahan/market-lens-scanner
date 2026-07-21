@@ -166,10 +166,18 @@ def test_monitor_live_endpoint_requires_cron_secret_when_configured(monkeypatch)
     assert response.json()["protected"] is True
 
 
-def test_monitor_live_endpoint_supports_tiny_cron_response(monkeypatch) -> None:
+def test_monitor_live_endpoint_supports_tiny_cron_response(monkeypatch, tmp_path) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
-    monkeypatch.setattr(main, "build_agent_dashboard", lambda *_args, **_kwargs: {"status": "ok", "open_positions": []})
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_text('{"status":"ok","open_positions":[]}', encoding="utf-8")
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": False, "reason": "disabled in test"},
+    )
 
     client = TestClient(main.app)
     response = client.get("/agent/monitor-live?compact=1")
@@ -181,10 +189,18 @@ def test_monitor_live_endpoint_supports_tiny_cron_response(monkeypatch) -> None:
     assert "triggered=false" in response.text
 
 
-def test_monitor_live_endpoint_defaults_to_tiny_cron_response(monkeypatch) -> None:
+def test_monitor_live_endpoint_defaults_to_tiny_cron_response(monkeypatch, tmp_path) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
-    monkeypatch.setattr(main, "build_agent_dashboard", lambda *_args, **_kwargs: {"status": "ok", "open_positions": []})
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_text('{"status":"ok","open_positions":[]}', encoding="utf-8")
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": False, "reason": "disabled in test"},
+    )
 
     client = TestClient(main.app)
     response = client.get("/agent/monitor-live")

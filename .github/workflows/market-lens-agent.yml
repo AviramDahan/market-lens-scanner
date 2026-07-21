@@ -112,6 +112,7 @@ jobs:
         timeout-minutes: 22
         env:
           MARKET_LENS_URL: http://127.0.0.1:8000/?v=agent
+          MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
           MARKET_LENS_EMAIL: ${{ secrets.MARKET_LENS_EMAIL }}
           MARKET_LENS_PASSWORD: ${{ secrets.MARKET_LENS_PASSWORD }}
           MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx

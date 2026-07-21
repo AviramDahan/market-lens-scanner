@@ -621,6 +621,14 @@ was touched. If target and stop are touched in the same one-minute candle, the
 paper tracker applies a conservative stop-first rule because the exact sequence
 inside that candle is unknown.
 
+Telegram alerts are paper-trading alerts only. When configured with
+`MARKET_LENS_TELEGRAM_BOT_TOKEN` and `MARKET_LENS_TELEGRAM_CHAT_ID`, the agent
+sends a message for new `BUY_SIMULATED` positions, and the position monitor
+sends a message for `TAKE_PARTIAL_PROFIT`, `TAKE_PROFIT`, and `EXIT_STOP`
+events after the Excel tracker is updated. Set `MARKET_LENS_PUBLIC_URL` or
+`MARKET_LENS_DASHBOARD_URL` so alerts link to the public `/agent` dashboard
+instead of the local GitHub runner URL.
+
 The `/agent` dashboard also includes an optional live TP/SL sensor while it is
 open in a browser, but automation does not depend on the browser being open.
 For full automation, configure cron-job.org to call the server-side

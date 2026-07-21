@@ -99,9 +99,14 @@ jobs:
         env:
           MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
           MARKET_LENS_RUN_DIR: agent_results
+          MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
           MARKET_LENS_MONITOR_SAVE_NOOP: "false"
+          MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
+          MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python agent/position_monitor.py
 
       - name: Apply Agent media retention

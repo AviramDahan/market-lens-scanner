@@ -16,6 +16,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.data import fetch_intraday_frame
+from app.telegram_notifications import (
+    dashboard_url_from_env,
+    format_position_event_message,
+    send_telegram_message,
+)
 
 
 DEFAULT_TRACKER = ROOT / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
@@ -30,6 +35,7 @@ class MonitorSettings:
     period: str
     interval: str
     save_noop: bool
+    dashboard_url: str
 
 
 @dataclass
@@ -76,12 +82,14 @@ def main() -> None:
     open_positions = read_open_positions(wb)
     last_event_times = read_last_event_times(wb)
     results: list[MonitorResult] = []
+    event_notifications: list[tuple[dict[str, Any], PositionEvent]] = []
 
     for ticker, position in list(open_positions.items()):
         since = last_event_times.get(ticker) or parse_timestamp(position.get("entry_date"))
         result = monitor_position(position, settings=settings, since=since, currency_rate=currency_rate)
         results.append(result)
         if result.event:
+            event_notifications.append((dict(position), result.event))
             apply_event(wb, open_positions, position, result.event, timestamp, run_id, currency_rate)
         elif result.current_price > 0 and settings.save_noop:
             refresh_position(position, result.current_price, currency_rate)
@@ -123,6 +131,13 @@ def main() -> None:
             summary_path=summary_path,
         )
         wb.save(settings.excel_path)
+        if events:
+            send_position_event_notifications(
+                event_notifications,
+                settings=settings,
+                run_id=run_id,
+                timestamp=timestamp,
+            )
 
     if events:
         print(f"Position monitor completed with {len(events)} event(s).")
@@ -142,7 +157,30 @@ def load_settings() -> MonitorSettings:
         period=os.getenv("MARKET_LENS_MONITOR_PERIOD", "5d"),
         interval=os.getenv("MARKET_LENS_MONITOR_INTERVAL", "1m"),
         save_noop=os.getenv("MARKET_LENS_MONITOR_SAVE_NOOP", "false").lower() in {"1", "true", "yes"},
+        dashboard_url=dashboard_url_from_env(os.getenv("MARKET_LENS_URL", "")),
     )
+
+
+def send_position_event_notifications(
+    event_notifications: list[tuple[dict[str, Any], PositionEvent]],
+    *,
+    settings: MonitorSettings,
+    run_id: str,
+    timestamp: str,
+) -> None:
+    for position, event in event_notifications:
+        message = format_position_event_message(
+            position=position,
+            event=event,
+            run_id=run_id,
+            timestamp=timestamp,
+            dashboard_url=settings.dashboard_url,
+        )
+        outcome = send_telegram_message(message)
+        if outcome.sent:
+            print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
+        elif outcome.status != "not_configured":
+            print(f"Telegram position-event notification skipped for {event.ticker}:{event.action}: {outcome.reason}")
 
 
 def monitor_position(

@@ -115,6 +115,60 @@ def format_position_opened_message(
     return "\n".join(lines)
 
 
+def format_position_event_message(
+    *,
+    position: dict[str, Any],
+    event: Any,
+    run_id: str,
+    timestamp: str,
+    dashboard_url: str,
+) -> str:
+    action = str(getattr(event, "action", "") or "")
+    action_title = {
+        "TAKE_PARTIAL_PROFIT": "TP1 hit - partial profit",
+        "TAKE_PROFIT": "TP2 hit - position closed",
+        "EXIT_STOP": "Stop hit - position closed",
+    }.get(action, action or "Position event")
+    entry = _to_float(position.get("entry_price"))
+    trigger = _to_float(getattr(event, "trigger_price", 0))
+    quantity = int(_to_float(getattr(event, "quantity", 0)))
+    pnl = (trigger - entry) * quantity if entry > 0 and trigger > 0 and quantity > 0 else None
+    lines = [
+        "<b>Market Lens Paper Agent</b>",
+        f"<b>{_escape(action_title)}</b>",
+        "",
+        f"Ticker: <b>{_escape(getattr(event, 'ticker', '') or position.get('ticker', ''))}</b>",
+        f"Time: {_escape(timestamp)}",
+        f"Triggered at: {_escape(getattr(event, 'triggered_at', ''))}",
+        f"Run: {_escape(run_id)}",
+        "",
+        f"Trigger price: {_money(trigger)}",
+        f"Quantity: {_escape(quantity)}",
+        f"Estimated P/L: {_signed_money(pnl)}",
+        f"Cash in: {_money(getattr(event, 'cash_in', None))}",
+        "",
+        f"Entry: {_money(entry)}",
+        f"Stop: {_money(position.get('stop_loss'))}",
+        f"Targets: {_money(position.get('target_1'))} / {_money(position.get('target_2'))}",
+        f"Bar H/L/C: {_money(getattr(event, 'high', None))} / {_money(getattr(event, 'low', None))} / {_money(getattr(event, 'close', None))}",
+        "",
+        f"Note: {_escape(_shorten(getattr(event, 'note', '')))}",
+    ]
+    if action == "TAKE_PARTIAL_PROFIT":
+        lines.append("Risk update: remaining stop moves to breakeven.")
+    if dashboard_url:
+        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+    return "\n".join(lines)
+
+
+def dashboard_url_from_env(fallback_app_url: str = "") -> str:
+    explicit = os.getenv("MARKET_LENS_DASHBOARD_URL", "").strip()
+    if explicit:
+        return explicit
+    public_url = os.getenv("MARKET_LENS_PUBLIC_URL", "").strip()
+    return dashboard_url_from_app_url(public_url or fallback_app_url)
+
+
 def dashboard_url_from_app_url(app_url: str) -> str:
     parts = urlsplit(app_url)
     if not parts.scheme or not parts.netloc:
@@ -140,6 +194,14 @@ def _money(value: Any) -> str:
         return "-"
 
 
+def _signed_money(value: Any) -> str:
+    amount = _to_float(value)
+    if value is None:
+        return "-"
+    sign = "+" if amount >= 0 else "-"
+    return f"{sign}${abs(amount):,.2f}"
+
+
 def _number(value: Any, digits: int = 2) -> str:
     try:
         return f"{float(value):.{digits}f}"
@@ -152,3 +214,10 @@ def _shorten(value: Any, limit: int = 700) -> str:
     if len(text) <= limit:
         return text
     return text[: limit - 3].rstrip() + "..."
+
+
+def _to_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value if value is not None else default)
+    except (TypeError, ValueError):
+        return default
