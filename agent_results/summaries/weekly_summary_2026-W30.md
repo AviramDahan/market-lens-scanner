@@ -1,27 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-07-20
-Total scans: 27
-Tickers scanned: 3691
+Total scans: 28
+Tickers scanned: 3835
 BUY_SIMULATED: 2
 WATCH_READY: 0
-WATCH: 939
-SKIP: 2745
-NO_TRADE: 1835
+WATCH: 968
+SKIP: 2859
+NO_TRADE: 1924
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100872.35
+Portfolio value: 100941.1
 Best ticker: BSX
 Worst ticker: CTRE
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 23
-- RELATIVE_STRENGTH_LEADER: 253
-- TREND_PULLBACK_RECLAIM: 38
+- RELATIVE_STRENGTH_LEADER: 263
+- TREND_PULLBACK_RECLAIM: 41
 - VWAP_RECLAIM: 3
 
 Top rejected candidates:
+- ASML: WATCH score=0.63 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
 - ASML: WATCH score=0.59 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
 - ASML: WATCH score=0.59 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
 - GILD: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -31,7 +32,6 @@ Top rejected candidates:
 - GILD: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - AMD: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - GILD: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
-- FANG: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
