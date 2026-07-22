@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-07-22
-Total scans: 25
-Tickers scanned: 3290
+Total scans: 26
+Tickers scanned: 3428
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 961
-SKIP: 2297
-NO_TRADE: 1796
+WATCH: 996
+SKIP: 2398
+NO_TRADE: 1885
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101119.11
+Portfolio value: 101091.29
 Best ticker: DHR
 Worst ticker: D
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 8
-- RELATIVE_STRENGTH_LEADER: 159
-- TREND_PULLBACK_RECLAIM: 99
+- RELATIVE_STRENGTH_LEADER: 167
+- TREND_PULLBACK_RECLAIM: 102
 - VWAP_RECLAIM: 14
 
 Top rejected candidates:
@@ -27,11 +27,11 @@ Top rejected candidates:
 - PPL: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.29 failed minimum 2.20 after slippage/spread adjustment.
 - PPL: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.28.
 - PPL: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
+- PPL: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
 - PPL: WATCH score=0.58 reason=Gross R/R is valid, but Net R/R 1.96 failed minimum 2.20 after slippage/spread adjustment.
 - BG: WATCH score=0.58 reason=Gross R/R is valid, but Net R/R 1.59 failed minimum 2.20 after slippage/spread adjustment.
 - PPL: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.79 failed minimum 2.20 after slippage/spread adjustment.
-- PPL: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.65 failed minimum 2.20 after slippage/spread adjustment.
-- PPL: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.64 failed minimum 2.20 after slippage/spread adjustment.
+- HON: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 2.42 failed minimum 2.50 after slippage/spread adjustment.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
