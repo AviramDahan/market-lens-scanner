@@ -1,28 +1,29 @@
 Daily Performance Summary
 
 Date: 2026-07-22
-Total scans: 27
-Tickers scanned: 3564
+Total scans: 28
+Tickers scanned: 3702
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 1034
-SKIP: 2494
-NO_TRADE: 1966
+WATCH: 1072
+SKIP: 2592
+NO_TRADE: 2050
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101118.22
+Portfolio value: 101119.21
 Best ticker: DHR
 Worst ticker: D
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 8
-- RELATIVE_STRENGTH_LEADER: 178
-- TREND_PULLBACK_RECLAIM: 107
+- RELATIVE_STRENGTH_LEADER: 191
+- TREND_PULLBACK_RECLAIM: 109
 - VWAP_RECLAIM: 14
 
 Top rejected candidates:
 - ASML: WATCH score=0.61 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
+- PPL: WATCH score=0.61 reason=Gross R/R is valid, but Net R/R 1.47 failed minimum 2.20 after slippage/spread adjustment.
 - PPL: WATCH score=0.6 reason=Gross R/R is valid, but Net R/R 1.42 failed minimum 2.20 after slippage/spread adjustment.
 - PPL: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.32 failed minimum 2.20 after slippage/spread adjustment.
 - PPL: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.29 failed minimum 2.20 after slippage/spread adjustment.
@@ -31,7 +32,6 @@ Top rejected candidates:
 - PPL: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
 - PPL: WATCH score=0.58 reason=Gross R/R is valid, but Net R/R 1.96 failed minimum 2.20 after slippage/spread adjustment.
 - BG: WATCH score=0.58 reason=Gross R/R is valid, but Net R/R 1.59 failed minimum 2.20 after slippage/spread adjustment.
-- PPL: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.79 failed minimum 2.20 after slippage/spread adjustment.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
