@@ -5,9 +5,9 @@ Total scans: 30
 Tickers scanned: 3981
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 1174
-SKIP: 2765
-NO_TRADE: 2193
+WATCH: 1170
+SKIP: 2769
+NO_TRADE: 2194
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 101036.67
@@ -17,8 +17,8 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 8
-- RELATIVE_STRENGTH_LEADER: 215
-- TREND_PULLBACK_RECLAIM: 114
+- RELATIVE_STRENGTH_LEADER: 212
+- TREND_PULLBACK_RECLAIM: 113
 - VWAP_RECLAIM: 16
 
 Top rejected candidates:
