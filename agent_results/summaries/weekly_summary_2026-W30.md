@@ -1,24 +1,24 @@
 Weekly Performance Summary
 
 Date: 2026-07-20
-Total scans: 66
-Tickers scanned: 8964
+Total scans: 67
+Tickers scanned: 9100
 BUY_SIMULATED: 3
 WATCH_READY: 1
-WATCH: 2381
-SKIP: 6528
-NO_TRADE: 4770
+WATCH: 2419
+SKIP: 6624
+NO_TRADE: 4851
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101091.29
+Portfolio value: 101118.22
 Best ticker: BSX
 Worst ticker: D
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 31
-- RELATIVE_STRENGTH_LEADER: 509
-- TREND_PULLBACK_RECLAIM: 188
+- RELATIVE_STRENGTH_LEADER: 520
+- TREND_PULLBACK_RECLAIM: 193
 - VWAP_RECLAIM: 24
 
 Top rejected candidates:
@@ -30,8 +30,8 @@ Top rejected candidates:
 - ASML: WATCH score=0.59 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
 - ASML: WATCH score=0.59 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
 - GILD: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- PPL: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.32 failed minimum 2.20 after slippage/spread adjustment.
 - PPL: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.29 failed minimum 2.20 after slippage/spread adjustment.
-- PPL: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.28.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
