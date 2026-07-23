@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-20
-Total scans: 83
-Tickers scanned: 11416
+Total scans: 84
+Tickers scanned: 11563
 BUY_SIMULATED: 3
 WATCH_READY: 1
-WATCH: 3217
-SKIP: 8110
-NO_TRADE: 6041
+WATCH: 3269
+SKIP: 8203
+NO_TRADE: 6115
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 101036.67
@@ -17,9 +17,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 31
-- RELATIVE_STRENGTH_LEADER: 690
-- TREND_PULLBACK_RECLAIM: 230
-- VWAP_RECLAIM: 39
+- RELATIVE_STRENGTH_LEADER: 701
+- TREND_PULLBACK_RECLAIM: 233
+- VWAP_RECLAIM: 40
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Position cannot be opened because AI / Semiconductors factor exposure cap leaves no executable size.
