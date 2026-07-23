@@ -193,6 +193,20 @@ def test_carry_forward_limit_keeps_open_positions_and_caps_watch(monkeypatch) ->
     assert selected == ["OPEN1", "OPEN2", "WATCH1", "WATCH2"]
 
 
+def test_carry_forward_prioritizes_watch_ready_before_watch(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT", "4")
+    monkeypatch.setenv("MARKET_LENS_AGENT_NEAR_MISS_LIMIT", "2")
+
+    selected = limited_carry_forward_tickers(
+        open_tickers=["OPEN"],
+        watch_ready_tickers=["READY1", "READY2", "WATCH1"],
+        watch_tickers=["WATCH1", "WATCH2", "WATCH3"],
+        near_miss_tickers=["NEAR1", "NEAR2"],
+    )
+
+    assert selected == ["OPEN", "READY1", "READY2", "WATCH1", "NEAR1", "NEAR2"]
+
+
 def chart_candidate(
     ticker: str,
     action: str,

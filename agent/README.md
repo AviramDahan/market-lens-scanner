@@ -40,10 +40,12 @@ It then filters for common liquid US equities, price, dollar volume, ATR%,
 relative strength, trend quality, and sector health before selecting a
 diversified scan basket. The current cloud target is 100 fresh tickers per run
 with up to 15 per sector, while weak sectors are excluded from new candidates.
-Recent WATCH/WATCH_READY names and near-miss SKIP names are carried forward
-outside that fresh quota, bounded by the production stability cap. If the fully
-scored Smart Universe is too narrow to fill the target, the agent can supplement
-from the curated quality universe without changing entry gates.
+Open positions are carried first, then recent WATCH_READY names are prioritized
+for regular-session confirmation, followed by ordinary WATCH names and near-miss
+SKIP names. These follow-up tickers are carried outside the fresh quota and are
+bounded by the production stability cap. If the fully scored Smart Universe is
+too narrow to fill the target, the agent can supplement from the curated quality
+universe without changing entry gates.
 
 Open simulated positions are always added to the scan basket, even if they are
 not selected by the current Smart Universe run. This keeps stop and target

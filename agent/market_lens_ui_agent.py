@@ -303,14 +303,26 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
     page.locator('[data-testid="min-rr-input"]').fill(str(settings.min_rr))
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
     open_tickers = read_open_position_tickers(settings.excel_path)
+    watch_ready_tickers = read_recent_watch_ready_tickers(settings.excel_path)
     watch_tickers = read_recent_watch_tickers(settings.excel_path)
     near_miss_tickers = read_recent_near_miss_tickers(settings.excel_path)
-    carry_forward_tickers = limited_carry_forward_tickers(open_tickers, watch_tickers, near_miss_tickers)
+    carry_forward_tickers = limited_carry_forward_tickers(
+        open_tickers,
+        watch_tickers,
+        near_miss_tickers,
+        watch_ready_tickers=watch_ready_tickers,
+    )
     skipped_tickers = read_recent_skip_tickers(settings.excel_path)
     if carry_forward_tickers:
         log(
             "Carry-forward tickers added outside universe quota: "
             f"{len(carry_forward_tickers)} ({' '.join(carry_forward_tickers)})"
+        )
+    if watch_ready_tickers:
+        log(
+            "WATCH_READY tickers prioritized for regular-session confirmation: "
+            f"{len(watch_ready_tickers)} ({' '.join(watch_ready_tickers[:20])}"
+            f"{' ...' if len(watch_ready_tickers) > 20 else ''})"
         )
     if near_miss_tickers:
         log(
@@ -353,22 +365,39 @@ def limited_carry_forward_tickers(
     open_tickers: list[str],
     watch_tickers: list[str],
     near_miss_tickers: list[str] | None = None,
+    *,
+    watch_ready_tickers: list[str] | None = None,
 ) -> list[str]:
     near_miss_tickers = near_miss_tickers or []
+    watch_ready_tickers = watch_ready_tickers or []
     open_unique = unique_tickers(open_tickers)
-    watch_unique = [ticker for ticker in unique_tickers(watch_tickers) if ticker not in open_unique]
+    ready_unique = [ticker for ticker in unique_tickers(watch_ready_tickers) if ticker not in open_unique]
+    watch_unique = [
+        ticker
+        for ticker in unique_tickers(watch_tickers)
+        if ticker not in open_unique and ticker not in ready_unique
+    ]
     near_unique = [
         ticker
         for ticker in unique_tickers(near_miss_tickers)
-        if ticker not in open_unique and ticker not in watch_unique
+        if ticker not in open_unique and ticker not in ready_unique and ticker not in watch_unique
     ]
     limit = int(os.getenv("MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT", "30"))
     if limit <= 0:
+        selected_ready = ready_unique
         selected_watch = watch_unique
     else:
         remaining = max(0, limit - len(open_unique))
+        selected_ready = ready_unique[:remaining]
+        remaining = max(0, remaining - len(selected_ready))
         selected_watch = watch_unique[:remaining]
+        ready_dropped = len(ready_unique) - len(selected_ready)
         dropped = len(watch_unique) - len(selected_watch)
+        if ready_dropped > 0:
+            log(
+                "Carry-forward WATCH_READY tickers limited to protect scan stability: "
+                f"kept {len(selected_ready)} and deferred {ready_dropped}."
+            )
         if dropped > 0:
             log(
                 "Carry-forward WATCH tickers limited to protect scan stability: "
@@ -383,7 +412,7 @@ def limited_carry_forward_tickers(
             "Near-miss carry-forward limited to protect scan stability: "
             f"kept {len(selected_near)} and deferred {near_dropped}."
         )
-    return unique_tickers(open_unique + selected_watch + selected_near)
+    return unique_tickers(open_unique + selected_ready + selected_watch + selected_near)
 
 
 def set_scan_basket(page: Page, tickers: list[str]) -> None:
@@ -1315,7 +1344,13 @@ def read_open_position_tickers(excel_path: Path) -> list[str]:
 def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_CARRY_FORWARD_DAYS", "14"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
-    return read_recent_action_tickers(excel_path, {"WATCH", "WATCH_READY"}, cutoff)
+    return read_recent_action_tickers(excel_path, "WATCH", cutoff)
+
+
+def read_recent_watch_ready_tickers(excel_path: Path, days: int | None = None) -> list[str]:
+    lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_READY_CARRY_FORWARD_DAYS", "5"))
+    cutoff = datetime.now() - timedelta(days=lookback_days)
+    return read_recent_action_tickers(excel_path, "WATCH_READY", cutoff)
 
 
 def read_recent_near_miss_tickers(excel_path: Path, days: int | None = None) -> list[str]:
