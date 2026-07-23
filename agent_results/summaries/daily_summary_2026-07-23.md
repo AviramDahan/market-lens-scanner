@@ -1,23 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-07-23
-Total scans: 21
-Tickers scanned: 3026
+Total scans: 22
+Tickers scanned: 3170
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 927
-SKIP: 2063
-NO_TRADE: 1677
+WATCH: 964
+SKIP: 2169
+NO_TRADE: 1768
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100858.06
+Portfolio value: 100905.14
 Best ticker: NFLX
 Worst ticker: REG
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
-- RELATIVE_STRENGTH_LEADER: 169
+- RELATIVE_STRENGTH_LEADER: 174
 - TREND_PULLBACK_RECLAIM: 39
 - VWAP_RECLAIM: 14
 
