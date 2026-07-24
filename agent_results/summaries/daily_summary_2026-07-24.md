@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-24
-Total scans: 7
-Tickers scanned: 1009
+Total scans: 8
+Tickers scanned: 1153
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 263
-SKIP: 739
-NO_TRADE: 452
+WATCH: 301
+SKIP: 844
+NO_TRADE: 516
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100848.05
@@ -25,7 +25,7 @@ Top rejected candidates:
 - GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- MDT: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.27.
+- GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - MDT: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.27.
 - MDT: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.27.
 
