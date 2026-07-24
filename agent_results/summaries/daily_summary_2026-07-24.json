@@ -1,0 +1,435 @@
+{
+  "BUY_SIMULATED_count": 0,
+  "NO_TRADE_count": 65,
+  "SKIP_count": 106,
+  "SL_hits": 0,
+  "TP1_hits": 0,
+  "TP2_hits": 0,
+  "WATCH_READY_conversion_rate": null,
+  "WATCH_READY_count": 0,
+  "WATCH_count": 38,
+  "average_R": null,
+  "average_confidence_by_shadow_strategy": {
+    "BREAKOUT_CONTINUATION": 0.3483,
+    "RELATIVE_STRENGTH_LEADER": 0.4701,
+    "TREND_PULLBACK_RECLAIM": 0.3163,
+    "VWAP_RECLAIM": 0.4034
+  },
+  "average_loser": null,
+  "average_rr_to_target_1": 0.6,
+  "average_rr_to_target_2": 1.9476,
+  "average_setup_score": 0.1609,
+  "average_winner": null,
+  "best_sector": "Communication Services",
+  "best_setup_type": "No Trade",
+  "best_shadow_strategy": "RELATIVE_STRENGTH_LEADER",
+  "best_ticker": "BSX",
+  "common_false_positives": [],
+  "common_missed_opportunities": [],
+  "daily_return_pct": 0.8481,
+  "data_quality_issues": [
+    {
+      "count": 65,
+      "name": "Target ATR feasibility unavailable."
+    },
+    {
+      "count": 65,
+      "name": "Entry confirmation data unavailable; blocking auto-buy."
+    },
+    {
+      "count": 58,
+      "name": "Earnings blackout active."
+    },
+    {
+      "count": 54,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 24,
+      "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
+    },
+    {
+      "count": 17,
+      "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 14,
+      "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
+    },
+    {
+      "count": 14,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 14,
+      "name": "SKIP: Bear market regime blocks new simulated buys."
+    },
+    {
+      "count": 14,
+      "name": "WATCH: Market regime exposure limit would be exceeded (5936.59 > 0.00)."
+    }
+  ],
+  "date": "2026-07-24",
+  "errors_retries_timeouts": [],
+  "market_session": "",
+  "max_drawdown": null,
+  "max_intraday_drawdown": null,
+  "median_R": null,
+  "most_common_rejection_reasons": [
+    {
+      "count": 65,
+      "name": "SKIP: No Trade result"
+    },
+    {
+      "count": 38,
+      "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
+    },
+    {
+      "count": 14,
+      "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
+    },
+    {
+      "count": 14,
+      "name": "SKIP: Consumer sector regime is weak (13/100); skip new entry"
+    },
+    {
+      "count": 9,
+      "name": "SKIP: Technology sector regime is weak (39/100); skip new entry"
+    },
+    {
+      "count": 3,
+      "name": "SKIP: Communication Services sector regime is weak (12/100); skip new entry"
+    },
+    {
+      "count": 1,
+      "name": "SKIP: Consumer Defensive sector regime is weak (23/100); skip new entry"
+    }
+  ],
+  "most_common_warnings": [
+    {
+      "count": 65,
+      "name": "Target ATR feasibility unavailable."
+    },
+    {
+      "count": 65,
+      "name": "Entry confirmation data unavailable; blocking auto-buy."
+    },
+    {
+      "count": 58,
+      "name": "Earnings blackout active."
+    },
+    {
+      "count": 54,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 24,
+      "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
+    },
+    {
+      "count": 17,
+      "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 14,
+      "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
+    },
+    {
+      "count": 14,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 14,
+      "name": "SKIP: Bear market regime blocks new simulated buys."
+    },
+    {
+      "count": 14,
+      "name": "WATCH: Market regime exposure limit would be exceeded (5936.59 > 0.00)."
+    }
+  ],
+  "open_positions_end": 1,
+  "open_positions_start": 1,
+  "partial_exits": 0,
+  "performance_by_market_regime": {
+    "BEAR": 145
+  },
+  "performance_by_sector_regime": {
+    "NEUTRAL": 8,
+    "STRONG": 100,
+    "WEAK": 37
+  },
+  "performance_by_setup_score_bucket": {
+    "0.40-0.49": 17,
+    "<0.40": 128
+  },
+  "performance_by_shadow_strategy": {},
+  "positions_closed_today": 0,
+  "positions_opened_today": 0,
+  "profit_factor": null,
+  "realized_pnl": null,
+  "recommendations_for_next_week": [
+    "Keep collecting shadow data; no strategy changes are recommended from this sample alone."
+  ],
+  "runtime_metrics": {
+    "decision_files": [
+      "agent_results/decisions/market_lens_agent_20260724_002009.jsonl"
+    ],
+    "records": 145,
+    "run_id": "20260724_002009"
+  },
+  "shadow_strategies_that_agreed_with_active_agent": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.6667,
+      "reason": "Breakout continuation: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "RPRX",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.5714,
+      "reason": "Trend pullback reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "RPRX",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.5,
+      "reason": "VWAP reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "RPRX",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.6667,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "RPRX",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.5,
+      "reason": "Breakout continuation: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "EOG",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.4286,
+      "reason": "Trend pullback reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "EOG",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.3333,
+      "reason": "VWAP reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "EOG",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.6667,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "EOG",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.3333,
+      "reason": "Breakout continuation: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "STT",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.2857,
+      "reason": "Trend pullback reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "STT",
+      "would_buy": false
+    }
+  ],
+  "shadow_strategies_that_would_buy_but_active_agent_skipped": [],
+  "shadow_strategies_top_candidates": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8571,
+      "reason": "Trend pullback reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "UNH",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.8333,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "WFC",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.8333,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "CAT",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8333,
+      "reason": "VWAP reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "MDT",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8333,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "UNH",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8333,
+      "reason": "VWAP reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "NEE",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8333,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "AIG",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8333,
+      "reason": "VWAP reclaim: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "PFE",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.8333,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GILD",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.8333,
+      "reason": "Relative strength leader: shadow buy blocked because market regime is not BEAR.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MS",
+      "would_buy": false
+    }
+  ],
+  "shadow_strategies_would_buy_count_by_strategy": {},
+  "summary_type": "daily",
+  "top_rejected_candidates": [
+    {
+      "final_action": "SKIP",
+      "net_rr": 2.1971,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.47,
+      "ticker": "GILD"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.2655,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.27.",
+      "setup_score": 0.47,
+      "ticker": "MDT"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.8156,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.82.",
+      "setup_score": 0.46,
+      "ticker": "O"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.8998,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.40 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.90.",
+      "setup_score": 0.45,
+      "ticker": "RPRX"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 2.1703,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.44,
+      "ticker": "CAT"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.4567,
+      "reason": "SKIP: Technology sector regime is weak (39/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.46.",
+      "setup_score": 0.44,
+      "ticker": "AVGO"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.1827,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.18.",
+      "setup_score": 0.44,
+      "ticker": "NI"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.275,
+      "reason": "SKIP: Technology sector regime is weak (39/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.27.",
+      "setup_score": 0.43,
+      "ticker": "CRWD"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.0936,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.51 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.09.",
+      "setup_score": 0.43,
+      "ticker": "MRK"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 3.6804,
+      "reason": "SKIP: Consumer sector regime is weak (13/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 3.68.",
+      "setup_score": 0.42,
+      "ticker": "AMZN"
+    }
+  ],
+  "total_BUY_SIMULATED": 0,
+  "total_WATCH_READY": 0,
+  "total_closed_trades": 0,
+  "total_portfolio_value": 100848.05,
+  "total_result_cards_read": 145,
+  "total_scans": 1,
+  "total_tickers_scanned": 145,
+  "total_trading_days": null,
+  "unrealized_pnl": null,
+  "week_end": null,
+  "week_start": null,
+  "win_rate": null,
+  "worst_sector": "Materials",
+  "worst_setup_type": null,
+  "worst_shadow_strategy": "TREND_PULLBACK_RECLAIM",
+  "worst_ticker": "CNP"
+}
