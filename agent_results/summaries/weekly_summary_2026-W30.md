@@ -5,9 +5,9 @@ Total scans: 137
 Tickers scanned: 19079
 BUY_SIMULATED: 4
 WATCH_READY: 1
-WATCH: 5151
-SKIP: 13768
-NO_TRADE: 10343
+WATCH: 5149
+SKIP: 13770
+NO_TRADE: 10344
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100677.27
