@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 1,
-  "NO_TRADE_count": 1472,
-  "SKIP_count": 2120,
+  "NO_TRADE_count": 1559,
+  "SKIP_count": 2218,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 712,
+  "WATCH_count": 745,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.3918,
-    "RELATIVE_STRENGTH_LEADER": 0.51,
-    "TREND_PULLBACK_RECLAIM": 0.3535,
-    "VWAP_RECLAIM": 0.4366
+    "BREAKOUT_CONTINUATION": 0.3969,
+    "RELATIVE_STRENGTH_LEADER": 0.5142,
+    "TREND_PULLBACK_RECLAIM": 0.3577,
+    "VWAP_RECLAIM": 0.4407
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.5222,
-  "average_rr_to_target_2": 1.6794,
-  "average_setup_score": 0.1448,
+  "average_rr_to_target_1": 0.5156,
+  "average_rr_to_target_2": 1.6583,
+  "average_setup_score": 0.1433,
   "average_winner": null,
   "best_sector": "Communication Services",
   "best_setup_type": "No Trade",
@@ -107,30 +107,30 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.8339,
+  "daily_return_pct": 0.8116,
   "data_quality_issues": [
     {
-      "count": 1472,
+      "count": 1559,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 1472,
+      "count": 1559,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 1070,
+      "count": 1114,
       "name": "Earnings blackout active."
     },
     {
-      "count": 914,
+      "count": 941,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 437,
+      "count": 451,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 303,
+      "count": 316,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -158,11 +158,11 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 1472,
+      "count": 1559,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 668,
+      "count": 693,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -178,7 +178,7 @@
       "name": "SKIP: Technology sector regime is weak (39/100); skip new entry"
     },
     {
-      "count": 64,
+      "count": 74,
       "name": "WATCH: NEUTRAL market requires setup score (0"
     },
     {
@@ -186,7 +186,7 @@
       "name": "SKIP: Communication Services sector regime is weak (12/100); skip new entry"
     },
     {
-      "count": 32,
+      "count": 37,
       "name": "SKIP: Consumer sector regime is weak (14/100); skip new entry"
     },
     {
@@ -200,27 +200,27 @@
   ],
   "most_common_warnings": [
     {
-      "count": 1472,
+      "count": 1559,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 1472,
+      "count": 1559,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 1070,
+      "count": 1114,
       "name": "Earnings blackout active."
     },
     {
-      "count": 914,
+      "count": 941,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 437,
+      "count": 451,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 303,
+      "count": 316,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -245,21 +245,21 @@
   "partial_exits": 0,
   "performance_by_market_regime": {
     "BEAR": 2018,
-    "NEUTRAL": 836
+    "NEUTRAL": 969
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 134,
-    "STRONG": 2077,
-    "WEAK": 643
+    "NEUTRAL": 142,
+    "STRONG": 2180,
+    "WEAK": 665
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 311,
-    "0.50-0.59": 10,
-    "<0.40": 2533
+    "0.40-0.49": 326,
+    "0.50-0.59": 11,
+    "<0.40": 2650
   },
   "performance_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 6,
-    "RELATIVE_STRENGTH_LEADER": 39,
+    "BREAKOUT_CONTINUATION": 8,
+    "RELATIVE_STRENGTH_LEADER": 47,
     "TREND_PULLBACK_RECLAIM": 8
   },
   "positions_closed_today": 0,
@@ -290,10 +290,11 @@
       "agent_results/decisions/market_lens_agent_20260724_143238.jsonl",
       "agent_results/decisions/market_lens_agent_20260724_150310.jsonl",
       "agent_results/decisions/market_lens_agent_20260724_153300.jsonl",
-      "agent_results/decisions/market_lens_agent_20260724_160250.jsonl"
+      "agent_results/decisions/market_lens_agent_20260724_160250.jsonl",
+      "agent_results/decisions/market_lens_agent_20260724_163304.jsonl"
     ],
-    "records": 2854,
-    "run_id": "20260724_160250"
+    "records": 2987,
+    "run_id": "20260724_163304"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -542,8 +543,8 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "BREAKOUT_CONTINUATION": 6,
-    "RELATIVE_STRENGTH_LEADER": 39,
+    "BREAKOUT_CONTINUATION": 8,
+    "RELATIVE_STRENGTH_LEADER": 47,
     "TREND_PULLBACK_RECLAIM": 8
   },
   "summary_type": "daily",
@@ -599,6 +600,13 @@
     },
     {
       "final_action": "WATCH",
+      "net_rr": 2.8256,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.50 < 0.55).",
+      "setup_score": 0.5,
+      "ticker": "GILD"
+    },
+    {
+      "final_action": "WATCH",
       "net_rr": 2.759,
       "reason": "WATCH: NEUTRAL market requires setup score (0.50 < 0.55).",
       "setup_score": 0.5,
@@ -610,22 +618,15 @@
       "reason": "WATCH: NEUTRAL market requires setup score (0.50 < 0.55).",
       "setup_score": 0.5,
       "ticker": "WFC"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.8514,
-      "reason": "WATCH: NEUTRAL market requires setup score (0.49 < 0.55).",
-      "setup_score": 0.49,
-      "ticker": "BLK"
     }
   ],
   "total_BUY_SIMULATED": 1,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
-  "total_portfolio_value": 100833.86,
-  "total_result_cards_read": 2854,
-  "total_scans": 20,
-  "total_tickers_scanned": 2854,
+  "total_portfolio_value": 100811.56,
+  "total_result_cards_read": 2987,
+  "total_scans": 21,
+  "total_tickers_scanned": 2987,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
