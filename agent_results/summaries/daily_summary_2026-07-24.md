@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-07-24
-Total scans: 25
-Tickers scanned: 3535
+Total scans: 26
+Tickers scanned: 3670
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 886
-SKIP: 2617
-NO_TRADE: 1910
+WATCH: 921
+SKIP: 2715
+NO_TRADE: 1995
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100703.92
+Portfolio value: 100696.99
 Best ticker: BSX
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 9
-- RELATIVE_STRENGTH_LEADER: 83
-- TREND_PULLBACK_RECLAIM: 14
+- RELATIVE_STRENGTH_LEADER: 92
+- TREND_PULLBACK_RECLAIM: 16
 
 Top rejected candidates:
 - GILD: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.96 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.69.
@@ -26,10 +26,10 @@ Top rejected candidates:
 - GILD: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - GILD: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - GILD: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
+- GILD: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - BLK: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - WFC: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - NI: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.
-- GILD: WATCH score=0.5 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - GILD: WATCH score=0.5 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 
 Recommendations:
