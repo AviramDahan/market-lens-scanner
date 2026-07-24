@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-07-24
-Total scans: 15
-Tickers scanned: 2161
+Total scans: 16
+Tickers scanned: 2306
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 545
-SKIP: 1601
-NO_TRADE: 1016
+WATCH: 572
+SKIP: 1718
+NO_TRADE: 1108
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100687.45
+Portfolio value: 100694.6
 Best ticker: BSX
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
@@ -22,10 +22,10 @@ Shadow would-buy counts:
 
 Top rejected candidates:
 - GILD: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.96 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.69.
+- GILD: SKIP score=0.51 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - GILD: WATCH score=0.5 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - WFC: WATCH score=0.5 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
-- GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- WFC: SKIP score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - GILD: SKIP score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
