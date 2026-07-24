@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 1108,
-  "SKIP_count": 1718,
+  "NO_TRADE_count": 1202,
+  "SKIP_count": 1824,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 572,
+  "WATCH_count": 611,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.3642,
-    "RELATIVE_STRENGTH_LEADER": 0.4866,
-    "TREND_PULLBACK_RECLAIM": 0.3306,
-    "VWAP_RECLAIM": 0.4121
+    "BREAKOUT_CONTINUATION": 0.3722,
+    "RELATIVE_STRENGTH_LEADER": 0.4938,
+    "TREND_PULLBACK_RECLAIM": 0.3375,
+    "VWAP_RECLAIM": 0.4193
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.5622,
-  "average_rr_to_target_2": 1.822,
-  "average_setup_score": 0.1538,
+  "average_rr_to_target_1": 0.5505,
+  "average_rr_to_target_2": 1.7754,
+  "average_setup_score": 0.1516,
   "average_winner": null,
   "best_sector": "Communication Services",
   "best_setup_type": "No Trade",
@@ -107,30 +107,30 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.6946,
+  "daily_return_pct": 0.7085,
   "data_quality_issues": [
     {
-      "count": 1108,
+      "count": 1202,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 1108,
+      "count": 1202,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 875,
+      "count": 928,
       "name": "Earnings blackout active."
     },
     {
-      "count": 816,
+      "count": 847,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 383,
+      "count": 400,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 261,
+      "count": 274,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -158,11 +158,11 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 1108,
+      "count": 1202,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 563,
+      "count": 593,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -182,11 +182,11 @@
       "name": "SKIP: Communication Services sector regime is weak (12/100); skip new entry"
     },
     {
-      "count": 22,
+      "count": 34,
       "name": "WATCH: NEUTRAL market requires setup score (0"
     },
     {
-      "count": 22,
+      "count": 25,
       "name": "SKIP: Consumer sector regime is weak (14/100); skip new entry"
     },
     {
@@ -194,33 +194,33 @@
       "name": "SKIP: Consumer Defensive sector regime is weak (23/100); skip new entry"
     },
     {
-      "count": 8,
+      "count": 11,
       "name": "SKIP: Technology sector regime is weak (34/100); skip new entry"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 1108,
+      "count": 1202,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 1108,
+      "count": 1202,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 875,
+      "count": 928,
       "name": "Earnings blackout active."
     },
     {
-      "count": 816,
+      "count": 847,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 383,
+      "count": 400,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 261,
+      "count": 274,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -245,22 +245,22 @@
   "partial_exits": 0,
   "performance_by_market_regime": {
     "BEAR": 2018,
-    "NEUTRAL": 288
+    "NEUTRAL": 434
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 106,
-    "STRONG": 1614,
-    "WEAK": 586
+    "NEUTRAL": 110,
+    "STRONG": 1735,
+    "WEAK": 607
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 262,
-    "0.50-0.59": 4,
-    "<0.40": 2040
+    "0.40-0.49": 276,
+    "0.50-0.59": 7,
+    "<0.40": 2169
   },
   "performance_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 1,
-    "RELATIVE_STRENGTH_LEADER": 11,
-    "TREND_PULLBACK_RECLAIM": 2
+    "BREAKOUT_CONTINUATION": 2,
+    "RELATIVE_STRENGTH_LEADER": 18,
+    "TREND_PULLBACK_RECLAIM": 4
   },
   "positions_closed_today": 0,
   "positions_opened_today": 0,
@@ -286,10 +286,11 @@
       "agent_results/decisions/market_lens_agent_20260724_131415.jsonl",
       "agent_results/decisions/market_lens_agent_20260724_133737.jsonl",
       "agent_results/decisions/market_lens_agent_20260724_134800.jsonl",
-      "agent_results/decisions/market_lens_agent_20260724_140311.jsonl"
+      "agent_results/decisions/market_lens_agent_20260724_140311.jsonl",
+      "agent_results/decisions/market_lens_agent_20260724_143238.jsonl"
     ],
-    "records": 2306,
-    "run_id": "20260724_140311"
+    "records": 2452,
+    "run_id": "20260724_143238"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -538,9 +539,9 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "BREAKOUT_CONTINUATION": 1,
-    "RELATIVE_STRENGTH_LEADER": 11,
-    "TREND_PULLBACK_RECLAIM": 2
+    "BREAKOUT_CONTINUATION": 2,
+    "RELATIVE_STRENGTH_LEADER": 18,
+    "TREND_PULLBACK_RECLAIM": 4
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
@@ -557,6 +558,27 @@
       "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
       "setup_score": 0.51,
       "ticker": "GILD"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 3.1956,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.51 < 0.55).",
+      "setup_score": 0.51,
+      "ticker": "GILD"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.6995,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.51 < 0.55).",
+      "setup_score": 0.51,
+      "ticker": "WFC"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.1331,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.",
+      "setup_score": 0.51,
+      "ticker": "NI"
     },
     {
       "final_action": "WATCH",
@@ -580,32 +602,11 @@
       "ticker": "WFC"
     },
     {
-      "final_action": "SKIP",
-      "net_rr": 2.1971,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
-      "setup_score": 0.47,
-      "ticker": "GILD"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 2.1971,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
-      "setup_score": 0.47,
-      "ticker": "GILD"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 2.1971,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
-      "setup_score": 0.47,
-      "ticker": "GILD"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 2.1971,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
-      "setup_score": 0.47,
-      "ticker": "GILD"
+      "final_action": "WATCH",
+      "net_rr": 1.4484,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.49 < 0.55).",
+      "setup_score": 0.49,
+      "ticker": "AIG"
     },
     {
       "final_action": "SKIP",
@@ -618,10 +619,10 @@
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
-  "total_portfolio_value": 100694.6,
-  "total_result_cards_read": 2306,
-  "total_scans": 16,
-  "total_tickers_scanned": 2306,
+  "total_portfolio_value": 100708.46,
+  "total_result_cards_read": 2452,
+  "total_scans": 17,
+  "total_tickers_scanned": 2452,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
