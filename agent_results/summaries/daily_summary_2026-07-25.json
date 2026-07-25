@@ -1,29 +1,29 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 300,
-  "SKIP_count": 411,
+  "NO_TRADE_count": 384,
+  "SKIP_count": 526,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 169,
+  "WATCH_count": 199,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.4884,
-    "RELATIVE_STRENGTH_LEADER": 0.6162,
-    "TREND_PULLBACK_RECLAIM": 0.4466,
-    "VWAP_RECLAIM": 0.5479
+    "BREAKOUT_CONTINUATION": 0.4533,
+    "RELATIVE_STRENGTH_LEADER": 0.5803,
+    "TREND_PULLBACK_RECLAIM": 0.4146,
+    "VWAP_RECLAIM": 0.5088
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.5022,
-  "average_rr_to_target_2": 1.33,
-  "average_setup_score": 0.1449,
+  "average_rr_to_target_1": 0.497,
+  "average_rr_to_target_2": 1.3232,
+  "average_setup_score": 0.1402,
   "average_winner": null,
-  "best_sector": "Technology",
+  "best_sector": "Communication Services",
   "best_setup_type": "No Trade",
   "best_shadow_strategy": "RELATIVE_STRENGTH_LEADER",
-  "best_ticker": "AMD",
+  "best_ticker": "NFLX",
   "common_false_positives": [],
   "common_missed_opportunities": [
     {
@@ -107,46 +107,46 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.6773,
+  "daily_return_pct": 0.8985,
   "data_quality_issues": [
     {
-      "count": 300,
+      "count": 384,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 300,
+      "count": 384,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 228,
+      "count": 284,
       "name": "Earnings blackout active."
     },
     {
-      "count": 196,
+      "count": 243,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 109,
+      "count": 138,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 47,
-      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
-    },
-    {
-      "count": 40,
+      "count": 53,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 32,
+      "count": 52,
+      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+    },
+    {
+      "count": 42,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
-      "count": 24,
+      "count": 28,
       "name": "SKIP: Earnings blackout active."
     },
     {
-      "count": 16,
+      "count": 17,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     }
   ],
@@ -158,11 +158,11 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 300,
+      "count": 384,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 141,
+      "count": 171,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -182,49 +182,61 @@
       "name": "SKIP: Semiconductors sector regime is weak (32/100); skip new entry"
     },
     {
+      "count": 11,
+      "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
+    },
+    {
+      "count": 10,
+      "name": "SKIP: Consumer sector regime is weak (13/100); skip new entry"
+    },
+    {
       "count": 8,
       "name": "SKIP: Communication Services sector regime is weak (16/100); skip new entry"
+    },
+    {
+      "count": 5,
+      "name": "SKIP: Technology sector regime is weak (39/100); skip new entry"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 300,
+      "count": 384,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 300,
+      "count": 384,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 228,
+      "count": 284,
       "name": "Earnings blackout active."
     },
     {
-      "count": 196,
+      "count": 243,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 109,
+      "count": 138,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 47,
-      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
-    },
-    {
-      "count": 40,
+      "count": 53,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 32,
+      "count": 52,
+      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+    },
+    {
+      "count": 42,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
-      "count": 24,
+      "count": 28,
       "name": "SKIP: Earnings blackout active."
     },
     {
-      "count": 16,
+      "count": 17,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     }
   ],
@@ -232,17 +244,18 @@
   "open_positions_start": 2,
   "partial_exits": 0,
   "performance_by_market_regime": {
+    "BEAR": 147,
     "NEUTRAL": 588
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 48,
-    "STRONG": 401,
-    "WEAK": 139
+    "NEUTRAL": 56,
+    "STRONG": 501,
+    "WEAK": 178
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 53,
+    "0.40-0.49": 62,
     "0.50-0.59": 4,
-    "<0.40": 531
+    "<0.40": 669
   },
   "performance_by_shadow_strategy": {
     "RELATIVE_STRENGTH_LEADER": 32,
@@ -260,10 +273,11 @@
       "agent_results/decisions/market_lens_agent_20260725_001751.jsonl",
       "agent_results/decisions/market_lens_agent_20260725_013328.jsonl",
       "agent_results/decisions/market_lens_agent_20260725_023324.jsonl",
-      "agent_results/decisions/market_lens_agent_20260725_033301.jsonl"
+      "agent_results/decisions/market_lens_agent_20260725_033301.jsonl",
+      "agent_results/decisions/market_lens_agent_20260725_150308.jsonl"
     ],
-    "records": 588,
-    "run_id": "20260725_033301"
+    "records": 735,
+    "run_id": "20260725_150308"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -547,10 +561,10 @@
     },
     {
       "final_action": "SKIP",
-      "net_rr": 1.837,
-      "reason": "SKIP: Technology sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.84.",
-      "setup_score": 0.47,
-      "ticker": "AVGO"
+      "net_rr": 1.4713,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.48,
+      "ticker": "ONB"
     },
     {
       "final_action": "SKIP",
@@ -574,11 +588,11 @@
       "ticker": "AVGO"
     },
     {
-      "final_action": "WATCH",
-      "net_rr": 1.0339,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.03.",
-      "setup_score": 0.46,
-      "ticker": "ED"
+      "final_action": "SKIP",
+      "net_rr": 1.837,
+      "reason": "SKIP: Technology sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.84.",
+      "setup_score": 0.47,
+      "ticker": "AVGO"
     },
     {
       "final_action": "WATCH",
@@ -591,10 +605,10 @@
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
-  "total_portfolio_value": 100677.27,
-  "total_result_cards_read": 588,
-  "total_scans": 4,
-  "total_tickers_scanned": 588,
+  "total_portfolio_value": 100898.51,
+  "total_result_cards_read": 735,
+  "total_scans": 5,
+  "total_tickers_scanned": 735,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
