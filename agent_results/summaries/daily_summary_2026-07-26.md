@@ -1,0 +1,33 @@
+Daily Performance Summary
+
+Date: 2026-07-26
+Total scans: 1
+Tickers scanned: 145
+BUY_SIMULATED: 0
+WATCH_READY: 0
+WATCH: 34
+SKIP: 109
+NO_TRADE: 80
+Realized PnL: None
+Unrealized PnL: None
+Portfolio value: 100898.51
+Best ticker: NFLX
+Worst ticker: OKE
+Best shadow strategy: RELATIVE_STRENGTH_LEADER
+Worst shadow strategy: TREND_PULLBACK_RECLAIM
+Shadow would-buy counts:
+
+Top rejected candidates:
+- CME: SKIP score=0.48 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- ONB: SKIP score=0.48 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- CRWD: SKIP score=0.43 reason=SKIP: Technology sector regime is weak (39/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.27.
+- UNH: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.80 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.40.
+- NEE: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.21.
+- FIX: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.42 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.16.
+- WFC: SKIP score=0.41 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- SJM: SKIP score=0.4 reason=SKIP: Consumer Defensive sector regime is weak (23/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.30.
+- SRE: WATCH score=0.4 reason=WATCH: Technical setup detected, but weighted risk/reward 1.14 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.74.
+- GILD: SKIP score=0.39 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+
+Recommendations:
+- Keep collecting shadow data; no strategy changes are recommended from this sample alone.
