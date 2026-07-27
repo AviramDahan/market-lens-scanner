@@ -1,24 +1,24 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 23
-Tickers scanned: 3298
+Total scans: 24
+Tickers scanned: 3445
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 824
-SKIP: 2438
-NO_TRADE: 1886
+WATCH: 866
+SKIP: 2542
+NO_TRADE: 1982
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100494.38
+Portfolio value: 100484.88
 Best ticker: NFLX
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 4
-- RELATIVE_STRENGTH_LEADER: 77
-- TREND_PULLBACK_RECLAIM: 9
+- BREAKOUT_CONTINUATION: 5
+- RELATIVE_STRENGTH_LEADER: 87
+- TREND_PULLBACK_RECLAIM: 13
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
