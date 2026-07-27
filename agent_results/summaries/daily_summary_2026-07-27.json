@@ -1,24 +1,24 @@
 {
-  "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 803,
-  "SKIP_count": 1153,
-  "SL_hits": 0,
+  "BUY_SIMULATED_count": 1,
+  "NO_TRADE_count": 993,
+  "SKIP_count": 1369,
+  "SL_hits": 2,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 0,
-  "WATCH_count": 432,
+  "WATCH_count": 502,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.4061,
-    "RELATIVE_STRENGTH_LEADER": 0.53,
-    "TREND_PULLBACK_RECLAIM": 0.3712,
-    "VWAP_RECLAIM": 0.4482
+    "BREAKOUT_CONTINUATION": 0.4193,
+    "RELATIVE_STRENGTH_LEADER": 0.5404,
+    "TREND_PULLBACK_RECLAIM": 0.3809,
+    "VWAP_RECLAIM": 0.4588
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.5201,
-  "average_rr_to_target_2": 1.4676,
-  "average_setup_score": 0.1418,
+  "average_rr_to_target_1": 0.4953,
+  "average_rr_to_target_2": 1.3853,
+  "average_setup_score": 0.136,
   "average_winner": null,
   "best_sector": "Communication Services",
   "best_setup_type": "No Trade",
@@ -107,38 +107,38 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.6773,
+  "daily_return_pct": 0.4682,
   "data_quality_issues": [
     {
-      "count": 803,
+      "count": 993,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 803,
+      "count": 993,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 576,
-      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
-    },
-    {
-      "count": 551,
+      "count": 645,
       "name": "Earnings blackout active."
     },
     {
-      "count": 347,
+      "count": 638,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 382,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 122,
+      "count": 148,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 107,
+      "count": 108,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 93,
+      "count": 101,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -158,11 +158,11 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 803,
+      "count": 993,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 387,
+      "count": 439,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -190,45 +190,45 @@
       "name": "SKIP: Technology sector regime is weak (39/100); skip new entry"
     },
     {
-      "count": 25,
+      "count": 26,
       "name": "SKIP: Semiconductors sector regime is weak (32/100); skip new entry"
     },
     {
-      "count": 15,
-      "name": "SKIP: Communication Services sector regime is weak (12/100); skip new entry"
+      "count": 21,
+      "name": "WATCH: NEUTRAL market requires setup score (0"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 803,
+      "count": 993,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 803,
+      "count": 993,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 576,
-      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
-    },
-    {
-      "count": 551,
+      "count": 645,
       "name": "Earnings blackout active."
     },
     {
-      "count": 347,
+      "count": 638,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 382,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 122,
+      "count": 148,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 107,
+      "count": 108,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 93,
+      "count": 101,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -240,29 +240,30 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     }
   ],
-  "open_positions_end": 2,
+  "open_positions_end": 1,
   "open_positions_start": 2,
   "partial_exits": 0,
   "performance_by_market_regime": {
     "BEAR": 867,
-    "NEUTRAL": 740
+    "NEUTRAL": 1030
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 104,
-    "STRONG": 1081,
-    "WEAK": 422
+    "NEUTRAL": 114,
+    "STRONG": 1300,
+    "WEAK": 483
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 98,
-    "0.50-0.59": 6,
-    "<0.40": 1503
+    "0.40-0.49": 113,
+    "0.50-0.59": 9,
+    "<0.40": 1775
   },
   "performance_by_shadow_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 40,
-    "TREND_PULLBACK_RECLAIM": 5
+    "BREAKOUT_CONTINUATION": 4,
+    "RELATIVE_STRENGTH_LEADER": 54,
+    "TREND_PULLBACK_RECLAIM": 8
   },
-  "positions_closed_today": 0,
-  "positions_opened_today": 0,
+  "positions_closed_today": 2,
+  "positions_opened_today": 1,
   "profit_factor": null,
   "realized_pnl": null,
   "recommendations_for_next_week": [
@@ -280,10 +281,12 @@
       "agent_results/decisions/market_lens_agent_20260727_103257.jsonl",
       "agent_results/decisions/market_lens_agent_20260727_113323.jsonl",
       "agent_results/decisions/market_lens_agent_20260727_123303.jsonl",
-      "agent_results/decisions/market_lens_agent_20260727_131257.jsonl"
+      "agent_results/decisions/market_lens_agent_20260727_131257.jsonl",
+      "agent_results/decisions/market_lens_agent_20260727_133756.jsonl",
+      "agent_results/decisions/market_lens_agent_20260727_135015.jsonl"
     ],
-    "records": 1607,
-    "run_id": "20260727_131257"
+    "records": 1897,
+    "run_id": "20260727_135015"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -532,13 +535,35 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 40,
-    "TREND_PULLBACK_RECLAIM": 5
+    "BREAKOUT_CONTINUATION": 4,
+    "RELATIVE_STRENGTH_LEADER": 54,
+    "TREND_PULLBACK_RECLAIM": 8
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
     {
       "final_action": "WATCH",
+      "net_rr": 2.0006,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.53 < 0.55).",
+      "setup_score": 0.53,
+      "ticker": "FCX"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 2.8905,
+      "reason": "SKIP: Technology sector regime is weak (34/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.89.",
+      "setup_score": 0.52,
+      "ticker": "NVDA"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.1477,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.15.",
+      "setup_score": 0.51,
+      "ticker": "PPL"
+    },
+    {
+      "final_action": "WATCH",
       "net_rr": 1.6519,
       "reason": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.",
       "setup_score": 0.5,
@@ -585,36 +610,15 @@
       "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
       "setup_score": 0.48,
       "ticker": "ONB"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.4713,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
-      "setup_score": 0.48,
-      "ticker": "ONB"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.837,
-      "reason": "SKIP: Technology sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.84.",
-      "setup_score": 0.47,
-      "ticker": "AVGO"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.837,
-      "reason": "SKIP: Technology sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.84.",
-      "setup_score": 0.47,
-      "ticker": "AVGO"
     }
   ],
-  "total_BUY_SIMULATED": 0,
+  "total_BUY_SIMULATED": 1,
   "total_WATCH_READY": 0,
-  "total_closed_trades": 0,
-  "total_portfolio_value": 100677.27,
-  "total_result_cards_read": 1607,
-  "total_scans": 11,
-  "total_tickers_scanned": 1607,
+  "total_closed_trades": 2,
+  "total_portfolio_value": 100468.16,
+  "total_result_cards_read": 1897,
+  "total_scans": 13,
+  "total_tickers_scanned": 1897,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
