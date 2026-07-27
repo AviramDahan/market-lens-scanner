@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 17
-Tickers scanned: 2441
+Total scans: 18
+Tickers scanned: 2583
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 638
-SKIP: 1773
-NO_TRADE: 1345
+WATCH: 669
+SKIP: 1883
+NO_TRADE: 1429
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100497.04
+Portfolio value: 100503.88
 Best ticker: NFLX
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
@@ -31,7 +31,7 @@ Top rejected candidates:
 - WFC: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - WFC: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - WFC: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- ONB: SKIP score=0.48 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- PPL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.21.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
