@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 30
-Tickers scanned: 4304
+Total scans: 31
+Tickers scanned: 4452
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 1129
-SKIP: 3132
-NO_TRADE: 2459
+WATCH: 1173
+SKIP: 3235
+NO_TRADE: 2537
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100488.3
@@ -17,8 +17,8 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- RELATIVE_STRENGTH_LEADER: 129
-- TREND_PULLBACK_RECLAIM: 25
+- RELATIVE_STRENGTH_LEADER: 135
+- TREND_PULLBACK_RECLAIM: 27
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
@@ -30,8 +30,8 @@ Top rejected candidates:
 - PPL: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.15.
 - FCX: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- FCX: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - WFC: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- WFC: SKIP score=0.5 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
