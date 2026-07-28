@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 31
-Tickers scanned: 4452
+Total scans: 32
+Tickers scanned: 4598
 BUY_SIMULATED: 1
 WATCH_READY: 0
-WATCH: 1173
-SKIP: 3235
-NO_TRADE: 2537
+WATCH: 1213
+SKIP: 3340
+NO_TRADE: 2612
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100488.3
@@ -17,11 +17,12 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- RELATIVE_STRENGTH_LEADER: 135
-- TREND_PULLBACK_RECLAIM: 27
+- RELATIVE_STRENGTH_LEADER: 140
+- TREND_PULLBACK_RECLAIM: 28
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
+- FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
@@ -31,7 +32,6 @@ Top rejected candidates:
 - FCX: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- WFC: WATCH score=0.5 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
