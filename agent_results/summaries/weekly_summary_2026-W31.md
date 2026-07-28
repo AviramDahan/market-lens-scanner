@@ -5,8 +5,8 @@ Total scans: 58
 Tickers scanned: 8294
 BUY_SIMULATED: 1
 WATCH_READY: 269
-WATCH: 2165
-SKIP: 6058
+WATCH: 2164
+SKIP: 6059
 NO_TRADE: 4727
 Realized PnL: None
 Unrealized PnL: None
