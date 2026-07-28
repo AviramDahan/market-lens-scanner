@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-28
-Total scans: 4
-Tickers scanned: 584
+Total scans: 5
+Tickers scanned: 730
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 161
-SKIP: 419
-NO_TRADE: 299
+WATCH: 201
+SKIP: 524
+NO_TRADE: 373
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100488.3
@@ -16,10 +16,11 @@ Worst ticker: BSX
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 21
-- TREND_PULLBACK_RECLAIM: 4
+- RELATIVE_STRENGTH_LEADER: 26
+- TREND_PULLBACK_RECLAIM: 5
 
 Top rejected candidates:
+- FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
@@ -28,8 +29,7 @@ Top rejected candidates:
 - IDXX: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - IDXX: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - IDXX: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
-- NEE: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.75 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
-- NEE: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.75 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
+- IDXX: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
