@@ -117,3 +117,42 @@ def test_read_recent_near_miss_tickers_ignores_ordinary_skip_and_no_trade(monkey
     tickers = agent.read_recent_near_miss_tickers(tracker, days=5)
 
     assert tickers == ["NEAR", "RRNEAR"]
+
+
+def test_read_recent_watch_ready_uses_decision_json_staging_flags(tmp_path) -> None:
+    tracker = tmp_path / "tracker.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Setup Watchlist"
+    ws.append([f"Col {index}" for index in range(1, 19)])
+    timestamp = datetime.now().isoformat(timespec="seconds")
+
+    def append_setup(ticker: str, action: str, decision: dict) -> None:
+        row = ["" for _ in range(18)]
+        row[0] = timestamp
+        row[1] = ticker
+        row[12] = action
+        row[17] = json.dumps(decision)
+        ws.append(row)
+
+    append_setup(
+        "READY",
+        "WATCH",
+        {
+            "off_hours_candidate": True,
+            "regular_session_confirmation_required": True,
+            "reason": "WATCH_READY: Setup is staged outside regular market hours.",
+        },
+    )
+    append_setup(
+        "BLOCKED",
+        "SKIP",
+        {
+            "off_hours_candidate": True,
+            "regular_session_confirmation_required": True,
+            "reason": "SKIP: Earnings blackout active.",
+        },
+    )
+    wb.save(tracker)
+
+    assert agent.read_recent_watch_ready_tickers(tracker, days=5) == ["READY"]

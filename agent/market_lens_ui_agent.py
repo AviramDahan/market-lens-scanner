@@ -1350,7 +1350,12 @@ def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list
 def read_recent_watch_ready_tickers(excel_path: Path, days: int | None = None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_READY_CARRY_FORWARD_DAYS", "5"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
-    return read_recent_action_tickers(excel_path, "WATCH_READY", cutoff)
+    return read_recent_action_tickers(
+        excel_path,
+        "WATCH_READY",
+        cutoff,
+        decision_predicate=is_watch_ready_payload,
+    )
 
 
 def read_recent_near_miss_tickers(excel_path: Path, days: int | None = None) -> list[str]:
@@ -1473,7 +1478,27 @@ def parse_json_cell(value: Any) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
-def read_recent_action_tickers(excel_path: Path, action_name: str | set[str], cutoff: datetime) -> list[str]:
+def is_watch_ready_payload(action: str, payload: dict[str, Any], fallback_text: str = "") -> bool:
+    action = str(action or "").upper()
+    if action == "SKIP":
+        return False
+    if action == "WATCH_READY":
+        return True
+    if payload.get("off_hours_candidate") or payload.get("regular_session_confirmation_required"):
+        return True
+    reason = str(payload.get("reason") or fallback_text or "").upper()
+    if reason.startswith("WATCH_READY:"):
+        return True
+    return any(str(warning).upper().startswith("WATCH_READY:") for warning in payload.get("warnings") or [])
+
+
+def read_recent_action_tickers(
+    excel_path: Path,
+    action_name: str | set[str],
+    cutoff: datetime,
+    *,
+    decision_predicate: Any | None = None,
+) -> list[str]:
     action_names = {action_name} if isinstance(action_name, str) else set(action_name)
     try:
         wb = load_workbook(excel_path, read_only=True, data_only=True)
@@ -1481,20 +1506,24 @@ def read_recent_action_tickers(excel_path: Path, action_name: str | set[str], cu
     except Exception:
         return []
     try:
-        latest: dict[str, tuple[datetime, str]] = {}
+        latest: dict[str, tuple[datetime, bool]] = {}
         for row in ws.iter_rows(min_row=2, values_only=True):
             ticker = str(row[1] or "").upper().strip() if len(row) > 1 else ""
             action = str(row[12] or "").upper().strip() if len(row) > 12 else ""
             timestamp = parse_agent_timestamp(row[0] if row else None)
             if not ticker or not action or timestamp is None or timestamp < cutoff:
                 continue
+            decision_json = parse_json_cell(row[17] if decision_predicate and len(row) > 17 else "")
+            matches = action in action_names or bool(
+                decision_predicate(action, decision_json) if decision_predicate else False
+            )
             current = latest.get(ticker)
             if current is None or timestamp > current[0]:
-                latest[ticker] = (timestamp, action)
+                latest[ticker] = (timestamp, matches)
         matching = {
             ticker: event_time
-            for ticker, (event_time, action) in latest.items()
-            if action in action_names
+            for ticker, (event_time, matches) in latest.items()
+            if matches
         }
         return sorted(matching, key=lambda ticker: matching[ticker], reverse=True)
     finally:
@@ -1687,6 +1716,11 @@ def decision_json_text(decision: Decision) -> str:
     return json.dumps(decision.decision_json, ensure_ascii=False, sort_keys=True, default=str)
 
 
+def is_watch_ready_decision(decision: Decision) -> bool:
+    payload = decision.decision_json or {}
+    return is_watch_ready_payload(decision.action, payload, decision.feedback)
+
+
 def enrich_decision_analytics(
     decision_json: dict[str, Any],
     *,
@@ -1779,8 +1813,12 @@ def write_summary(
 ) -> None:
     valid = [result for result in results if result.setup_type != "No Trade"]
     buys = [ticker for ticker, decision in decisions.items() if decision.action == "BUY_SIMULATED"]
-    watch_ready = [ticker for ticker, decision in decisions.items() if decision.action == "WATCH_READY"]
-    watch = [ticker for ticker, decision in decisions.items() if decision.action == "WATCH"]
+    watch_ready = [ticker for ticker, decision in decisions.items() if is_watch_ready_decision(decision)]
+    watch = [
+        ticker
+        for ticker, decision in decisions.items()
+        if decision.action == "WATCH" and not is_watch_ready_decision(decision)
+    ]
     closed = [ticker for ticker, decision in decisions.items() if decision.action in {"TAKE_PROFIT", "EXIT_STOP", "TAKE_PARTIAL_PROFIT"}]
     market_regime = workbook_context.get("market_regime")
     market_text = (

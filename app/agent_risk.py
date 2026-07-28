@@ -435,8 +435,8 @@ def evaluate_agent_candidate(
         )
         if blockers:
             final_action = downgrade_action_from_blockers(blockers)
-            final_reason = blockers[0]["reason"]
-            warnings.extend(blocker["reason"] for blocker in blockers[1:])
+            final_reason = blocker_reason_for_action(blockers, final_action)
+            warnings.extend(blocker["reason"] for blocker in blockers if blocker["reason"] != final_reason)
         else:
             if neutral_pilot["eligible"]:
                 final_reason = (
@@ -956,6 +956,13 @@ def downgrade_action_from_blockers(blockers: list[dict[str, str]]) -> str:
     if all(blocker["action"] == "WATCH_READY" for blocker in blockers):
         return "WATCH_READY"
     return "WATCH"
+
+
+def blocker_reason_for_action(blockers: list[dict[str, str]], final_action: str) -> str:
+    for blocker in blockers:
+        if blocker["action"] == final_action:
+            return blocker["reason"]
+    return blockers[0]["reason"] if blockers else ""
 
 
 def enrich_non_buy_reason(

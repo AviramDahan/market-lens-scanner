@@ -68,6 +68,7 @@ def build_period_summary(
         files = [current_decision_path]
 
     actions = Counter(str(record.get("final_action") or "UNKNOWN") for record in records)
+    watch_ready_count = sum(1 for record in records if is_watch_ready_candidate(record))
     setups = Counter(str(record.get("setup_type") or "UNKNOWN") for record in records)
     sectors = group_average(records, "sector", "net_rr")
     setup_scores = [to_float(record.get("setup_score")) for record in records if record.get("setup_score") is not None]
@@ -101,7 +102,7 @@ def build_period_summary(
         "total_tickers_scanned": len(records),
         "total_result_cards_read": len(records),
         "BUY_SIMULATED_count": actions.get("BUY_SIMULATED", 0),
-        "WATCH_READY_count": actions.get("WATCH_READY", 0),
+        "WATCH_READY_count": watch_ready_count,
         "WATCH_count": actions.get("WATCH", 0),
         "SKIP_count": actions.get("SKIP", 0),
         "NO_TRADE_count": setups.get("No Trade", 0),
@@ -141,7 +142,7 @@ def build_period_summary(
         "errors_retries_timeouts": [],
         "data_quality_issues": counter_items(warning_counter(records)),
         "total_BUY_SIMULATED": actions.get("BUY_SIMULATED", 0),
-        "total_WATCH_READY": actions.get("WATCH_READY", 0),
+        "total_WATCH_READY": watch_ready_count,
         "total_closed_trades": actions.get("TAKE_PROFIT", 0) + actions.get("EXIT_STOP", 0),
         "win_rate": round(len(winners) / len(r_values) * 100, 2) if r_values else None,
         "average_R": rounded_mean(r_values),
@@ -161,9 +162,23 @@ def build_period_summary(
         "WATCH_READY_conversion_rate": None,
         "common_missed_opportunities": shadow["would_buy_but_active_skipped"],
         "common_false_positives": [],
-        "recommendations_for_next_week": recommendations(actions, shadow),
+        "recommendations_for_next_week": recommendations(actions, shadow, watch_ready_count),
     }
     return summary
+
+
+def is_watch_ready_candidate(record: dict[str, Any]) -> bool:
+    action = str(record.get("final_action") or "").upper()
+    if action == "SKIP":
+        return False
+    if action == "WATCH_READY":
+        return True
+    if record.get("off_hours_candidate") or record.get("regular_session_confirmation_required"):
+        return True
+    reason = str(record.get("reason") or "").upper()
+    if reason.startswith("WATCH_READY:"):
+        return True
+    return any(str(warning).upper().startswith("WATCH_READY:") for warning in record.get("warnings") or [])
 
 
 def infer_open_positions_start(
@@ -402,9 +417,9 @@ def worst_shadow_strategy(metrics: dict[str, Any]) -> str:
     return min(values.items(), key=lambda item: item[1])[0] if values else ""
 
 
-def recommendations(actions: Counter[str], shadow: dict[str, Any]) -> list[str]:
+def recommendations(actions: Counter[str], shadow: dict[str, Any], watch_ready_count: int = 0) -> list[str]:
     items = []
-    if actions.get("WATCH_READY", 0):
+    if watch_ready_count:
         items.append("Track WATCH_READY conversion during regular-session confirmation scans.")
     if shadow.get("would_buy_but_active_skipped"):
         items.append("Review shadow would-buy candidates that active gates skipped before changing thresholds.")

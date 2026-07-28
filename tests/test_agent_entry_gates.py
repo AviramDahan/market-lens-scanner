@@ -409,6 +409,53 @@ def test_off_hours_candidate_is_staged_and_requires_regular_confirmation(monkeyp
     assert "blocked until a regular-session confirmation scan" in decision["off_hours_staging_reason"]
 
 
+def test_skip_reason_matches_skip_blocker_when_off_hours_also_staged(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.20, confirmation_passed=True)
+    monkeypatch.setattr(
+        "app.agent_risk.market_session_status",
+        lambda allow_off_hours_buys=False: {
+            "phase": "AFTER_HOURS",
+            "timestamp": "2026-07-08T18:30-04:00",
+            "can_open_new_buy": False,
+            "regular_session_open": False,
+            "reason": "Outside regular market hours.",
+        },
+    )
+    monkeypatch.setattr(
+        "app.agent_risk.calculate_earnings_blackout",
+        lambda ticker, config: {
+            "earnings_date": "2026-07-09",
+            "days_to_earnings": 1,
+            "earnings_blackout": True,
+            "warnings": [],
+        },
+    )
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test strong sector"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T18:30:00",
+        result=result(score=0.60),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=100_000,
+        portfolio_exposure_before=0,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+    )
+
+    assert decision["final_action"] == "SKIP"
+    assert decision["reason"].startswith("SKIP: Earnings blackout active")
+    assert any("WATCH_READY" in warning for warning in decision["warnings"])
+
+
 def test_stop_loss_cooldown_blocks_reentry() -> None:
     assert "Stop-loss cooldown active" in reasons(blockers_for(cooldown_active=True))
 

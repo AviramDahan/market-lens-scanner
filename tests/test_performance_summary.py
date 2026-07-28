@@ -155,3 +155,51 @@ def test_summary_infers_period_start_positions_from_actions(tmp_path: Path) -> N
     assert daily["positions_opened_today"] == 1
     assert daily["open_positions_end"] == 3
     assert daily["open_positions_start"] == 2
+
+
+def test_summary_counts_staged_watch_ready_without_counting_skips(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260728_063000.jsonl"
+    records = [
+        {
+            "timestamp": "2026-07-28T06:30:00",
+            "ticker": "READY",
+            "final_action": "WATCH",
+            "setup_type": "Breakout + Retest",
+            "setup_score": 0.62,
+            "reason": "WATCH_READY: Setup is staged outside regular market hours.",
+            "off_hours_candidate": True,
+            "regular_session_confirmation_required": True,
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-07-28T06:30:00",
+            "ticker": "BLOCKED",
+            "final_action": "SKIP",
+            "setup_type": "Breakout + Retest",
+            "setup_score": 0.62,
+            "reason": "SKIP: Earnings blackout active.",
+            "off_hours_candidate": True,
+            "regular_session_confirmation_required": True,
+            "warnings": ["WATCH_READY: Setup is staged outside regular market hours."],
+            "shadow_strategies": [],
+        },
+    ]
+    write_decisions(decision_path, records)
+
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260728_063000",
+        timestamp="2026-07-28T06:30:00",
+        portfolio={},
+    )
+
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+
+    assert daily["WATCH_READY_count"] == 1
+    assert daily["WATCH_count"] == 1
+    assert daily["SKIP_count"] == 1
