@@ -1,0 +1,551 @@
+{
+  "BUY_SIMULATED_count": 0,
+  "NO_TRADE_count": 72,
+  "SKIP_count": 107,
+  "SL_hits": 0,
+  "TP1_hits": 0,
+  "TP2_hits": 0,
+  "WATCH_READY_conversion_rate": null,
+  "WATCH_READY_count": 10,
+  "WATCH_count": 39,
+  "average_R": null,
+  "average_confidence_by_shadow_strategy": {
+    "BREAKOUT_CONTINUATION": 0.5079,
+    "RELATIVE_STRENGTH_LEADER": 0.6213,
+    "TREND_PULLBACK_RECLAIM": 0.4548,
+    "VWAP_RECLAIM": 0.5624
+  },
+  "average_loser": null,
+  "average_rr_to_target_1": 0.6017,
+  "average_rr_to_target_2": 1.5649,
+  "average_setup_score": 0.1635,
+  "average_winner": null,
+  "best_sector": "Communication Services",
+  "best_setup_type": "No Trade",
+  "best_shadow_strategy": "RELATIVE_STRENGTH_LEADER",
+  "best_ticker": "ACI",
+  "common_false_positives": [],
+  "common_missed_opportunities": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "VWAP reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "MNST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MNST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "WST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "PLD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "KDP",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "MKC",
+      "would_buy": true
+    }
+  ],
+  "daily_return_pct": 0.5765,
+  "data_quality_issues": [
+    {
+      "count": 72,
+      "name": "Target ATR feasibility unavailable."
+    },
+    {
+      "count": 72,
+      "name": "Entry confirmation data unavailable; blocking auto-buy."
+    },
+    {
+      "count": 68,
+      "name": "Earnings blackout active."
+    },
+    {
+      "count": 47,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 24,
+      "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
+    },
+    {
+      "count": 22,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 16,
+      "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 8,
+      "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
+    },
+    {
+      "count": 7,
+      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+    },
+    {
+      "count": 7,
+      "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    }
+  ],
+  "date": "2026-07-29",
+  "errors_retries_timeouts": [],
+  "market_session": "",
+  "max_drawdown": null,
+  "max_intraday_drawdown": null,
+  "median_R": null,
+  "most_common_rejection_reasons": [
+    {
+      "count": 72,
+      "name": "SKIP: No Trade result"
+    },
+    {
+      "count": 28,
+      "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
+    },
+    {
+      "count": 12,
+      "name": "SKIP: Earnings blackout active"
+    },
+    {
+      "count": 10,
+      "name": "SKIP: Consumer sector regime is weak (18/100); skip new entry"
+    },
+    {
+      "count": 10,
+      "name": "WATCH: NEUTRAL market requires setup score (0"
+    },
+    {
+      "count": 5,
+      "name": "SKIP: Technology sector regime is weak (30/100); skip new entry"
+    },
+    {
+      "count": 5,
+      "name": "SKIP: Semiconductors sector regime is weak (27/100); skip new entry"
+    },
+    {
+      "count": 3,
+      "name": "SKIP: Communication Services sector regime is weak (19/100); skip new entry"
+    },
+    {
+      "count": 1,
+      "name": "WATCH: Valid setup, but price is not inside the buy zone"
+    }
+  ],
+  "most_common_warnings": [
+    {
+      "count": 72,
+      "name": "Target ATR feasibility unavailable."
+    },
+    {
+      "count": 72,
+      "name": "Entry confirmation data unavailable; blocking auto-buy."
+    },
+    {
+      "count": 68,
+      "name": "Earnings blackout active."
+    },
+    {
+      "count": 47,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 24,
+      "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
+    },
+    {
+      "count": 22,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 16,
+      "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 8,
+      "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
+    },
+    {
+      "count": 7,
+      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+    },
+    {
+      "count": 7,
+      "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    }
+  ],
+  "open_positions_end": 1,
+  "open_positions_start": 1,
+  "partial_exits": 0,
+  "performance_by_market_regime": {
+    "NEUTRAL": 147
+  },
+  "performance_by_sector_regime": {
+    "NEUTRAL": 27,
+    "STRONG": 86,
+    "WEAK": 34
+  },
+  "performance_by_setup_score_bucket": {
+    "0.40-0.49": 14,
+    "0.50-0.59": 1,
+    "<0.40": 132
+  },
+  "performance_by_shadow_strategy": {
+    "RELATIVE_STRENGTH_LEADER": 4,
+    "TREND_PULLBACK_RECLAIM": 1,
+    "VWAP_RECLAIM": 1
+  },
+  "positions_closed_today": 0,
+  "positions_opened_today": 0,
+  "profit_factor": null,
+  "realized_pnl": null,
+  "recommendations_for_next_week": [
+    "Track WATCH_READY conversion during regular-session confirmation scans.",
+    "Review shadow would-buy candidates that active gates skipped before changing thresholds."
+  ],
+  "runtime_metrics": {
+    "decision_files": [
+      "agent_results/decisions/market_lens_agent_20260729_001817.jsonl"
+    ],
+    "records": 147,
+    "run_id": "20260729_001817"
+  },
+  "shadow_strategies_that_agreed_with_active_agent": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8333,
+      "reason": "Breakout continuation: shadow buy blocked because breakout/retest setup detected.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "MNST",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.7143,
+      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "MNST",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.6667,
+      "reason": "Breakout continuation: shadow buy blocked because primary net R/R is acceptable.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "TROW",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.4286,
+      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "TROW",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.6667,
+      "reason": "VWAP reclaim: shadow buy blocked because VWAP setup detected.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "TROW",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.6667,
+      "reason": "Relative strength leader: shadow buy blocked because not blocked by earnings blackout.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "TROW",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.5,
+      "reason": "Breakout continuation: shadow buy blocked because breakout/retest setup detected.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "SJM",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.4286,
+      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "SJM",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.5,
+      "reason": "VWAP reclaim: shadow buy blocked because VWAP setup detected.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "SJM",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.6667,
+      "reason": "Relative strength leader: shadow buy blocked because technical setup exists.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SJM",
+      "would_buy": false
+    }
+  ],
+  "shadow_strategies_that_would_buy_but_active_agent_skipped": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "VWAP reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "MNST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MNST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "WST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "PLD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "KDP",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "MKC",
+      "would_buy": true
+    }
+  ],
+  "shadow_strategies_top_candidates": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "VWAP reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "MNST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MNST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "WST",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "PLD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "KDP",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "MKC",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8571,
+      "reason": "Trend pullback reclaim: shadow buy blocked because reclaim or completed confirmation exists.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "WST",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8571,
+      "reason": "Trend pullback reclaim: shadow buy blocked because setup score is at least 0.40.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "KMI",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8571,
+      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "FCX",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 0.8571,
+      "reason": "Trend pullback reclaim: shadow buy blocked because reclaim or completed confirmation exists.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "KDP",
+      "would_buy": false
+    }
+  ],
+  "shadow_strategies_would_buy_count_by_strategy": {
+    "RELATIVE_STRENGTH_LEADER": 4,
+    "TREND_PULLBACK_RECLAIM": 1,
+    "VWAP_RECLAIM": 1
+  },
+  "summary_type": "daily",
+  "top_rejected_candidates": [
+    {
+      "final_action": "SKIP",
+      "net_rr": 2.5651,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.58,
+      "ticker": "BA"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 2.0077,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.46 < 0.55).",
+      "setup_score": 0.46,
+      "ticker": "FCX"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.6836,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.45 < 0.55).",
+      "setup_score": 0.45,
+      "ticker": "KDP"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.3971,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.45,
+      "ticker": "VMC"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 4.2821,
+      "reason": "SKIP: Communication Services sector regime is weak (19/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 4.28.",
+      "setup_score": 0.43,
+      "ticker": "NFLX"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.1762,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.18.",
+      "setup_score": 0.43,
+      "ticker": "IFF"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.0491,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.43 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.05.",
+      "setup_score": 0.43,
+      "ticker": "NEE"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 2.1223,
+      "reason": "WATCH: NEUTRAL market requires setup score (0.42 < 0.55).",
+      "setup_score": 0.42,
+      "ticker": "MKC"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.8792,
+      "reason": "SKIP: Technology sector regime is weak (30/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.88.",
+      "setup_score": 0.42,
+      "ticker": "AVGO"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 2.85,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.41,
+      "ticker": "ETN"
+    }
+  ],
+  "total_BUY_SIMULATED": 0,
+  "total_WATCH_READY": 10,
+  "total_closed_trades": 0,
+  "total_portfolio_value": 100576.46,
+  "total_result_cards_read": 147,
+  "total_scans": 1,
+  "total_tickers_scanned": 147,
+  "total_trading_days": null,
+  "unrealized_pnl": null,
+  "week_end": null,
+  "week_start": null,
+  "win_rate": null,
+  "worst_sector": "Utilities",
+  "worst_setup_type": null,
+  "worst_shadow_strategy": "TREND_PULLBACK_RECLAIM",
+  "worst_ticker": "MO"
+}
