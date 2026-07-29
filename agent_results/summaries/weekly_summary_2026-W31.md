@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 73
-Tickers scanned: 10491
+Total scans: 74
+Tickers scanned: 10638
 BUY_SIMULATED: 1
-WATCH_READY: 409
-WATCH: 2687
-SKIP: 7718
-NO_TRADE: 5953
+WATCH_READY: 419
+WATCH: 2725
+SKIP: 7826
+NO_TRADE: 6029
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100576.46
@@ -17,9 +17,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 10
-- RELATIVE_STRENGTH_LEADER: 292
+- RELATIVE_STRENGTH_LEADER: 296
 - TREND_PULLBACK_RECLAIM: 49
-- VWAP_RECLAIM: 10
+- VWAP_RECLAIM: 11
 
 Top rejected candidates:
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
@@ -29,7 +29,7 @@ Top rejected candidates:
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
 - BA: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- BA: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 
