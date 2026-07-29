@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 81
-Tickers scanned: 11653
+Total scans: 83
+Tickers scanned: 11945
 BUY_SIMULATED: 1
 WATCH_READY: 429
-WATCH: 2911
-SKIP: 8648
-NO_TRADE: 6693
+WATCH: 2970
+SKIP: 8879
+NO_TRADE: 6880
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100635.9
+Portfolio value: 100664.8
 Best ticker: NFLX
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
@@ -22,6 +22,7 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 12
 
 Top rejected candidates:
+- EQR: SKIP score=0.61 reason=SKIP: Bear market regime blocks new simulated buys.
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
@@ -31,7 +32,6 @@ Top rejected candidates:
 - BA: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - BA: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - BA: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- FCX: WATCH score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
