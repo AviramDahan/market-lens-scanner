@@ -1,23 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-07-29
-Total scans: 28
-Tickers scanned: 4083
+Total scans: 25
+Tickers scanned: 3642
 BUY_SIMULATED: 0
 WATCH_READY: 116
-WATCH: 861
-SKIP: 3194
-NO_TRADE: 2456
+WATCH: 771
+SKIP: 2846
+NO_TRADE: 2195
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100661.1
+Portfolio value: 100659.3
 Best ticker: NEM
-Worst ticker: KIM
+Worst ticker: CTRE
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 7
-- RELATIVE_STRENGTH_LEADER: 58
+- BREAKOUT_CONTINUATION: 6
+- RELATIVE_STRENGTH_LEADER: 53
 - TREND_PULLBACK_RECLAIM: 7
 - VWAP_RECLAIM: 11
 
