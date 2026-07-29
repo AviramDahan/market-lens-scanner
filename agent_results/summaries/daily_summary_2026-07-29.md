@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-07-29
-Total scans: 21
-Tickers scanned: 3067
+Total scans: 22
+Tickers scanned: 3210
 BUY_SIMULATED: 0
 WATCH_READY: 116
-WATCH: 668
-SKIP: 2378
-NO_TRADE: 1835
+WATCH: 697
+SKIP: 2491
+NO_TRADE: 1925
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100664.8
+Portfolio value: 100661.5
 Best ticker: ACI
 Worst ticker: CTRE
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
