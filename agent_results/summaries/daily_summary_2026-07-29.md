@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-29
-Total scans: 10
-Tickers scanned: 1466
+Total scans: 11
+Tickers scanned: 1613
 BUY_SIMULATED: 0
-WATCH_READY: 86
-WATCH: 347
-SKIP: 1109
-NO_TRADE: 832
+WATCH_READY: 96
+WATCH: 385
+SKIP: 1217
+NO_TRADE: 908
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100576.46
@@ -17,9 +17,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- RELATIVE_STRENGTH_LEADER: 37
+- RELATIVE_STRENGTH_LEADER: 41
 - TREND_PULLBACK_RECLAIM: 6
-- VWAP_RECLAIM: 8
+- VWAP_RECLAIM: 9
 
 Top rejected candidates:
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
@@ -28,7 +28,7 @@ Top rejected candidates:
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
 - BA: SKIP score=0.58 reason=SKIP: Earnings blackout active.
-- FCX: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
+- BA: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - FCX: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - FCX: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - FCX: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
