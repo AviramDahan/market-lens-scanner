@@ -7,7 +7,7 @@ BUY_SIMULATED: 0
 WATCH_READY: 22
 WATCH: 979
 SKIP: 3371
-NO_TRADE: 2344
+NO_TRADE: 2343
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100678.9
