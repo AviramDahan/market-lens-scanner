@@ -29,6 +29,7 @@ def detect_live_monitor_event(position: dict[str, Any], live_price: float) -> Li
     stop = to_float(position.get("stop_loss"))
     target_1 = to_float(position.get("target_1"))
     target_2 = to_float(position.get("target_2"))
+    partial_taken = bool(position.get("partial_taken")) or "partial" in str(position.get("notes") or "").lower()
 
     if stop > 0 and live_price <= stop:
         return LiveMonitorEvent(
@@ -46,7 +47,7 @@ def detect_live_monitor_event(position: dict[str, Any], live_price: float) -> Li
             live_price=live_price,
             reason=f"{ticker} live price {live_price:.2f} touched target 2 {target_2:.2f}.",
         )
-    if target_1 > 0 and live_price >= target_1:
+    if target_1 > 0 and live_price >= target_1 and not partial_taken:
         return LiveMonitorEvent(
             ticker=ticker,
             event_type="TAKE_PARTIAL_PROFIT",

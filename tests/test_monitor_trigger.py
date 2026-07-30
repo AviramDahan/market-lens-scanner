@@ -82,6 +82,21 @@ def test_detect_live_monitor_event_target_2_before_target_1() -> None:
     assert event.threshold == 112
 
 
+def test_detect_live_monitor_event_does_not_repeat_target_1_after_partial() -> None:
+    position = {
+        "ticker": "TEST",
+        "stop_loss": 100,
+        "target_1": 105,
+        "target_2": 112,
+        "notes": "Partial profit taken; stop moved to breakeven.",
+    }
+    assert detect_live_monitor_event(position, 106) is None
+
+    event = detect_live_monitor_event(position, 113)
+    assert event is not None
+    assert event.event_type == "TAKE_PROFIT"
+
+
 def test_fetch_live_price_prefers_extended_hours_intraday(monkeypatch) -> None:
     reset_rate_limits()
     calls = []
