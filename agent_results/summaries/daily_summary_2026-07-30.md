@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-07-30
-Total scans: 18
-Tickers scanned: 2629
+Total scans: 19
+Tickers scanned: 2776
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 600
-SKIP: 2011
-NO_TRADE: 1350
+WATCH: 626
+SKIP: 2131
+NO_TRADE: 1443
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100625.4
+Portfolio value: 100627.8
 Best ticker: ORCL
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
