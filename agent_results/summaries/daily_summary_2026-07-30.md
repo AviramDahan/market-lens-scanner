@@ -1,23 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-07-30
-Total scans: 26
-Tickers scanned: 3795
+Total scans: 27
+Tickers scanned: 3941
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 834
-SKIP: 2935
-NO_TRADE: 2030
+WATCH: 867
+SKIP: 3047
+NO_TRADE: 2115
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100662.8
+Portfolio value: 100669.7
 Best ticker: ORCL
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- RELATIVE_STRENGTH_LEADER: 35
+- RELATIVE_STRENGTH_LEADER: 40
 
 Top rejected candidates:
 - EQIX: SKIP score=0.49 reason=SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.99.
