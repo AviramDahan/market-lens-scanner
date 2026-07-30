@@ -5,12 +5,12 @@ Total scans: 15
 Tickers scanned: 2190
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 510
-SKIP: 1665
-NO_TRADE: 1095
+WATCH: 504
+SKIP: 1671
+NO_TRADE: 1098
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100638.6
+Portfolio value: 100643.9
 Best ticker: ORCL
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
@@ -18,7 +18,7 @@ Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 
 Top rejected candidates:
-- EQIX: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.51.
+- IRM: SKIP score=0.48 reason=SKIP: Bear market regime blocks new simulated buys.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
