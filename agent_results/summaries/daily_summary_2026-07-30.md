@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-30
-Total scans: 12
-Tickers scanned: 1752
+Total scans: 13
+Tickers scanned: 1898
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 414
-SKIP: 1326
-NO_TRADE: 867
+WATCH: 448
+SKIP: 1437
+NO_TRADE: 938
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100661.1
@@ -22,7 +22,7 @@ Top rejected candidates:
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
-- EXC: SKIP score=0.45 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.54.
+- SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - EXC: SKIP score=0.45 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.54.
 - EXC: SKIP score=0.45 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.54.
 - EXC: SKIP score=0.45 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.54.
