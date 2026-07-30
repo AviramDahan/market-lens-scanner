@@ -1,17 +1,17 @@
 Weekly Performance Summary
 
 Date: 2026-07-27
-Total scans: 109
-Tickers scanned: 15740
+Total scans: 110
+Tickers scanned: 15886
 BUY_SIMULATED: 1
 WATCH_READY: 429
-WATCH: 3795
-SKIP: 11823
-NO_TRADE: 8873
+WATCH: 3823
+SKIP: 11940
+NO_TRADE: 8958
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100661.1
-Best ticker: NEM
+Portfolio value: 100638.6
+Best ticker: ORCL
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
