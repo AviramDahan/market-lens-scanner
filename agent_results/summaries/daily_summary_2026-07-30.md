@@ -1,23 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-07-30
-Total scans: 20
-Tickers scanned: 2922
+Total scans: 21
+Tickers scanned: 3066
 BUY_SIMULATED: 0
 WATCH_READY: 0
-WATCH: 652
-SKIP: 2250
-NO_TRADE: 1529
+WATCH: 682
+SKIP: 2363
+NO_TRADE: 1615
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100647.6
+Portfolio value: 100656.5
 Best ticker: ORCL
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- RELATIVE_STRENGTH_LEADER: 12
+- RELATIVE_STRENGTH_LEADER: 15
 
 Top rejected candidates:
 - EQIX: SKIP score=0.49 reason=SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.99.
@@ -26,7 +26,7 @@ Top rejected candidates:
 - IRM: SKIP score=0.49 reason=SKIP: Earnings blackout active.
 - IRM: SKIP score=0.48 reason=SKIP: Bear market regime blocks new simulated buys.
 - EQIX: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.51.
-- SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
+- WFC: WATCH score=0.47 reason=WATCH: NEUTRAL market requires setup score (0.47 < 0.55).
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
 - SBUX: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.35.
