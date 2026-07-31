@@ -15,13 +15,20 @@ class LiveMonitorEvent:
     threshold: float
     live_price: float
     reason: str
+    live_high: float = 0.0
+    live_low: float = 0.0
 
 
 _GLOBAL_TRIGGER_AT = 0.0
 _EVENT_TRIGGER_AT: dict[str, float] = {}
 
 
-def detect_live_monitor_event(position: dict[str, Any], live_price: float) -> LiveMonitorEvent | None:
+def detect_live_monitor_event(
+    position: dict[str, Any],
+    live_price: float,
+    live_high: float | None = None,
+    live_low: float | None = None,
+) -> LiveMonitorEvent | None:
     ticker = str(position.get("ticker") or "").upper()
     if not ticker or live_price <= 0:
         return None
@@ -30,30 +37,38 @@ def detect_live_monitor_event(position: dict[str, Any], live_price: float) -> Li
     target_1 = to_float(position.get("target_1"))
     target_2 = to_float(position.get("target_2"))
     partial_taken = bool(position.get("partial_taken")) or "partial" in str(position.get("notes") or "").lower()
+    high = live_high if live_high is not None and live_high > 0 else live_price
+    low = live_low if live_low is not None and live_low > 0 else live_price
 
-    if stop > 0 and live_price <= stop:
+    if stop > 0 and low <= stop:
         return LiveMonitorEvent(
             ticker=ticker,
             event_type="EXIT_STOP",
             threshold=stop,
             live_price=live_price,
-            reason=f"{ticker} live price {live_price:.2f} touched stop loss {stop:.2f}.",
+            reason=f"{ticker} live 1m low {low:.2f} touched stop loss {stop:.2f}.",
+            live_high=high,
+            live_low=low,
         )
-    if target_2 > 0 and live_price >= target_2:
+    if target_2 > 0 and high >= target_2:
         return LiveMonitorEvent(
             ticker=ticker,
             event_type="TAKE_PROFIT",
             threshold=target_2,
             live_price=live_price,
-            reason=f"{ticker} live price {live_price:.2f} touched target 2 {target_2:.2f}.",
+            reason=f"{ticker} live 1m high {high:.2f} touched target 2 {target_2:.2f}.",
+            live_high=high,
+            live_low=low,
         )
-    if target_1 > 0 and live_price >= target_1 and not partial_taken:
+    if target_1 > 0 and high >= target_1 and not partial_taken:
         return LiveMonitorEvent(
             ticker=ticker,
             event_type="TAKE_PARTIAL_PROFIT",
             threshold=target_1,
             live_price=live_price,
-            reason=f"{ticker} live price {live_price:.2f} touched target 1 {target_1:.2f}.",
+            reason=f"{ticker} live 1m high {high:.2f} touched target 1 {target_1:.2f}.",
+            live_high=high,
+            live_low=low,
         )
     return None
 

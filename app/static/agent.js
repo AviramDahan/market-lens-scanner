@@ -131,6 +131,7 @@ function renderDashboard(data) {
   document.getElementById("tradeReadySetups").textContent = countTradeReady(data.latest_setups);
 
   renderMetrics(data.summary);
+  renderDiagnostics(data.decision_diagnostics || {}, data.daily_summary || {}, data.weekly_summary || {});
   renderEquity(data.equity_curve, data.summary);
   renderScanCharts(data.latest_setups, data.latest_run);
   renderPositionsOverview(data.open_positions);
@@ -457,6 +458,66 @@ function renderMetrics(summary) {
       `,
     )
     .join("");
+}
+
+function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
+  const grid = document.getElementById("diagnosticsGrid");
+  const list = document.getElementById("nearMissList");
+  const meta = document.getElementById("nearMissMeta");
+  if (!grid || !list || !meta) return;
+
+  const blockers = diagnostics.blockers || {};
+  const actionCounts = diagnostics.action_counts || {};
+  const cards = [
+    ["BUY", actionCounts.BUY_SIMULATED || dailySummary.BUY_SIMULATED_count || 0, "Actual simulated entries"],
+    ["WATCH_READY", diagnostics.watch_ready_count || dailySummary.WATCH_READY_count || 0, "Closest staged candidates"],
+    ["R/R Blocked", blockers["R/R below gate"] || 0, "Failed weighted/net reward"],
+    ["Score Blocked", blockers["Setup score below gate"] || 0, "Below regime threshold"],
+    ["Confirm Blocked", blockers["Entry confirmation missing"] || 0, "No completed-candle confirmation"],
+    ["Weak/Earnings", (blockers["Weak sector"] || 0) + (blockers["Earnings blackout"] || 0), "Sector or earnings risk"],
+  ];
+
+  grid.innerHTML = cards
+    .map(
+      ([label, value, detail]) => `
+        <div class="diagnostic-card">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(value)}</strong>
+          <small>${escapeHtml(detail)}</small>
+        </div>
+      `,
+    )
+    .join("");
+
+  const nearMisses = diagnostics.near_misses || [];
+  meta.textContent = `${nearMisses.length} shown / ${diagnostics.total_results || 0} scan results`;
+  if (!nearMisses.length) {
+    list.innerHTML = '<div class="empty-state">No near-miss setups in the latest scan.</div>';
+    return;
+  }
+  list.innerHTML = nearMisses
+    .map((item) => {
+      const rr = Number(item.weighted_net_rr || item.net_rr || 0);
+      const score = Number(item.setup_score || 0);
+      const confirmed = item.entry_confirmation_passed ? "Confirmed" : "No confirmation";
+      return `
+        <article class="near-miss-card">
+          <div>
+            <strong>${escapeHtml(tickerLabel(item))}</strong>
+            <span class="${actionBadgeClass(item.action)}">${escapeHtml(item.action)}</span>
+          </div>
+          <p>${escapeHtml(item.setup_type || "Setup")}</p>
+          <small>Score ${score.toFixed(2)} / weighted R/R ${rr.toFixed(2)}x / ${escapeHtml(confirmed)}</small>
+          <em>${escapeHtml(item.reason || "No reason provided")}</em>
+        </article>
+      `;
+    })
+    .join("");
+
+  const weeklyRecommendation = (weeklySummary.recommendations_for_next_week || [])[0];
+  if (weeklyRecommendation) {
+    meta.textContent += ` - Weekly: ${weeklyRecommendation}`;
+  }
 }
 
 function renderEquity(curve, summary) {

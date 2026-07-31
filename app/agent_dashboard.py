@@ -95,6 +95,9 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     for setup in latest_setups:
         action_counts[str(setup.get("action") or "UNKNOWN")] += 1
     latest_decisions = [setup["decision_json"] for setup in latest_setups if setup.get("decision_json")]
+    latest_dt = parse_timestamp(latest_update.get("timestamp"))
+    daily_summary = load_period_summary(summary_dir, "daily", latest_dt)
+    weekly_summary = load_period_summary(summary_dir, "weekly", latest_dt)
 
     return {
         "status": "ok",
@@ -150,12 +153,102 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         # older historical trade media.
         "latest_setups": latest_setups,
         "latest_decisions": latest_decisions,
+        "decision_diagnostics": build_decision_diagnostics(latest_setups),
+        "daily_summary": daily_summary,
+        "weekly_summary": weekly_summary,
         "open_positions": open_positions,
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
         "recent_trades": scoped_trades[-30:],
         "closed_trades": realized["closed"][-30:],
         "score_calibration": build_score_calibration(realized["closed"]),
         "recent_runs": scoped_updates[-20:],
+    }
+
+
+def load_period_summary(summary_dir: Path, period: str, timestamp: datetime) -> dict[str, Any]:
+    if timestamp == datetime.min:
+        return {}
+    if period == "daily":
+        path = summary_dir / f"daily_summary_{timestamp.date().isoformat()}.json"
+    elif period == "weekly":
+        year, week, _weekday = timestamp.date().isocalendar()
+        path = summary_dir / f"weekly_summary_{year}-W{week:02d}.json"
+    else:
+        return {}
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
+    blockers: dict[str, int] = defaultdict(int)
+    action_counts: dict[str, int] = defaultdict(int)
+    near_misses: list[dict[str, Any]] = []
+
+    for setup in setups:
+        action = str(setup.get("action") or "UNKNOWN").upper()
+        action_counts[action] += 1
+        decision = setup.get("decision_json") or {}
+        setup_type = str(setup.get("setup_type") or decision.get("setup_type") or "")
+        reason = str(setup.get("reason") or decision.get("reason") or "")
+        warnings = " ".join(str(warning) for warning in decision.get("warnings") or [])
+        text = f"{reason} {warnings}".lower()
+
+        if setup_type.lower() == "no trade" or "no trade result" in text:
+            blockers["No Trade"] += 1
+        if "risk/reward" in text or "net r/r" in text or "weighted" in text:
+            blockers["R/R below gate"] += 1
+        if "setup score" in text:
+            blockers["Setup score below gate"] += 1
+        if "entry confirmation" in text or "confirmed entry" in text or "confirmation failed" in text:
+            blockers["Entry confirmation missing"] += 1
+        if "earnings blackout" in text:
+            blockers["Earnings blackout"] += 1
+        if "bear market regime blocks" in text:
+            blockers["BEAR blocks new buys"] += 1
+        if "sector regime is weak" in text or "weak sector" in text:
+            blockers["Weak sector"] += 1
+
+        if action in {"WATCH", "WATCH_READY", "SKIP"} and setup_type and setup_type.lower() != "no trade":
+            near_misses.append(
+                {
+                    "ticker": setup.get("ticker"),
+                    "company_name": setup.get("company_name", ""),
+                    "sector": setup.get("sector", ""),
+                    "action": action,
+                    "setup_type": setup_type,
+                    "setup_score": round(to_float(setup.get("setup_score") or decision.get("setup_score")), 3),
+                    "net_rr": round(to_float(decision.get("net_rr") or setup.get("net_rr")), 3),
+                    "net_rr_1": round(to_float(decision.get("net_rr_1")), 3),
+                    "weighted_net_rr": round(to_float(decision.get("weighted_net_rr")), 3),
+                    "entry_confirmation_passed": bool(decision.get("entry_confirmation_passed")),
+                    "reason": reason,
+                }
+            )
+
+    near_misses.sort(
+        key=lambda item: (
+            item.get("action") == "WATCH_READY",
+            to_float(item.get("setup_score")),
+            to_float(item.get("weighted_net_rr") or item.get("net_rr")),
+        ),
+        reverse=True,
+    )
+    return {
+        "total_results": len(setups),
+        "action_counts": dict(sorted(action_counts.items())),
+        "blockers": dict(sorted(blockers.items(), key=lambda item: item[1], reverse=True)),
+        "near_misses": near_misses[:10],
+        "watch_ready_count": sum(
+            1
+            for setup in setups
+            if str(setup.get("action") or "").upper() == "WATCH_READY"
+            or any(str(warning).upper().startswith("WATCH_READY:") for warning in (setup.get("decision_json") or {}).get("warnings") or [])
+        ),
     }
 
 

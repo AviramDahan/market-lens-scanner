@@ -9,7 +9,14 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.agent_dashboard import TRACKER_NAME, build_agent_dashboard, with_position_calculations
+from app.agent_dashboard import (
+    TRACKER_NAME,
+    build_agent_dashboard,
+    build_decision_diagnostics,
+    load_period_summary,
+    parse_timestamp,
+    with_position_calculations,
+)
 from app.auth import auth_is_configured, auth_is_open, get_current_user_required, supabase_publishable_key
 from app.charts import write_scan_chart
 from app.config import load_config
@@ -52,7 +59,7 @@ AGENT_RESULTS_DIR.mkdir(exist_ok=True)
 init_storage()
 
 LIVE_PRICE_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_LIVE_PRICE_CACHE_TTL", "45"))
-_LIVE_PRICE_CACHE: dict[str, tuple[float, float, str]] = {}
+_LIVE_PRICE_CACHE: dict[str, tuple[float, float, str, float, float]] = {}
 DASHBOARD_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_AGENT_DASHBOARD_CACHE_TTL", "120"))
 _AGENT_DASHBOARD_CACHE: dict[tuple[str, int, int], tuple[float, dict]] = {}
 
@@ -107,12 +114,29 @@ def current_agent_dashboard() -> dict:
         try:
             dashboard = json.loads(DASHBOARD_SNAPSHOT_PATH.read_text(encoding="utf-8"))
             if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
+                dashboard = enrich_agent_dashboard_snapshot(dashboard)
                 asset_sync_status = sync_dashboard_snapshot_assets_if_enabled(PROJECT_ROOT, dashboard)
                 dashboard["results_sync"] = {**sync_status, "asset_sync": asset_sync_status}
                 return dashboard
         except Exception:
             pass
     return cached_agent_dashboard()
+
+
+def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
+    """Backfill lightweight analytics when Render is serving an older snapshot."""
+    latest_setups = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
+    if "decision_diagnostics" not in dashboard:
+        dashboard["decision_diagnostics"] = build_decision_diagnostics(latest_setups)
+
+    latest_run = dashboard.get("latest_run") if isinstance(dashboard.get("latest_run"), dict) else {}
+    latest_dt = parse_timestamp(latest_run.get("timestamp"))
+    summary_dir = AGENT_RESULTS_DIR / "summaries"
+    if "daily_summary" not in dashboard:
+        dashboard["daily_summary"] = load_period_summary(summary_dir, "daily", latest_dt)
+    if "weekly_summary" not in dashboard:
+        dashboard["weekly_summary"] = load_period_summary(summary_dir, "weekly", latest_dt)
+    return dashboard
 
 
 def monitor_agent_dashboard() -> dict:
@@ -328,16 +352,18 @@ async def monitor_live_positions(
         if not ticker:
             continue
         try:
-            live_price, source_time = fetch_live_price(ticker)
+            live_price, source_time, live_high, live_low = fetch_live_quote(ticker)
         except Exception as exc:
             warnings[ticker] = str(exc)
             checked.append({"ticker": ticker, "status": "price_unavailable", "warning": str(exc)})
             continue
 
-        event = detect_live_monitor_event(position, live_price)
+        event = detect_live_monitor_event(position, live_price, live_high=live_high, live_low=live_low)
         checked_item = {
             "ticker": ticker,
             "live_price": round(live_price, 4),
+            "live_high": round(live_high, 4),
+            "live_low": round(live_low, 4),
             "live_price_updated_at": source_time,
             "status": "event_detected" if event else "no_event",
         }
@@ -509,16 +535,23 @@ def live_monitor_event_payload(event) -> dict:
         "event_type": event.event_type,
         "threshold": event.threshold,
         "live_price": round(event.live_price, 4),
+        "live_high": round(event.live_high, 4),
+        "live_low": round(event.live_low, 4),
         "reason": event.reason,
     }
 
 
 def fetch_live_price(ticker: str) -> tuple[float, str]:
+    price, source_time, _high, _low = fetch_live_quote(ticker)
+    return price, source_time
+
+
+def fetch_live_quote(ticker: str) -> tuple[float, str, float, float]:
     symbol = ticker.upper()
     now = time.monotonic()
     cached = _LIVE_PRICE_CACHE.get(symbol)
     if cached and now - cached[0] < LIVE_PRICE_CACHE_TTL_SECONDS:
-        return cached[1], cached[2]
+        return cached[1], cached[2], cached[3], cached[4]
 
     errors = []
     for period, include_prepost in (("5d", True), ("1d", False), ("5d", False)):
@@ -540,10 +573,13 @@ def fetch_live_price(ticker: str) -> tuple[float, str]:
     close = frame["Close"].dropna()
     if close.empty:
         raise ValueError(f"{symbol}: live intraday rows have no close prices")
+    latest_row = frame.loc[close.index[-1]]
     price = float(close.iloc[-1])
+    high = float(latest_row.get("High") or price)
+    low = float(latest_row.get("Low") or price)
     source_time = close.index[-1].isoformat()
-    _LIVE_PRICE_CACHE[symbol] = (now, price, source_time)
-    return price, source_time
+    _LIVE_PRICE_CACHE[symbol] = (now, price, source_time, high, low)
+    return price, source_time, high, low
 
 
 def compact_dispatch_payload(dispatch: dict | None) -> dict:

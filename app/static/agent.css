@@ -242,6 +242,82 @@ h2 {
   background: var(--soft-amber);
 }
 
+.diagnostics-panel {
+  margin-top: 18px;
+}
+
+.diagnostics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.diagnostic-card,
+.near-miss-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.diagnostic-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.diagnostic-card span,
+.diagnostic-card small,
+.near-miss-card small,
+.near-miss-card em,
+.near-miss-head span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.diagnostic-card strong {
+  font-size: 24px;
+}
+
+.near-miss-wrap {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.near-miss-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.near-miss-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.near-miss-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.near-miss-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.near-miss-card em {
+  display: -webkit-box;
+  overflow: hidden;
+  font-style: normal;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
 .agent-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);

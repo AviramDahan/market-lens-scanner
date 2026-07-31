@@ -1,3 +1,4 @@
+import json
 import sys
 import types
 from datetime import datetime
@@ -74,12 +75,85 @@ def test_agent_dashboard_cache_reuses_until_tracker_changes(monkeypatch, tmp_pat
     assert len(calls) == 2
 
 
+def test_current_agent_dashboard_enriches_legacy_snapshot(monkeypatch, tmp_path) -> None:
+    reset_rate_limits()
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    summary_dir = snapshot_path.parent / "summaries"
+    summary_dir.mkdir(parents=True)
+    snapshot_path.write_text(
+        json.dumps(
+            {
+                "status": "ok",
+                "latest_run": {"timestamp": "2026-07-31T14:30:00Z"},
+                "latest_setups": [
+                    {
+                        "ticker": "TEST",
+                        "company_name": "Test Corp",
+                        "sector": "Technology",
+                        "action": "WATCH",
+                        "setup_type": "Breakout + Retest",
+                        "setup_score": 0.57,
+                        "reason": "Entry confirmation failed on completed candle.",
+                        "decision_json": {
+                            "setup_type": "Breakout + Retest",
+                            "setup_score": 0.57,
+                            "weighted_net_rr": 2.1,
+                            "entry_confirmation_passed": False,
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (summary_dir / "daily_summary_2026-07-31.json").write_text(
+        '{"BUY_SIMULATED_count": 0, "WATCH_READY_count": 1}',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", snapshot_path.parent)
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": False, "reason": "disabled in test"},
+    )
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_assets_if_enabled",
+        lambda project_root, dashboard: {"enabled": False, "reason": "disabled in test"},
+    )
+
+    dashboard = main.current_agent_dashboard()
+
+    assert dashboard["decision_diagnostics"]["blockers"]["Entry confirmation missing"] == 1
+    assert dashboard["decision_diagnostics"]["near_misses"][0]["ticker"] == "TEST"
+    assert dashboard["daily_summary"]["WATCH_READY_count"] == 1
+
+
 def test_detect_live_monitor_event_target_2_before_target_1() -> None:
     position = {"ticker": "TEST", "stop_loss": 95, "target_1": 105, "target_2": 112}
     event = detect_live_monitor_event(position, 113)
     assert event is not None
     assert event.event_type == "TAKE_PROFIT"
     assert event.threshold == 112
+
+
+def test_detect_live_monitor_event_uses_intraday_high_low_touch() -> None:
+    position = {"ticker": "TEST", "stop_loss": 95, "target_1": 105, "target_2": 112}
+
+    target_event = detect_live_monitor_event(position, 104.5, live_high=105.2, live_low=103.8)
+    assert target_event is not None
+    assert target_event.event_type == "TAKE_PARTIAL_PROFIT"
+    assert target_event.live_high == 105.2
+    assert "1m high" in target_event.reason
+
+    stop_event = detect_live_monitor_event(position, 96.1, live_high=97.0, live_low=94.8)
+    assert stop_event is not None
+    assert stop_event.event_type == "EXIT_STOP"
+    assert stop_event.live_low == 94.8
+    assert "1m low" in stop_event.reason
 
 
 def test_detect_live_monitor_event_does_not_repeat_target_1_after_partial() -> None:
@@ -245,11 +319,11 @@ def test_monitor_live_endpoint_uses_lightweight_snapshot(monkeypatch, tmp_path) 
     def fail_build(*_args, **_kwargs):
         raise AssertionError("monitor-live should not rebuild the full dashboard when a snapshot exists")
 
-    def fail_live_price(*_args, **_kwargs):
+    def fail_live_quote(*_args, **_kwargs):
         raise AssertionError("monitor-live should not fetch live prices when the snapshot has no open positions")
 
     monkeypatch.setattr(main, "build_agent_dashboard", fail_build)
-    monkeypatch.setattr(main, "fetch_live_price", fail_live_price)
+    monkeypatch.setattr(main, "fetch_live_quote", fail_live_quote)
 
     client = TestClient(main.app)
     response = client.get("/agent/monitor-live")
@@ -582,14 +656,14 @@ def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(
         },
     )
 
-    def fake_live_price(ticker):
+    def fake_live_quote(ticker):
         prices = {
-            "AAA": (100.0, "2026-06-18T14:00:00Z"),
-            "BBB": (55.5, "2026-06-18T14:00:00Z"),
+            "AAA": (100.0, "2026-06-18T14:00:00Z", 100.2, 99.8),
+            "BBB": (54.5, "2026-06-18T14:00:00Z", 55.5, 54.0),
         }
         return prices[ticker]
 
-    monkeypatch.setattr(main, "fetch_live_price", fake_live_price)
+    monkeypatch.setattr(main, "fetch_live_quote", fake_live_quote)
     dispatches = []
 
     async def fake_dispatch(event, source="agent-ui-live-price"):
