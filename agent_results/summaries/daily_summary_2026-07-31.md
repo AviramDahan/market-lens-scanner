@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-07-31
-Total scans: 10
-Tickers scanned: 1459
+Total scans: 11
+Tickers scanned: 1605
 BUY_SIMULATED: 0
-WATCH_READY: 119
-WATCH: 400
-SKIP: 1049
-NO_TRADE: 707
+WATCH_READY: 131
+WATCH: 440
+SKIP: 1154
+NO_TRADE: 778
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100678.9
@@ -16,8 +16,8 @@ Worst ticker: AIG
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 90
-- TREND_PULLBACK_RECLAIM: 10
+- RELATIVE_STRENGTH_LEADER: 99
+- TREND_PULLBACK_RECLAIM: 11
 
 Top rejected candidates:
 - BA: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.31.
