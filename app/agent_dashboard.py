@@ -145,12 +145,15 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "latest_scan_run_id": latest_scan_update.get("run_id"),
             "latest_scan_timestamp": latest_scan_update.get("timestamp"),
         },
-        "equity_curve": build_equity_curve(scoped_updates, starting_capital),
-        "open_positions": open_positions,
-        "recent_trades": scoped_trades[-30:],
-        "closed_trades": realized["closed"][-30:],
+        # Keep current-run assets early in the snapshot. The deployed app syncs
+        # referenced files lazily, so latest charts should be discovered before
+        # older historical trade media.
         "latest_setups": latest_setups,
         "latest_decisions": latest_decisions,
+        "open_positions": open_positions,
+        "equity_curve": build_equity_curve(scoped_updates, starting_capital),
+        "recent_trades": scoped_trades[-30:],
+        "closed_trades": realized["closed"][-30:],
         "score_calibration": build_score_calibration(realized["closed"]),
         "recent_runs": scoped_updates[-20:],
     }
