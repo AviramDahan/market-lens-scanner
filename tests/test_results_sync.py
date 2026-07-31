@@ -156,6 +156,57 @@ def test_dashboard_snapshot_asset_sync_downloads_missing_assets(monkeypatch, tmp
     assert existing.read_bytes() == b"already here"
 
 
+def test_dashboard_snapshot_asset_sync_prioritizes_latest_missing_assets(monkeypatch, tmp_path: Path) -> None:
+    reset_results_sync_cache()
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_ASSET_SYNC_TTL_SECONDS", "0")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_ASSET_SYNC_LIMIT", "2")
+
+    dashboard = {
+        "closed_trades": [
+            {
+                "chart_url": "/agent-results/charts/market_lens_agent_20260622_183144_ba.png",
+            }
+        ],
+        "latest_run": {
+            "run_id": "20260731_161740",
+            "screenshot_url": "/agent-results/screenshots/market_lens_agent_20260731_161740.png",
+        },
+        "latest_setups": [
+            {
+                "chart_url": "/agent-results/charts/market_lens_agent_20260731_161740_jpm.png",
+            }
+        ],
+    }
+
+    downloaded: list[str] = []
+
+    def fake_metadata(repo, ref, path):
+        return {"type": "file", "sha": f"sha-{path}", "download_url": f"https://example.test/{path}"}
+
+    def fake_download(url, path):
+        downloaded.append(path.as_posix())
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"downloaded {url}".encode("utf-8"))
+
+    monkeypatch.setattr(results_sync, "github_file_metadata", fake_metadata)
+    monkeypatch.setattr(results_sync, "download_to_path", fake_download)
+
+    result = results_sync.sync_dashboard_snapshot_assets_if_enabled(tmp_path, dashboard)
+
+    latest_screenshot = tmp_path / "agent_results" / "screenshots" / "market_lens_agent_20260731_161740.png"
+    latest_chart = tmp_path / "agent_results" / "charts" / "market_lens_agent_20260731_161740_jpm.png"
+    old_chart = tmp_path / "agent_results" / "charts" / "market_lens_agent_20260622_183144_ba.png"
+
+    assert result["downloaded"] == 2
+    assert result["download_limit_reached"] is True
+    assert latest_screenshot.exists()
+    assert latest_chart.exists()
+    assert not old_chart.exists()
+    assert downloaded == [latest_screenshot.as_posix(), latest_chart.as_posix()]
+
+
 def test_dashboard_snapshot_sync_downloads_exact_blob(monkeypatch, tmp_path: Path) -> None:
     reset_results_sync_cache()
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")

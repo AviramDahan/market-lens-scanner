@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import threading
 import time
 import urllib.parse
@@ -100,7 +101,12 @@ def sync_dashboard_snapshot_assets_if_enabled(project_root: Path, dashboard: dic
         }
         return _LAST_SNAPSHOT_ASSET_SYNC_RESULT
 
-    missing_paths = [path for path in referenced_paths if not (project_root / path).exists()]
+    latest_run = dashboard.get("latest_run") if isinstance(dashboard, dict) else None
+    latest_run_id = str((latest_run or {}).get("run_id") or (latest_run or {}).get("latest_scan_run_id") or "")
+    missing_paths = prioritize_dashboard_asset_paths(
+        [path for path in referenced_paths if not (project_root / path).exists()],
+        latest_run_id,
+    )
     ttl = int_env("MARKET_LENS_DASHBOARD_ASSET_SYNC_TTL_SECONDS", 45)
     now = time.time()
     if not missing_paths and now - _LAST_SNAPSHOT_ASSET_SYNC_AT < ttl:
@@ -113,19 +119,16 @@ def sync_dashboard_snapshot_assets_if_enabled(project_root: Path, dashboard: dic
     time_budget = int_env("MARKET_LENS_DASHBOARD_ASSET_SYNC_TIME_BUDGET_SECONDS", 15)
     started_at = time.monotonic()
     downloaded: list[str] = []
-    skipped = 0
+    skipped = len(referenced_paths) - len(missing_paths)
     warnings: list[str] = []
     limit_reached = False
 
-    for target in referenced_paths[:limit]:
+    for target in missing_paths[:limit]:
         if time_budget > 0 and time.monotonic() - started_at >= time_budget:
             limit_reached = True
             break
         try:
             local_path = project_root / target
-            if local_path.exists():
-                skipped += 1
-                continue
             meta = github_file_metadata(repo, ref, target)
             sha = str(meta.get("sha") or "")
             download_url = raw_github_url(repo, ref, target, sha)
@@ -136,7 +139,7 @@ def sync_dashboard_snapshot_assets_if_enabled(project_root: Path, dashboard: dic
         except Exception as exc:  # pragma: no cover - depends on live GitHub/network state
             warnings.append(f"{target}: {exc}")
 
-    if len(referenced_paths) > limit:
+    if len(missing_paths) > limit:
         limit_reached = True
 
     save_state(project_root, state)
@@ -158,6 +161,37 @@ def sync_dashboard_snapshot_assets_if_enabled(project_root: Path, dashboard: dic
     _LAST_SNAPSHOT_ASSET_SYNC_AT = time.time()
     _LAST_SNAPSHOT_ASSET_SYNC_RESULT = result
     return result
+
+
+def prioritize_dashboard_asset_paths(paths: list[str], latest_run_id: str = "") -> list[str]:
+    """Return missing dashboard assets in the order the UI needs them.
+
+    Render syncs assets lazily. If old missing chart URLs are processed before
+    the newest run, the visible dashboard can show 404s for current charts.
+    """
+
+    def key(path: str) -> tuple[int, int, int, str]:
+        is_latest = 0 if latest_run_id and latest_run_id in path else 1
+        timestamp = dashboard_asset_timestamp(path)
+        type_priority = 0
+        if "/screenshots/" in path:
+            type_priority = 0
+        elif "/charts/" in path:
+            type_priority = 1
+        elif "/summaries/" in path:
+            type_priority = 2
+        elif "/decisions/" in path:
+            type_priority = 3
+        return (is_latest, -timestamp, type_priority, path)
+
+    return sorted(paths, key=key)
+
+
+def dashboard_asset_timestamp(path: str) -> int:
+    match = re.search(r"(20\d{6})_(\d{6})", path)
+    if not match:
+        return 0
+    return int(match.group(1) + match.group(2))
 
 
 def dashboard_asset_paths(value: Any) -> list[str]:
