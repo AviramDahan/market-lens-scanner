@@ -5,20 +5,20 @@ Total scans: 144
 Tickers scanned: 20847
 BUY_SIMULATED: 1
 WATCH_READY: 662
-WATCH: 5046
-SKIP: 15644
-NO_TRADE: 11552
+WATCH: 5047
+SKIP: 15643
+NO_TRADE: 11549
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100663.7
+Portfolio value: 100679.3
 Best ticker: ORCL
 Worst ticker: FRT
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 19
-- RELATIVE_STRENGTH_LEADER: 525
-- TREND_PULLBACK_RECLAIM: 67
+- BREAKOUT_CONTINUATION: 17
+- RELATIVE_STRENGTH_LEADER: 524
+- TREND_PULLBACK_RECLAIM: 65
 - VWAP_RECLAIM: 18
 
 Top rejected candidates:
