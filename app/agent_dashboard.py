@@ -99,7 +99,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     daily_summary = load_period_summary(summary_dir, "daily", latest_dt)
     weekly_summary = load_period_summary(summary_dir, "weekly", latest_dt)
 
-    return {
+    dashboard = {
         "status": "ok",
         "tracker_url": "/agent/tracker",
         "github_actions_url": "https://github.com/AviramDahan/market-lens-scanner/actions/workflows/market-lens-agent.yml",
@@ -163,6 +163,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         "score_calibration": build_score_calibration(realized["closed"]),
         "recent_runs": scoped_updates[-20:],
     }
+    return sanitize_dashboard_media_urls(dashboard, project_root)
 
 
 def load_period_summary(summary_dir: Path, period: str, timestamp: datetime) -> dict[str, Any]:
@@ -250,6 +251,20 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             or any(str(warning).upper().startswith("WATCH_READY:") for warning in (setup.get("decision_json") or {}).get("warnings") or [])
         ),
     }
+
+
+def sanitize_dashboard_media_urls(value: Any, project_root: Path) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: sanitize_dashboard_media_urls(item, project_root)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [sanitize_dashboard_media_urls(item, project_root) for item in value]
+    if not isinstance(value, str) or not value.startswith("/agent-results/"):
+        return value
+    relative = value.split("/agent-results/", 1)[1].split("?", 1)[0].split("#", 1)[0]
+    return value if (project_root / "agent_results" / relative).exists() else ""
 
 
 def read_settings(wb: Any) -> dict[str, Any]:

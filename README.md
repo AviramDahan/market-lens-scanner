@@ -354,6 +354,12 @@ A setup may become `BUY_SIMULATED` only if all required gates pass:
 - correlation with open positions is below the block threshold
 - position size fits cash, exposure, and max-risk limits
 
+In a `NEUTRAL` market, a separate conservative `NEUTRAL_PILOT` path may allow
+up to 2 paper entries per day when the sector is `STRONG`, entry confirmation
+passes, setup score is at least `0.45`, net R/R is at least `2.0`, and no other
+risk gate blocks the trade. These entries are reduced to 50% of the normal
+position size.
+
 Entry confirmation is setup-specific:
 
 - Breakout/retest requires a completed close or reclaim above the trigger, held
@@ -564,7 +570,8 @@ Agent outputs:
 Agent media retention keeps repository size under control. Decision JSONL,
 summaries, Excel, and the dashboard snapshot are retained for analysis, while
 older PNG media is pruned by `agent/cleanup_agent_results.py`. The default
-cloud workflow keeps the latest 240 chart files and latest 60 screenshots.
+cloud workflow keeps the latest 240 chart files capped at about 180 MB, and
+the latest 60 screenshots capped at about 80 MB.
 
 Before a new `BUY_SIMULATED` is accepted, the agent now adds a risk and
 transparency layer on top of the existing scanner decision. The original setup
@@ -660,6 +667,8 @@ MARKET_LENS_DASHBOARD_ASSET_SYNC_TIME_BUDGET_SECONDS=15
 MARKET_LENS_AGENT_MEDIA_RETENTION_ENABLED=true
 MARKET_LENS_AGENT_CHART_RETENTION_MAX_FILES=240
 MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_FILES=60
+MARKET_LENS_AGENT_CHART_RETENTION_MAX_MB=180
+MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_MB=80
 MARKET_LENS_AGENT_CRON_SECRET=...
 MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
 MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=false

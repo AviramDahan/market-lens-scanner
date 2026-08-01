@@ -598,7 +598,7 @@ def test_neutral_pilot_can_buy_half_size_when_only_strict_neutral_score_blocks(m
     assert decision["minimum_net_rr_required"] == 2.0
 
 
-def test_neutral_pilot_daily_limit_blocks_second_pilot_trade(monkeypatch) -> None:
+def test_neutral_pilot_allows_second_pilot_trade(monkeypatch) -> None:
     _patch_risk_dependencies(monkeypatch, net_rr=2.05, confirmation_passed=True)
     run_context = context("NEUTRAL")
     run_context.sector_health = {
@@ -620,6 +620,35 @@ def test_neutral_pilot_daily_limit_blocks_second_pilot_trade(monkeypatch) -> Non
         run_context=run_context,
         recent_stop_events={},
         neutral_pilot_trades_today=1,
+    )
+
+    assert decision["final_action"] == "BUY_SIMULATED"
+    assert decision["entry_mode"] == "neutral_pilot"
+    assert decision["position_size"] == 50
+
+
+def test_neutral_pilot_daily_limit_blocks_third_pilot_trade(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.05, confirmation_passed=True)
+    run_context = context("NEUTRAL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test strong sector"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T10:30:00",
+        result=result(score=0.49),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=100_000,
+        portfolio_exposure_before=0,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+        neutral_pilot_trades_today=2,
     )
 
     assert decision["final_action"] == "WATCH"

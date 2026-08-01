@@ -15,6 +15,7 @@ from app.agent_dashboard import (
     build_decision_diagnostics,
     load_period_summary,
     parse_timestamp,
+    sanitize_dashboard_media_urls,
     with_position_calculations,
 )
 from app.auth import auth_is_configured, auth_is_open, get_current_user_required, supabase_publishable_key
@@ -125,6 +126,7 @@ def current_agent_dashboard() -> dict:
 
 def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     """Backfill lightweight analytics when Render is serving an older snapshot."""
+    dashboard = sanitize_dashboard_media_urls(dashboard, PROJECT_ROOT)
     latest_setups = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
     if "decision_diagnostics" not in dashboard:
         dashboard["decision_diagnostics"] = build_decision_diagnostics(latest_setups)

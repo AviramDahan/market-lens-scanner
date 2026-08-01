@@ -85,6 +85,7 @@ def test_current_agent_dashboard_enriches_legacy_snapshot(monkeypatch, tmp_path)
             {
                 "status": "ok",
                 "latest_run": {"timestamp": "2026-07-31T14:30:00Z"},
+                "recent_trades": [{"chart_url": "/agent-results/charts/missing-old-chart.png"}],
                 "latest_setups": [
                     {
                         "ticker": "TEST",
@@ -130,6 +131,7 @@ def test_current_agent_dashboard_enriches_legacy_snapshot(monkeypatch, tmp_path)
     assert dashboard["decision_diagnostics"]["blockers"]["Entry confirmation missing"] == 1
     assert dashboard["decision_diagnostics"]["near_misses"][0]["ticker"] == "TEST"
     assert dashboard["daily_summary"]["WATCH_READY_count"] == 1
+    assert dashboard["recent_trades"][0]["chart_url"] == ""
 
 
 def test_detect_live_monitor_event_target_2_before_target_1() -> None:

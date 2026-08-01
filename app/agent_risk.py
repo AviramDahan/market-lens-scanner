@@ -71,7 +71,7 @@ class AgentRiskConfig:
     neutral_pilot_min_setup_score: float = 0.45
     neutral_pilot_min_net_rr: float = 2.0
     neutral_pilot_position_pct: float = 0.50
-    neutral_pilot_max_trades_per_day: int = 1
+    neutral_pilot_max_trades_per_day: int = 2
     stop_cooldown_days: int = 3
     cooldown_exception_setup_score: float = 0.60
     cooldown_exception_net_rr1: float = 1.20
@@ -160,7 +160,7 @@ def build_agent_run_context(
         neutral_pilot_min_setup_score=float(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MIN_SETUP_SCORE", "0.45")),
         neutral_pilot_min_net_rr=float(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MIN_NET_RR", "2.0")),
         neutral_pilot_position_pct=float(os.getenv("MARKET_LENS_NEUTRAL_PILOT_POSITION_PCT", "0.50")),
-        neutral_pilot_max_trades_per_day=int(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MAX_TRADES_PER_DAY", "1")),
+        neutral_pilot_max_trades_per_day=int(os.getenv("MARKET_LENS_NEUTRAL_PILOT_MAX_TRADES_PER_DAY", "2")),
         stop_cooldown_days=int(os.getenv("MARKET_LENS_STOP_COOLDOWN_DAYS", "3")),
         cooldown_exception_setup_score=float(
             os.getenv("MARKET_LENS_COOLDOWN_EXCEPTION_SETUP_SCORE", "0.60")
