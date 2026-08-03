@@ -229,7 +229,7 @@ async def get_agent_live_prices() -> dict:
 @app.post("/agent/trigger-monitor")
 async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
     trigger_configured = monitor_trigger_configured()
-    dashboard = cached_agent_dashboard()
+    dashboard = monitor_agent_dashboard()
     if dashboard.get("status") != "ok":
         return {
             "status": "skipped",
@@ -250,7 +250,7 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
         }
 
     try:
-        live_price, source_time = fetch_live_price(ticker)
+        live_price, source_time, live_high, live_low = fetch_live_quote(ticker)
     except Exception as exc:
         return {
             "status": "skipped",
@@ -259,7 +259,7 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
             "reason": f"Live price unavailable: {exc}",
         }
 
-    event = detect_live_monitor_event(position, live_price)
+    event = detect_live_monitor_event(position, live_price, live_high=live_high, live_low=live_low)
     if event is None:
         return {
             "status": "skipped",
@@ -267,6 +267,8 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
             "trigger_configured": trigger_configured,
             "ticker": ticker,
             "live_price": round(live_price, 4),
+            "live_high": round(live_high, 4),
+            "live_low": round(live_low, 4),
             "live_price_updated_at": source_time,
             "reason": "Live price has not touched stop loss or targets.",
         }
@@ -280,6 +282,8 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
             "ticker": ticker,
             "event_type": event.event_type,
             "live_price": round(live_price, 4),
+            "live_high": round(live_high, 4),
+            "live_low": round(live_low, 4),
             "reason": limit_reason,
         }
 
@@ -291,6 +295,8 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
             "ticker": ticker,
             "event_type": event.event_type,
             "live_price": round(live_price, 4),
+            "live_high": round(live_high, 4),
+            "live_low": round(live_low, 4),
             "reason": "GitHub monitor trigger token is not configured on the server.",
         }
 
@@ -307,6 +313,8 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
         "event_type": event.event_type,
         "threshold": event.threshold,
         "live_price": round(live_price, 4),
+        "live_high": round(live_high, 4),
+        "live_low": round(live_low, 4),
         "live_price_updated_at": source_time,
         "reason": event.reason,
         "dispatch": compact_dispatch_payload(dispatch),

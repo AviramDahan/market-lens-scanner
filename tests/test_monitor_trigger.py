@@ -239,7 +239,7 @@ def test_fetch_live_price_prefers_extended_hours_intraday(monkeypatch) -> None:
 
 def test_trigger_monitor_endpoint_skips_without_open_position(monkeypatch) -> None:
     reset_rate_limits()
-    monkeypatch.setattr(main, "build_agent_dashboard", lambda *_args, **_kwargs: {"status": "ok", "open_positions": []})
+    monkeypatch.setattr(main, "monitor_agent_dashboard", lambda: {"status": "ok", "open_positions": []})
     client = TestClient(main.app)
     response = client.post("/agent/trigger-monitor", json={"ticker": "TEST", "live_price": 105})
     assert response.status_code == 200
@@ -253,8 +253,8 @@ def test_trigger_monitor_endpoint_dispatches_when_live_price_touches_target(monk
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
     monkeypatch.setattr(
         main,
-        "build_agent_dashboard",
-        lambda *_args, **_kwargs: {
+        "monitor_agent_dashboard",
+        lambda: {
             "status": "ok",
             "open_positions": [
                 {
@@ -267,7 +267,7 @@ def test_trigger_monitor_endpoint_dispatches_when_live_price_touches_target(monk
             ],
         },
     )
-    monkeypatch.setattr(main, "fetch_live_price", lambda ticker: (106.0, "2026-06-18T14:00:00Z"))
+    monkeypatch.setattr(main, "fetch_live_quote", lambda ticker: (104.0, "2026-06-18T14:00:00Z", 106.0, 103.0))
 
     async def fake_dispatch(event, source="agent-ui-live-price"):
         return {"github_status": 204, "workflow": "market-lens-position-monitor.yml", "ticker": event.ticker}
@@ -284,6 +284,9 @@ def test_trigger_monitor_endpoint_dispatches_when_live_price_touches_target(monk
     assert payload["status"] == "triggered"
     assert payload["triggered"] is True
     assert payload["event_type"] == "TAKE_PARTIAL_PROFIT"
+    assert payload["live_price"] == 104.0
+    assert payload["live_high"] == 106.0
+    assert payload["live_low"] == 103.0
 
 
 def test_monitor_live_endpoint_requires_cron_secret_when_configured(monkeypatch) -> None:
