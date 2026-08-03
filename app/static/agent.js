@@ -236,6 +236,7 @@ function touchedPositionEvent(position) {
   const stop = Number(position.stop_loss || 0);
   const target1 = Number(position.target_1 || 0);
   const target2 = Number(position.target_2 || 0);
+  const partialTaken = Boolean(position.partial_taken) || String(position.notes || "").toLowerCase().includes("partial");
   if (!price || !position.ticker) return null;
   if (stop > 0 && price <= stop) {
     return { eventType: "EXIT_STOP", label: "Stop touched", threshold: stop, price };
@@ -243,7 +244,7 @@ function touchedPositionEvent(position) {
   if (target2 > 0 && price >= target2) {
     return { eventType: "TAKE_PROFIT", label: "Target 2 touched", threshold: target2, price };
   }
-  if (target1 > 0 && price >= target1) {
+  if (target1 > 0 && price >= target1 && !partialTaken) {
     return { eventType: "TAKE_PARTIAL_PROFIT", label: "Target 1 touched", threshold: target1, price };
   }
   return null;
