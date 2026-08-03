@@ -134,6 +134,49 @@ def test_current_agent_dashboard_enriches_legacy_snapshot(monkeypatch, tmp_path)
     assert dashboard["recent_trades"][0]["chart_url"] == ""
 
 
+def test_current_agent_dashboard_syncs_assets_before_sanitizing(monkeypatch, tmp_path) -> None:
+    reset_rate_limits()
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    chart_url = "/agent-results/charts/latest-chart.png"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_text(
+        json.dumps(
+            {
+                "status": "ok",
+                "latest_run": {
+                    "timestamp": "2026-08-03T17:04:30Z",
+                    "screenshot_url": chart_url,
+                },
+                "latest_setups": [{"ticker": "TEST", "chart_url": chart_url}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_asset_sync(project_root, dashboard):
+        assert dashboard["latest_run"]["screenshot_url"] == chart_url
+        asset_path = project_root / "agent_results" / "charts" / "latest-chart.png"
+        asset_path.parent.mkdir(parents=True, exist_ok=True)
+        asset_path.write_bytes(b"png")
+        return {"enabled": True, "downloaded": 1}
+
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", snapshot_path.parent)
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": True, "downloaded": True},
+    )
+    monkeypatch.setattr(main, "sync_dashboard_snapshot_assets_if_enabled", fake_asset_sync)
+
+    dashboard = main.current_agent_dashboard()
+
+    assert dashboard["latest_run"]["screenshot_url"] == chart_url
+    assert dashboard["latest_setups"][0]["chart_url"] == chart_url
+    assert dashboard["results_sync"]["asset_sync"]["downloaded"] == 1
+
+
 def test_detect_live_monitor_event_target_2_before_target_1() -> None:
     position = {"ticker": "TEST", "stop_loss": 95, "target_1": 105, "target_2": 112}
     event = detect_live_monitor_event(position, 113)

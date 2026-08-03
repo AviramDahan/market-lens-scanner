@@ -115,8 +115,8 @@ def current_agent_dashboard() -> dict:
         try:
             dashboard = json.loads(DASHBOARD_SNAPSHOT_PATH.read_text(encoding="utf-8"))
             if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
-                dashboard = enrich_agent_dashboard_snapshot(dashboard)
                 asset_sync_status = sync_dashboard_snapshot_assets_if_enabled(PROJECT_ROOT, dashboard)
+                dashboard = enrich_agent_dashboard_snapshot(dashboard)
                 dashboard["results_sync"] = {**sync_status, "asset_sync": asset_sync_status}
                 return dashboard
         except Exception:
