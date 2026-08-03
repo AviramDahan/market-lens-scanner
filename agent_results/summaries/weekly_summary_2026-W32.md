@@ -1,23 +1,23 @@
 Weekly Performance Summary
 
 Date: 2026-08-03
-Total scans: 20
-Tickers scanned: 2912
+Total scans: 21
+Tickers scanned: 3054
 BUY_SIMULATED: 2
 WATCH_READY: 209
-WATCH: 951
-SKIP: 1931
-NO_TRADE: 1397
+WATCH: 987
+SKIP: 2034
+NO_TRADE: 1480
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100648.51
+Portfolio value: 100636.62
 Best ticker: ORCL
 Worst ticker: ROKU
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 130
+- RELATIVE_STRENGTH_LEADER: 134
 - TREND_PULLBACK_RECLAIM: 35
 - VWAP_RECLAIM: 29
 
@@ -31,7 +31,7 @@ Top rejected candidates:
 - EXR: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - NVDA: SKIP score=0.53 reason=SKIP: Technology sector regime is weak (30/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.32.
 - EXR: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
-- SW: SKIP score=0.53 reason=SKIP: Materials sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.80.
+- EXR: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
