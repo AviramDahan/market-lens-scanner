@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-08-03
-Total scans: 28
-Tickers scanned: 4069
+Total scans: 29
+Tickers scanned: 4216
 BUY_SIMULATED: 2
-WATCH_READY: 256
-WATCH: 1321
-SKIP: 2694
-NO_TRADE: 1994
+WATCH_READY: 272
+WATCH: 1375
+SKIP: 2784
+NO_TRADE: 2062
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100681.39
@@ -17,11 +17,12 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 184
-- TREND_PULLBACK_RECLAIM: 55
-- VWAP_RECLAIM: 39
+- RELATIVE_STRENGTH_LEADER: 194
+- TREND_PULLBACK_RECLAIM: 58
+- VWAP_RECLAIM: 42
 
 Top rejected candidates:
+- NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
@@ -31,7 +32,6 @@ Top rejected candidates:
 - DLR: WATCH score=0.55 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - EXR: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 2.11 failed minimum 2.50 after slippage/spread adjustment.
 - EXR: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 2.01 failed minimum 2.50 after slippage/spread adjustment.
-- EXR: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.81 failed minimum 2.20 after slippage/spread adjustment.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
