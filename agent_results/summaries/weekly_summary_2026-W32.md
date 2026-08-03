@@ -1,23 +1,23 @@
 Weekly Performance Summary
 
 Date: 2026-08-03
-Total scans: 17
-Tickers scanned: 2472
+Total scans: 18
+Tickers scanned: 2619
 BUY_SIMULATED: 2
 WATCH_READY: 209
-WATCH: 847
-SKIP: 1604
-NO_TRADE: 1128
+WATCH: 880
+SKIP: 1715
+NO_TRADE: 1217
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100676.2
+Portfolio value: 100672.56
 Best ticker: ORCL
 Worst ticker: ROKU
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 121
+- RELATIVE_STRENGTH_LEADER: 125
 - TREND_PULLBACK_RECLAIM: 32
 - VWAP_RECLAIM: 29
 
@@ -26,12 +26,12 @@ Top rejected candidates:
 - EXR: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 2.04 failed minimum 2.50 after slippage/spread adjustment.
 - DLR: WATCH score=0.55 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - EXR: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.81 failed minimum 2.20 after slippage/spread adjustment.
+- EXR: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - NVDA: SKIP score=0.53 reason=SKIP: Technology sector regime is weak (30/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.32.
 - EXR: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - BA: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.49.
 - BA: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.43.
 - WFC: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.43.
-- TJX: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.79 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.36.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
