@@ -1,23 +1,23 @@
 Daily Performance Summary
 
 Date: 2026-08-03
-Total scans: 18
-Tickers scanned: 2619
+Total scans: 19
+Tickers scanned: 2766
 BUY_SIMULATED: 2
 WATCH_READY: 209
-WATCH: 880
-SKIP: 1715
-NO_TRADE: 1217
+WATCH: 917
+SKIP: 1822
+NO_TRADE: 1306
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100672.56
+Portfolio value: 100653.16
 Best ticker: ORCL
 Worst ticker: ROKU
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 125
+- RELATIVE_STRENGTH_LEADER: 128
 - TREND_PULLBACK_RECLAIM: 32
 - VWAP_RECLAIM: 29
 
@@ -27,11 +27,11 @@ Top rejected candidates:
 - DLR: WATCH score=0.55 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - EXR: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.81 failed minimum 2.20 after slippage/spread adjustment.
 - EXR: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
+- EXR: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - NVDA: SKIP score=0.53 reason=SKIP: Technology sector regime is weak (30/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.32.
 - EXR: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
+- SW: SKIP score=0.53 reason=SKIP: Materials sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.80.
 - BA: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.49.
-- BA: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.43.
-- WFC: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.43.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
