@@ -1,24 +1,24 @@
 Weekly Performance Summary
 
 Date: 2026-08-03
-Total scans: 47
-Tickers scanned: 6827
+Total scans: 48
+Tickers scanned: 6971
 BUY_SIMULATED: 3
 WATCH_READY: 510
-WATCH: 2241
-SKIP: 4472
-NO_TRADE: 3317
+WATCH: 2285
+SKIP: 4568
+NO_TRADE: 3398
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100620.71
+Portfolio value: 100655.67
 Best ticker: ORCL
 Worst ticker: ROKU
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 13
-- RELATIVE_STRENGTH_LEADER: 315
-- TREND_PULLBACK_RECLAIM: 102
+- BREAKOUT_CONTINUATION: 14
+- RELATIVE_STRENGTH_LEADER: 324
+- TREND_PULLBACK_RECLAIM: 105
 - VWAP_RECLAIM: 93
 
 Top rejected candidates:
