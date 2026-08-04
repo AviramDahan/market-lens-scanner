@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-08-04
-Total scans: 15
-Tickers scanned: 2170
+Total scans: 16
+Tickers scanned: 2316
 BUY_SIMULATED: 1
 WATCH_READY: 222
-WATCH: 715
-SKIP: 1409
-NO_TRADE: 1038
+WATCH: 761
+SKIP: 1505
+NO_TRADE: 1114
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100604.23
+Portfolio value: 100615.8
 Best ticker: ORCL
 Worst ticker: ONB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 9
-- RELATIVE_STRENGTH_LEADER: 96
-- TREND_PULLBACK_RECLAIM: 37
-- VWAP_RECLAIM: 42
+- BREAKOUT_CONTINUATION: 11
+- RELATIVE_STRENGTH_LEADER: 100
+- TREND_PULLBACK_RECLAIM: 38
+- VWAP_RECLAIM: 44
 
 Top rejected candidates:
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
