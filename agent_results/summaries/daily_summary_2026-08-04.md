@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-08-04
-Total scans: 22
-Tickers scanned: 3157
+Total scans: 23
+Tickers scanned: 3292
 BUY_SIMULATED: 1
 WATCH_READY: 222
-WATCH: 1021
-SKIP: 2062
-NO_TRADE: 1592
+WATCH: 1061
+SKIP: 2153
+NO_TRADE: 1675
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100786.96
+Portfolio value: 100788.44
 Best ticker: ORCL
 Worst ticker: D
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 13
-- RELATIVE_STRENGTH_LEADER: 143
-- TREND_PULLBACK_RECLAIM: 58
+- RELATIVE_STRENGTH_LEADER: 151
+- TREND_PULLBACK_RECLAIM: 61
 - VWAP_RECLAIM: 48
 
 Top rejected candidates:
@@ -28,10 +28,10 @@ Top rejected candidates:
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
+- DINO: WATCH score=0.61 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - NVDA: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.37 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.16.
 - EXR: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.71 failed minimum 2.20 after slippage/spread adjustment.
 - EXR: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.71 failed minimum 2.20 after slippage/spread adjustment.
-- PLD: SKIP score=0.55 reason=SKIP: Utilities / Real Assets sector regime is weak (15/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.47.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
