@@ -1,24 +1,24 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 1062,
-  "SKIP_count": 1214,
+  "NO_TRADE_count": 1152,
+  "SKIP_count": 1310,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
   "WATCH_READY_conversion_rate": null,
   "WATCH_READY_count": 300,
-  "WATCH_count": 794,
+  "WATCH_count": 834,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5777,
-    "RELATIVE_STRENGTH_LEADER": 0.6793,
-    "TREND_PULLBACK_RECLAIM": 0.524,
-    "VWAP_RECLAIM": 0.5867
+    "BREAKOUT_CONTINUATION": 0.5766,
+    "RELATIVE_STRENGTH_LEADER": 0.6771,
+    "TREND_PULLBACK_RECLAIM": 0.5234,
+    "VWAP_RECLAIM": 0.5843
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.5282,
-  "average_rr_to_target_2": 1.5281,
-  "average_setup_score": 0.1816,
+  "average_rr_to_target_1": 0.5169,
+  "average_rr_to_target_2": 1.5017,
+  "average_setup_score": 0.179,
   "average_winner": null,
   "best_sector": "Communication Services",
   "best_setup_type": "No Trade",
@@ -107,22 +107,22 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 0.8053,
+  "daily_return_pct": 0.8475,
   "data_quality_issues": [
     {
-      "count": 1062,
+      "count": 1152,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 1062,
+      "count": 1152,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 627,
+      "count": 657,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 428,
+      "count": 445,
       "name": "Earnings blackout active."
     },
     {
@@ -130,19 +130,19 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 299,
+      "count": 315,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 272,
+      "count": 286,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 154,
+      "count": 159,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 148,
+      "count": 153,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -158,11 +158,11 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 1026,
+      "count": 1113,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 494,
+      "count": 520,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -174,29 +174,45 @@
       "name": "SKIP: Utilities / Real Assets sector regime is weak (15/100); skip new entry"
     },
     {
-      "count": 86,
+      "count": 89,
       "name": "SKIP: Earnings blackout active"
     },
     {
       "count": 8,
       "name": "WATCH: Position cannot be opened because Financials sector exposure cap leaves no executable size"
+    },
+    {
+      "count": 8,
+      "name": "WATCH: BULL market requires setup score (0"
+    },
+    {
+      "count": 6,
+      "name": "SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry"
+    },
+    {
+      "count": 4,
+      "name": "Gross R/R is valid, but Net R/R 1"
+    },
+    {
+      "count": 1,
+      "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 1062,
+      "count": 1152,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 1062,
+      "count": 1152,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 627,
+      "count": 657,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 428,
+      "count": 445,
       "name": "Earnings blackout active."
     },
     {
@@ -204,19 +220,19 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 299,
+      "count": 315,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 272,
+      "count": 286,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 154,
+      "count": 159,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 148,
+      "count": 153,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -228,22 +244,23 @@
   "open_positions_start": 3,
   "partial_exits": 0,
   "performance_by_market_regime": {
+    "BULL": 139,
     "NEUTRAL": 2058
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 509,
-    "STRONG": 1440,
-    "WEAK": 109
+    "NEUTRAL": 540,
+    "STRONG": 1540,
+    "WEAK": 117
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 422,
-    "0.50-0.59": 56,
-    "<0.40": 1580
+    "0.40-0.49": 447,
+    "0.50-0.59": 62,
+    "<0.40": 1688
   },
   "performance_by_shadow_strategy": {
     "BREAKOUT_CONTINUATION": 4,
-    "RELATIVE_STRENGTH_LEADER": 124,
-    "TREND_PULLBACK_RECLAIM": 41,
+    "RELATIVE_STRENGTH_LEADER": 134,
+    "TREND_PULLBACK_RECLAIM": 45,
     "VWAP_RECLAIM": 56
   },
   "positions_closed_today": 0,
@@ -269,10 +286,11 @@
       "agent_results/decisions/market_lens_agent_20260805_103142.jsonl",
       "agent_results/decisions/market_lens_agent_20260805_113125.jsonl",
       "agent_results/decisions/market_lens_agent_20260805_123138.jsonl",
-      "agent_results/decisions/market_lens_agent_20260805_131130.jsonl"
+      "agent_results/decisions/market_lens_agent_20260805_131130.jsonl",
+      "agent_results/decisions/market_lens_agent_20260805_133629.jsonl"
     ],
-    "records": 2058,
-    "run_id": "20260805_131130"
+    "records": 2197,
+    "run_id": "20260805_133629"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -522,58 +540,58 @@
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
     "BREAKOUT_CONTINUATION": 4,
-    "RELATIVE_STRENGTH_LEADER": 124,
-    "TREND_PULLBACK_RECLAIM": 41,
+    "RELATIVE_STRENGTH_LEADER": 134,
+    "TREND_PULLBACK_RECLAIM": 45,
     "VWAP_RECLAIM": 56
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
     {
-      "final_action": "SKIP",
-      "net_rr": 1.7768,
-      "reason": "SKIP: Earnings blackout active.",
-      "setup_score": 0.52,
-      "ticker": "CRBG"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.7768,
-      "reason": "SKIP: Earnings blackout active.",
-      "setup_score": 0.52,
-      "ticker": "CRBG"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.7768,
-      "reason": "SKIP: Earnings blackout active.",
-      "setup_score": 0.52,
-      "ticker": "CRBG"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.7768,
-      "reason": "SKIP: Earnings blackout active.",
-      "setup_score": 0.52,
-      "ticker": "CRBG"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.7768,
-      "reason": "SKIP: Earnings blackout active.",
-      "setup_score": 0.52,
-      "ticker": "CRBG"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.7768,
-      "reason": "SKIP: Earnings blackout active.",
-      "setup_score": 0.52,
-      "ticker": "CRBG"
-    },
-    {
       "final_action": "WATCH",
+      "net_rr": 1.2311,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.61 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.23.",
+      "setup_score": 0.53,
+      "ticker": "TJX"
+    },
+    {
+      "final_action": "SKIP",
       "net_rr": 1.7768,
-      "reason": "WATCH: NEUTRAL market requires setup score (0.52 < 0.55).",
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.52,
+      "ticker": "CRBG"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.7768,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.52,
+      "ticker": "CRBG"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.7768,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.52,
+      "ticker": "CRBG"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.7768,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.52,
+      "ticker": "CRBG"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.7768,
+      "reason": "SKIP: Earnings blackout active.",
+      "setup_score": 0.52,
+      "ticker": "CRBG"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.7768,
+      "reason": "SKIP: Earnings blackout active.",
       "setup_score": 0.52,
       "ticker": "CRBG"
     },
@@ -602,10 +620,10 @@
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 300,
   "total_closed_trades": 0,
-  "total_portfolio_value": 100805.28,
-  "total_result_cards_read": 2058,
-  "total_scans": 14,
-  "total_tickers_scanned": 2058,
+  "total_portfolio_value": 100847.46,
+  "total_result_cards_read": 2197,
+  "total_scans": 15,
+  "total_tickers_scanned": 2197,
   "total_trading_days": null,
   "unrealized_pnl": null,
   "week_end": null,
@@ -614,5 +632,5 @@
   "worst_sector": "Technology",
   "worst_setup_type": null,
   "worst_shadow_strategy": "TREND_PULLBACK_RECLAIM",
-  "worst_ticker": "EOG"
+  "worst_ticker": "D"
 }
