@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-08-05
-Total scans: 24
-Tickers scanned: 3384
+Total scans: 25
+Tickers scanned: 3517
 BUY_SIMULATED: 1
 WATCH_READY: 300
-WATCH: 1160
-SKIP: 2143
-NO_TRADE: 1971
+WATCH: 1191
+SKIP: 2241
+NO_TRADE: 2063
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100786.32
+Portfolio value: 100806.86
 Best ticker: CCI
 Worst ticker: FHN
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 7
-- RELATIVE_STRENGTH_LEADER: 185
-- TREND_PULLBACK_RECLAIM: 69
+- RELATIVE_STRENGTH_LEADER: 188
+- TREND_PULLBACK_RECLAIM: 70
 - VWAP_RECLAIM: 57
 
 Top rejected candidates:
@@ -27,11 +27,11 @@ Top rejected candidates:
 - MDLZ: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.42 failed minimum 2.00 after slippage/spread adjustment.
 - MDLZ: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.38 failed minimum 2.00 after slippage/spread adjustment.
 - MDLZ: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.36 failed minimum 2.00 after slippage/spread adjustment.
+- MDLZ: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.74 failed minimum 2.00 after slippage/spread adjustment.
 - BXP: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.46 failed minimum 2.00 after slippage/spread adjustment.
 - TSN: WATCH score=0.54 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - TSN: WATCH score=0.54 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - EXR: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.51 failed minimum 2.00 after slippage/spread adjustment.
-- EXR: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.46 failed minimum 2.00 after slippage/spread adjustment.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
