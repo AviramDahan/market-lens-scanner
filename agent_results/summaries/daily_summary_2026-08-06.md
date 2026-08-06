@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-08-06
-Total scans: 10
-Tickers scanned: 1480
+Total scans: 11
+Tickers scanned: 1628
 BUY_SIMULATED: 0
-WATCH_READY: 217
-WATCH: 610
-SKIP: 830
-NO_TRADE: 683
+WATCH_READY: 240
+WATCH: 671
+SKIP: 913
+NO_TRADE: 752
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 100966.41
@@ -17,9 +17,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 105
-- TREND_PULLBACK_RECLAIM: 49
-- VWAP_RECLAIM: 10
+- RELATIVE_STRENGTH_LEADER: 118
+- TREND_PULLBACK_RECLAIM: 54
+- VWAP_RECLAIM: 11
 
 Top rejected candidates:
 - NVDA: WATCH score=0.61 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
@@ -28,7 +28,7 @@ Top rejected candidates:
 - NEM: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
-- NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
+- NEM: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
