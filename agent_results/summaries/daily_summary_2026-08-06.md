@@ -1,26 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-06
-Total scans: 4
-Tickers scanned: 592
+Total scans: 5
+Tickers scanned: 740
 BUY_SIMULATED: 0
-WATCH_READY: 91
-WATCH: 253
-SKIP: 323
-NO_TRADE: 262
+WATCH_READY: 107
+WATCH: 310
+SKIP: 410
+NO_TRADE: 336
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 100966.41
-Best ticker: SMCI
+Portfolio value: 100917.52
+Best ticker: ACI
 Worst ticker: PNC
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 44
-- TREND_PULLBACK_RECLAIM: 20
-- VWAP_RECLAIM: 4
+- BREAKOUT_CONTINUATION: 1
+- RELATIVE_STRENGTH_LEADER: 50
+- TREND_PULLBACK_RECLAIM: 24
+- VWAP_RECLAIM: 5
 
 Top rejected candidates:
+- NVDA: WATCH score=0.61 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
 - NEM: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
@@ -29,8 +31,7 @@ Top rejected candidates:
 - LLY: SKIP score=0.57 reason=SKIP: Earnings blackout active.
 - LLY: SKIP score=0.57 reason=SKIP: Earnings blackout active.
 - LLY: SKIP score=0.57 reason=SKIP: Earnings blackout active.
-- EXR: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.89 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.27.
-- EXR: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.89 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.27.
+- LLY: SKIP score=0.55 reason=SKIP: Earnings blackout active.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
