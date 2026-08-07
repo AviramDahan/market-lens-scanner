@@ -4,7 +4,7 @@ Date: 2026-08-07
 Total scans: 30
 Tickers scanned: 4218
 BUY_SIMULATED: 3
-WATCH_READY: 38
+WATCH_READY: 39
 WATCH: 1195
 SKIP: 2812
 NO_TRADE: 2367
@@ -18,8 +18,8 @@ Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 34
 - RELATIVE_STRENGTH_LEADER: 414
-- TREND_PULLBACK_RECLAIM: 109
-- VWAP_RECLAIM: 34
+- TREND_PULLBACK_RECLAIM: 110
+- VWAP_RECLAIM: 33
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
