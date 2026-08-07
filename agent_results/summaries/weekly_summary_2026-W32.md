@@ -1,29 +1,29 @@
 Weekly Performance Summary
 
 Date: 2026-08-03
-Total scans: 146
-Tickers scanned: 20883
+Total scans: 147
+Tickers scanned: 21010
 BUY_SIMULATED: 9
 WATCH_READY: 1313
-WATCH: 6861
-SKIP: 13440
-NO_TRADE: 11047
+WATCH: 6898
+SKIP: 13523
+NO_TRADE: 11135
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101577.88
+Portfolio value: 101610.4
 Best ticker: ALB
 Worst ticker: ROKU
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 62
-- RELATIVE_STRENGTH_LEADER: 1310
-- TREND_PULLBACK_RECLAIM: 448
+- BREAKOUT_CONTINUATION: 63
+- RELATIVE_STRENGTH_LEADER: 1324
+- TREND_PULLBACK_RECLAIM: 454
 - VWAP_RECLAIM: 207
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
-- NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
+- PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.84 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.41.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
