@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-08-07
-Total scans: 21
-Tickers scanned: 3022
+Total scans: 22
+Tickers scanned: 3150
 BUY_SIMULATED: 2
 WATCH_READY: 0
-WATCH: 835
-SKIP: 2042
-NO_TRADE: 1590
+WATCH: 878
+SKIP: 2120
+NO_TRADE: 1671
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101730.6
+Portfolio value: 101538.93
 Best ticker: CCI
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 26
-- RELATIVE_STRENGTH_LEADER: 300
-- TREND_PULLBACK_RECLAIM: 84
+- BREAKOUT_CONTINUATION: 28
+- RELATIVE_STRENGTH_LEADER: 314
+- TREND_PULLBACK_RECLAIM: 85
 - VWAP_RECLAIM: 17
 
 Top rejected candidates:
