@@ -1,13 +1,13 @@
 Weekly Performance Summary
 
 Date: 2026-08-03
-Total scans: 131
-Tickers scanned: 18810
+Total scans: 132
+Tickers scanned: 18958
 BUY_SIMULATED: 7
 WATCH_READY: 1313
-WATCH: 6250
-SKIP: 12081
-NO_TRADE: 9843
+WATCH: 6288
+SKIP: 12184
+NO_TRADE: 9914
 Realized PnL: None
 Unrealized PnL: None
 Portfolio value: 101006.95
@@ -16,10 +16,10 @@ Worst ticker: ROKU
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 40
-- RELATIVE_STRENGTH_LEADER: 1103
-- TREND_PULLBACK_RECLAIM: 385
-- VWAP_RECLAIM: 199
+- BREAKOUT_CONTINUATION: 41
+- RELATIVE_STRENGTH_LEADER: 1118
+- TREND_PULLBACK_RECLAIM: 388
+- VWAP_RECLAIM: 200
 
 Top rejected candidates:
 - NVDA: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.70.
