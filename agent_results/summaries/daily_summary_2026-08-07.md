@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-08-07
-Total scans: 27
-Tickers scanned: 3788
+Total scans: 29
+Tickers scanned: 4070
 BUY_SIMULATED: 3
-WATCH_READY: 0
-WATCH: 1056
-SKIP: 2544
-NO_TRADE: 2106
+WATCH_READY: 19
+WATCH: 1138
+SKIP: 2729
+NO_TRADE: 2288
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101606.9
+Portfolio value: 101696.22
 Best ticker: CCI
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 33
-- RELATIVE_STRENGTH_LEADER: 378
-- TREND_PULLBACK_RECLAIM: 104
-- VWAP_RECLAIM: 17
+- BREAKOUT_CONTINUATION: 34
+- RELATIVE_STRENGTH_LEADER: 401
+- TREND_PULLBACK_RECLAIM: 108
+- VWAP_RECLAIM: 24
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
@@ -34,4 +34,5 @@ Top rejected candidates:
 - TSN: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 2.42.
 
 Recommendations:
+- Track WATCH_READY conversion during regular-session confirmation scans.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
