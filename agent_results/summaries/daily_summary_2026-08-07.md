@@ -1,29 +1,29 @@
 Daily Performance Summary
 
 Date: 2026-08-07
-Total scans: 23
-Tickers scanned: 3278
+Total scans: 24
+Tickers scanned: 3405
 BUY_SIMULATED: 2
 WATCH_READY: 0
-WATCH: 917
-SKIP: 2202
-NO_TRADE: 1756
+WATCH: 953
+SKIP: 2286
+NO_TRADE: 1845
 Realized PnL: None
 Unrealized PnL: None
-Portfolio value: 101592.44
+Portfolio value: 101577.88
 Best ticker: CCI
 Worst ticker: KIM
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 29
-- RELATIVE_STRENGTH_LEADER: 328
-- TREND_PULLBACK_RECLAIM: 88
+- BREAKOUT_CONTINUATION: 31
+- RELATIVE_STRENGTH_LEADER: 342
+- TREND_PULLBACK_RECLAIM: 90
 - VWAP_RECLAIM: 17
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
-- TSN: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 2.42.
+- PFE: WATCH score=0.63 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.28.
 - TSN: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 2.42.
 - TSN: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 2.42.
 - TSN: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 2.42.
