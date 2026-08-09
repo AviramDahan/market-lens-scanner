@@ -19,6 +19,7 @@ from app.data import fetch_intraday_frame
 from app.telegram_notifications import (
     dashboard_url_from_env,
     format_position_event_message,
+    format_stop_moved_to_entry_message,
     send_telegram_message,
 )
 
@@ -181,6 +182,29 @@ def send_position_event_notifications(
             print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
         elif outcome.status != "not_configured":
             print(f"Telegram position-event notification skipped for {event.ticker}:{event.action}: {outcome.reason}")
+        if should_notify_stop_moved_to_entry(position, event):
+            stop_message = format_stop_moved_to_entry_message(
+                position=position,
+                event=event,
+                run_id=run_id,
+                timestamp=timestamp,
+                dashboard_url=settings.dashboard_url,
+            )
+            stop_outcome = send_telegram_message(stop_message)
+            if stop_outcome.sent:
+                print(f"Telegram stop-to-entry notification sent for {event.ticker}.")
+            elif stop_outcome.status != "not_configured":
+                print(f"Telegram stop-to-entry notification skipped for {event.ticker}: {stop_outcome.reason}")
+
+
+def should_notify_stop_moved_to_entry(position: dict[str, Any], event: PositionEvent) -> bool:
+    if event.action != "TAKE_PARTIAL_PROFIT":
+        return False
+    entry = float(position.get("entry_price") or 0)
+    previous_stop = float(position.get("stop_loss") or 0)
+    total_quantity = int(position.get("quantity") or 0)
+    remaining_quantity = total_quantity - int(event.quantity or 0)
+    return entry > 0 and remaining_quantity > 0 and previous_stop < entry - 0.005
 
 
 def monitor_position(

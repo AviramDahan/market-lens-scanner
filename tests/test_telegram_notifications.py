@@ -11,6 +11,7 @@ from app.telegram_notifications import (
     dashboard_url_from_env,
     format_position_event_message,
     format_position_opened_message,
+    format_stop_moved_to_entry_message,
     send_telegram_message,
     telegram_configured,
 )
@@ -249,6 +250,44 @@ def test_position_event_message_contains_exit_details() -> None:
     assert "https://example.com/agent" in message
 
 
+def test_stop_moved_to_entry_message_contains_breakeven_update() -> None:
+    position = {
+        "ticker": "BA",
+        "entry_price": 200,
+        "stop_loss": 190,
+        "target_1": 215,
+        "target_2": 230,
+        "quantity": 10,
+    }
+    event = position_monitor.PositionEvent(
+        ticker="BA",
+        action="TAKE_PARTIAL_PROFIT",
+        triggered_at="2026-06-22T15:31:00+00:00",
+        trigger_price=215,
+        high=216,
+        low=211,
+        close=214,
+        quantity=5,
+        cash_in=1075,
+        note="Target 1 touched by intraday high; taking partial profit and moving stop to breakeven.",
+    )
+
+    message = format_stop_moved_to_entry_message(
+        position=position,
+        event=event,
+        run_id="monitor-1",
+        timestamp="2026-06-22T15:32:00+00:00",
+        dashboard_url="https://example.com/agent",
+    )
+
+    assert "Stop moved to entry" in message
+    assert "BA" in message
+    assert "Previous stop: $190.00 (-5.00%)" in message
+    assert "New stop: $200.00 (0.00%)" in message
+    assert "Remaining quantity: 5" in message
+    assert "TP1 was hit" in message
+
+
 def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_path) -> None:
     sent_messages = []
 
@@ -289,3 +328,46 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
     assert "Stop hit - position closed" in sent_messages[0]
     assert "MSFT" in sent_messages[0]
     assert "-$15.00" in sent_messages[0]
+
+
+def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch, tmp_path) -> None:
+    sent_messages = []
+
+    def fake_send(message: str):
+        sent_messages.append(message)
+        return TelegramSendResult(True, "sent")
+
+    monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
+    settings = position_monitor.MonitorSettings(
+        excel_path=tmp_path / "tracker.xlsx",
+        run_dir=tmp_path / "agent_results",
+        period="5d",
+        interval="1m",
+        save_noop=False,
+        dashboard_url="https://example.com/agent",
+    )
+    event = position_monitor.PositionEvent(
+        ticker="MSFT",
+        action="TAKE_PARTIAL_PROFIT",
+        triggered_at="2026-06-22T15:31:00+00:00",
+        trigger_price=110,
+        high=111,
+        low=101,
+        close=109,
+        quantity=5,
+        cash_in=550,
+        note="Target 1 touched by intraday high; taking partial profit and moving stop to breakeven.",
+    )
+
+    position_monitor.send_position_event_notifications(
+        [({"ticker": "MSFT", "entry_price": 100, "quantity": 10, "stop_loss": 95, "target_1": 110, "target_2": 120}, event)],
+        settings=settings,
+        run_id="monitor-1",
+        timestamp="2026-06-22T15:32:00+00:00",
+    )
+
+    assert len(sent_messages) == 2
+    assert "TP1 hit - partial profit" in sent_messages[0]
+    assert "Stop moved to entry" in sent_messages[1]
+    assert "Previous stop: $95.00 (-5.00%)" in sent_messages[1]
+    assert "New stop: $100.00 (0.00%)" in sent_messages[1]

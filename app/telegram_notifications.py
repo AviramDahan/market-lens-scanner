@@ -161,6 +161,39 @@ def format_position_event_message(
     return "\n".join(lines)
 
 
+def format_stop_moved_to_entry_message(
+    *,
+    position: dict[str, Any],
+    event: Any,
+    run_id: str,
+    timestamp: str,
+    dashboard_url: str,
+) -> str:
+    entry = _to_float(position.get("entry_price"))
+    old_stop = _to_float(position.get("stop_loss"))
+    total_quantity = int(_to_float(position.get("quantity", 0)))
+    closed_quantity = int(_to_float(getattr(event, "quantity", 0)))
+    remaining_quantity = max(0, total_quantity - closed_quantity)
+    lines = [
+        "<b>Market Lens Paper Agent</b>",
+        "<b>Stop moved to entry</b>",
+        "",
+        f"Ticker: <b>{_escape(getattr(event, 'ticker', '') or position.get('ticker', ''))}</b>",
+        f"Time: {_escape(timestamp)}",
+        f"Run: {_escape(run_id)}",
+        "",
+        f"Entry: {_money(entry)}",
+        f"Previous stop: {_price_with_percent(old_stop, entry)}",
+        f"New stop: {_price_with_percent(entry, entry)}",
+        f"Remaining quantity: {_escape(remaining_quantity)}",
+        "",
+        "Reason: TP1 was hit and the remaining paper position is now protected at breakeven.",
+    ]
+    if dashboard_url:
+        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+    return "\n".join(lines)
+
+
 def dashboard_url_from_env(fallback_app_url: str = "") -> str:
     explicit = os.getenv("MARKET_LENS_DASHBOARD_URL", "").strip()
     if explicit:
