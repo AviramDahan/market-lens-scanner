@@ -177,7 +177,7 @@ def test_position_opened_message_contains_trade_plan() -> None:
 
     assert "BUY_SIMULATED opened" in message
     assert "NVDA" in message
-    assert "Time: 2026-06-22 10:30" in message
+    assert "Time: 2026-06-22 13:30" in message
     assert "Time: 2026-06-22T10:30:00" not in message
     assert "$210.00" in message
     assert "$195.00 (-7.14%)" in message
@@ -319,8 +319,8 @@ def test_position_event_message_contains_exit_details() -> None:
 
     assert "TP1 hit - partial profit" in message
     assert "BA" in message
-    assert "Time: 2026-06-22 15:32" in message
-    assert "Triggered at: 2026-06-22 15:31" in message
+    assert "Time: 2026-06-22 18:32" in message
+    assert "Triggered at: 2026-06-22 18:31" in message
     assert "$215.00" in message
     assert "$190.00 (-5.00%)" in message
     assert "$215.00 (+7.50%) / $230.00 (+15.00%)" in message
@@ -361,7 +361,7 @@ def test_stop_moved_to_entry_message_contains_breakeven_update() -> None:
 
     assert "Stop moved to entry" in message
     assert "BA" in message
-    assert "Time: 2026-06-22 15:32" in message
+    assert "Time: 2026-06-22 18:32" in message
     assert "Previous stop: $190.00 (-5.00%)" in message
     assert "New stop: $200.00 (0.00%)" in message
     assert "Remaining quantity: 5" in message

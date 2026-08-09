@@ -5,12 +5,13 @@ import json
 import mimetypes
 import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 from uuid import uuid4
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 @dataclass(frozen=True)
@@ -358,12 +359,23 @@ def _format_message_time(value: Any) -> str:
     if not text:
         return ""
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(_message_timezone()).strftime("%Y-%m-%d %H:%M")
     except ValueError:
         compact = text.replace("T", " ")
         if len(compact) >= 16:
             return compact[:16]
         return compact
+
+
+def _message_timezone() -> ZoneInfo:
+    timezone_name = os.getenv("MARKET_LENS_TELEGRAM_TIMEZONE", "Asia/Jerusalem").strip() or "Asia/Jerusalem"
+    try:
+        return ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        return ZoneInfo("Asia/Jerusalem")
 
 
 def _is_http_url(value: str) -> bool:
