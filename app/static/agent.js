@@ -689,7 +689,7 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
     { key: "WATCH_READY", label: "WATCH_READY", value: diagnostics.watch_ready_count || dailySummary.WATCH_READY_count || 0, detail: "Closest staged candidates" },
     { key: "RR_BLOCKED", label: "R/R Blocked", value: blockers["R/R below gate"] || 0, detail: "Failed weighted/net reward" },
     { key: "SCORE_BLOCKED", label: "Score Blocked", value: blockers["Setup score below gate"] || 0, detail: "Below regime threshold" },
-    { key: "CONFIRM_BLOCKED", label: "Confirm Blocked", value: blockers["Entry confirmation missing"] || 0, detail: "No completed-candle confirmation" },
+    { key: "CONFIRM_BLOCKED", label: "Confirm/Session", value: blockers["Entry confirmation missing"] || 0, detail: "Needs entry or regular-session confirmation" },
     { key: "WEAK_EARNINGS", label: "Weak/Earnings", value: (blockers["Weak sector"] || 0) + (blockers["Earnings blackout"] || 0), detail: "Sector or earnings risk" },
   ];
 
