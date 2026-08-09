@@ -4,6 +4,11 @@ const state = {
   visibleActionCount: 10,
   tradesExpanded: false,
   visibleTradeCount: 10,
+  chartSections: {
+    equity: false,
+    scanCharts: false,
+    positionCharts: false,
+  },
   liveTimer: null,
   scheduleTimer: null,
   nextLiveSyncAt: null,
@@ -77,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.visibleTradeCount += TRADES_PAGE_SIZE;
     renderTrades(state.data?.recent_trades || [], state.data?.closed_trades || []);
   });
+  setupCollapsibleSections();
   setupMediaModal();
   loadDashboard(selectedDate);
   updateScheduleIndicators();
@@ -141,8 +147,44 @@ function renderDashboard(data) {
   renderTrades(data.recent_trades, data.closed_trades);
   renderCalibration(data.score_calibration || []);
   renderSummary(data.latest_run);
+  syncCollapsibleSections();
   startLivePrices(snapshot.selected_date || "");
 
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
+function setupCollapsibleSections() {
+  document.querySelectorAll("[data-collapse-target]").forEach((button) => {
+    const key = button.dataset.collapseKey || button.dataset.collapseTarget;
+    button.addEventListener("click", () => {
+      setCollapsibleSection(key, !state.chartSections[key]);
+    });
+  });
+  syncCollapsibleSections();
+}
+
+function syncCollapsibleSections() {
+  Object.entries(state.chartSections).forEach(([key, expanded]) => {
+    setCollapsibleSection(key, expanded, { skipChartRender: true });
+  });
+}
+
+function setCollapsibleSection(key, expanded, options = {}) {
+  state.chartSections[key] = Boolean(expanded);
+  document.querySelectorAll(`[data-collapse-key="${key}"]`).forEach((button) => {
+    const target = document.getElementById(button.dataset.collapseTarget);
+    if (target) target.hidden = !state.chartSections[key];
+    button.setAttribute("aria-expanded", String(state.chartSections[key]));
+    button.innerHTML = `
+      <i data-lucide="${state.chartSections[key] ? "chevron-up" : "chevron-down"}"></i>
+      <span>${state.chartSections[key] ? "Hide" : "Show"}</span>
+    `;
+  });
+  if (key === "equity" && state.chartSections[key] && state.data && !options.skipChartRender) {
+    window.requestAnimationFrame(() => renderEquity(state.data.equity_curve, state.data.summary));
+  }
   if (window.lucide) {
     window.lucide.createIcons();
   }
@@ -522,6 +564,15 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
 }
 
 function renderEquity(curve, summary) {
+  const pnlBadge = document.getElementById("pnlBadge");
+  pnlBadge.textContent = formatPct(summary.total_pnl_pct);
+  pnlBadge.className = `badge ${summary.total_pnl_ils >= 0 ? "good" : "bad"}`;
+  const runCount = Math.max(0, (curve || []).length - 1);
+  document.getElementById("equityMeta").textContent = `${runCount} tracked ${runCount === 1 ? "run" : "runs"}`;
+
+  const panel = document.getElementById("equityChartPanel");
+  if (panel?.hidden) return;
+
   const canvas = document.getElementById("equityChart");
   const context = canvas.getContext("2d");
   const rect = canvas.getBoundingClientRect();
@@ -592,11 +643,6 @@ function renderEquity(curve, summary) {
     context.fill();
   });
 
-  const pnlBadge = document.getElementById("pnlBadge");
-  pnlBadge.textContent = formatPct(summary.total_pnl_pct);
-  pnlBadge.className = `badge ${summary.total_pnl_ils >= 0 ? "good" : "bad"}`;
-  const runCount = Math.max(0, points.length - 1);
-  document.getElementById("equityMeta").textContent = `${runCount} tracked ${runCount === 1 ? "run" : "runs"}`;
 }
 
 function renderScanCharts(setups, run) {
@@ -676,10 +722,13 @@ function renderPositionsOverview(positions, liveUpdatedAt = "") {
 }
 
 function renderPositions(positions, liveUpdatedAt = "") {
-  document.getElementById("positionMeta").textContent = liveUpdatedAt
+  const meta = document.getElementById("positionMeta");
+  const body = document.getElementById("positionsBody");
+  if (!meta || !body) return;
+
+  meta.textContent = liveUpdatedAt
     ? `${positions.length} open positions - live ${formatDate(liveUpdatedAt)}`
     : `${positions.length} open positions`;
-  const body = document.getElementById("positionsBody");
   if (!positions.length) {
     body.innerHTML = `<tr><td colspan="12" class="empty-state">No open positions</td></tr>`;
     return;

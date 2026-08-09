@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260809-collapse-charts" />
   </head>
   <body>
     <main class="agent-shell">
@@ -128,9 +128,17 @@
               <h2>Portfolio Equity</h2>
               <p id="equityMeta">Waiting for data</p>
             </div>
-            <span id="pnlBadge" class="badge neutral">0.00%</span>
+            <div class="panel-actions">
+              <span id="pnlBadge" class="badge neutral">0.00%</span>
+              <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="equity" data-collapse-target="equityChartPanel" aria-expanded="false">
+                <i data-lucide="chevron-down"></i>
+                <span>Show</span>
+              </button>
+            </div>
           </div>
-          <canvas id="equityChart" height="260"></canvas>
+          <div id="equityChartPanel" class="collapsible-content" hidden>
+            <canvas id="equityChart" height="260"></canvas>
+          </div>
         </div>
 
         <div class="panel scan-charts-panel">
@@ -139,41 +147,19 @@
               <h2>Scan Charts</h2>
               <p id="scanChartsMeta">Charts by ticker</p>
             </div>
-            <a id="screenshotLink" class="icon-only" href="#" target="_blank" rel="noreferrer" title="Open full run screenshot">
-              <i data-lucide="external-link"></i>
-            </a>
+            <div class="panel-actions">
+              <a id="screenshotLink" class="icon-only" href="#" target="_blank" rel="noreferrer" title="Open full run screenshot">
+                <i data-lucide="external-link"></i>
+              </a>
+              <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="scanCharts" data-collapse-target="scanChartsPanel" aria-expanded="false">
+                <i data-lucide="chevron-down"></i>
+                <span>Show</span>
+              </button>
+            </div>
           </div>
-          <div id="scanChartsGrid" class="scan-chart-grid"></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <h2>Open Positions</h2>
-            <p id="positionMeta">No open positions</p>
+          <div id="scanChartsPanel" class="collapsible-content" hidden>
+            <div id="scanChartsGrid" class="scan-chart-grid"></div>
           </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Ticker</th>
-                <th>Status</th>
-                <th>Qty</th>
-                <th>Entry</th>
-                <th>Current</th>
-                <th>Stop</th>
-                <th>Targets</th>
-                <th>Unrealized</th>
-                <th>Exposure</th>
-                <th>Risk</th>
-                <th>Potential</th>
-                <th>Progress</th>
-              </tr>
-            </thead>
-            <tbody id="positionsBody"></tbody>
-          </table>
         </div>
       </section>
 
@@ -183,8 +169,14 @@
             <h2>Position Charts</h2>
             <p id="positionChartsMeta">Charts and selection context</p>
           </div>
+          <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="positionCharts" data-collapse-target="positionChartsPanel" aria-expanded="false">
+            <i data-lucide="chevron-down"></i>
+            <span>Show</span>
+          </button>
         </div>
-        <div id="positionChartsGrid" class="position-chart-grid"></div>
+        <div id="positionChartsPanel" class="collapsible-content" hidden>
+          <div id="positionChartsGrid" class="position-chart-grid"></div>
+        </div>
       </section>
 
       <section class="agent-layout lower">
@@ -258,6 +250,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260803-monitor-fix"></script>
+    <script src="/static/agent.js?v=20260809-collapse-charts"></script>
   </body>
 </html>
