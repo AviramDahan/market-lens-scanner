@@ -20,6 +20,7 @@ from app.telegram_notifications import (
     dashboard_url_from_env,
     format_position_event_message,
     format_stop_moved_to_entry_message,
+    send_telegram_chart_photo,
     send_telegram_message,
 )
 
@@ -180,6 +181,15 @@ def send_position_event_notifications(
         outcome = send_telegram_message(message)
         if outcome.sent:
             print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
+            chart_outcome = send_telegram_chart_photo(
+                position.get("chart_url"),
+                ticker=event.ticker,
+                dashboard_url=settings.dashboard_url,
+            )
+            if chart_outcome.sent:
+                print(f"Telegram position-event chart sent for {event.ticker}:{event.action}.")
+            elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
+                print(f"Telegram position-event chart skipped for {event.ticker}:{event.action}: {chart_outcome.reason}")
         elif outcome.status != "not_configured":
             print(f"Telegram position-event notification skipped for {event.ticker}:{event.action}: {outcome.reason}")
         if should_notify_stop_moved_to_entry(position, event):

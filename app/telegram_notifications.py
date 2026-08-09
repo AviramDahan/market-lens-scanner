@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import html
 import json
+import mimetypes
 import os
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
+from uuid import uuid4
 
 
 @dataclass(frozen=True)
@@ -77,6 +81,95 @@ def send_telegram_message(
         return TelegramSendResult(False, "failed", f"Telegram send failed: {exc.__class__.__name__}.")
 
 
+def send_telegram_photo(
+    photo: Any,
+    *,
+    caption: str = "",
+    settings: TelegramSettings | None = None,
+    opener: Callable[..., Any] = urlopen,
+) -> TelegramSendResult:
+    current = settings or load_telegram_settings()
+    if not current.enabled:
+        return TelegramSendResult(False, "disabled", "Telegram notifications are disabled.")
+    if not current.bot_token or not current.chat_id:
+        return TelegramSendResult(False, "not_configured", "Telegram bot token or chat id is missing.")
+
+    photo_source = str(photo or "").strip()
+    if not photo_source:
+        return TelegramSendResult(False, "no_photo", "No chart image is available.")
+
+    headers = {"User-Agent": "market-lens-agent/1.0"}
+    if _is_http_url(photo_source):
+        payload = {
+            "chat_id": current.chat_id,
+            "photo": photo_source,
+            "caption": caption,
+            "parse_mode": "HTML",
+        }
+        data = json.dumps(payload).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    else:
+        path = Path(photo_source)
+        if not path.exists() or not path.is_file():
+            return TelegramSendResult(False, "not_found", "Chart image file is missing.")
+        data, content_type = _multipart_photo_payload(
+            fields={
+                "chat_id": current.chat_id,
+                "caption": caption,
+                "parse_mode": "HTML",
+            },
+            file_path=path,
+        )
+        headers["Content-Type"] = content_type
+
+    request = Request(
+        f"https://api.telegram.org/bot{current.bot_token}/sendPhoto",
+        data=data,
+        headers=headers,
+        method="POST",
+    )
+    try:
+        with opener(request, timeout=current.timeout_seconds) as response:
+            status_code = int(getattr(response, "status", 0) or response.getcode())
+            if 200 <= status_code < 300:
+                return TelegramSendResult(True, "sent", f"Telegram API returned {status_code}.")
+            return TelegramSendResult(False, "failed", f"Telegram API returned {status_code}.")
+    except Exception as exc:
+        return TelegramSendResult(False, "failed", f"Telegram photo send failed: {exc.__class__.__name__}.")
+
+
+def send_telegram_chart_photo(
+    chart_ref: Any,
+    *,
+    ticker: Any = "",
+    dashboard_url: str = "",
+    settings: TelegramSettings | None = None,
+    opener: Callable[..., Any] = urlopen,
+) -> TelegramSendResult:
+    source = chart_photo_source(chart_ref, dashboard_url)
+    if not source:
+        return TelegramSendResult(False, "no_photo", "No chart image is available.")
+    ticker_text = str(ticker or "").upper()
+    caption = f"<b>{_escape(ticker_text)} chart</b>" if ticker_text else "<b>Position chart</b>"
+    return send_telegram_photo(source, caption=caption, settings=settings, opener=opener)
+
+
+def chart_photo_source(chart_ref: Any, dashboard_url: str = "") -> str:
+    ref = str(chart_ref or "").strip()
+    if not ref:
+        return ""
+    if _is_http_url(ref) or Path(ref).exists():
+        return ref
+    normalized_ref = ref.replace("\\", "/")
+    if "agent_results/" in normalized_ref:
+        ref = "/agent-results/" + normalized_ref.split("agent_results/", 1)[1]
+    if ref.startswith("/"):
+        parts = urlsplit(dashboard_url)
+        if parts.scheme and parts.netloc:
+            return urlunsplit((parts.scheme, parts.netloc, ref, "", ""))
+    return ref
+
+
 def format_position_opened_message(
     *,
     result: Any,
@@ -93,7 +186,7 @@ def format_position_opened_message(
         "",
         f"Ticker: <b>{_escape(getattr(result, 'ticker', ''))}</b>",
         f"Setup: {_escape(getattr(result, 'setup_type', ''))}",
-        f"Time: {_escape(timestamp)}",
+        f"Time: {_escape(_format_message_time(timestamp))}",
         f"Run: {_escape(run_id)}",
         "",
         f"Entry: {_money(position.get('entry_price') or getattr(result, 'current_price', 0))}",
@@ -138,8 +231,8 @@ def format_position_event_message(
         f"<b>{_escape(action_title)}</b>",
         "",
         f"Ticker: <b>{_escape(getattr(event, 'ticker', '') or position.get('ticker', ''))}</b>",
-        f"Time: {_escape(timestamp)}",
-        f"Triggered at: {_escape(getattr(event, 'triggered_at', ''))}",
+        f"Time: {_escape(_format_message_time(timestamp))}",
+        f"Triggered at: {_escape(_format_message_time(getattr(event, 'triggered_at', '')))}",
         f"Run: {_escape(run_id)}",
         "",
         f"Trigger price: {_money(trigger)}",
@@ -179,7 +272,7 @@ def format_stop_moved_to_entry_message(
         "<b>Stop moved to entry</b>",
         "",
         f"Ticker: <b>{_escape(getattr(event, 'ticker', '') or position.get('ticker', ''))}</b>",
-        f"Time: {_escape(timestamp)}",
+        f"Time: {_escape(_format_message_time(timestamp))}",
         f"Run: {_escape(run_id)}",
         "",
         f"Entry: {_money(entry)}",
@@ -258,6 +351,48 @@ def _percent_from_entry(value: Any, entry: Any) -> str:
     change = ((target - base) / base) * 100
     sign = "+" if change > 0 else ""
     return f"{sign}{change:.2f}%"
+
+
+def _format_message_time(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        compact = text.replace("T", " ")
+        if len(compact) >= 16:
+            return compact[:16]
+        return compact
+
+
+def _is_http_url(value: str) -> bool:
+    parts = urlsplit(value)
+    return parts.scheme in {"http", "https"} and bool(parts.netloc)
+
+
+def _multipart_photo_payload(*, fields: dict[str, Any], file_path: Path) -> tuple[bytes, str]:
+    boundary = f"market-lens-{uuid4().hex}"
+    content_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
+    body = bytearray()
+
+    for name, value in fields.items():
+        body.extend(f"--{boundary}\r\n".encode("utf-8"))
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        body.extend(str(value).encode("utf-8"))
+        body.extend(b"\r\n")
+
+    body.extend(f"--{boundary}\r\n".encode("utf-8"))
+    body.extend(
+        (
+            f'Content-Disposition: form-data; name="photo"; filename="{file_path.name}"\r\n'
+            f"Content-Type: {content_type}\r\n\r\n"
+        ).encode("utf-8")
+    )
+    body.extend(file_path.read_bytes())
+    body.extend(b"\r\n")
+    body.extend(f"--{boundary}--\r\n".encode("utf-8"))
+    return bytes(body), f"multipart/form-data; boundary={boundary}"
 
 
 def _shorten(value: Any, limit: int = 700) -> str:

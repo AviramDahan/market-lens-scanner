@@ -7,12 +7,14 @@ from agent.market_lens_ui_agent import Settings, SetupResult, send_new_buy_notif
 from app.telegram_notifications import (
     TelegramSettings,
     TelegramSendResult,
+    chart_photo_source,
     dashboard_url_from_app_url,
     dashboard_url_from_env,
     format_position_event_message,
     format_position_opened_message,
     format_stop_moved_to_entry_message,
     send_telegram_message,
+    send_telegram_photo,
     telegram_configured,
 )
 
@@ -73,6 +75,71 @@ def test_telegram_send_uses_json_payload_without_exposing_secret() -> None:
     assert "SECRET_TOKEN" not in result.reason
 
 
+def test_telegram_send_photo_uses_json_payload_for_remote_chart() -> None:
+    captured = {}
+
+    def opener(request, timeout):
+        captured["url"] = request.full_url
+        captured["timeout"] = timeout
+        captured["payload"] = json.loads(request.data.decode("utf-8"))
+        captured["content_type"] = request.headers["Content-type"]
+        return FakeTelegramResponse()
+
+    result = send_telegram_photo(
+        "https://example.com/chart.png",
+        caption="<b>NVDA chart</b>",
+        settings=TelegramSettings(bot_token="SECRET_TOKEN", chat_id="-100", timeout_seconds=4),
+        opener=opener,
+    )
+
+    assert result.sent is True
+    assert result.status == "sent"
+    assert captured["payload"]["chat_id"] == "-100"
+    assert captured["payload"]["photo"] == "https://example.com/chart.png"
+    assert captured["payload"]["caption"] == "<b>NVDA chart</b>"
+    assert captured["payload"]["parse_mode"] == "HTML"
+    assert "SECRET_TOKEN" not in result.reason
+
+
+def test_telegram_send_photo_uploads_local_chart(tmp_path) -> None:
+    captured = {}
+    chart = tmp_path / "chart.png"
+    chart.write_bytes(b"fake-png-data")
+
+    def opener(request, timeout):
+        captured["url"] = request.full_url
+        captured["timeout"] = timeout
+        captured["body"] = request.data
+        captured["content_type"] = request.headers["Content-type"]
+        return FakeTelegramResponse()
+
+    result = send_telegram_photo(
+        chart,
+        caption="<b>MSFT chart</b>",
+        settings=TelegramSettings(bot_token="SECRET_TOKEN", chat_id="-100", timeout_seconds=4),
+        opener=opener,
+    )
+
+    assert result.sent is True
+    assert result.status == "sent"
+    assert "multipart/form-data" in captured["content_type"]
+    assert b'name="photo"; filename="chart.png"' in captured["body"]
+    assert b"fake-png-data" in captured["body"]
+    assert b"<b>MSFT chart</b>" in captured["body"]
+
+
+def test_chart_photo_source_resolves_relative_dashboard_path() -> None:
+    assert chart_photo_source("/agent-results/charts/nvda.png", "https://example.com/agent") == (
+        "https://example.com/agent-results/charts/nvda.png"
+    )
+
+
+def test_chart_photo_source_resolves_saved_agent_results_path() -> None:
+    assert chart_photo_source(r"C:\agent\agent_results\charts\nvda.png", "https://example.com/agent") == (
+        "https://example.com/agent-results/charts/nvda.png"
+    )
+
+
 def test_position_opened_message_contains_trade_plan() -> None:
     result = SimpleNamespace(
         ticker="NVDA",
@@ -110,6 +177,8 @@ def test_position_opened_message_contains_trade_plan() -> None:
 
     assert "BUY_SIMULATED opened" in message
     assert "NVDA" in message
+    assert "Time: 2026-06-22 10:30" in message
+    assert "Time: 2026-06-22T10:30:00" not in message
     assert "$210.00" in message
     assert "$195.00 (-7.14%)" in message
     assert "$225.00 (+7.14%) / $245.00 (+16.67%)" in message
@@ -138,12 +207,18 @@ def test_telegram_configured_requires_token_and_chat() -> None:
 
 def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
     sent_messages = []
+    sent_charts = []
 
     def fake_send(message: str):
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 
+    def fake_send_chart(chart_ref, *, ticker, dashboard_url):
+        sent_charts.append((chart_ref, ticker, dashboard_url))
+        return TelegramSendResult(True, "sent")
+
     monkeypatch.setattr(ui_agent, "send_telegram_message", fake_send)
+    monkeypatch.setattr(ui_agent, "send_telegram_chart_photo", fake_send_chart)
     settings = Settings(
         url="https://market-lens-scanner-fb63.onrender.com/?v=latest",
         email="test@example.com",
@@ -198,6 +273,7 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
                 "stop_loss": 95,
                 "target_1": 110,
                 "target_2": 120,
+                "chart_url": "agent_results/charts/buy.png",
             }
         },
         settings=settings,
@@ -209,6 +285,7 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
     assert "BUY_SIMULATED opened" in sent_messages[0]
     assert "BUY" in sent_messages[0]
     assert "WATCH" not in sent_messages[0]
+    assert sent_charts == [("agent_results/charts/buy.png", "BUY", "https://market-lens-scanner-fb63.onrender.com/agent")]
 
 
 def test_position_event_message_contains_exit_details() -> None:
@@ -242,6 +319,8 @@ def test_position_event_message_contains_exit_details() -> None:
 
     assert "TP1 hit - partial profit" in message
     assert "BA" in message
+    assert "Time: 2026-06-22 15:32" in message
+    assert "Triggered at: 2026-06-22 15:31" in message
     assert "$215.00" in message
     assert "$190.00 (-5.00%)" in message
     assert "$215.00 (+7.50%) / $230.00 (+15.00%)" in message
@@ -282,6 +361,7 @@ def test_stop_moved_to_entry_message_contains_breakeven_update() -> None:
 
     assert "Stop moved to entry" in message
     assert "BA" in message
+    assert "Time: 2026-06-22 15:32" in message
     assert "Previous stop: $190.00 (-5.00%)" in message
     assert "New stop: $200.00 (0.00%)" in message
     assert "Remaining quantity: 5" in message
@@ -290,12 +370,18 @@ def test_stop_moved_to_entry_message_contains_breakeven_update() -> None:
 
 def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_path) -> None:
     sent_messages = []
+    sent_charts = []
 
     def fake_send(message: str):
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 
+    def fake_send_chart(chart_ref, *, ticker, dashboard_url):
+        sent_charts.append((chart_ref, ticker, dashboard_url))
+        return TelegramSendResult(True, "sent")
+
     monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
+    monkeypatch.setattr(position_monitor, "send_telegram_chart_photo", fake_send_chart)
     settings = position_monitor.MonitorSettings(
         excel_path=tmp_path / "tracker.xlsx",
         run_dir=tmp_path / "agent_results",
@@ -318,7 +404,7 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
     )
 
     position_monitor.send_position_event_notifications(
-        [({"ticker": "MSFT", "entry_price": 100, "stop_loss": 95, "target_1": 110, "target_2": 120}, event)],
+        [({"ticker": "MSFT", "entry_price": 100, "stop_loss": 95, "target_1": 110, "target_2": 120, "chart_url": "agent_results/charts/msft.png"}, event)],
         settings=settings,
         run_id="monitor-1",
         timestamp="2026-06-22T15:32:00+00:00",
@@ -328,6 +414,7 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
     assert "Stop hit - position closed" in sent_messages[0]
     assert "MSFT" in sent_messages[0]
     assert "-$15.00" in sent_messages[0]
+    assert sent_charts == [("agent_results/charts/msft.png", "MSFT", "https://example.com/agent")]
 
 
 def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch, tmp_path) -> None:

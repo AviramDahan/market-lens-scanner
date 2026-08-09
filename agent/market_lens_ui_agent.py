@@ -28,6 +28,7 @@ from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 from app.telegram_notifications import (
     dashboard_url_from_env,
     format_position_opened_message,
+    send_telegram_chart_photo,
     send_telegram_message,
 )
 
@@ -1108,6 +1109,15 @@ def send_new_buy_notifications(
         outcome = send_telegram_message(message)
         if outcome.sent:
             log(f"Telegram position-open notification sent for {result.ticker}.")
+            chart_outcome = send_telegram_chart_photo(
+                position.get("chart_url") or result.chart_url,
+                ticker=result.ticker,
+                dashboard_url=dashboard_url,
+            )
+            if chart_outcome.sent:
+                log(f"Telegram position-open chart sent for {result.ticker}.")
+            elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
+                log(f"Telegram position-open chart skipped for {result.ticker}: {chart_outcome.reason}")
         elif outcome.status != "not_configured":
             log(f"Telegram position-open notification skipped for {result.ticker}: {outcome.reason}")
 
