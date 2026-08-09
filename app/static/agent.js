@@ -6,7 +6,6 @@ const state = {
   visibleTradeCount: 10,
   chartSections: {
     equity: false,
-    scanCharts: false,
     positionCharts: false,
   },
   liveTimer: null,
@@ -139,7 +138,6 @@ function renderDashboard(data) {
   renderMetrics(data.summary);
   renderDiagnostics(data.decision_diagnostics || {}, data.daily_summary || {}, data.weekly_summary || {});
   renderEquity(data.equity_curve, data.summary);
-  renderScanCharts(data.latest_setups, data.latest_run);
   renderPositionsOverview(data.open_positions);
   renderPositions(data.open_positions);
   renderPositionCharts(data.open_positions);
@@ -643,41 +641,6 @@ function renderEquity(curve, summary) {
     context.fill();
   });
 
-}
-
-function renderScanCharts(setups, run) {
-  const grid = document.getElementById("scanChartsGrid");
-  const link = document.getElementById("screenshotLink");
-  const charts = (setups || []).filter((setup) => setup.chart_url);
-  document.getElementById("scanChartsMeta").textContent = `${charts.length} chart${charts.length === 1 ? "" : "s"} from ${formatDate(run.timestamp)}`;
-  if (run.screenshot_url) {
-    link.href = run.screenshot_url;
-  } else {
-    link.removeAttribute("href");
-  }
-  if (!charts.length) {
-    grid.innerHTML = '<div class="empty-media">No scan charts saved</div>';
-    return;
-  }
-
-  grid.innerHTML = charts
-    .map((setup) => {
-      const src = `${setup.chart_url}?v=${Date.now()}`;
-      return `
-        <button class="scan-chart-card" type="button" data-full-src="${escapeHtml(src)}" title="Open ${escapeHtml(setup.ticker)} chart">
-          <img src="${escapeHtml(src)}" alt="${escapeHtml(setup.ticker)} chart" />
-          <span>
-            <strong>${escapeHtml(tickerLabel(setup))}</strong>
-            <small>${escapeHtml(`${setup.action || "UNKNOWN"} - ${setup.setup_type || ""}`)}</small>
-          </span>
-        </button>
-      `;
-    })
-    .join("");
-
-  grid.querySelectorAll(".scan-chart-card").forEach((button) => {
-    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
-  });
 }
 
 function renderPositionsOverview(positions, liveUpdatedAt = "") {
