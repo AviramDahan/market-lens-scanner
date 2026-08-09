@@ -1,9 +1,17 @@
 const state = {
   data: null,
+  selectedDate: "",
+  actions: [],
+  actionTotal: 0,
+  actionHasMore: false,
   actionsExpanded: false,
-  visibleActionCount: 10,
+  actionsLoading: false,
+  trades: [],
+  tradeTotal: 0,
+  closedTradeTotal: 0,
+  tradeHasMore: false,
   tradesExpanded: false,
-  visibleTradeCount: 10,
+  tradesLoading: false,
   chartSections: {
     equity: false,
     nearMisses: false,
@@ -81,21 +89,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("toggleActions").addEventListener("click", () => {
     state.actionsExpanded = !state.actionsExpanded;
-    state.visibleActionCount = ACTIONS_PAGE_SIZE;
-    renderActions(state.data?.latest_setups || []);
+    renderActions();
+    if (state.actionsExpanded && !state.actions.length) loadActionsPage(true);
   });
   document.getElementById("loadMoreActions").addEventListener("click", () => {
-    state.visibleActionCount += ACTIONS_PAGE_SIZE;
-    renderActions(state.data?.latest_setups || []);
+    loadActionsPage(false);
   });
   document.getElementById("toggleTrades").addEventListener("click", () => {
     state.tradesExpanded = !state.tradesExpanded;
-    state.visibleTradeCount = TRADES_PAGE_SIZE;
-    renderTrades(state.data?.recent_trades || [], state.data?.closed_trades || []);
+    renderTrades();
+    if (state.tradesExpanded && !state.trades.length) loadTradesPage(true);
   });
   document.getElementById("loadMoreTrades").addEventListener("click", () => {
-    state.visibleTradeCount += TRADES_PAGE_SIZE;
-    renderTrades(state.data?.recent_trades || [], state.data?.closed_trades || []);
+    loadTradesPage(false);
   });
   setupCollapsibleSections();
   setupMediaModal();
@@ -108,21 +114,92 @@ async function loadDashboard(selectedDate = "") {
   try {
     const params = new URLSearchParams();
     if (selectedDate) params.set("date", selectedDate);
+    params.set("limit", String(ACTIONS_PAGE_SIZE));
     const response = await fetch(`/agent/data${params.toString() ? `?${params}` : ""}`);
     if (!response.ok) {
       throw new Error(`Agent data failed: ${response.status}`);
     }
     state.data = await response.json();
+    state.selectedDate = selectedDate;
+    resetPagedCollections(state.data);
     state.actionsExpanded = false;
-    state.visibleActionCount = ACTIONS_PAGE_SIZE;
     state.tradesExpanded = false;
-    state.visibleTradeCount = TRADES_PAGE_SIZE;
     syncDateUrl(selectedDate);
     renderDashboard(state.data);
   } catch (error) {
     document.getElementById("runStatus").textContent = "Error";
     document.getElementById("summaryText").textContent = error.message;
   }
+}
+
+function resetPagedCollections(data) {
+  const pagination = data.pagination || {};
+  const actionPage = pagination.actions || {};
+  const tradePage = pagination.trades || {};
+  state.actions = data.latest_setups || [];
+  state.actionTotal = Number(actionPage.total ?? state.actions.length);
+  state.actionHasMore = Boolean(actionPage.has_more ?? state.actions.length < state.actionTotal);
+  state.trades = data.recent_trades || [];
+  state.tradeTotal = Number(tradePage.total ?? state.trades.length);
+  state.closedTradeTotal = Number(tradePage.closed_total ?? (data.closed_trades || []).length);
+  state.tradeHasMore = Boolean(tradePage.has_more ?? state.trades.length < state.tradeTotal);
+}
+
+async function loadActionsPage(reset = false) {
+  if (state.actionsLoading) return;
+  state.actionsLoading = true;
+  renderActions();
+  try {
+    const params = new URLSearchParams({
+      section: "actions",
+      offset: String(reset ? 0 : state.actions.length),
+      limit: String(ACTIONS_PAGE_SIZE),
+    });
+    if (state.selectedDate) params.set("date", state.selectedDate);
+    const response = await fetch(`/agent/data?${params}`);
+    if (!response.ok) throw new Error(`Actions failed: ${response.status}`);
+    const page = await response.json();
+    if (page.status !== "ok") throw new Error(page.error || "Actions unavailable");
+    state.actions = reset ? page.items || [] : state.actions.concat(page.items || []);
+    state.actionTotal = Number(page.total || state.actions.length);
+    state.actionHasMore = Boolean(page.has_more);
+  } catch (error) {
+    setInlineLoadError("actionsList", error.message || "Actions unavailable");
+  } finally {
+    state.actionsLoading = false;
+    renderActions();
+  }
+}
+
+async function loadTradesPage(reset = false) {
+  if (state.tradesLoading) return;
+  state.tradesLoading = true;
+  renderTrades();
+  try {
+    const params = new URLSearchParams({
+      section: "trades",
+      offset: String(reset ? 0 : state.trades.length),
+      limit: String(TRADES_PAGE_SIZE),
+    });
+    if (state.selectedDate) params.set("date", state.selectedDate);
+    const response = await fetch(`/agent/data?${params}`);
+    if (!response.ok) throw new Error(`Trades failed: ${response.status}`);
+    const page = await response.json();
+    if (page.status !== "ok") throw new Error(page.error || "Trades unavailable");
+    state.trades = reset ? page.items || [] : state.trades.concat(page.items || []);
+    state.tradeTotal = Number(page.total || state.trades.length);
+    state.tradeHasMore = Boolean(page.has_more);
+  } catch (error) {
+    setInlineLoadError("tradeList", error.message || "Trades unavailable");
+  } finally {
+    state.tradesLoading = false;
+    renderTrades();
+  }
+}
+
+function setInlineLoadError(elementId, message) {
+  const element = document.getElementById(elementId);
+  if (element) element.innerHTML = `<div class="empty-state compact">${escapeHtml(message)}</div>`;
 }
 
 function renderDashboard(data) {
@@ -149,16 +226,17 @@ function renderDashboard(data) {
   document.getElementById("runStatus").textContent = "OK";
   document.getElementById("tickerCount").textContent = data.latest_run.tickers.length;
   document.getElementById("validSetups").textContent = data.latest_run.valid_setups;
-  document.getElementById("tradeReadySetups").textContent = countTradeReady(data.latest_setups);
+  document.getElementById("tradeReadySetups").textContent = data.latest_run.trade_ready_setups ?? countTradeReady(data.latest_setups);
 
   renderMetrics(data.summary);
+  renderSystemHealth(data.system_health || {}, data.results_sync || {}, data.payload || {});
   renderDiagnostics(data.decision_diagnostics || {}, data.daily_summary || {}, data.weekly_summary || {});
   renderEquity(data.equity_curve, data.summary);
   renderPositionsOverview(data.open_positions);
   renderPositions(data.open_positions);
   renderPositionCharts(data.open_positions);
-  renderActions(data.latest_setups);
-  renderTrades(data.recent_trades, data.closed_trades);
+  renderActions();
+  renderTrades();
   renderCalibration(data.score_calibration || []);
   renderSummary(data.latest_run);
   syncCollapsibleSections();
@@ -464,6 +542,13 @@ function formatElapsed(ms) {
   return `${seconds}s`;
 }
 
+function formatAgeMinutes(minutes) {
+  const value = Math.max(0, Number(minutes || 0));
+  if (value >= 1440) return `${Math.floor(value / 1440)}d ${Math.floor((value % 1440) / 60)}h`;
+  if (value >= 60) return `${Math.floor(value / 60)}h ${value % 60}m`;
+  return `${value}m`;
+}
+
 function renderMetrics(summary) {
   const metrics = [
     {
@@ -511,6 +596,58 @@ function renderMetrics(summary) {
           <span>${escapeHtml(metric.label)}</span>
           <strong>${escapeHtml(metric.value)}</strong>
           <small>${escapeHtml(metric.detail)}</small>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function renderSystemHealth(health, resultsSync, payload) {
+  const grid = document.getElementById("systemHealthGrid");
+  const meta = document.getElementById("systemHealthMeta");
+  if (!grid || !meta) return;
+
+  const notes = health.notes || [];
+  meta.textContent = notes.length ? notes[0] : "Scanner, monitor and dashboard sync status";
+  const syncStatus = resultsSync?.enabled === false
+    ? "Local"
+    : resultsSync?.downloaded || resultsSync?.asset_sync?.downloaded
+      ? "Synced"
+      : "Ready";
+  const cards = [
+    {
+      label: "Payload",
+      value: payload.mode === "compact" ? "Compact" : "Full",
+      detail: payload.mode === "compact" ? "Actions/trades load on demand" : "Full dashboard payload",
+      tone: payload.mode === "compact" ? "good" : "warn",
+    },
+    {
+      label: "Last Scan",
+      value: health.latest_scan_at ? formatDate(health.latest_scan_at) : "Unknown",
+      detail: health.latest_scan_age_minutes != null ? `${formatAgeMinutes(health.latest_scan_age_minutes)} ago` : "No scan timestamp",
+      tone: health.latest_scan_at ? "good" : "warn",
+    },
+    {
+      label: "Last Monitor",
+      value: health.latest_monitor_at ? formatDate(health.latest_monitor_at) : "No events",
+      detail: health.latest_monitor_age_minutes != null ? `${formatAgeMinutes(health.latest_monitor_age_minutes)} ago` : "Waiting for monitor update",
+      tone: health.latest_monitor_at ? "good" : "",
+    },
+    {
+      label: "Data Sync",
+      value: syncStatus,
+      detail: resultsSync?.reason || resultsSync?.asset_sync?.reason || "Dashboard assets checked",
+      tone: resultsSync?.error ? "bad" : "",
+    },
+  ];
+
+  grid.innerHTML = cards
+    .map(
+      (card) => `
+        <div class="health-card ${card.tone || ""}">
+          <span>${escapeHtml(card.label)}</span>
+          <strong>${escapeHtml(card.value)}</strong>
+          <small>${escapeHtml(card.detail || "")}</small>
         </div>
       `,
     )
@@ -779,8 +916,9 @@ function renderPositionCharts(positions) {
   });
 }
 
-function renderActions(setups) {
-  document.getElementById("actionMeta").textContent = `${setups.length} latest setup decisions`;
+function renderActions() {
+  const setups = state.actions || [];
+  document.getElementById("actionMeta").textContent = `${Math.min(setups.length, state.actionTotal)} loaded / ${state.actionTotal} latest setup decisions`;
   const list = document.getElementById("actionsList");
   const toggle = document.getElementById("toggleActions");
   const loadMoreRow = document.getElementById("actionsLoadMoreRow");
@@ -802,9 +940,13 @@ function renderActions(setups) {
     loadMoreRow.hidden = true;
     return;
   }
+  if (state.actionsLoading && !setups.length) {
+    list.innerHTML = '<div class="empty-state compact">Loading latest actions...</div>';
+    loadMoreRow.hidden = true;
+    return;
+  }
 
-  const visible = setups.slice(0, state.visibleActionCount);
-  list.innerHTML = visible
+  list.innerHTML = setups
     .map(
       (setup) => `
         <div class="action-row">
@@ -830,10 +972,11 @@ function renderActions(setups) {
       `,
     )
     .join("");
-  loadMoreRow.hidden = state.visibleActionCount >= setups.length;
+  loadMoreRow.hidden = !state.actionHasMore;
   if (!loadMoreRow.hidden) {
-    const nextCount = Math.min(ACTIONS_PAGE_SIZE, setups.length - state.visibleActionCount);
-    loadMore.querySelector("span").textContent = `Load ${nextCount} more`;
+    const nextCount = Math.min(ACTIONS_PAGE_SIZE, Math.max(0, state.actionTotal - setups.length));
+    loadMore.disabled = state.actionsLoading;
+    loadMore.querySelector("span").textContent = state.actionsLoading ? "Loading" : `Load ${nextCount} more`;
   }
   list.querySelectorAll(".action-chart-button").forEach((button) => {
     button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
@@ -896,8 +1039,9 @@ function renderCalibration(rows) {
     .join("");
 }
 
-function renderTrades(trades, closedTrades) {
-  document.getElementById("tradeMeta").textContent = `${closedTrades.length} closed / ${trades.length} logged`;
+function renderTrades() {
+  const trades = state.trades || [];
+  document.getElementById("tradeMeta").textContent = `${state.closedTradeTotal} closed / ${Math.min(trades.length, state.tradeTotal)} of ${state.tradeTotal} logged`;
   const list = document.getElementById("tradeList");
   const toggle = document.getElementById("toggleTrades");
   const loadMoreRow = document.getElementById("tradesLoadMoreRow");
@@ -919,9 +1063,12 @@ function renderTrades(trades, closedTrades) {
     loadMoreRow.hidden = true;
     return;
   }
-  const sorted = trades.slice().reverse();
-  const visible = sorted.slice(0, state.visibleTradeCount);
-  list.innerHTML = visible
+  if (state.tradesLoading && !trades.length) {
+    list.innerHTML = '<div class="empty-state compact">Loading latest trades...</div>';
+    loadMoreRow.hidden = true;
+    return;
+  }
+  list.innerHTML = trades
     .map((trade) => {
       const cash = trade.action === "BUY_SIMULATED" ? trade.cash_out_ils : trade.cash_in_ils;
       return `
@@ -939,10 +1086,11 @@ function renderTrades(trades, closedTrades) {
       `;
     })
     .join("");
-  loadMoreRow.hidden = state.visibleTradeCount >= sorted.length;
+  loadMoreRow.hidden = !state.tradeHasMore;
   if (!loadMoreRow.hidden) {
-    const nextCount = Math.min(TRADES_PAGE_SIZE, sorted.length - state.visibleTradeCount);
-    loadMore.querySelector("span").textContent = `Load ${nextCount} more`;
+    const nextCount = Math.min(TRADES_PAGE_SIZE, Math.max(0, state.tradeTotal - trades.length));
+    loadMore.disabled = state.tradesLoading;
+    loadMore.querySelector("span").textContent = state.tradesLoading ? "Loading" : `Load ${nextCount} more`;
   }
   if (window.lucide) {
     window.lucide.createIcons();
@@ -1188,7 +1336,15 @@ function renderPotential(item) {
 }
 
 function tradePotentialText(trade) {
-  if (trade.action !== "BUY_SIMULATED") return formatDate(trade.timestamp);
+  if (trade.action !== "BUY_SIMULATED") {
+    const parts = [formatDate(trade.timestamp)];
+    if (trade.pnl_ils !== undefined && trade.pnl_ils !== null) parts.push(`P/L ${formatSignedMoney(trade.pnl_ils)}`);
+    if (trade.r_multiple !== undefined && trade.r_multiple !== null && trade.r_multiple !== "") {
+      parts.push(`${Number(trade.r_multiple || 0).toFixed(2)}R`);
+    }
+    if (trade.price_usd) parts.push(`at ${usd.format(trade.price_usd)}`);
+    return parts.join(" - ");
+  }
   return `${formatDate(trade.timestamp)} - potential ${money.format(trade.potential_profit_plan_ils || 0)}`;
 }
 

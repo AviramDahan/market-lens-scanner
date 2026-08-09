@@ -16,6 +16,7 @@ def write_performance_summaries(
     run_id: str,
     timestamp: str,
     portfolio: dict[str, Any],
+    trade_events: list[dict[str, Any]] | None = None,
 ) -> dict[str, Path]:
     summary_dir.mkdir(parents=True, exist_ok=True)
     run_date = parse_date(timestamp)
@@ -26,6 +27,7 @@ def write_performance_summaries(
         portfolio=portfolio,
         current_decision_path=current_decision_path,
         run_id=run_id,
+        trade_events=trade_events,
     )
     year, week, _ = run_date.isocalendar()
     weekly = build_period_summary(
@@ -35,6 +37,7 @@ def write_performance_summaries(
         portfolio=portfolio,
         current_decision_path=current_decision_path,
         run_id=run_id,
+        trade_events=trade_events,
     )
 
     daily_json = summary_dir / f"daily_summary_{run_date.isoformat()}.json"
@@ -61,28 +64,47 @@ def build_period_summary(
     portfolio: dict[str, Any],
     current_decision_path: Path,
     run_id: str,
+    trade_events: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     records, files = collect_records(decision_dir, period=period, target_date=target_date)
     if not records and current_decision_path.exists():
         records = read_jsonl(current_decision_path)
         files = [current_decision_path]
 
+    period_trade_events = [
+        event for event in trade_events or [] if in_period(event, period, target_date)
+    ]
     actions = Counter(str(record.get("final_action") or "UNKNOWN") for record in records)
+    trade_actions = Counter(str(event.get("action") or "UNKNOWN") for event in period_trade_events)
     watch_ready_count = sum(1 for record in records if is_watch_ready_candidate(record))
     setups = Counter(str(record.get("setup_type") or "UNKNOWN") for record in records)
+    actionable_setups = Counter(
+        str(record.get("setup_type") or "UNKNOWN")
+        for record in records
+        if str(record.get("setup_type") or "").lower() != "no trade"
+    )
     sectors = group_average(records, "sector", "net_rr")
     setup_scores = [to_float(record.get("setup_score")) for record in records if record.get("setup_score") is not None]
     rr1_values = [to_float(record.get("net_rr_1")) for record in records if record.get("net_rr_1") is not None]
     rr2_values = [to_float(record.get("net_rr_2")) for record in records if record.get("net_rr_2") is not None]
     shadow = shadow_metrics(records)
-    r_values = [to_float(record.get("r_multiple")) for record in records if record.get("r_multiple") not in (None, "")]
+    trade_r_values = [
+        to_float(event.get("r_multiple"))
+        for event in period_trade_events
+        if event.get("action") in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}
+        and event.get("r_multiple") not in (None, "")
+    ]
+    decision_r_values = [to_float(record.get("r_multiple")) for record in records if record.get("r_multiple") not in (None, "")]
+    r_values = trade_r_values or decision_r_values
     winners = [value for value in r_values if value > 0]
     losers = [value for value in r_values if value < 0]
     gross_profit = sum(winners)
     gross_loss = abs(sum(losers))
     week_start, week_end = iso_week_bounds(target_date)
-    positions_opened = actions.get("BUY_SIMULATED", 0)
-    positions_closed = actions.get("TAKE_PROFIT", 0) + actions.get("EXIT_STOP", 0)
+    positions_opened = trade_actions.get("BUY_SIMULATED", actions.get("BUY_SIMULATED", 0))
+    positions_closed = trade_actions.get("TAKE_PROFIT", actions.get("TAKE_PROFIT", 0)) + trade_actions.get(
+        "EXIT_STOP", actions.get("EXIT_STOP", 0)
+    )
     open_positions_end = portfolio.get("open_positions_end")
     open_positions_start = infer_open_positions_start(
         open_positions_end=open_positions_end,
@@ -97,11 +119,11 @@ def build_period_summary(
         "week_start": week_start.isoformat() if period == "weekly" else None,
         "week_end": week_end.isoformat() if period == "weekly" else None,
         "market_session": portfolio.get("market_session", ""),
-        "total_trading_days": len({record_date(record) for record in records if record_date(record)}) if period == "weekly" else None,
+        "total_trading_days": count_trading_days(records, period) if period == "weekly" else None,
         "total_scans": len(files),
         "total_tickers_scanned": len(records),
         "total_result_cards_read": len(records),
-        "BUY_SIMULATED_count": actions.get("BUY_SIMULATED", 0),
+        "BUY_SIMULATED_count": trade_actions.get("BUY_SIMULATED", actions.get("BUY_SIMULATED", 0)),
         "WATCH_READY_count": watch_ready_count,
         "WATCH_count": actions.get("WATCH", 0),
         "SKIP_count": actions.get("SKIP", 0),
@@ -110,11 +132,11 @@ def build_period_summary(
         "open_positions_end": open_positions_end,
         "positions_opened_today": positions_opened,
         "positions_closed_today": positions_closed,
-        "TP1_hits": actions.get("TAKE_PARTIAL_PROFIT", 0),
-        "TP2_hits": actions.get("TAKE_PROFIT", 0),
-        "SL_hits": actions.get("EXIT_STOP", 0),
-        "partial_exits": actions.get("TAKE_PARTIAL_PROFIT", 0),
-        "realized_pnl": portfolio.get("realized_pnl"),
+        "TP1_hits": trade_actions.get("TAKE_PARTIAL_PROFIT", actions.get("TAKE_PARTIAL_PROFIT", 0)),
+        "TP2_hits": trade_actions.get("TAKE_PROFIT", actions.get("TAKE_PROFIT", 0)),
+        "SL_hits": trade_actions.get("EXIT_STOP", actions.get("EXIT_STOP", 0)),
+        "partial_exits": trade_actions.get("TAKE_PARTIAL_PROFIT", actions.get("TAKE_PARTIAL_PROFIT", 0)),
+        "realized_pnl": portfolio.get("realized_pnl", realized_pnl_from_events(period_trade_events)),
         "unrealized_pnl": portfolio.get("unrealized_pnl"),
         "total_portfolio_value": portfolio.get("total_portfolio_value"),
         "daily_return_pct": portfolio.get("daily_return_pct") if period == "daily" else None,
@@ -141,9 +163,9 @@ def build_period_summary(
         },
         "errors_retries_timeouts": [],
         "data_quality_issues": counter_items(warning_counter(records)),
-        "total_BUY_SIMULATED": actions.get("BUY_SIMULATED", 0),
+        "total_BUY_SIMULATED": trade_actions.get("BUY_SIMULATED", actions.get("BUY_SIMULATED", 0)),
         "total_WATCH_READY": watch_ready_count,
-        "total_closed_trades": actions.get("TAKE_PROFIT", 0) + actions.get("EXIT_STOP", 0),
+        "total_closed_trades": positions_closed,
         "win_rate": round(len(winners) / len(r_values) * 100, 2) if r_values else None,
         "average_R": rounded_mean(r_values),
         "median_R": round(median(r_values), 4) if r_values else None,
@@ -151,7 +173,7 @@ def build_period_summary(
         "average_winner": rounded_mean(winners),
         "average_loser": rounded_mean(losers),
         "max_drawdown": None,
-        "best_setup_type": best_counter(setups),
+        "best_setup_type": best_counter(actionable_setups),
         "worst_setup_type": None,
         "best_shadow_strategy": best_shadow_strategy(shadow),
         "worst_shadow_strategy": worst_shadow_strategy(shadow),
@@ -192,6 +214,30 @@ def infer_open_positions_start(
     if open_positions_end is None:
         return fallback
     return max(0, int(round(end)) - positions_opened + positions_closed)
+
+
+def count_trading_days(records: list[dict[str, Any]], period: str) -> int | None:
+    if period != "weekly":
+        return None
+    return len(
+        {
+            current
+            for record in records
+            if (current := record_date(record)) is not None and current.isoweekday() <= 5
+        }
+    )
+
+
+def realized_pnl_from_events(events: list[dict[str, Any]]) -> float | None:
+    values = [
+        to_float(event.get("pnl_ils"))
+        for event in events
+        if event.get("action") in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}
+        and event.get("pnl_ils") not in (None, "")
+    ]
+    if not values:
+        return None
+    return round(sum(values), 2)
 
 
 def collect_records(decision_dir: Path, *, period: str, target_date: date) -> tuple[list[dict[str, Any]], list[Path]]:

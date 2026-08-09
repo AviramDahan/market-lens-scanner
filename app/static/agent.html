@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260809-collapse-near-miss" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260809-phase1-health" />
   </head>
   <body>
     <main class="agent-shell">
@@ -93,6 +93,16 @@
       </section>
 
       <section class="metric-grid" id="metricGrid"></section>
+
+      <section class="panel system-health-panel">
+        <div class="panel-head">
+          <div>
+            <h2>System Health</h2>
+            <p id="systemHealthMeta">Scanner, monitor and data sync status</p>
+          </div>
+        </div>
+        <div id="systemHealthGrid" class="system-health-grid"></div>
+      </section>
 
       <section class="panel positions-overview-panel" id="positionsOverviewPanel">
         <div class="panel-head">
@@ -238,6 +248,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260809-collapse-near-miss"></script>
+    <script src="/static/agent.js?v=20260809-phase1-health"></script>
   </body>
 </html>

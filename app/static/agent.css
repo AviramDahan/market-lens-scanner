@@ -242,6 +242,59 @@ h2 {
   background: var(--soft-amber);
 }
 
+.system-health-panel {
+  margin-top: 18px;
+}
+
+.system-health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.health-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.health-card.good {
+  border-color: #bfe4d1;
+  background: var(--soft-green);
+}
+
+.health-card.warn {
+  border-color: #efd3a5;
+  background: var(--soft-amber);
+}
+
+.health-card.bad {
+  border-color: #f1c5bf;
+  background: var(--soft-red);
+}
+
+.health-card span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.health-card strong {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.health-card small {
+  color: var(--muted);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .diagnostics-panel {
   margin-top: 18px;
 }

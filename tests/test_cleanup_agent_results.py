@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import time
 
 import pytest
 
@@ -88,6 +90,39 @@ def test_prune_directory_preserves_dashboard_referenced_media(tmp_path: Path) ->
         "market_lens_agent_20260714_120000_abc.png",
         "market_lens_agent_20260714_120002_abc.png",
     ]
+
+
+def test_prune_directory_applies_age_cap_but_keeps_preserved_media(tmp_path: Path) -> None:
+    media_dir = tmp_path / "agent_results" / "charts"
+    old = media_dir / "market_lens_agent_20260701_120000_old.png"
+    preserved_old = media_dir / "market_lens_agent_20260701_120000_preserved.png"
+    fresh = media_dir / "market_lens_agent_20260801_120000_fresh.png"
+    for index, path in enumerate([old, preserved_old, fresh]):
+        touch_file(path, index)
+    old_time = time.time() - 10 * 86400
+    old.touch()
+    preserved_old.touch()
+    old.write_text("old", encoding="utf-8")
+    preserved_old.write_text("preserved", encoding="utf-8")
+    fresh.write_text("fresh", encoding="utf-8")
+    for path in [old, preserved_old]:
+        path.touch()
+        time_tuple = (old_time, old_time)
+        os.utime(path, time_tuple)
+
+    result = prune_directory(
+        media_dir,
+        max_files=10,
+        max_age_days=5,
+        dry_run=False,
+        project_root=tmp_path,
+        preserve_paths={preserved_old.resolve()},
+    )
+
+    assert result["deleted"] == 1
+    assert not old.exists()
+    assert preserved_old.exists()
+    assert fresh.exists()
 
 
 def test_prune_directory_refuses_outside_project_root(tmp_path: Path) -> None:

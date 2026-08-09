@@ -18,6 +18,8 @@ from openpyxl import load_workbook
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 from app.charts import write_scan_chart
+from app.agent_dashboard import compute_realized_pnl as dashboard_compute_realized_pnl
+from app.agent_dashboard import read_trades as dashboard_read_trades
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.performance_summary import write_performance_summaries
 from app.scanner import scan_ticker_detail
@@ -1017,6 +1019,14 @@ def update_workbook(
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
+    trade_events: list[dict[str, Any]] = []
+    realized_pnl = None
+    try:
+        trade_analytics = dashboard_compute_realized_pnl(dashboard_read_trades(wb))
+        trade_events = trade_analytics.get("trades", [])
+        realized_pnl = round(float(trade_analytics.get("total") or 0), 2)
+    except Exception as exc:
+        errors.append(f"TRADE_ANALYTICS_FAILED: {exc}")
     performance_summary_paths: dict[str, Path] = {}
     try:
         performance_summary_paths = write_performance_summaries(
@@ -1033,11 +1043,14 @@ def update_workbook(
                 "cash": cash,
                 "exposure": exposure,
                 "open_risk": open_risk,
+                "realized_pnl": realized_pnl,
+                "unrealized_pnl": round(sum(pos["unrealized_ils"] for pos in open_positions.values()), 2),
                 "total_portfolio_value": round(cash + exposure, 2),
                 "daily_return_pct": round(((cash + exposure) - starting_capital) / starting_capital * 100, 4)
                 if starting_capital
                 else None,
             },
+            trade_events=trade_events,
         )
     except Exception as exc:
         errors.append(f"PERFORMANCE_SUMMARY_FAILED: {exc}")

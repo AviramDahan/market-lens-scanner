@@ -13,6 +13,9 @@ from app.agent_dashboard import (
     TRACKER_NAME,
     build_agent_dashboard,
     build_decision_diagnostics,
+    build_system_health,
+    compact_agent_dashboard_payload,
+    dashboard_section_payload,
     load_period_summary,
     parse_timestamp,
     sanitize_dashboard_media_urls,
@@ -138,6 +141,32 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
         dashboard["daily_summary"] = load_period_summary(summary_dir, "daily", latest_dt)
     if "weekly_summary" not in dashboard:
         dashboard["weekly_summary"] = load_period_summary(summary_dir, "weekly", latest_dt)
+    if "system_health" not in dashboard:
+        recent_runs = dashboard.get("recent_runs") if isinstance(dashboard.get("recent_runs"), list) else []
+        latest_update = recent_runs[-1] if recent_runs else latest_run
+        latest_scan_update = next(
+            (
+                update
+                for update in reversed(recent_runs)
+                if not str(update.get("run_id") or "").startswith("monitor_")
+            ),
+            latest_run,
+        )
+        latest_monitor_update = next(
+            (
+                update
+                for update in reversed(recent_runs)
+                if str(update.get("run_id") or "").startswith("monitor_")
+            ),
+            {},
+        )
+        dashboard["system_health"] = build_system_health(
+            tracker_path=AGENT_TRACKER_DIR / TRACKER_NAME,
+            updates=recent_runs,
+            latest_update=latest_update,
+            latest_scan_update=latest_scan_update,
+            latest_monitor_update=latest_monitor_update,
+        )
     return dashboard
 
 
@@ -161,10 +190,24 @@ def monitor_agent_dashboard() -> dict:
 
 
 @app.get("/agent/data")
-async def get_agent_dashboard(date: str | None = Query(default=None)) -> dict:
-    if not date:
-        return current_agent_dashboard()
-    return cached_agent_dashboard(date)
+async def get_agent_dashboard(
+    date: str | None = Query(default=None),
+    compact: bool = Query(default=True),
+    section: str | None = Query(default=None, pattern="^(actions|trades)$"),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100),
+) -> dict:
+    dashboard = current_agent_dashboard() if not date else cached_agent_dashboard(date)
+    if section:
+        return dashboard_section_payload(dashboard, section=section, offset=offset, limit=limit)
+    if compact:
+        return compact_agent_dashboard_payload(dashboard, action_limit=limit, trade_limit=limit)
+    if dashboard.get("status") == "ok":
+        dashboard["payload"] = {
+            "mode": "full",
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+    return dashboard
 
 
 @app.get("/agent/live-prices")

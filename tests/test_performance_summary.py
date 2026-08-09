@@ -203,3 +203,52 @@ def test_summary_counts_staged_watch_ready_without_counting_skips(tmp_path: Path
     assert daily["WATCH_READY_count"] == 1
     assert daily["WATCH_count"] == 1
     assert daily["SKIP_count"] == 1
+
+
+def test_summary_uses_trade_events_for_monitor_outcomes(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260805_153000.jsonl"
+    write_decisions(decision_path, sample_records())
+
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260805_153000",
+        timestamp="2026-08-05T15:30:00",
+        portfolio={"open_positions_end": 1, "total_portfolio_value": 100250},
+        trade_events=[
+            {
+                "timestamp": "2026-08-05T13:40:00",
+                "action": "BUY_SIMULATED",
+                "ticker": "AAA",
+            },
+            {
+                "timestamp": "2026-08-05T15:10:00",
+                "action": "TAKE_PARTIAL_PROFIT",
+                "ticker": "AAA",
+                "pnl_ils": 60,
+                "r_multiple": 1.15,
+            },
+            {
+                "timestamp": "2026-08-05T15:20:00",
+                "action": "EXIT_STOP",
+                "ticker": "BBB",
+                "pnl_ils": -40,
+                "r_multiple": -1,
+            },
+        ],
+    )
+
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+    weekly = json.loads(paths["weekly_summary_json"].read_text(encoding="utf-8"))
+
+    assert daily["BUY_SIMULATED_count"] == 1
+    assert daily["TP1_hits"] == 1
+    assert daily["SL_hits"] == 1
+    assert daily["positions_closed_today"] == 1
+    assert daily["realized_pnl"] == 20
+    assert weekly["total_closed_trades"] == 1
+    assert weekly["average_R"] == 0.075
+    assert weekly["best_setup_type"] == "Breakout + Retest"

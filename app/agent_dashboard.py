@@ -60,6 +60,8 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         else reconstruct_open_positions(scoped_trades, setup_rows, latest_run_timestamp)
     )
     realized = compute_realized_pnl(scoped_trades)
+    annotated_trades = realized.get("trades", scoped_trades)
+    latest_monitor_update = select_latest_monitor_update(updates, latest_update)
 
     cash = to_float(latest_update.get("cash_ils"), compute_cash(scoped_trades, starting_capital))
     exposure = to_float(
@@ -136,6 +138,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "run_id": latest_update.get("run_id"),
             "tickers": latest_update.get("tickers", []),
             "valid_setups": latest_update.get("valid_setups", 0),
+            "trade_ready_setups": count_trade_ready(latest_setups),
             "actions_summary": latest_update.get("actions_summary", ""),
             "screenshot_url": latest_screenshot,
             "summary_url": resolve_asset_url(latest_summary_path),
@@ -156,14 +159,105 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         "decision_diagnostics": build_decision_diagnostics(latest_setups),
         "daily_summary": daily_summary,
         "weekly_summary": weekly_summary,
+        "system_health": build_system_health(
+            tracker_path=tracker_path,
+            updates=scoped_updates,
+            latest_update=latest_update,
+            latest_scan_update=latest_scan_update,
+            latest_monitor_update=latest_monitor_update,
+        ),
         "open_positions": open_positions,
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
-        "recent_trades": scoped_trades[-30:],
-        "closed_trades": realized["closed"][-30:],
+        "recent_trades": annotated_trades,
+        "closed_trades": realized["closed"],
         "score_calibration": build_score_calibration(realized["closed"]),
         "recent_runs": scoped_updates[-20:],
+        "pagination": {
+            "actions": {"total": len(latest_setups), "returned": len(latest_setups), "offset": 0},
+            "trades": {
+                "total": len(annotated_trades),
+                "closed_total": len(realized["closed"]),
+                "returned": len(annotated_trades),
+                "offset": 0,
+            },
+        },
     }
     return sanitize_dashboard_media_urls(dashboard, project_root)
+
+
+def compact_agent_dashboard_payload(
+    dashboard: dict[str, Any],
+    *,
+    action_limit: int = 10,
+    trade_limit: int = 10,
+) -> dict[str, Any]:
+    """Return the same dashboard shape with heavy expandable collections trimmed."""
+    if dashboard.get("status") != "ok":
+        return dashboard
+
+    actions = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
+    trades = dashboard.get("recent_trades") if isinstance(dashboard.get("recent_trades"), list) else []
+    closed = dashboard.get("closed_trades") if isinstance(dashboard.get("closed_trades"), list) else []
+    compact = dict(dashboard)
+    compact["latest_setups"] = actions[: max(0, action_limit)]
+    compact["latest_decisions"] = []
+    compact["recent_trades"] = list(reversed(trades))[: max(0, trade_limit)]
+    compact["closed_trades"] = closed[: max(0, trade_limit)]
+    compact["payload"] = {
+        "mode": "compact",
+        "generated_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+    }
+    compact["pagination"] = {
+        **(dashboard.get("pagination") if isinstance(dashboard.get("pagination"), dict) else {}),
+        "actions": {
+            "total": len(actions),
+            "returned": len(compact["latest_setups"]),
+            "offset": 0,
+            "has_more": len(actions) > len(compact["latest_setups"]),
+        },
+        "trades": {
+            "total": len(trades),
+            "closed_total": len(closed),
+            "returned": len(compact["recent_trades"]),
+            "offset": 0,
+            "has_more": len(trades) > len(compact["recent_trades"]),
+        },
+    }
+    latest_run = compact.get("latest_run")
+    if isinstance(latest_run, dict):
+        latest_run["summary_text"] = trim_text(str(latest_run.get("summary_text") or ""), 24_000)
+    return compact
+
+
+def dashboard_section_payload(
+    dashboard: dict[str, Any],
+    *,
+    section: str,
+    offset: int = 0,
+    limit: int = 10,
+) -> dict[str, Any]:
+    offset = max(0, offset)
+    limit = max(1, min(limit, 100))
+    if dashboard.get("status") != "ok":
+        return dashboard
+    if section == "actions":
+        items = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
+    elif section == "trades":
+        items = list(reversed(dashboard.get("recent_trades") if isinstance(dashboard.get("recent_trades"), list) else []))
+    else:
+        return {"status": "error", "error": f"Unknown dashboard section: {section}"}
+    page = items[offset : offset + limit]
+    if section == "trades":
+        page = list(page)
+    return {
+        "status": "ok",
+        "section": section,
+        "offset": offset,
+        "limit": limit,
+        "total": len(items),
+        "has_more": offset + len(page) < len(items),
+        "items": page,
+    }
 
 
 def load_period_summary(summary_dir: Path, period: str, timestamp: datetime) -> dict[str, Any]:
@@ -251,6 +345,64 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             or any(str(warning).upper().startswith("WATCH_READY:") for warning in (setup.get("decision_json") or {}).get("warnings") or [])
         ),
     }
+
+
+def count_trade_ready(setups: list[dict[str, Any]]) -> int:
+    total = 0
+    for setup in setups:
+        action = str(setup.get("action") or (setup.get("decision_json") or {}).get("final_action") or "").upper()
+        if action in {"BUY_SIMULATED", "WATCH_READY"}:
+            total += 1
+    return total
+
+
+def build_system_health(
+    *,
+    tracker_path: Path,
+    updates: list[dict[str, Any]],
+    latest_update: dict[str, Any],
+    latest_scan_update: dict[str, Any],
+    latest_monitor_update: dict[str, Any],
+) -> dict[str, Any]:
+    now = datetime.utcnow().replace(microsecond=0)
+    latest_scan_at = parse_timestamp(latest_scan_update.get("timestamp"))
+    latest_monitor_at = parse_timestamp(latest_monitor_update.get("timestamp"))
+    latest_update_at = parse_timestamp(latest_update.get("timestamp"))
+    scan_age = age_minutes(now, latest_scan_at)
+    monitor_age = age_minutes(now, latest_monitor_at)
+    notes = []
+    if not latest_scan_update:
+        notes.append("No scanner update found in tracker.")
+    elif scan_age is not None and scan_age > 36 * 60:
+        notes.append("Latest scanner update is older than 36 hours.")
+    if not latest_monitor_update:
+        notes.append("No position-monitor update found yet.")
+    try:
+        tracker_mtime = datetime.utcfromtimestamp(tracker_path.stat().st_mtime).replace(microsecond=0)
+    except OSError:
+        tracker_mtime = datetime.min
+        notes.append("Tracker file timestamp is unavailable.")
+
+    return {
+        "status": "ok" if not notes else "attention",
+        "generated_at": now.isoformat() + "Z",
+        "tracker_updated_at": tracker_mtime.isoformat() + "Z" if tracker_mtime != datetime.min else "",
+        "latest_update_at": latest_update_at.isoformat() if latest_update_at != datetime.min else "",
+        "latest_scan_at": latest_scan_at.isoformat() if latest_scan_at != datetime.min else "",
+        "latest_scan_run_id": latest_scan_update.get("run_id", ""),
+        "latest_scan_age_minutes": scan_age,
+        "latest_monitor_at": latest_monitor_at.isoformat() if latest_monitor_at != datetime.min else "",
+        "latest_monitor_run_id": latest_monitor_update.get("run_id", ""),
+        "latest_monitor_age_minutes": monitor_age,
+        "recent_runs_loaded": len(updates),
+        "notes": notes,
+    }
+
+
+def age_minutes(now: datetime, timestamp: datetime) -> int | None:
+    if timestamp == datetime.min:
+        return None
+    return max(0, int((now - timestamp).total_seconds() // 60))
 
 
 def sanitize_dashboard_media_urls(value: Any, project_root: Path) -> Any:
@@ -343,11 +495,14 @@ def read_trades(wb: Any) -> list[dict[str, Any]]:
     rows = []
     ws = wb["Trade Log"]
     for row in data_rows(ws):
+        action = row[1]
+        price = row[3] if action == "BUY_SIMULATED" else row[4]
         trade = with_ticker_meta(
             {
                 "timestamp": row[0],
-                "action": row[1],
+                "action": action,
                 "ticker": row[2],
+                "price_usd": round(to_float(price), 2) if price is not None else None,
                 "entry_price_usd": round(to_float(row[3]), 2) if row[3] is not None else None,
                 "exit_price_usd": round(to_float(row[4]), 2) if row[4] is not None else None,
                 "quantity": to_int(row[5]),
@@ -365,6 +520,18 @@ def read_trades(wb: Any) -> list[dict[str, Any]]:
                 "chart_url": resolve_asset_url(cell(row, 17)),
                 "selection_context": cell(row, 18),
                 "decision_json": parse_json(cell(row, 19), {}),
+                "trade_id": cell(row, 20),
+                "setup_score_bucket": cell(row, 21),
+                "entry_confirmation_status": cell(row, 22),
+                "mfe": cell(row, 23, None),
+                "mae": cell(row, 24, None),
+                "r_multiple": cell(row, 25, None),
+                "duration": cell(row, 26),
+                "exit_reason": cell(row, 27),
+                "outcome_after_1d": cell(row, 28, None),
+                "outcome_after_3d": cell(row, 29, None),
+                "outcome_after_5d": cell(row, 30, None),
+                "outcome_after_10d": cell(row, 31, None),
             }
         )
         rows.append(with_trade_potential(trade))
@@ -439,6 +606,18 @@ def select_latest_scan_update(updates: list[dict[str, Any]], latest_update: dict
         end_index = updates.index(latest_update)
     for update in reversed(updates[: end_index + 1]):
         if not is_monitor_update(update):
+            return update
+    return {}
+
+
+def select_latest_monitor_update(updates: list[dict[str, Any]], latest_update: dict[str, Any]) -> dict[str, Any]:
+    if not updates:
+        return {}
+    end_index = len(updates) - 1
+    if latest_update in updates:
+        end_index = updates.index(latest_update)
+    for update in reversed(updates[: end_index + 1]):
+        if is_monitor_update(update):
             return update
     return {}
 
@@ -651,44 +830,81 @@ def compute_cash(trades: list[dict[str, Any]], starting_capital: float) -> float
 def compute_realized_pnl(trades: list[dict[str, Any]]) -> dict[str, Any]:
     lots: dict[str, deque[dict[str, float]]] = defaultdict(deque)
     closed = []
+    annotated = []
     total = 0.0
     wins = 0
     losses = 0
 
     for trade in trades:
+        annotated_trade = dict(trade)
         ticker = str(trade.get("ticker") or "")
         quantity = to_int(trade.get("quantity"))
         action = str(trade.get("action") or "")
         if quantity <= 0 or not ticker:
+            annotated.append(annotated_trade)
             continue
 
         if action == "BUY_SIMULATED":
             cost = to_float(trade.get("cash_out_ils"), trade.get("buy_value_ils"))
-            lots[ticker].append({"quantity": quantity, "unit_cost": cost / quantity if quantity else 0})
+            lots[ticker].append(
+                {
+                    "quantity": quantity,
+                    "unit_cost": cost / quantity if quantity else 0,
+                    "entry_price": to_float(trade.get("entry_price_usd"), trade.get("price_usd")),
+                    "stop_loss": to_float(trade.get("stop_loss")),
+                }
+            )
+            annotated.append(annotated_trade)
             continue
 
         if action not in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            annotated.append(annotated_trade)
             continue
 
         remaining = quantity
         cost_basis = 0.0
+        entry_value = 0.0
+        stop_value = 0.0
         while remaining > 0 and lots[ticker]:
             lot = lots[ticker][0]
             used = min(remaining, int(lot["quantity"]))
             cost_basis += used * lot["unit_cost"]
+            entry_value += used * lot.get("entry_price", 0)
+            stop_value += used * lot.get("stop_loss", 0)
             lot["quantity"] -= used
             remaining -= used
             if lot["quantity"] <= 0:
                 lots[ticker].popleft()
 
+        matched_quantity = quantity - remaining
         cash_in = to_float(trade.get("cash_in_ils"), trade.get("sell_value_ils"))
+        exit_price = to_float(trade.get("exit_price_usd"), trade.get("price_usd"))
+        avg_entry = entry_value / matched_quantity if matched_quantity else to_float(trade.get("entry_price_usd"))
+        avg_stop = stop_value / matched_quantity if matched_quantity else to_float(trade.get("stop_loss"))
+        if cost_basis <= 0 and avg_entry and exit_price:
+            cost_basis = avg_entry * quantity * to_float(trade.get("usd_ils"), 1.0)
         pnl = round(cash_in - cost_basis, 2)
+        pnl_pct = round(pnl / cost_basis * 100, 2) if cost_basis else 0
+        r_multiple = to_float(trade.get("r_multiple"))
+        if not r_multiple and avg_entry > avg_stop > 0 and exit_price:
+            r_multiple = round((exit_price - avg_entry) / (avg_entry - avg_stop), 4)
+        annotated_trade.update(
+            {
+                "entry_price_usd": round(avg_entry, 2) if avg_entry else trade.get("entry_price_usd"),
+                "price_usd": round(exit_price, 2) if exit_price else trade.get("price_usd"),
+                "cost_basis_ils": round(cost_basis, 2),
+                "pnl_ils": pnl,
+                "pnl_pct": pnl_pct,
+                "r_multiple": r_multiple,
+            }
+        )
         total += pnl
         wins += 1 if pnl > 0 else 0
         losses += 1 if pnl < 0 else 0
-        closed.append({**trade, "cost_basis_ils": round(cost_basis, 2), "pnl_ils": pnl})
+        closed.append(annotated_trade)
+        annotated.append(annotated_trade)
 
-    return {"total": total, "closed": closed, "wins": wins, "losses": losses}
+    return {"total": total, "closed": closed, "wins": wins, "losses": losses, "trades": annotated}
 
 
 def build_score_calibration(closed_trades: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -758,6 +974,12 @@ def parse_json(value: Any, default: Any) -> Any:
         return json.loads(str(value))
     except (TypeError, ValueError, json.JSONDecodeError):
         return default
+
+
+def trim_text(value: str, max_chars: int) -> str:
+    if len(value) <= max_chars:
+        return value
+    return value[:max_chars].rstrip() + "\n\n[Summary trimmed for dashboard load speed.]"
 
 
 def data_rows(ws: Any) -> list[tuple[Any, ...]]:
