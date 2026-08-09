@@ -100,8 +100,8 @@ def format_position_opened_message(
         f"Quantity: {_escape(position.get('quantity', 0))}",
         f"Exposure: {_money(position.get('exposure_ils'))}",
         f"Risk: {_money(position.get('risk_ils'))}",
-        f"Stop: {_money(position.get('stop_loss'))}",
-        f"Targets: {_money(position.get('target_1'))} / {_money(position.get('target_2'))}",
+        f"Stop: {_price_with_percent(position.get('stop_loss'), position.get('entry_price') or getattr(result, 'current_price', 0))}",
+        f"Targets: {_price_with_percent(position.get('target_1'), position.get('entry_price') or getattr(result, 'current_price', 0))} / {_price_with_percent(position.get('target_2'), position.get('entry_price') or getattr(result, 'current_price', 0))}",
         "",
         f"Setup score: {_number(getattr(result, 'score', 0), 2)}",
         f"Net R/R: {_number(decision_json.get('net_rr'), 2)}",
@@ -148,8 +148,8 @@ def format_position_event_message(
         f"Cash in: {_money(getattr(event, 'cash_in', None))}",
         "",
         f"Entry: {_money(entry)}",
-        f"Stop: {_money(position.get('stop_loss'))}",
-        f"Targets: {_money(position.get('target_1'))} / {_money(position.get('target_2'))}",
+        f"Stop: {_price_with_percent(position.get('stop_loss'), entry)}",
+        f"Targets: {_price_with_percent(position.get('target_1'), entry)} / {_price_with_percent(position.get('target_2'), entry)}",
         f"Bar H/L/C: {_money(getattr(event, 'high', None))} / {_money(getattr(event, 'low', None))} / {_money(getattr(event, 'close', None))}",
         "",
         f"Note: {_escape(_shorten(getattr(event, 'note', '')))}",
@@ -194,6 +194,14 @@ def _money(value: Any) -> str:
         return "-"
 
 
+def _price_with_percent(value: Any, entry: Any) -> str:
+    price = _money(value)
+    percent = _percent_from_entry(value, entry)
+    if percent == "-":
+        return price
+    return f"{price} ({percent})"
+
+
 def _signed_money(value: Any) -> str:
     amount = _to_float(value)
     if value is None:
@@ -207,6 +215,16 @@ def _number(value: Any, digits: int = 2) -> str:
         return f"{float(value):.{digits}f}"
     except (TypeError, ValueError):
         return "-"
+
+
+def _percent_from_entry(value: Any, entry: Any) -> str:
+    target = _to_float(value)
+    base = _to_float(entry)
+    if target <= 0 or base <= 0:
+        return "-"
+    change = ((target - base) / base) * 100
+    sign = "+" if change > 0 else ""
+    return f"{sign}{change:.2f}%"
 
 
 def _shorten(value: Any, limit: int = 700) -> str:

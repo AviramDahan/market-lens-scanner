@@ -54,6 +54,21 @@ const usd = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
+function percentFromEntry(level, entry) {
+  const numericLevel = Number(level || 0);
+  const numericEntry = Number(entry || 0);
+  if (!numericLevel || !numericEntry) return "";
+  const change = ((numericLevel - numericEntry) / numericEntry) * 100;
+  const sign = change > 0 ? "+" : "";
+  return `${sign}${change.toFixed(2)}%`;
+}
+
+function formatLevelWithPercent(level, entry) {
+  const price = usd.format(Number(level || 0));
+  const percent = percentFromEntry(level, entry);
+  return percent ? `${price} (${percent})` : price;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const selectedDate = params.get("date") || "";
@@ -671,8 +686,8 @@ function renderPositionsOverview(positions, liveUpdatedAt = "") {
           <div class="position-mini-grid">
             <span><b>Entry</b>${usd.format(position.entry_price_usd)}</span>
             <span><b>Now</b>${usd.format(position.current_price_usd)}</span>
-            <span><b>Stop</b>${usd.format(position.stop_loss)}</span>
-            <span><b>TP</b>${usd.format(position.target_1)} / ${usd.format(position.target_2)}</span>
+            <span><b>Stop</b>${formatLevelWithPercent(position.stop_loss, position.entry_price_usd)}</span>
+            <span><b>TP</b>${formatLevelWithPercent(position.target_1, position.entry_price_usd)} / ${formatLevelWithPercent(position.target_2, position.entry_price_usd)}</span>
             <span><b>Exposure</b>${money.format(position.exposure_ils)}</span>
             <span><b>P/L</b><em class="${pnlClass}">${formatSignedMoney(position.unrealized_pnl_ils)}</em></span>
           </div>
@@ -712,8 +727,8 @@ function renderPositions(positions, liveUpdatedAt = "") {
           <td>${position.quantity}</td>
           <td>${usd.format(position.entry_price_usd)}</td>
           <td>${usd.format(position.current_price_usd)}</td>
-          <td>${usd.format(position.stop_loss)}</td>
-          <td>${usd.format(position.target_1)} / ${usd.format(position.target_2)}</td>
+          <td>${formatLevelWithPercent(position.stop_loss, position.entry_price_usd)}</td>
+          <td>${formatLevelWithPercent(position.target_1, position.entry_price_usd)} / ${formatLevelWithPercent(position.target_2, position.entry_price_usd)}</td>
           <td class="${position.unrealized_pnl_ils >= 0 ? "money-pos" : "money-neg"}">${formatSignedMoney(position.unrealized_pnl_ils)}</td>
           <td>${money.format(position.exposure_ils)}</td>
           <td>${money.format(position.open_risk_ils)}</td>

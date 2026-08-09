@@ -110,7 +110,8 @@ def test_position_opened_message_contains_trade_plan() -> None:
     assert "BUY_SIMULATED opened" in message
     assert "NVDA" in message
     assert "$210.00" in message
-    assert "$195.00" in message
+    assert "$195.00 (-7.14%)" in message
+    assert "$225.00 (+7.14%) / $245.00 (+16.67%)" in message
     assert "2.34" in message
     assert "https://example.com/agent" in message
 
@@ -241,6 +242,8 @@ def test_position_event_message_contains_exit_details() -> None:
     assert "TP1 hit - partial profit" in message
     assert "BA" in message
     assert "$215.00" in message
+    assert "$190.00 (-5.00%)" in message
+    assert "$215.00 (+7.50%) / $230.00 (+15.00%)" in message
     assert "+$75.00" in message
     assert "stop moves to breakeven" in message
     assert "https://example.com/agent" in message
