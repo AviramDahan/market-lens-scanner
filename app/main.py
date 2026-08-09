@@ -77,6 +77,11 @@ async def ui() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> PlainTextResponse:
+    return PlainTextResponse("", status_code=204)
+
+
 @app.get("/agent", include_in_schema=False)
 async def agent_ui() -> FileResponse:
     return FileResponse(STATIC_DIR / "agent.html")
