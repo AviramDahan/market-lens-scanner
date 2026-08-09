@@ -218,7 +218,7 @@ def env_bool(name: str, default: bool) -> bool:
 def chart_retention_settings() -> ChartRetentionSettings:
     return ChartRetentionSettings(
         save_rejected_charts=env_bool("MARKET_LENS_SAVE_REJECTED_CHARTS", False),
-        rejected_chart_limit=max(0, int(os.getenv("MARKET_LENS_REJECTED_CHART_LIMIT", "5"))),
+        rejected_chart_limit=max(0, int(os.getenv("MARKET_LENS_REJECTED_CHART_LIMIT", "15"))),
         rejected_chart_min_score=float(os.getenv("MARKET_LENS_REJECTED_CHART_MIN_SCORE", "0.40")),
     )
 

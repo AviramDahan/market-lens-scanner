@@ -1772,7 +1772,7 @@ Defaults:
 
 ```text
 MARKET_LENS_SAVE_REJECTED_CHARTS=false
-MARKET_LENS_REJECTED_CHART_LIMIT=5
+MARKET_LENS_REJECTED_CHART_LIMIT=15
 MARKET_LENS_REJECTED_CHART_MIN_SCORE=0.40
 ```
 
@@ -1908,4 +1908,3 @@ Not every good stock is a trade.
 Not every setup is an entry.
 An entry happens only when the technical setup, market, sector, risk, execution, and portfolio context all align.
 ```
-
