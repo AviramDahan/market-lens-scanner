@@ -282,6 +282,7 @@ def load_period_summary(summary_dir: Path, period: str, timestamp: datetime) -> 
 def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
     blockers: dict[str, int] = defaultdict(int)
     action_counts: dict[str, int] = defaultdict(int)
+    drilldowns: dict[str, list[dict[str, Any]]] = defaultdict(list)
     near_misses: list[dict[str, Any]] = []
 
     for setup in setups:
@@ -292,38 +293,37 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
         reason = str(setup.get("reason") or decision.get("reason") or "")
         warnings = " ".join(str(warning) for warning in decision.get("warnings") or [])
         text = f"{reason} {warnings}".lower()
+        drilldown_item = diagnostic_drilldown_item(setup, decision, action, setup_type, reason)
+
+        if action == "BUY_SIMULATED":
+            drilldowns["BUY"].append(drilldown_item)
+        if action == "WATCH_READY" or any(
+            str(warning).upper().startswith("WATCH_READY:") for warning in decision.get("warnings") or []
+        ):
+            drilldowns["WATCH_READY"].append(drilldown_item)
 
         if setup_type.lower() == "no trade" or "no trade result" in text:
             blockers["No Trade"] += 1
         if "risk/reward" in text or "net r/r" in text or "weighted" in text:
             blockers["R/R below gate"] += 1
+            drilldowns["RR_BLOCKED"].append(drilldown_item)
         if "setup score" in text:
             blockers["Setup score below gate"] += 1
+            drilldowns["SCORE_BLOCKED"].append(drilldown_item)
         if "entry confirmation" in text or "confirmed entry" in text or "confirmation failed" in text:
             blockers["Entry confirmation missing"] += 1
+            drilldowns["CONFIRM_BLOCKED"].append(drilldown_item)
         if "earnings blackout" in text:
             blockers["Earnings blackout"] += 1
+            drilldowns["WEAK_EARNINGS"].append(drilldown_item)
         if "bear market regime blocks" in text:
             blockers["BEAR blocks new buys"] += 1
         if "sector regime is weak" in text or "weak sector" in text:
             blockers["Weak sector"] += 1
+            drilldowns["WEAK_EARNINGS"].append(drilldown_item)
 
         if action in {"WATCH", "WATCH_READY", "SKIP"} and setup_type and setup_type.lower() != "no trade":
-            near_misses.append(
-                {
-                    "ticker": setup.get("ticker"),
-                    "company_name": setup.get("company_name", ""),
-                    "sector": setup.get("sector", ""),
-                    "action": action,
-                    "setup_type": setup_type,
-                    "setup_score": round(to_float(setup.get("setup_score") or decision.get("setup_score")), 3),
-                    "net_rr": round(to_float(decision.get("net_rr") or setup.get("net_rr")), 3),
-                    "net_rr_1": round(to_float(decision.get("net_rr_1")), 3),
-                    "weighted_net_rr": round(to_float(decision.get("weighted_net_rr")), 3),
-                    "entry_confirmation_passed": bool(decision.get("entry_confirmation_passed")),
-                    "reason": reason,
-                }
-            )
+            near_misses.append(drilldown_item)
 
     near_misses.sort(
         key=lambda item: (
@@ -338,6 +338,9 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
         "action_counts": dict(sorted(action_counts.items())),
         "blockers": dict(sorted(blockers.items(), key=lambda item: item[1], reverse=True)),
         "near_misses": near_misses[:10],
+        "drilldowns": {
+            key: sorted_unique_diagnostic_items(items)[:60] for key, items in sorted(drilldowns.items())
+        },
         "watch_ready_count": sum(
             1
             for setup in setups
@@ -345,6 +348,64 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             or any(str(warning).upper().startswith("WATCH_READY:") for warning in (setup.get("decision_json") or {}).get("warnings") or [])
         ),
     }
+
+
+def diagnostic_drilldown_item(
+    setup: dict[str, Any],
+    decision: dict[str, Any],
+    action: str,
+    setup_type: str,
+    reason: str,
+) -> dict[str, Any]:
+    return {
+        "ticker": setup.get("ticker"),
+        "company_name": setup.get("company_name", ""),
+        "sector": setup.get("sector", "") or decision.get("sector", ""),
+        "action": action,
+        "setup_type": setup_type,
+        "setup_score": round(to_float(setup.get("setup_score") or decision.get("setup_score") or setup.get("score")), 3),
+        "net_rr": round(to_float(decision.get("net_rr") or setup.get("net_rr") or setup.get("risk_reward")), 3),
+        "net_rr_1": round(to_float(decision.get("net_rr_1")), 3),
+        "net_rr_2": round(to_float(decision.get("net_rr_2")), 3),
+        "weighted_net_rr": round(to_float(decision.get("weighted_net_rr")), 3),
+        "entry_confirmation_passed": bool(decision.get("entry_confirmation_passed")),
+        "market_regime": decision.get("market_regime", ""),
+        "sector_regime": decision.get("sector_regime", ""),
+        "current_price_usd": setup.get("current_price_usd") or decision.get("price"),
+        "buy_zone_low": setup.get("buy_zone_low") or decision.get("buy_zone_low"),
+        "buy_zone_high": setup.get("buy_zone_high") or decision.get("buy_zone_high"),
+        "stop_loss": setup.get("stop_loss") or decision.get("stop_loss"),
+        "target_1": setup.get("target_1") or decision.get("target_1"),
+        "target_2": setup.get("target_2") or decision.get("target_2"),
+        "chart_url": setup.get("chart_url", ""),
+        "selection_context": setup.get("selection_context", ""),
+        "reason": reason,
+    }
+
+
+def sorted_unique_diagnostic_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen = set()
+    unique = []
+    for item in sorted(
+        items,
+        key=lambda candidate: (
+            candidate.get("action") == "WATCH_READY",
+            to_float(candidate.get("setup_score")),
+            to_float(candidate.get("weighted_net_rr") or candidate.get("net_rr")),
+        ),
+        reverse=True,
+    ):
+        key = (
+            item.get("ticker"),
+            item.get("action"),
+            item.get("setup_type"),
+            item.get("reason"),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    return unique
 
 
 def count_trade_ready(setups: list[dict[str, Any]]) -> int:

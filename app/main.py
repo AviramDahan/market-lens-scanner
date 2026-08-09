@@ -136,7 +136,8 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     """Backfill lightweight analytics when Render is serving an older snapshot."""
     dashboard = sanitize_dashboard_media_urls(dashboard, PROJECT_ROOT)
     latest_setups = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
-    if "decision_diagnostics" not in dashboard:
+    decision_diagnostics = dashboard.get("decision_diagnostics")
+    if not isinstance(decision_diagnostics, dict) or "drilldowns" not in decision_diagnostics:
         dashboard["decision_diagnostics"] = build_decision_diagnostics(latest_setups)
 
     latest_run = dashboard.get("latest_run") if isinstance(dashboard.get("latest_run"), dict) else {}

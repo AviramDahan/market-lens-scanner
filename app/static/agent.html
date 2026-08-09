@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260809-phase1-health" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260809-diagnostics-modal" />
   </head>
   <body>
     <main class="agent-shell">
@@ -247,7 +247,23 @@
       <img id="mediaModalImage" alt="Expanded chart" />
     </div>
 
+    <div id="diagnosticModal" class="diagnostic-modal" aria-hidden="true">
+      <div class="diagnostic-modal-panel" role="dialog" aria-modal="true" aria-labelledby="diagnosticModalTitle">
+        <div class="diagnostic-modal-head">
+          <div>
+            <span id="diagnosticModalEyebrow">Entry Diagnostics</span>
+            <h2 id="diagnosticModalTitle">Setup details</h2>
+            <p id="diagnosticModalMeta">Waiting for data</p>
+          </div>
+          <button id="diagnosticModalClose" class="icon-only" type="button" title="Close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div id="diagnosticModalBody" class="diagnostic-modal-body"></div>
+      </div>
+    </div>
+
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260809-phase1-health"></script>
+    <script src="/static/agent.js?v=20260809-diagnostics-modal"></script>
   </body>
 </html>

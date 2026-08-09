@@ -105,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   setupCollapsibleSections();
   setupMediaModal();
+  setupDiagnosticModal();
   loadDashboard(selectedDate);
   updateScheduleIndicators();
   state.scheduleTimer = window.setInterval(updateScheduleIndicators, 1000);
@@ -663,25 +664,31 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   const blockers = diagnostics.blockers || {};
   const actionCounts = diagnostics.action_counts || {};
   const cards = [
-    ["BUY", actionCounts.BUY_SIMULATED || dailySummary.BUY_SIMULATED_count || 0, "Actual simulated entries"],
-    ["WATCH_READY", diagnostics.watch_ready_count || dailySummary.WATCH_READY_count || 0, "Closest staged candidates"],
-    ["R/R Blocked", blockers["R/R below gate"] || 0, "Failed weighted/net reward"],
-    ["Score Blocked", blockers["Setup score below gate"] || 0, "Below regime threshold"],
-    ["Confirm Blocked", blockers["Entry confirmation missing"] || 0, "No completed-candle confirmation"],
-    ["Weak/Earnings", (blockers["Weak sector"] || 0) + (blockers["Earnings blackout"] || 0), "Sector or earnings risk"],
+    { key: "BUY", label: "BUY", value: actionCounts.BUY_SIMULATED || dailySummary.BUY_SIMULATED_count || 0, detail: "Actual simulated entries" },
+    { key: "WATCH_READY", label: "WATCH_READY", value: diagnostics.watch_ready_count || dailySummary.WATCH_READY_count || 0, detail: "Closest staged candidates" },
+    { key: "RR_BLOCKED", label: "R/R Blocked", value: blockers["R/R below gate"] || 0, detail: "Failed weighted/net reward" },
+    { key: "SCORE_BLOCKED", label: "Score Blocked", value: blockers["Setup score below gate"] || 0, detail: "Below regime threshold" },
+    { key: "CONFIRM_BLOCKED", label: "Confirm Blocked", value: blockers["Entry confirmation missing"] || 0, detail: "No completed-candle confirmation" },
+    { key: "WEAK_EARNINGS", label: "Weak/Earnings", value: (blockers["Weak sector"] || 0) + (blockers["Earnings blackout"] || 0), detail: "Sector or earnings risk" },
   ];
 
   grid.innerHTML = cards
     .map(
-      ([label, value, detail]) => `
-        <div class="diagnostic-card">
-          <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value)}</strong>
-          <small>${escapeHtml(detail)}</small>
-        </div>
+      (card) => `
+        <button class="diagnostic-card" type="button" data-diagnostic-key="${escapeHtml(card.key)}" data-diagnostic-label="${escapeHtml(card.label)}">
+          <span>${escapeHtml(card.label)}</span>
+          <strong>${escapeHtml(card.value)}</strong>
+          <small>${escapeHtml(card.detail)}</small>
+          <em>View setups</em>
+        </button>
       `,
     )
     .join("");
+  grid.querySelectorAll("[data-diagnostic-key]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openDiagnosticModal(button.dataset.diagnosticKey || "", button.dataset.diagnosticLabel || "Setups");
+    });
+  });
 
   const nearMisses = diagnostics.near_misses || [];
   meta.textContent = `${nearMisses.length} shown / ${diagnostics.total_results || 0} scan results`;
@@ -712,6 +719,105 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   if (weeklyRecommendation) {
     meta.textContent += ` - Weekly: ${weeklyRecommendation}`;
   }
+}
+
+function setupDiagnosticModal() {
+  const modal = document.getElementById("diagnosticModal");
+  const close = document.getElementById("diagnosticModalClose");
+  if (!modal || !close) return;
+  close.addEventListener("click", closeDiagnosticModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeDiagnosticModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !event.marketLensMediaHandled) closeDiagnosticModal();
+  });
+}
+
+function openDiagnosticModal(key, label) {
+  const modal = document.getElementById("diagnosticModal");
+  const title = document.getElementById("diagnosticModalTitle");
+  const meta = document.getElementById("diagnosticModalMeta");
+  const body = document.getElementById("diagnosticModalBody");
+  if (!modal || !title || !meta || !body) return;
+
+  const diagnostics = state.data?.decision_diagnostics || {};
+  const groups = diagnostics.drilldowns || {};
+  const items = groups[key] || [];
+  title.textContent = label;
+  meta.textContent = items.length
+    ? `${items.length} setup${items.length === 1 ? "" : "s"} in the latest scan`
+    : "No matching setups in the latest scan";
+  body.innerHTML = renderDiagnosticItems(items);
+  body.querySelectorAll(".diagnostic-chart-button").forEach((button) => {
+    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
+  });
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
+function closeDiagnosticModal() {
+  const modal = document.getElementById("diagnosticModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function renderDiagnosticItems(items) {
+  if (!items.length) {
+    return '<div class="empty-state">No setups match this diagnostic bucket.</div>';
+  }
+  return items
+    .map((item) => {
+      const score = Number(item.setup_score || 0);
+      const net = Number(item.weighted_net_rr || item.net_rr || 0);
+      const rr1 = Number(item.net_rr_1 || 0);
+      const rr2 = Number(item.net_rr_2 || 0);
+      const chart = item.chart_url
+        ? `<button class="diagnostic-chart-button" type="button" data-full-src="${escapeHtml(item.chart_url)}?v=${Date.now()}">
+            <img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" />
+          </button>`
+        : `<div class="diagnostic-chart-missing"><span>No chart saved</span></div>`;
+      return `
+        <article class="diagnostic-detail-card">
+          ${chart}
+          <div class="diagnostic-detail-copy">
+            <div class="diagnostic-detail-head">
+              <div class="ticker-cell">
+                <strong>${escapeHtml(tickerLabel(item))}</strong>
+                <span class="meta">${escapeHtml(tickerMeta(item, item.setup_type || "Setup"))}</span>
+              </div>
+              <span class="${actionBadgeClass(item.action)}">${escapeHtml(item.action || "UNKNOWN")}</span>
+            </div>
+            <div class="diagnostic-metrics">
+              <span><b>Score</b>${score.toFixed(2)}</span>
+              <span><b>Weighted R/R</b>${net.toFixed(2)}x</span>
+              <span><b>T1/T2 R/R</b>${rr1.toFixed(2)}x / ${rr2.toFixed(2)}x</span>
+              <span><b>Market</b>${escapeHtml(item.market_regime || "Unknown")}</span>
+              <span><b>Sector</b>${escapeHtml(item.sector_regime || "Unknown")}</span>
+              <span><b>Confirm</b>${item.entry_confirmation_passed ? "Passed" : "Missing"}</span>
+            </div>
+            <div class="diagnostic-levels">
+              <span><b>Price</b>${diagnosticPrice(item.current_price_usd)}</span>
+              <span><b>Buy zone</b>${diagnosticPrice(item.buy_zone_low)} - ${diagnosticPrice(item.buy_zone_high)}</span>
+              <span><b>Stop</b>${diagnosticPrice(item.stop_loss)}</span>
+              <span><b>Targets</b>${diagnosticPrice(item.target_1)} / ${diagnosticPrice(item.target_2)}</span>
+            </div>
+            ${selectionLines(item)}
+            <p>${escapeHtml(item.reason || "No reason provided")}</p>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function diagnosticPrice(value) {
+  const number = Number(value || 0);
+  return number ? usd.format(number) : "N/A";
 }
 
 function renderEquity(curve, summary) {
@@ -994,7 +1100,10 @@ function setupMediaModal() {
     if (event.target === modal) closeMediaModal();
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeMediaModal();
+    if (event.key === "Escape" && isMediaModalOpen()) {
+      event.marketLensMediaHandled = true;
+      closeMediaModal();
+    }
   });
 }
 
@@ -1013,6 +1122,10 @@ function closeMediaModal() {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
   image.removeAttribute("src");
+}
+
+function isMediaModalOpen() {
+  return Boolean(document.getElementById("mediaModal")?.classList.contains("open"));
 }
 
 function renderCalibration(rows) {

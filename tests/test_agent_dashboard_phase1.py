@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.agent_dashboard import (
+    build_decision_diagnostics,
     compact_agent_dashboard_payload,
     compute_realized_pnl,
     dashboard_section_payload,
@@ -84,3 +85,44 @@ def test_dashboard_section_payload_paginates_actions_and_trades() -> None:
     assert actions["has_more"] is False
     assert [item["ticker"] for item in trades["items"]] == ["T11", "T10", "T9"]
     assert trades["has_more"] is True
+
+
+def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
+    diagnostics = build_decision_diagnostics(
+        [
+            {
+                "ticker": "AAA",
+                "company_name": "Alpha Apps",
+                "sector": "Technology",
+                "action": "WATCH_READY",
+                "setup_type": "VWAP Reclaim",
+                "score": 0.61,
+                "current_price_usd": 101,
+                "buy_zone_low": 100,
+                "buy_zone_high": 102,
+                "stop_loss": 96,
+                "target_1": 108,
+                "target_2": 115,
+                "chart_url": "/agent-results/charts/aaa.png",
+                "reason": "WATCH_READY: waiting for regular-session confirmation",
+                "decision_json": {
+                    "market_regime": "NEUTRAL",
+                    "sector_regime": "STRONG",
+                    "setup_score": 0.61,
+                    "weighted_net_rr": 2.22,
+                    "net_rr_1": 1.1,
+                    "net_rr_2": 3.0,
+                    "entry_confirmation_passed": False,
+                    "warnings": ["WATCH_READY: staged for confirmation"],
+                },
+            }
+        ]
+    )
+
+    watch_ready = diagnostics["drilldowns"]["WATCH_READY"][0]
+    assert diagnostics["watch_ready_count"] == 1
+    assert watch_ready["ticker"] == "AAA"
+    assert watch_ready["company_name"] == "Alpha Apps"
+    assert watch_ready["chart_url"] == "/agent-results/charts/aaa.png"
+    assert watch_ready["weighted_net_rr"] == 2.22
+    assert watch_ready["entry_confirmation_passed"] is False
