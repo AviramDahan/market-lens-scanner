@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -37,7 +38,7 @@ from app.results_sync import (
     sync_dashboard_snapshot_assets_if_enabled,
     sync_dashboard_snapshot_if_enabled,
 )
-from app.scanner import scan_tickers
+from app.scanner import scan_ticker_detail, scan_tickers
 from app.scan_trigger import (
     dispatch_agent_scan,
     mark_scan_dispatched,
@@ -199,13 +200,30 @@ def monitor_agent_dashboard() -> dict:
 async def get_agent_dashboard(
     date: str | None = Query(default=None),
     compact: bool = Query(default=True),
-    section: str | None = Query(default=None, pattern="^(actions|trades)$"),
+    section: str | None = Query(default=None, pattern="^(actions|trades|diagnostics)$"),
+    diagnostic_key: str | None = Query(default=None, max_length=40),
+    sector: str | None = Query(default=None, max_length=80),
+    setup_type: str | None = Query(default=None, max_length=80),
+    chart_filter: str = Query(default="all", pattern="^(all|with_chart|missing_chart)$"),
+    confirmation: str = Query(default="all", pattern="^(all|passed|missing)$"),
+    sort: str = Query(default="closest", pattern="^(closest|score|rr|ticker)$"),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
 ) -> dict:
     dashboard = current_agent_dashboard() if not date else cached_agent_dashboard(date)
     if section:
-        return dashboard_section_payload(dashboard, section=section, offset=offset, limit=limit)
+        return dashboard_section_payload(
+            dashboard,
+            section=section,
+            offset=offset,
+            limit=limit,
+            diagnostic_key=diagnostic_key,
+            sector=sector,
+            setup_type=setup_type,
+            chart_filter=chart_filter,
+            confirmation=confirmation,
+            sort=sort,
+        )
     if compact:
         return compact_agent_dashboard_payload(dashboard, action_limit=limit, trade_limit=limit)
     if dashboard.get("status") == "ok":
@@ -214,6 +232,128 @@ async def get_agent_dashboard(
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
     return dashboard
+
+
+@app.post("/agent/diagnostic-chart")
+async def create_agent_diagnostic_chart(
+    ticker: str = Query(..., min_length=1, max_length=12),
+    diagnostic_key: str = Query(default="WATCH_READY", max_length=40),
+    analysis_period: str = Query(default="6mo", pattern="^(3mo|6mo|1y|2y)$"),
+    min_rr: float = Query(default=2.0, ge=0.1, le=10),
+) -> dict:
+    normalized_ticker = ticker.upper().strip()
+    if not re.fullmatch(r"[A-Z0-9.\-]{1,12}", normalized_ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker.")
+
+    dashboard = current_agent_dashboard()
+    if dashboard.get("status") != "ok":
+        raise HTTPException(status_code=503, detail="Agent dashboard data unavailable.")
+
+    item = find_diagnostic_item(dashboard, ticker=normalized_ticker, diagnostic_key=diagnostic_key)
+    if not item:
+        raise HTTPException(status_code=404, detail="Ticker is not in the current diagnostic bucket.")
+
+    existing_url = str(item.get("chart_url") or "")
+    existing_path = agent_result_path_from_url(existing_url)
+    if existing_path and existing_path.exists():
+        return {"status": "ok", "ticker": normalized_ticker, "chart_url": existing_url, "generated": False}
+
+    run_id = sanitize_run_id(str((dashboard.get("latest_run") or {}).get("run_id") or "latest"))
+    chart_dir = AGENT_RESULTS_DIR / "charts"
+    chart_dir.mkdir(parents=True, exist_ok=True)
+    destination = chart_dir / f"market_lens_diagnostic_{run_id}_{normalized_ticker.lower()}.png"
+    chart_url = f"/agent-results/charts/{destination.name}"
+    if not destination.exists():
+        try:
+            detail = scan_ticker_detail(normalized_ticker, min_rr=min_rr, analysis_period=analysis_period)
+            update: dict[str, object] = {
+                "setup_type": item.get("setup_type") or detail.result.setup_type,
+                "score": float(item.get("setup_score") or detail.result.score or 0),
+                "current_price": float(item.get("current_price_usd") or detail.result.current_price or 0),
+                "risk_reward": float(item.get("weighted_net_rr") or item.get("net_rr") or detail.result.risk_reward or 0),
+            }
+            buy_low = item.get("buy_zone_low")
+            buy_high = item.get("buy_zone_high")
+            if buy_low and buy_high:
+                update["buy_zone"] = (float(buy_low), float(buy_high))
+            for source_key, target_key in (
+                ("stop_loss", "stop_loss"),
+                ("target_1", "target_1"),
+                ("target_2", "target_2"),
+            ):
+                if item.get(source_key):
+                    update[target_key] = float(item[source_key])
+            detail.result = detail.result.model_copy(update=update)
+            generated = write_scan_chart(detail, chart_dir)
+            if generated != destination:
+                destination.write_bytes(generated.read_bytes())
+                try:
+                    generated.unlink()
+                except OSError:
+                    pass
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Chart generation failed: {exc}") from exc
+
+    attach_diagnostic_chart_to_snapshot(normalized_ticker, chart_url)
+    return {"status": "ok", "ticker": normalized_ticker, "chart_url": chart_url, "generated": True}
+
+
+def find_diagnostic_item(dashboard: dict, *, ticker: str, diagnostic_key: str) -> dict | None:
+    diagnostics = dashboard.get("decision_diagnostics") if isinstance(dashboard.get("decision_diagnostics"), dict) else {}
+    drilldowns = diagnostics.get("drilldowns") if isinstance(diagnostics.get("drilldowns"), dict) else {}
+    buckets = []
+    if diagnostic_key and isinstance(drilldowns.get(diagnostic_key), list):
+        buckets.append(drilldowns.get(diagnostic_key) or [])
+    buckets.extend(bucket for bucket in drilldowns.values() if isinstance(bucket, list))
+    for bucket in buckets:
+        for item in bucket:
+            if str(item.get("ticker") or "").upper() == ticker:
+                return item
+    return None
+
+
+def agent_result_path_from_url(url: str) -> Path | None:
+    if not url.startswith("/agent-results/"):
+        return None
+    relative = url.split("/agent-results/", 1)[1].split("?", 1)[0].split("#", 1)[0]
+    path = (AGENT_RESULTS_DIR / relative).resolve()
+    try:
+        path.relative_to(AGENT_RESULTS_DIR.resolve())
+    except ValueError:
+        return None
+    return path
+
+
+def attach_diagnostic_chart_to_snapshot(ticker: str, chart_url: str) -> None:
+    if not DASHBOARD_SNAPSHOT_PATH.exists():
+        return
+    try:
+        dashboard = json.loads(DASHBOARD_SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    if not isinstance(dashboard, dict):
+        return
+    update_chart_url_for_ticker(dashboard, ticker=ticker, chart_url=chart_url)
+    try:
+        DASHBOARD_SNAPSHOT_PATH.write_text(json.dumps(dashboard, default=str, separators=(",", ":")), encoding="utf-8")
+    except OSError:
+        return
+
+
+def update_chart_url_for_ticker(value: object, *, ticker: str, chart_url: str) -> None:
+    if isinstance(value, dict):
+        if str(value.get("ticker") or "").upper() == ticker:
+            value["chart_url"] = chart_url
+        for child in value.values():
+            update_chart_url_for_ticker(child, ticker=ticker, chart_url=chart_url)
+    elif isinstance(value, list):
+        for child in value:
+            update_chart_url_for_ticker(child, ticker=ticker, chart_url=chart_url)
+
+
+def sanitize_run_id(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_\-]+", "_", value).strip("_")
+    return cleaned[:48] or "latest"
 
 
 @app.get("/agent/live-prices")

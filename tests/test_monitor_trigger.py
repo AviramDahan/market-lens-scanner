@@ -681,6 +681,67 @@ def test_smart_universe_endpoint_returns_fallback_on_error(monkeypatch) -> None:
     assert payload["companies"]
 
 
+def test_diagnostic_chart_endpoint_generates_only_for_current_diagnostic(monkeypatch, tmp_path) -> None:
+    class FakeResult:
+        ticker = "AAA"
+        setup_type = "VWAP Reclaim"
+        score = 0.5
+        current_price = 100
+        risk_reward = 2
+
+        def model_copy(self, update=None):
+            for key, value in (update or {}).items():
+                setattr(self, key, value)
+            return self
+
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", tmp_path / "agent_results")
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", tmp_path / "agent_results" / "dashboard_snapshot.json")
+    monkeypatch.setattr(
+        main,
+        "current_agent_dashboard",
+        lambda: {
+            "status": "ok",
+            "latest_run": {"run_id": "test-run"},
+            "decision_diagnostics": {
+                "drilldowns": {
+                    "WATCH_READY": [
+                        {
+                            "ticker": "AAA",
+                            "setup_type": "VWAP Reclaim",
+                            "setup_score": 0.5,
+                            "current_price_usd": 100,
+                            "buy_zone_low": 98,
+                            "buy_zone_high": 102,
+                            "stop_loss": 95,
+                            "target_1": 108,
+                            "target_2": 115,
+                        }
+                    ]
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(main, "scan_ticker_detail", lambda *_args, **_kwargs: types.SimpleNamespace(result=FakeResult()))
+
+    def fake_write_chart(_detail, output_dir):
+        path = output_dir / "aaa-scan.png"
+        path.write_bytes(b"png")
+        return path
+
+    monkeypatch.setattr(main, "write_scan_chart", fake_write_chart)
+
+    client = TestClient(main.app)
+    response = client.post("/agent/diagnostic-chart?ticker=AAA&diagnostic_key=WATCH_READY")
+    blocked = client.post("/agent/diagnostic-chart?ticker=BBB&diagnostic_key=WATCH_READY")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["generated"] is True
+    assert payload["chart_url"].startswith("/agent-results/charts/market_lens_diagnostic_test-run_aaa")
+    assert (tmp_path / "agent_results" / "charts" / "market_lens_diagnostic_test-run_aaa.png").exists()
+    assert blocked.status_code == 404
+
+
 def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch, tmp_path) -> None:
     reset_rate_limits()
     monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)

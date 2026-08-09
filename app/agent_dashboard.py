@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict, deque
 from datetime import datetime, time
 from pathlib import Path
@@ -229,12 +230,52 @@ def compact_agent_dashboard_payload(
     return compact
 
 
+def write_diagnostic_snapshot(project_root: Path, dashboard: dict[str, Any]) -> Path | None:
+    if dashboard.get("status") != "ok":
+        return None
+    latest_run = dashboard.get("latest_run") if isinstance(dashboard.get("latest_run"), dict) else {}
+    run_id = sanitize_snapshot_id(str(latest_run.get("run_id") or latest_run.get("timestamp") or "latest"))
+    payload = {
+        "status": "ok",
+        "generated_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "run_id": latest_run.get("run_id", ""),
+        "run_timestamp": latest_run.get("timestamp", ""),
+        "snapshot": dashboard.get("snapshot", {}),
+        "latest_run": {
+            "timestamp": latest_run.get("timestamp", ""),
+            "run_id": latest_run.get("run_id", ""),
+            "tickers": latest_run.get("tickers", []),
+            "valid_setups": latest_run.get("valid_setups", 0),
+            "trade_ready_setups": latest_run.get("trade_ready_setups", 0),
+            "action_counts": latest_run.get("action_counts", {}),
+            "market_regime": latest_run.get("market_regime", ""),
+        },
+        "decision_diagnostics": dashboard.get("decision_diagnostics", {}),
+    }
+    diagnostics_dir = project_root / "agent_results" / "diagnostics"
+    diagnostics_dir.mkdir(parents=True, exist_ok=True)
+    path = diagnostics_dir / f"diagnostics_{run_id}.json"
+    path.write_text(json.dumps(payload, default=str, separators=(",", ":")), encoding="utf-8")
+    return path
+
+
+def sanitize_snapshot_id(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_\-]+", "_", value).strip("_")
+    return cleaned[:80] or "latest"
+
+
 def dashboard_section_payload(
     dashboard: dict[str, Any],
     *,
     section: str,
     offset: int = 0,
     limit: int = 10,
+    diagnostic_key: str | None = None,
+    sector: str | None = None,
+    setup_type: str | None = None,
+    chart_filter: str = "all",
+    confirmation: str = "all",
+    sort: str = "closest",
 ) -> dict[str, Any]:
     offset = max(0, offset)
     limit = max(1, min(limit, 100))
@@ -244,6 +285,18 @@ def dashboard_section_payload(
         items = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
     elif section == "trades":
         items = list(reversed(dashboard.get("recent_trades") if isinstance(dashboard.get("recent_trades"), list) else []))
+    elif section == "diagnostics":
+        return dashboard_diagnostic_payload(
+            dashboard,
+            diagnostic_key=diagnostic_key or "WATCH_READY",
+            offset=offset,
+            limit=limit,
+            sector=sector,
+            setup_type=setup_type,
+            chart_filter=chart_filter,
+            confirmation=confirmation,
+            sort=sort,
+        )
     else:
         return {"status": "error", "error": f"Unknown dashboard section: {section}"}
     page = items[offset : offset + limit]
@@ -258,6 +311,135 @@ def dashboard_section_payload(
         "has_more": offset + len(page) < len(items),
         "items": page,
     }
+
+
+def dashboard_diagnostic_payload(
+    dashboard: dict[str, Any],
+    *,
+    diagnostic_key: str,
+    offset: int = 0,
+    limit: int = 60,
+    sector: str | None = None,
+    setup_type: str | None = None,
+    chart_filter: str = "all",
+    confirmation: str = "all",
+    sort: str = "closest",
+) -> dict[str, Any]:
+    diagnostics = dashboard.get("decision_diagnostics") if isinstance(dashboard.get("decision_diagnostics"), dict) else {}
+    drilldowns = diagnostics.get("drilldowns") if isinstance(diagnostics.get("drilldowns"), dict) else {}
+    items = drilldowns.get(diagnostic_key) if isinstance(drilldowns.get(diagnostic_key), list) else []
+    facets = diagnostic_facets(items)
+    filtered = filter_diagnostic_items(
+        items,
+        sector=sector,
+        setup_type=setup_type,
+        chart_filter=chart_filter,
+        confirmation=confirmation,
+    )
+    sorted_items = sort_diagnostic_items(filtered, sort=sort)
+    page = sorted_items[offset : offset + limit]
+    return {
+        "status": "ok",
+        "section": "diagnostics",
+        "diagnostic_key": diagnostic_key,
+        "offset": offset,
+        "limit": limit,
+        "total": len(sorted_items),
+        "unfiltered_total": len(items),
+        "has_more": offset + len(page) < len(sorted_items),
+        "facets": facets,
+        "filters": {
+            "sector": sector or "",
+            "setup_type": setup_type or "",
+            "chart_filter": chart_filter,
+            "confirmation": confirmation,
+            "sort": sort,
+        },
+        "items": page,
+    }
+
+
+def diagnostic_facets(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    sectors: dict[str, int] = defaultdict(int)
+    setup_types: dict[str, int] = defaultdict(int)
+    chart_counts = {"with_chart": 0, "missing_chart": 0}
+    confirmation_counts = {"passed": 0, "missing": 0}
+    for item in items:
+        sector = str(item.get("sector") or "Unknown")
+        setup = str(item.get("setup_type") or "Setup")
+        sectors[sector] += 1
+        setup_types[setup] += 1
+        chart_counts["with_chart" if item.get("chart_url") else "missing_chart"] += 1
+        confirmation_counts["passed" if item.get("entry_confirmation_passed") else "missing"] += 1
+    return {
+        "sectors": count_options(sectors),
+        "setup_types": count_options(setup_types),
+        "charts": count_options(chart_counts),
+        "confirmation": count_options(confirmation_counts),
+    }
+
+
+def count_options(counts: dict[str, int]) -> list[dict[str, Any]]:
+    return [
+        {"value": key, "count": value}
+        for key, value in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        if value
+    ]
+
+
+def filter_diagnostic_items(
+    items: list[dict[str, Any]],
+    *,
+    sector: str | None,
+    setup_type: str | None,
+    chart_filter: str,
+    confirmation: str,
+) -> list[dict[str, Any]]:
+    filtered = list(items)
+    if sector:
+        filtered = [item for item in filtered if str(item.get("sector") or "Unknown") == sector]
+    if setup_type:
+        filtered = [item for item in filtered if str(item.get("setup_type") or "Setup") == setup_type]
+    if chart_filter == "with_chart":
+        filtered = [item for item in filtered if item.get("chart_url")]
+    elif chart_filter == "missing_chart":
+        filtered = [item for item in filtered if not item.get("chart_url")]
+    if confirmation == "passed":
+        filtered = [item for item in filtered if item.get("entry_confirmation_passed")]
+    elif confirmation == "missing":
+        filtered = [item for item in filtered if not item.get("entry_confirmation_passed")]
+    return filtered
+
+
+def sort_diagnostic_items(items: list[dict[str, Any]], *, sort: str) -> list[dict[str, Any]]:
+    if sort == "score":
+        key = lambda item: (to_float(item.get("setup_score")), to_float(item.get("weighted_net_rr") or item.get("net_rr")))
+        return sorted(items, key=key, reverse=True)
+    if sort == "rr":
+        key = lambda item: (to_float(item.get("weighted_net_rr") or item.get("net_rr")), to_float(item.get("setup_score")))
+        return sorted(items, key=key, reverse=True)
+    if sort == "ticker":
+        return sorted(items, key=lambda item: str(item.get("ticker") or ""))
+    key = lambda item: (
+        item.get("entry_confirmation_passed") is True,
+        -diagnostic_buy_zone_distance(item),
+        to_float(item.get("setup_score")),
+        to_float(item.get("weighted_net_rr") or item.get("net_rr")),
+    )
+    return sorted(items, key=key, reverse=True)
+
+
+def diagnostic_buy_zone_distance(item: dict[str, Any]) -> float:
+    price = to_float(item.get("current_price_usd"))
+    low = to_float(item.get("buy_zone_low"))
+    high = to_float(item.get("buy_zone_high"))
+    if not price or not low or not high:
+        return 999.0
+    lower, upper = sorted((low, high))
+    if lower <= price <= upper:
+        return 0.0
+    nearest = lower if price < lower else upper
+    return abs(price - nearest) / price * 100 if price else 999.0
 
 
 def load_period_summary(summary_dir: Path, period: str, timestamp: datetime) -> dict[str, Any]:

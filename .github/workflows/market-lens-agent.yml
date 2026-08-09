@@ -192,13 +192,16 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          from app.agent_dashboard import build_agent_dashboard
+          from app.agent_dashboard import build_agent_dashboard, write_diagnostic_snapshot
 
           snapshot = build_agent_dashboard(Path("."))
           output = Path("agent_results/dashboard_snapshot.json")
           output.parent.mkdir(parents=True, exist_ok=True)
           output.write_text(json.dumps(snapshot, default=str, separators=(",", ":")), encoding="utf-8")
           print(f"Wrote {output}")
+          diagnostics_output = write_diagnostic_snapshot(Path("."), snapshot)
+          if diagnostics_output:
+              print(f"Wrote {diagnostics_output}")
           PY
 
       - name: Commit agent results safely

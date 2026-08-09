@@ -22,10 +22,27 @@ const state = {
   nextLiveSyncAt: null,
   monitorTriggerCooldowns: {},
   lastMonitorTrigger: null,
+  diagnostic: {
+    key: "",
+    label: "",
+    items: [],
+    total: 0,
+    hasMore: false,
+    loading: false,
+    facets: {},
+    filters: {
+      sector: "",
+      setupType: "",
+      chartFilter: "all",
+      confirmation: "all",
+      sort: "closest",
+    },
+  },
 };
 
 const ACTIONS_PAGE_SIZE = 10;
 const TRADES_PAGE_SIZE = 10;
+const DIAGNOSTICS_PAGE_SIZE = 20;
 const MONITOR_TRIGGER_COOLDOWN_MS = 5 * 60 * 1000;
 const NEW_YORK_TZ = "America/New_York";
 const ISRAEL_TZ = "Asia/Jerusalem";
@@ -102,6 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("loadMoreTrades").addEventListener("click", () => {
     loadTradesPage(false);
+  });
+  document.getElementById("openWatchReadyDiagnostics").addEventListener("click", () => {
+    openDiagnosticModal("WATCH_READY", "WATCH_READY");
   });
   setupCollapsibleSections();
   setupMediaModal();
@@ -232,6 +252,7 @@ function renderDashboard(data) {
   renderMetrics(data.summary);
   renderSystemHealth(data.system_health || {}, data.results_sync || {}, data.payload || {});
   renderDiagnostics(data.decision_diagnostics || {}, data.daily_summary || {}, data.weekly_summary || {});
+  renderWatchReadyPanel(data.decision_diagnostics || {});
   renderEquity(data.equity_curve, data.summary);
   renderPositionsOverview(data.open_positions);
   renderPositions(data.open_positions);
@@ -732,6 +753,30 @@ function setupDiagnosticModal() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !event.marketLensMediaHandled) closeDiagnosticModal();
   });
+  document.getElementById("loadMoreDiagnostics").addEventListener("click", () => loadDiagnosticPage(false));
+  document.getElementById("diagnosticResetFilters").addEventListener("click", () => {
+    state.diagnostic.filters = defaultDiagnosticFilters();
+    syncDiagnosticFilterControls();
+    loadDiagnosticPage(true);
+  });
+  [
+    "diagnosticSectorFilter",
+    "diagnosticSetupFilter",
+    "diagnosticChartFilter",
+    "diagnosticConfirmationFilter",
+    "diagnosticSort",
+  ].forEach((id) => {
+    document.getElementById(id).addEventListener("change", () => {
+      state.diagnostic.filters = {
+        sector: document.getElementById("diagnosticSectorFilter").value,
+        setupType: document.getElementById("diagnosticSetupFilter").value,
+        chartFilter: document.getElementById("diagnosticChartFilter").value,
+        confirmation: document.getElementById("diagnosticConfirmationFilter").value,
+        sort: document.getElementById("diagnosticSort").value,
+      };
+      loadDiagnosticPage(true);
+    });
+  });
 }
 
 function openDiagnosticModal(key, label) {
@@ -741,19 +786,24 @@ function openDiagnosticModal(key, label) {
   const body = document.getElementById("diagnosticModalBody");
   if (!modal || !title || !meta || !body) return;
 
-  const diagnostics = state.data?.decision_diagnostics || {};
-  const groups = diagnostics.drilldowns || {};
-  const items = groups[key] || [];
+  state.diagnostic = {
+    key,
+    label,
+    items: [],
+    total: 0,
+    hasMore: false,
+    loading: false,
+    facets: {},
+    filters: defaultDiagnosticFilters(),
+  };
   title.textContent = label;
-  meta.textContent = items.length
-    ? `${items.length} setup${items.length === 1 ? "" : "s"} in the latest scan`
-    : "No matching setups in the latest scan";
-  body.innerHTML = renderDiagnosticItems(items);
-  body.querySelectorAll(".diagnostic-chart-button").forEach((button) => {
-    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
-  });
+  meta.textContent = "Loading setups";
+  body.innerHTML = '<div class="empty-state compact">Loading diagnostic setups...</div>';
+  document.getElementById("diagnosticLoadMoreRow").hidden = true;
+  syncDiagnosticFilterControls();
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  loadDiagnosticPage(true);
   if (window.lucide) {
     window.lucide.createIcons();
   }
@@ -764,6 +814,116 @@ function closeDiagnosticModal() {
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+}
+
+function defaultDiagnosticFilters() {
+  return {
+    sector: "",
+    setupType: "",
+    chartFilter: "all",
+    confirmation: "all",
+    sort: "closest",
+  };
+}
+
+async function loadDiagnosticPage(reset = false) {
+  if (!state.diagnostic.key || state.diagnostic.loading) return;
+  state.diagnostic.loading = true;
+  renderDiagnosticModalContent();
+  try {
+    const filters = state.diagnostic.filters;
+    const params = new URLSearchParams({
+      section: "diagnostics",
+      diagnostic_key: state.diagnostic.key,
+      offset: String(reset ? 0 : state.diagnostic.items.length),
+      limit: String(DIAGNOSTICS_PAGE_SIZE),
+      chart_filter: filters.chartFilter,
+      confirmation: filters.confirmation,
+      sort: filters.sort,
+    });
+    if (state.selectedDate) params.set("date", state.selectedDate);
+    if (filters.sector) params.set("sector", filters.sector);
+    if (filters.setupType) params.set("setup_type", filters.setupType);
+    const response = await fetch(`/agent/data?${params}`);
+    if (!response.ok) throw new Error(`Diagnostics failed: ${response.status}`);
+    const page = await response.json();
+    if (page.status !== "ok") throw new Error(page.error || "Diagnostics unavailable");
+    state.diagnostic.items = reset ? page.items || [] : state.diagnostic.items.concat(page.items || []);
+    state.diagnostic.total = Number(page.total || state.diagnostic.items.length);
+    state.diagnostic.hasMore = Boolean(page.has_more);
+    state.diagnostic.facets = page.facets || {};
+    syncDiagnosticFilterControls();
+  } catch (error) {
+    const fallback = localDiagnosticItems(state.diagnostic.key);
+    if (reset && fallback.length) {
+      state.diagnostic.items = fallback;
+      state.diagnostic.total = fallback.length;
+      state.diagnostic.hasMore = false;
+      state.diagnostic.facets = {};
+    } else {
+      document.getElementById("diagnosticModalBody").innerHTML =
+        `<div class="empty-state compact">${escapeHtml(error.message || "Diagnostics unavailable")}</div>`;
+    }
+  } finally {
+    state.diagnostic.loading = false;
+    renderDiagnosticModalContent();
+  }
+}
+
+function localDiagnosticItems(key) {
+  const groups = state.data?.decision_diagnostics?.drilldowns || {};
+  return groups[key] || [];
+}
+
+function syncDiagnosticFilterControls() {
+  const filters = state.diagnostic.filters;
+  fillDiagnosticSelect("diagnosticSectorFilter", state.diagnostic.facets.sectors || [], "All sectors", filters.sector);
+  fillDiagnosticSelect("diagnosticSetupFilter", state.diagnostic.facets.setup_types || [], "All setups", filters.setupType);
+  document.getElementById("diagnosticChartFilter").value = filters.chartFilter;
+  document.getElementById("diagnosticConfirmationFilter").value = filters.confirmation;
+  document.getElementById("diagnosticSort").value = filters.sort;
+}
+
+function fillDiagnosticSelect(id, options, allLabel, selectedValue) {
+  const select = document.getElementById(id);
+  const current = selectedValue || "";
+  const choices = [`<option value="">${escapeHtml(allLabel)}</option>`].concat(
+    (options || []).map((option) => {
+      const value = option.value || "";
+      const count = Number(option.count || 0);
+      const selected = value === current ? " selected" : "";
+      return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)} (${count})</option>`;
+    }),
+  );
+  select.innerHTML = choices.join("");
+  select.value = current;
+}
+
+function renderDiagnosticModalContent() {
+  const title = document.getElementById("diagnosticModalTitle");
+  const meta = document.getElementById("diagnosticModalMeta");
+  const body = document.getElementById("diagnosticModalBody");
+  const loadMoreRow = document.getElementById("diagnosticLoadMoreRow");
+  const loadMore = document.getElementById("loadMoreDiagnostics");
+  if (!title || !meta || !body || !loadMoreRow || !loadMore) return;
+  title.textContent = state.diagnostic.label || "Setup details";
+  const shown = Math.min(state.diagnostic.items.length, state.diagnostic.total);
+  meta.textContent = state.diagnostic.loading && !shown
+    ? "Loading setups"
+    : `${shown} loaded / ${state.diagnostic.total} matching setup${state.diagnostic.total === 1 ? "" : "s"}`;
+  body.innerHTML = state.diagnostic.loading && !state.diagnostic.items.length
+    ? '<div class="empty-state compact">Loading diagnostic setups...</div>'
+    : renderDiagnosticItems(state.diagnostic.items);
+  attachDiagnosticItemListeners();
+  loadMoreRow.hidden = !state.diagnostic.hasMore;
+  if (!loadMoreRow.hidden) {
+    const nextCount = Math.min(DIAGNOSTICS_PAGE_SIZE, Math.max(0, state.diagnostic.total - state.diagnostic.items.length));
+    loadMore.disabled = state.diagnostic.loading;
+    loadMore.querySelector("span").textContent = state.diagnostic.loading ? "Loading" : `Load ${nextCount} more`;
+  }
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 }
 
 function renderDiagnosticItems(items) {
@@ -780,7 +940,13 @@ function renderDiagnosticItems(items) {
         ? `<button class="diagnostic-chart-button" type="button" data-full-src="${escapeHtml(item.chart_url)}?v=${Date.now()}">
             <img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" />
           </button>`
-        : `<div class="diagnostic-chart-missing"><span>No chart saved</span></div>`;
+        : `<div class="diagnostic-chart-missing">
+            <span>No chart saved</span>
+            <button class="icon-button secondary generate-diagnostic-chart" type="button" data-ticker="${escapeHtml(item.ticker || "")}">
+              <i data-lucide="image-plus"></i>
+              <span>Generate chart</span>
+            </button>
+          </div>`;
       return `
         <article class="diagnostic-detail-card">
           ${chart}
@@ -815,9 +981,98 @@ function renderDiagnosticItems(items) {
     .join("");
 }
 
+function attachDiagnosticItemListeners() {
+  const body = document.getElementById("diagnosticModalBody");
+  body.querySelectorAll(".diagnostic-chart-button").forEach((button) => {
+    button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
+  });
+  body.querySelectorAll(".generate-diagnostic-chart").forEach((button) => {
+    button.addEventListener("click", () => generateDiagnosticChart(button));
+  });
+}
+
+async function generateDiagnosticChart(button) {
+  const ticker = button.dataset.ticker || "";
+  if (!ticker || button.disabled) return;
+  button.disabled = true;
+  button.querySelector("span").textContent = "Generating";
+  try {
+    const params = new URLSearchParams({
+      ticker,
+      diagnostic_key: state.diagnostic.key || "WATCH_READY",
+    });
+    const response = await fetch(`/agent/diagnostic-chart?${params}`, { method: "POST" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.status !== "ok") {
+      throw new Error(payload.detail || `Chart failed (${response.status})`);
+    }
+    updateDiagnosticChart(ticker, payload.chart_url);
+    renderDiagnosticModalContent();
+  } catch (error) {
+    button.disabled = false;
+    button.querySelector("span").textContent = "Retry chart";
+    button.title = error.message || "Chart generation failed";
+  }
+}
+
+function updateDiagnosticChart(ticker, chartUrl) {
+  state.diagnostic.items.forEach((item) => {
+    if (String(item.ticker || "").toUpperCase() === String(ticker || "").toUpperCase()) {
+      item.chart_url = chartUrl;
+    }
+  });
+  const groups = state.data?.decision_diagnostics?.drilldowns || {};
+  Object.values(groups).forEach((items) => {
+    (items || []).forEach((item) => {
+      if (String(item.ticker || "").toUpperCase() === String(ticker || "").toUpperCase()) {
+        item.chart_url = chartUrl;
+      }
+    });
+  });
+  renderWatchReadyPanel(state.data?.decision_diagnostics || {});
+}
+
 function diagnosticPrice(value) {
   const number = Number(value || 0);
   return number ? usd.format(number) : "N/A";
+}
+
+function renderWatchReadyPanel(diagnostics) {
+  const list = document.getElementById("watchReadyList");
+  const meta = document.getElementById("watchReadyMeta");
+  const button = document.getElementById("openWatchReadyDiagnostics");
+  if (!list || !meta || !button) return;
+  const items = diagnostics?.drilldowns?.WATCH_READY || [];
+  const total = Number(diagnostics?.watch_ready_count || items.length || 0);
+  button.disabled = total === 0;
+  meta.textContent = total
+    ? `${total} candidate${total === 1 ? "" : "s"} staged for regular-session confirmation`
+    : "No WATCH_READY candidates in the latest scan";
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state compact">No WATCH_READY candidates right now.</div>';
+    return;
+  }
+  const topItems = items.slice(0, 6);
+  list.innerHTML = topItems
+    .map((item) => {
+      const score = Number(item.setup_score || 0);
+      const rr = Number(item.weighted_net_rr || item.net_rr || 0);
+      const chart = item.chart_url
+        ? `<img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" />`
+        : `<span>No chart</span>`;
+      return `
+        <button class="watch-ready-card" type="button" data-watch-ready-open="true">
+          <span class="watch-ready-thumb">${chart}</span>
+          <strong>${escapeHtml(tickerLabel(item))}</strong>
+          <small>${escapeHtml(tickerMeta(item, item.setup_type || "Setup"))}</small>
+          <em>Score ${score.toFixed(2)} / R/R ${rr.toFixed(2)}x</em>
+        </button>
+      `;
+    })
+    .join("");
+  list.querySelectorAll("[data-watch-ready-open]").forEach((card) => {
+    card.addEventListener("click", () => openDiagnosticModal("WATCH_READY", "WATCH_READY"));
+  });
 }
 
 function renderEquity(curve, summary) {

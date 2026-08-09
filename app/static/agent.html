@@ -167,6 +167,20 @@
         </div>
       </section>
 
+      <section class="panel watch-ready-panel">
+        <div class="panel-head">
+          <div>
+            <h2>WATCH_READY</h2>
+            <p id="watchReadyMeta">Candidates staged for confirmation</p>
+          </div>
+          <button id="openWatchReadyDiagnostics" class="icon-button secondary" type="button">
+            <i data-lucide="list-filter"></i>
+            <span>Review</span>
+          </button>
+        </div>
+        <div id="watchReadyList" class="watch-ready-list"></div>
+      </section>
+
       <section class="agent-layout lower">
         <div class="panel">
           <div class="panel-head">
@@ -259,7 +273,52 @@
             <i data-lucide="x"></i>
           </button>
         </div>
+        <div id="diagnosticFilters" class="diagnostic-filters">
+          <label>
+            <span>Sector</span>
+            <select id="diagnosticSectorFilter"></select>
+          </label>
+          <label>
+            <span>Setup</span>
+            <select id="diagnosticSetupFilter"></select>
+          </label>
+          <label>
+            <span>Chart</span>
+            <select id="diagnosticChartFilter">
+              <option value="all">All charts</option>
+              <option value="with_chart">With chart</option>
+              <option value="missing_chart">Missing chart</option>
+            </select>
+          </label>
+          <label>
+            <span>Confirm</span>
+            <select id="diagnosticConfirmationFilter">
+              <option value="all">All confirmation</option>
+              <option value="passed">Passed</option>
+              <option value="missing">Missing</option>
+            </select>
+          </label>
+          <label>
+            <span>Sort</span>
+            <select id="diagnosticSort">
+              <option value="closest">Closest to entry</option>
+              <option value="score">Best score</option>
+              <option value="rr">Best R/R</option>
+              <option value="ticker">Ticker A-Z</option>
+            </select>
+          </label>
+          <button id="diagnosticResetFilters" class="icon-button secondary" type="button">
+            <i data-lucide="rotate-ccw"></i>
+            <span>Reset</span>
+          </button>
+        </div>
         <div id="diagnosticModalBody" class="diagnostic-modal-body"></div>
+        <div id="diagnosticLoadMoreRow" class="diagnostic-load-more-row" hidden>
+          <button id="loadMoreDiagnostics" class="icon-button secondary" type="button">
+            <i data-lucide="list-plus"></i>
+            <span>Load more</span>
+          </button>
+        </div>
       </div>
     </div>
 

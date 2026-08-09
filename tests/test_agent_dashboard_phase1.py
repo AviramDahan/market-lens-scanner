@@ -5,6 +5,7 @@ from app.agent_dashboard import (
     compact_agent_dashboard_payload,
     compute_realized_pnl,
     dashboard_section_payload,
+    write_diagnostic_snapshot,
 )
 
 
@@ -126,3 +127,91 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
     assert watch_ready["chart_url"] == "/agent-results/charts/aaa.png"
     assert watch_ready["weighted_net_rr"] == 2.22
     assert watch_ready["entry_confirmation_passed"] is False
+
+
+def test_dashboard_section_payload_filters_and_sorts_diagnostics() -> None:
+    dashboard = {
+        "status": "ok",
+        "decision_diagnostics": {
+            "drilldowns": {
+                "WATCH_READY": [
+                    {
+                        "ticker": "FAR",
+                        "sector": "Technology",
+                        "setup_type": "VWAP Reclaim",
+                        "setup_score": 0.80,
+                        "weighted_net_rr": 2.5,
+                        "entry_confirmation_passed": False,
+                        "current_price_usd": 120,
+                        "buy_zone_low": 100,
+                        "buy_zone_high": 104,
+                        "chart_url": "",
+                    },
+                    {
+                        "ticker": "NEAR",
+                        "sector": "Technology",
+                        "setup_type": "Breakout",
+                        "setup_score": 0.55,
+                        "weighted_net_rr": 2.0,
+                        "entry_confirmation_passed": True,
+                        "current_price_usd": 101,
+                        "buy_zone_low": 100,
+                        "buy_zone_high": 104,
+                        "chart_url": "/agent-results/charts/near.png",
+                    },
+                    {
+                        "ticker": "HLTH",
+                        "sector": "Healthcare",
+                        "setup_type": "Breakout",
+                        "setup_score": 0.90,
+                        "weighted_net_rr": 3.0,
+                        "entry_confirmation_passed": True,
+                        "current_price_usd": 90,
+                        "buy_zone_low": 88,
+                        "buy_zone_high": 92,
+                        "chart_url": "/agent-results/charts/hlth.png",
+                    },
+                ]
+            }
+        },
+    }
+
+    payload = dashboard_section_payload(
+        dashboard,
+        section="diagnostics",
+        diagnostic_key="WATCH_READY",
+        sector="Technology",
+        chart_filter="all",
+        confirmation="all",
+        sort="closest",
+        limit=10,
+    )
+
+    assert payload["status"] == "ok"
+    assert payload["total"] == 2
+    assert [item["ticker"] for item in payload["items"]] == ["NEAR", "FAR"]
+    assert payload["facets"]["sectors"][0] == {"value": "Technology", "count": 2}
+
+
+def test_write_diagnostic_snapshot_creates_run_file(tmp_path) -> None:
+    dashboard = {
+        "status": "ok",
+        "snapshot": {"selected_date": ""},
+        "latest_run": {
+            "run_id": "run:123",
+            "timestamp": "2026-08-09T12:00:00",
+            "tickers": ["AAA"],
+            "valid_setups": 1,
+            "trade_ready_setups": 1,
+            "action_counts": {"WATCH_READY": 1},
+            "market_regime": "BULL",
+        },
+        "decision_diagnostics": {"watch_ready_count": 1},
+    }
+
+    path = write_diagnostic_snapshot(tmp_path, dashboard)
+
+    assert path is not None
+    assert path.name == "diagnostics_run_123.json"
+    assert path.exists()
+    assert '"watch_ready_count":1' in path.read_text(encoding="utf-8")
