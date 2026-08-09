@@ -6,6 +6,7 @@ const state = {
   visibleTradeCount: 10,
   chartSections: {
     equity: false,
+    nearMisses: false,
     positionCharts: false,
   },
   liveTimer: null,

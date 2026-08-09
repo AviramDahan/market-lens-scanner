@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260809-remove-scan-charts" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260809-collapse-near-miss" />
   </head>
   <body>
     <main class="agent-shell">
@@ -115,9 +115,17 @@
         <div class="near-miss-wrap">
           <div class="near-miss-head">
             <strong>Nearest missed entries</strong>
-            <span id="nearMissMeta">Waiting for scan data</span>
+            <div class="panel-actions">
+              <span id="nearMissMeta">Waiting for scan data</span>
+              <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="nearMisses" data-collapse-target="nearMissPanel" aria-expanded="false">
+                <i data-lucide="chevron-down"></i>
+                <span>Show</span>
+              </button>
+            </div>
           </div>
-          <div id="nearMissList" class="near-miss-list"></div>
+          <div id="nearMissPanel" class="collapsible-content" hidden>
+            <div id="nearMissList" class="near-miss-list"></div>
+          </div>
         </div>
       </section>
 
@@ -230,6 +238,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260809-remove-scan-charts"></script>
+    <script src="/static/agent.js?v=20260809-collapse-near-miss"></script>
   </body>
 </html>
