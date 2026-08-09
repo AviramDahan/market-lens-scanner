@@ -916,6 +916,19 @@ def test_chart_retention_keeps_open_position_chart() -> None:
     assert selected == {"OPEN"}
 
 
+def test_chart_retention_keeps_watch_ready_payload_even_when_action_is_watch() -> None:
+    setup, decision = chart_candidate("STAGED", "WATCH", score=0.45, net_rr=1.8)
+    decision.decision_json["warnings"] = ["WATCH_READY: staged outside regular market hours"]
+
+    selected = select_chart_tickers(
+        [(setup, decision)],
+        settings=ChartRetentionSettings(False, 0, 0.40),
+        open_position_tickers=set(),
+    )
+
+    assert selected == {"STAGED"}
+
+
 def test_scan_chart_marks_premarket_quote_separately() -> None:
     setup = SimpleNamespace(
         current_price=100.0,

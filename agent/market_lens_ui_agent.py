@@ -754,7 +754,11 @@ def select_chart_tickers(
         ticker = result.ticker
         action = str(decision.action or "").upper()
         decision_json = decision.decision_json or {}
-        if action in always_actions or ticker in open_position_tickers:
+        if (
+            action in always_actions
+            or is_watch_ready_payload(action, decision_json, decision.feedback)
+            or ticker in open_position_tickers
+        ):
             selected.add(ticker)
             continue
         if action not in {"WATCH", "SKIP"}:
