@@ -1,24 +1,24 @@
 Daily Performance Summary
 
 Date: 2026-08-10
-Total scans: 17
-Tickers scanned: 2415
+Total scans: 18
+Tickers scanned: 2548
 BUY_SIMULATED: 0
 WATCH_READY: 279
-WATCH: 964
-SKIP: 1319
-NO_TRADE: 1247
+WATCH: 1014
+SKIP: 1395
+NO_TRADE: 1322
 Realized PnL: 898.98
-Unrealized PnL: 748.24
-Portfolio value: 101647.22
+Unrealized PnL: 836.7
+Portfolio value: 101735.68
 Best ticker: ON
 Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 9
-- RELATIVE_STRENGTH_LEADER: 249
-- TREND_PULLBACK_RECLAIM: 30
+- BREAKOUT_CONTINUATION: 11
+- RELATIVE_STRENGTH_LEADER: 264
+- TREND_PULLBACK_RECLAIM: 35
 - VWAP_RECLAIM: 101
 
 Top rejected candidates:
