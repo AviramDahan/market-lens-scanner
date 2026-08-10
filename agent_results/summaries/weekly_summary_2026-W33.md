@@ -4,13 +4,13 @@ Date: 2026-08-10
 Total scans: 27
 Tickers scanned: 3756
 BUY_SIMULATED: 0
-WATCH_READY: 297
+WATCH_READY: 298
 WATCH: 1450
 SKIP: 2107
 NO_TRADE: 2019
 Realized PnL: 898.98
-Unrealized PnL: 618.72
-Portfolio value: 101517.7
+Unrealized PnL: 620.52
+Portfolio value: 101519.5
 Best ticker: ON
 Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
