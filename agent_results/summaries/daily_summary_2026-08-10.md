@@ -5,19 +5,19 @@ Total scans: 12
 Tickers scanned: 1744
 BUY_SIMULATED: 0
 WATCH_READY: 278
-WATCH: 732
-SKIP: 916
-NO_TRADE: 850
+WATCH: 725
+SKIP: 923
+NO_TRADE: 854
 Realized PnL: 898.98
-Unrealized PnL: 457.0
-Portfolio value: 101355.98
+Unrealized PnL: 505.6
+Portfolio value: 101404.58
 Best ticker: ON
-Worst ticker: SMCI
+Worst ticker: NOC
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 183
+- RELATIVE_STRENGTH_LEADER: 182
 - TREND_PULLBACK_RECLAIM: 12
 - VWAP_RECLAIM: 100
 
