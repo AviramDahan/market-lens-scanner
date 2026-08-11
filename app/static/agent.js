@@ -720,25 +720,38 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
     const session = dailySummary.WATCH_READY_session_breakdown || weeklySummary.WATCH_READY_session_breakdown || {};
     const regular = session.regular || {};
     const offHours = session.off_hours || {};
+    const hasConversionData = Boolean(dailySummary.WATCH_READY_conversion || weeklySummary.WATCH_READY_conversion);
+    const hasSessionData = Boolean(dailySummary.WATCH_READY_session_breakdown || weeklySummary.WATCH_READY_session_breakdown);
     const reviewed = Number(conversion.reviewed_unique_count || 0);
     const converted = Number(conversion.converted_unique_count || 0);
-    const source = Number(conversion.source_unique_count || dailySummary.WATCH_READY_unique_count || 0);
+    const source = Number(
+      conversion.source_unique_count ??
+        dailySummary.WATCH_READY_unique_count ??
+        weeklySummary.WATCH_READY_unique_count ??
+        diagnostics.watch_ready_count ??
+        dailySummary.WATCH_READY_count ??
+        0,
+    );
     const rate = conversion.reviewed_conversion_rate_pct ?? conversion.conversion_rate_pct;
     conversionGrid.innerHTML = [
       {
         label: "Unique WATCH_READY",
-        value: String(source),
-        detail: `${Number(dailySummary.WATCH_READY_count || 0)} total staged records`,
+        value: hasConversionData ? String(source) : "Pending",
+        detail: hasConversionData
+          ? `${Number(dailySummary.WATCH_READY_count || 0)} total staged records`
+          : "Updates after the next scan summary",
       },
       {
         label: "Session Split",
-        value: `${Number(regular.records || 0)} / ${Number(offHours.records || 0)}`,
-        detail: "Regular / off-hours WATCH_READY records",
+        value: hasSessionData ? `${Number(regular.records || 0)} / ${Number(offHours.records || 0)}` : "Pending",
+        detail: hasSessionData ? "Regular / off-hours WATCH_READY records" : "Updates after the next scan summary",
       },
       {
         label: "WR Conversion",
         value: rate == null ? "Pending" : `${Number(rate).toFixed(1)}%`,
-        detail: `${converted}/${reviewed || source} reviewed unique tickers converted`,
+        detail: hasConversionData
+          ? `${converted}/${reviewed || source} reviewed unique tickers converted`
+          : "Conversion tracking starts with the next summary",
       },
     ]
       .map(
