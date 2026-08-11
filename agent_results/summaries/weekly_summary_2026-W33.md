@@ -1,32 +1,32 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 59
-Tickers scanned: 8222
+Total scans: 60
+Tickers scanned: 8369
 BUY_SIMULATED: 1
-WATCH_READY: 669
-WATCH_READY unique tickers: 44
-WATCH_READY session split: regular=5, off_hours=664, unknown=0
-WATCH_READY conversion: 0 converted / 44 staged
-WATCH: 3081
-SKIP: 4742
-NO_TRADE: 4522
+WATCH_READY: 690
+WATCH_READY unique tickers: 46
+WATCH_READY session split: regular=5, off_hours=685, unknown=0
+WATCH_READY conversion: 0 converted / 46 staged
+WATCH: 3141
+SKIP: 4822
+NO_TRADE: 4598
 Realized PnL: 1001.66
-Unrealized PnL: 558.23
-Portfolio value: 101559.89
+Unrealized PnL: 578.28
+Portfolio value: 101579.94
 Best ticker: ON
 Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 72
-- RELATIVE_STRENGTH_LEADER: 861
-- TREND_PULLBACK_RECLAIM: 138
-- VWAP_RECLAIM: 123
+- RELATIVE_STRENGTH_LEADER: 872
+- TREND_PULLBACK_RECLAIM: 141
+- VWAP_RECLAIM: 125
 
 Top rejected candidates:
 - EOG: WATCH score=0.62 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- MP: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - MNST: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - PLD: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.44.
 - MRK: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.

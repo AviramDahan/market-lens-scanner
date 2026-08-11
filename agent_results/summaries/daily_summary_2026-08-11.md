@@ -1,32 +1,32 @@
 Daily Performance Summary
 
 Date: 2026-08-11
-Total scans: 28
-Tickers scanned: 3878
+Total scans: 29
+Tickers scanned: 4025
 BUY_SIMULATED: 1
-WATCH_READY: 299
-WATCH_READY unique tickers: 23
-WATCH_READY session split: regular=3, off_hours=296, unknown=0
-WATCH_READY conversion: 0 converted / 23 staged
-WATCH: 1394
-SKIP: 2308
-NO_TRADE: 2220
+WATCH_READY: 320
+WATCH_READY unique tickers: 31
+WATCH_READY session split: regular=3, off_hours=317, unknown=0
+WATCH_READY conversion: 0 converted / 31 staged
+WATCH: 1454
+SKIP: 2388
+NO_TRADE: 2296
 Realized PnL: 1001.66
-Unrealized PnL: 558.23
-Portfolio value: 101559.89
-Best ticker: HAL
+Unrealized PnL: 578.28
+Portfolio value: 101579.94
+Best ticker: MU
 Worst ticker: ECL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 38
-- RELATIVE_STRENGTH_LEADER: 396
-- TREND_PULLBACK_RECLAIM: 72
-- VWAP_RECLAIM: 17
+- RELATIVE_STRENGTH_LEADER: 407
+- TREND_PULLBACK_RECLAIM: 75
+- VWAP_RECLAIM: 19
 
 Top rejected candidates:
 - EOG: WATCH score=0.62 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- MP: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - PLD: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.44.
 - TRU: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - MCD: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.43.
