@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-11
-Total scans: 10
-Tickers scanned: 1470
+Total scans: 11
+Tickers scanned: 1617
 BUY_SIMULATED: 0
-WATCH_READY: 205
+WATCH_READY: 226
 WATCH_READY unique tickers: 21
-WATCH_READY session split: regular=0, off_hours=205, unknown=0
+WATCH_READY session split: regular=0, off_hours=226, unknown=0
 WATCH_READY conversion: 0 converted / 21 staged
-WATCH: 572
-SKIP: 838
-NO_TRADE: 750
+WATCH: 630
+SKIP: 921
+NO_TRADE: 824
 Realized PnL: 898.98
 Unrealized PnL: 620.52
 Portfolio value: 101519.5
@@ -19,10 +19,10 @@ Worst ticker: CVX
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 20
-- RELATIVE_STRENGTH_LEADER: 165
-- TREND_PULLBACK_RECLAIM: 20
-- VWAP_RECLAIM: 11
+- BREAKOUT_CONTINUATION: 22
+- RELATIVE_STRENGTH_LEADER: 182
+- TREND_PULLBACK_RECLAIM: 22
+- VWAP_RECLAIM: 12
 
 Top rejected candidates:
 - MP: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
