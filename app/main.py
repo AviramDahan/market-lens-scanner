@@ -14,6 +14,7 @@ from app.agent_dashboard import (
     TRACKER_NAME,
     build_agent_dashboard,
     build_decision_diagnostics,
+    build_position_attention,
     build_system_health,
     compact_agent_dashboard_payload,
     dashboard_section_payload,
@@ -410,6 +411,7 @@ async def get_agent_live_prices() -> dict:
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "summary": summary,
         "open_positions": refreshed,
+        "position_attention": build_position_attention(refreshed),
         "prices": prices,
         "warnings": warnings,
     }

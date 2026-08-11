@@ -305,6 +305,39 @@ h2 {
   gap: 12px;
 }
 
+.conversion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.conversion-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.conversion-card span,
+.conversion-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.conversion-card span {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.conversion-card strong {
+  color: var(--ink);
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
 .diagnostic-card,
 .near-miss-card {
   border: 1px solid var(--line);
@@ -740,6 +773,60 @@ td {
 
 .position-mini-grid em {
   font-style: normal;
+}
+
+.position-attention-panel.is-empty {
+  display: none;
+}
+
+.position-attention-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.attention-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.attention-card.immediate,
+.attention-card.high {
+  border-color: #f1c5bf;
+  background: var(--soft-red);
+}
+
+.attention-card.medium {
+  border-color: #efd3a5;
+  background: var(--soft-amber);
+}
+
+.attention-card > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.attention-card strong,
+.attention-card p,
+.attention-card small {
+  overflow-wrap: anywhere;
+}
+
+.attention-card p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.attention-card small {
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .actions-list,

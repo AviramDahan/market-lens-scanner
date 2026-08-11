@@ -205,6 +205,160 @@ def test_summary_counts_staged_watch_ready_without_counting_skips(tmp_path: Path
     assert daily["SKIP_count"] == 1
 
 
+def test_watch_ready_summary_tracks_unique_session_split_and_conversion(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260811_103000.jsonl"
+    records = [
+        {
+            "timestamp": "2026-08-11T06:00:00",
+            "ticker": "STAGE1",
+            "final_action": "WATCH",
+            "setup_type": "VWAP Reclaim",
+            "setup_score": 0.61,
+            "reason": "WATCH_READY: staged outside regular session.",
+            "off_hours_candidate": True,
+            "regular_session_confirmation_required": True,
+            "market_session_phase": "PRE_MARKET",
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-08-11T09:45:00",
+            "ticker": "STAGE1",
+            "final_action": "WATCH",
+            "setup_type": "VWAP Reclaim",
+            "setup_score": 0.62,
+            "reason": "WATCH_READY: regular-session confirmation scan.",
+            "market_session_phase": "REGULAR",
+            "market_session_can_open_new_buy": True,
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-08-11T10:30:00",
+            "ticker": "STAGE1",
+            "final_action": "BUY_SIMULATED",
+            "setup_type": "VWAP Reclaim",
+            "setup_score": 0.68,
+            "reason": "BUY_SIMULATED: confirmation passed.",
+            "market_session_phase": "REGULAR",
+            "market_session_can_open_new_buy": True,
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-08-11T06:05:00",
+            "ticker": "STAGE2",
+            "final_action": "WATCH",
+            "setup_type": "Breakout + Retest",
+            "setup_score": 0.59,
+            "reason": "WATCH_READY: staged outside regular session.",
+            "off_hours_candidate": True,
+            "regular_session_confirmation_required": True,
+            "market_session_phase": "CLOSED",
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-08-11T11:30:00",
+            "ticker": "STAGE3",
+            "final_action": "WATCH_READY",
+            "setup_type": "Trend Pullback",
+            "setup_score": 0.57,
+            "reason": "WATCH_READY: needs one more confirmation.",
+            "market_session_phase": "REGULAR",
+            "market_session_can_open_new_buy": True,
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+    ]
+    write_decisions(decision_path, records)
+
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260811_103000",
+        timestamp="2026-08-11T10:30:00",
+        portfolio={},
+    )
+
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+    conversion = daily["WATCH_READY_conversion"]
+
+    assert daily["WATCH_READY_count"] == 4
+    assert daily["WATCH_READY_unique_count"] == 3
+    assert daily["WATCH_READY_regular_session_count"] == 2
+    assert daily["WATCH_READY_off_hours_count"] == 2
+    assert daily["WATCH_READY_unique_regular_session_count"] == 2
+    assert daily["WATCH_READY_unique_off_hours_count"] == 2
+    assert conversion["source_unique_count"] == 3
+    assert conversion["reviewed_unique_count"] == 2
+    assert conversion["converted_unique_count"] == 1
+    assert conversion["pending_review_unique_count"] == 1
+    assert conversion["reviewed_conversion_rate_pct"] == 50.0
+    assert conversion["conversion_rate_pct"] == 33.33
+    assert conversion["converted_tickers"] == ["STAGE1"]
+    assert conversion["pending_review_tickers"] == ["STAGE2"]
+
+
+def test_top_rejected_candidates_are_unique_by_ticker(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260811_113000.jsonl"
+    records = [
+        {
+            "timestamp": "2026-08-11T11:30:00",
+            "ticker": "DUP",
+            "final_action": "WATCH",
+            "setup_type": "VWAP Reclaim",
+            "setup_score": 0.80,
+            "net_rr": 2.4,
+            "reason": "WATCH_READY: high quality but pending.",
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-08-11T11:31:00",
+            "ticker": "DUP",
+            "final_action": "WATCH",
+            "setup_type": "VWAP Reclaim",
+            "setup_score": 0.78,
+            "net_rr": 2.2,
+            "reason": "WATCH_READY: duplicate later scan.",
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+        {
+            "timestamp": "2026-08-11T11:32:00",
+            "ticker": "NEXT",
+            "final_action": "SKIP",
+            "setup_type": "Breakout + Retest",
+            "setup_score": 0.76,
+            "net_rr": 2.1,
+            "reason": "SKIP: no confirmation.",
+            "warnings": [],
+            "shadow_strategies": [],
+        },
+    ]
+    write_decisions(decision_path, records)
+
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260811_113000",
+        timestamp="2026-08-11T11:30:00",
+        portfolio={},
+    )
+
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+    tickers = [item["ticker"] for item in daily["top_rejected_candidates"]]
+
+    assert tickers == ["DUP", "NEXT"]
+
+
 def test_summary_uses_trade_events_for_monitor_outcomes(tmp_path: Path) -> None:
     decision_dir = tmp_path / "decisions"
     summary_dir = tmp_path / "summaries"

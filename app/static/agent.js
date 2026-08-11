@@ -255,6 +255,7 @@ function renderDashboard(data) {
   renderWatchReadyPanel(data.decision_diagnostics || {});
   renderEquity(data.equity_curve, data.summary);
   renderPositionsOverview(data.open_positions);
+  renderPositionAttention(data.position_attention || data.open_positions || []);
   renderPositions(data.open_positions);
   renderPositionCharts(data.open_positions);
   renderActions();
@@ -337,8 +338,10 @@ async function refreshLivePrices() {
     if (live.status !== "ok" || !state.data) return;
     state.data.summary = live.summary || state.data.summary;
     state.data.open_positions = live.open_positions || state.data.open_positions;
+    state.data.position_attention = live.position_attention || buildClientPositionAttention(state.data.open_positions);
     renderMetrics(state.data.summary);
     renderPositionsOverview(state.data.open_positions, live.updated_at);
+    renderPositionAttention(state.data.position_attention || state.data.open_positions || [], live.updated_at);
     renderPositions(state.data.open_positions, live.updated_at);
     renderPositionCharts(state.data.open_positions);
     detectAndTriggerMonitorEvents(state.data.open_positions);
@@ -678,6 +681,7 @@ function renderSystemHealth(health, resultsSync, payload) {
 
 function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   const grid = document.getElementById("diagnosticsGrid");
+  const conversionGrid = document.getElementById("conversionGrid");
   const list = document.getElementById("nearMissList");
   const meta = document.getElementById("nearMissMeta");
   if (!grid || !list || !meta) return;
@@ -711,6 +715,44 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
     });
   });
 
+  if (conversionGrid) {
+    const conversion = dailySummary.WATCH_READY_conversion || weeklySummary.WATCH_READY_conversion || {};
+    const session = dailySummary.WATCH_READY_session_breakdown || weeklySummary.WATCH_READY_session_breakdown || {};
+    const regular = session.regular || {};
+    const offHours = session.off_hours || {};
+    const reviewed = Number(conversion.reviewed_unique_count || 0);
+    const converted = Number(conversion.converted_unique_count || 0);
+    const source = Number(conversion.source_unique_count || dailySummary.WATCH_READY_unique_count || 0);
+    const rate = conversion.reviewed_conversion_rate_pct ?? conversion.conversion_rate_pct;
+    conversionGrid.innerHTML = [
+      {
+        label: "Unique WATCH_READY",
+        value: String(source),
+        detail: `${Number(dailySummary.WATCH_READY_count || 0)} total staged records`,
+      },
+      {
+        label: "Session Split",
+        value: `${Number(regular.records || 0)} / ${Number(offHours.records || 0)}`,
+        detail: "Regular / off-hours WATCH_READY records",
+      },
+      {
+        label: "WR Conversion",
+        value: rate == null ? "Pending" : `${Number(rate).toFixed(1)}%`,
+        detail: `${converted}/${reviewed || source} reviewed unique tickers converted`,
+      },
+    ]
+      .map(
+        (card) => `
+          <div class="conversion-card">
+            <span>${escapeHtml(card.label)}</span>
+            <strong>${escapeHtml(card.value)}</strong>
+            <small>${escapeHtml(card.detail)}</small>
+          </div>
+        `,
+      )
+      .join("");
+  }
+
   const nearMisses = diagnostics.near_misses || [];
   meta.textContent = `${nearMisses.length} shown / ${diagnostics.total_results || 0} scan results`;
   if (!nearMisses.length) {
@@ -740,6 +782,113 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   if (weeklyRecommendation) {
     meta.textContent += ` - Weekly: ${weeklyRecommendation}`;
   }
+}
+
+function renderPositionAttention(items, liveUpdatedAt = "") {
+  const panel = document.getElementById("positionAttentionPanel");
+  const list = document.getElementById("positionAttentionList");
+  const meta = document.getElementById("positionAttentionMeta");
+  if (!panel || !list || !meta) return;
+
+  const attentionItems = normalizeAttentionItems(items);
+  meta.textContent = liveUpdatedAt
+    ? `${attentionItems.length} active focus items - live ${formatDate(liveUpdatedAt)}`
+    : `${attentionItems.length} active focus items`;
+
+  if (!attentionItems.length) {
+    panel.classList.add("is-empty");
+    list.innerHTML = '<div class="empty-state compact">No position is close to TP/SL right now.</div>';
+    return;
+  }
+
+  panel.classList.remove("is-empty");
+  list.innerHTML = attentionItems
+    .map((item) => {
+      const attention = item.attention || item.position_attention || {};
+      return `
+        <article class="attention-card ${escapeHtml(attention.level || "low")}">
+          <div>
+            <strong>${escapeHtml(tickerLabel(item))}</strong>
+            <span class="badge ${attentionBadgeTone(attention.level)}">${escapeHtml(attention.level || "low")}</span>
+          </div>
+          <p>${escapeHtml(attention.label || "Next event")} - ${formatAttentionThreshold(attention.threshold)}</p>
+          <small>${escapeHtml(attention.reason || "")}</small>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function normalizeAttentionItems(items) {
+  const source = Array.isArray(items) ? items : [];
+  return source
+    .map((item) => {
+      if (item.attention) return item;
+      return {
+        ...item,
+        attention: item.position_attention || clientAttentionForPosition(item),
+      };
+    })
+    .filter((item) => item.attention && item.attention.level && item.attention.level !== "low")
+    .sort((a, b) => attentionRank(a.attention.level) - attentionRank(b.attention.level) || Number(a.attention.distance_pct || 999) - Number(b.attention.distance_pct || 999))
+    .slice(0, 8);
+}
+
+function buildClientPositionAttention(positions) {
+  return normalizeAttentionItems(positions || []);
+}
+
+function clientAttentionForPosition(position) {
+  const current = Number(position.current_price_usd || position.entry_price_usd || 0);
+  const entry = Number(position.entry_price_usd || current || 0);
+  const stop = Number(position.stop_loss || 0);
+  const target1 = Number(position.target_1 || 0);
+  const target2 = Number(position.target_2 || 0);
+  const partialTaken = Boolean(position.partial_taken) || String(position.notes || "").toLowerCase().includes("partial profit taken");
+  if (!current) return { level: "low", label: "No live price", reason: "Current price is unavailable." };
+  const candidates = [];
+  if (stop > 0) {
+    const label = entry && Math.abs(stop - entry) / entry <= 0.001 ? "Breakeven stop" : "Stop loss";
+    candidates.push(attentionCandidate("EXIT_STOP", label, current, stop, "below"));
+  }
+  if (target2 > 0) candidates.push(attentionCandidate("TAKE_PROFIT", "Target 2", current, target2, "above"));
+  if (target1 > 0 && !partialTaken) candidates.push(attentionCandidate("TAKE_PARTIAL_PROFIT", "Target 1", current, target1, "above"));
+  if (!candidates.length) return { level: "low", label: "No active target", reason: "No stop/target levels are available." };
+  candidates.sort((a, b) => Number(a.distance_pct || 999) - Number(b.distance_pct || 999));
+  const item = candidates[0];
+  if (item.distance_pct <= 0) item.level = "immediate";
+  else if (item.distance_pct <= 0.5) item.level = "high";
+  else if (item.distance_pct <= 2.0) item.level = "medium";
+  else item.level = "low";
+  return item;
+}
+
+function attentionCandidate(event, label, current, threshold, direction) {
+  const distance = direction === "above" ? ((threshold - current) / current) * 100 : ((current - threshold) / current) * 100;
+  const rounded = Number(distance.toFixed(2));
+  return {
+    event,
+    label,
+    threshold,
+    distance_pct: rounded,
+    level: "low",
+    reason: `${label} is ${Math.abs(rounded).toFixed(2)}% ${direction === "above" ? "above" : "below"} current price.`,
+  };
+}
+
+function attentionRank(level) {
+  return { immediate: 0, high: 1, medium: 2, low: 3 }[level] ?? 9;
+}
+
+function attentionBadgeTone(level) {
+  if (level === "immediate" || level === "high") return "bad";
+  if (level === "medium") return "warn";
+  return "neutral";
+}
+
+function formatAttentionThreshold(value) {
+  const numeric = Number(value || 0);
+  return numeric ? usd.format(numeric) : "No level";
 }
 
 function setupDiagnosticModal() {

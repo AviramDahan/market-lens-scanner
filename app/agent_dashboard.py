@@ -168,6 +168,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             latest_monitor_update=latest_monitor_update,
         ),
         "open_positions": open_positions,
+        "position_attention": build_position_attention(open_positions),
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
         "recent_trades": annotated_trades,
         "closed_trades": realized["closed"],
@@ -1011,6 +1012,8 @@ def with_position_calculations(position: dict[str, Any]) -> dict[str, Any]:
         else 0
     )
     position["progress_to_target_1"] = progress_to_target(current, entry, target_1)
+    position["partial_taken"] = "partial profit taken" in str(position.get("notes") or "").lower()
+    position["position_attention"] = position_attention_status(position)
     return position
 
 
@@ -1060,6 +1063,115 @@ def progress_to_target(current: float, entry: float, target_1: float) -> float:
     if target_1 <= entry:
         return 0.0
     return round(max(0.0, min(100.0, (current - entry) / (target_1 - entry) * 100)), 2)
+
+
+def build_position_attention(positions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    candidates = []
+    rank = {"immediate": 0, "high": 1, "medium": 2, "low": 3}
+    for position in positions:
+        attention = position.get("position_attention") or position_attention_status(position)
+        if attention.get("level") == "low":
+            continue
+        candidates.append(
+            {
+                "ticker": position.get("ticker", ""),
+                "company_name": position.get("company_name", ""),
+                "sector": position.get("sector", ""),
+                "current_price_usd": position.get("current_price_usd"),
+                "entry_price_usd": position.get("entry_price_usd"),
+                "chart_url": position.get("chart_url", ""),
+                "attention": attention,
+            }
+        )
+    candidates.sort(
+        key=lambda item: (
+            rank.get(str((item.get("attention") or {}).get("level") or "low"), 9),
+            to_float((item.get("attention") or {}).get("distance_pct"), 999),
+            str(item.get("ticker") or ""),
+        )
+    )
+    return candidates[:8]
+
+
+def position_attention_status(position: dict[str, Any]) -> dict[str, Any]:
+    current = to_float(position.get("current_price_usd"), position.get("entry_price_usd"))
+    entry = to_float(position.get("entry_price_usd"), current)
+    stop = to_float(position.get("stop_loss"))
+    target_1 = to_float(position.get("target_1"))
+    target_2 = to_float(position.get("target_2"))
+    partial_taken = "partial profit taken" in str(position.get("notes") or "").lower()
+
+    if current <= 0:
+        return {
+            "level": "low",
+            "event": "NO_PRICE",
+            "label": "No live price",
+            "distance_pct": None,
+            "threshold": None,
+            "reason": "Current price is unavailable.",
+        }
+
+    candidates: list[dict[str, Any]] = []
+    if stop > 0:
+        stop_label = "Breakeven stop" if entry > 0 and abs(stop - entry) / entry <= 0.001 else "Stop loss"
+        if current <= stop:
+            return attention_payload("immediate", "EXIT_STOP", stop_label, current, stop, "below")
+        candidates.append(attention_payload("", "EXIT_STOP", stop_label, current, stop, "below"))
+
+    if target_2 > 0:
+        if current >= target_2:
+            return attention_payload("immediate", "TAKE_PROFIT", "Target 2", current, target_2, "above")
+        candidates.append(attention_payload("", "TAKE_PROFIT", "Target 2", current, target_2, "above"))
+
+    if target_1 > 0 and not partial_taken:
+        if current >= target_1:
+            return attention_payload("immediate", "TAKE_PARTIAL_PROFIT", "Target 1", current, target_1, "above")
+        candidates.append(attention_payload("", "TAKE_PARTIAL_PROFIT", "Target 1", current, target_1, "above"))
+
+    if not candidates:
+        return {
+            "level": "low",
+            "event": "NO_TARGETS",
+            "label": "No active target",
+            "distance_pct": None,
+            "threshold": None,
+            "reason": "No stop/target levels are available.",
+        }
+
+    nearest = min(candidates, key=lambda item: to_float(item.get("distance_pct"), 999))
+    distance = to_float(nearest.get("distance_pct"), 999)
+    if distance <= 0.5:
+        nearest["level"] = "high"
+    elif distance <= 2.0:
+        nearest["level"] = "medium"
+    else:
+        nearest["level"] = "low"
+    return nearest
+
+
+def attention_payload(
+    level: str,
+    event: str,
+    label: str,
+    current: float,
+    threshold: float,
+    direction: str,
+) -> dict[str, Any]:
+    distance_pct = abs(current - threshold) / current * 100 if current else None
+    if level == "immediate":
+        reason = f"{label} is already touched or crossed."
+    elif direction == "above":
+        reason = f"{label} is {round(distance_pct or 0, 2)}% above current price."
+    else:
+        reason = f"{label} is {round(distance_pct or 0, 2)}% below current price."
+    return {
+        "level": level,
+        "event": event,
+        "label": label,
+        "distance_pct": round(distance_pct, 2) if distance_pct is not None else None,
+        "threshold": round(threshold, 2),
+        "reason": reason,
+    }
 
 
 def compute_cash(trades: list[dict[str, Any]], starting_capital: float) -> float:

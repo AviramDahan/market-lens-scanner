@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from app.agent_dashboard import (
+    build_position_attention,
     build_decision_diagnostics,
     compact_agent_dashboard_payload,
     compute_realized_pnl,
     dashboard_section_payload,
+    with_position_calculations,
     write_diagnostic_snapshot,
 )
 
@@ -215,3 +217,98 @@ def test_write_diagnostic_snapshot_creates_run_file(tmp_path) -> None:
     assert path.name == "diagnostics_run_123.json"
     assert path.exists()
     assert '"watch_ready_count":1' in path.read_text(encoding="utf-8")
+
+
+def test_position_attention_flags_near_target_one_before_partial_profit() -> None:
+    position = with_position_calculations(
+        {
+            "ticker": "LLY",
+            "company_name": "Eli Lilly and Company",
+            "sector": "Healthcare",
+            "quantity": 4,
+            "entry_price_usd": 1180.0,
+            "current_price_usd": 1231.94,
+            "stop_loss": 1160.0,
+            "target_1": 1233.41,
+            "target_2": 1290.0,
+            "notes": "",
+        }
+    )
+
+    attention = position["position_attention"]
+
+    assert attention["level"] == "high"
+    assert attention["event"] == "TAKE_PARTIAL_PROFIT"
+    assert attention["label"] == "Target 1"
+    assert attention["distance_pct"] < 0.2
+
+
+def test_position_attention_uses_target_two_after_partial_profit() -> None:
+    position = with_position_calculations(
+        {
+            "ticker": "ADBE",
+            "company_name": "Adobe Inc.",
+            "sector": "Technology",
+            "quantity": 5,
+            "entry_price_usd": 350.0,
+            "current_price_usd": 379.5,
+            "stop_loss": 350.0,
+            "target_1": 360.0,
+            "target_2": 382.0,
+            "notes": "Partial profit taken; stop moved to breakeven.",
+        }
+    )
+
+    attention = position["position_attention"]
+
+    assert position["partial_taken"] is True
+    assert attention["level"] == "medium"
+    assert attention["event"] == "TAKE_PROFIT"
+    assert attention["label"] == "Target 2"
+
+
+def test_build_position_attention_filters_low_priority_and_sorts() -> None:
+    positions = [
+        with_position_calculations(
+            {
+                "ticker": "FAR",
+                "quantity": 1,
+                "entry_price_usd": 100.0,
+                "current_price_usd": 101.0,
+                "stop_loss": 90.0,
+                "target_1": 120.0,
+                "target_2": 130.0,
+                "notes": "",
+            }
+        ),
+        with_position_calculations(
+            {
+                "ticker": "HIGH",
+                "quantity": 1,
+                "entry_price_usd": 100.0,
+                "current_price_usd": 104.8,
+                "stop_loss": 95.0,
+                "target_1": 105.0,
+                "target_2": 115.0,
+                "notes": "",
+            }
+        ),
+        with_position_calculations(
+            {
+                "ticker": "MED",
+                "quantity": 1,
+                "entry_price_usd": 100.0,
+                "current_price_usd": 103.0,
+                "stop_loss": 95.0,
+                "target_1": 104.5,
+                "target_2": 115.0,
+                "notes": "",
+            }
+        ),
+    ]
+
+    attention = build_position_attention(positions)
+
+    assert [item["ticker"] for item in attention] == ["HIGH", "MED"]
+    assert attention[0]["attention"]["level"] == "high"
+    assert attention[1]["attention"]["level"] == "medium"

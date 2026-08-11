@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260809-diagnostics-mobile-fix" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260811-agent-analytics" />
   </head>
   <body>
     <main class="agent-shell">
@@ -104,6 +104,16 @@
         <div id="positionsOverview" class="positions-overview"></div>
       </section>
 
+      <section class="panel position-attention-panel" id="positionAttentionPanel">
+        <div class="panel-head">
+          <div>
+            <h2>Position Attention</h2>
+            <p id="positionAttentionMeta">Nearest TP/SL events</p>
+          </div>
+        </div>
+        <div id="positionAttentionList" class="position-attention-list"></div>
+      </section>
+
       <section class="panel diagnostics-panel">
         <div class="panel-head">
           <div>
@@ -112,6 +122,7 @@
           </div>
         </div>
         <div id="diagnosticsGrid" class="diagnostics-grid"></div>
+        <div id="conversionGrid" class="conversion-grid"></div>
         <div class="near-miss-wrap">
           <div class="near-miss-head">
             <strong>Nearest missed entries</strong>
@@ -323,6 +334,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260809-diagnostics-label-fix"></script>
+    <script src="/static/agent.js?v=20260811-agent-analytics"></script>
   </body>
 </html>
