@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-11
-Total scans: 22
-Tickers scanned: 3109
+Total scans: 23
+Tickers scanned: 3238
 BUY_SIMULATED: 0
 WATCH_READY: 291
 WATCH_READY unique tickers: 22
 WATCH_READY session split: regular=2, off_hours=289, unknown=0
 WATCH_READY conversion: 0 converted / 22 staged
-WATCH: 1130
-SKIP: 1845
-NO_TRADE: 1740
+WATCH: 1173
+SKIP: 1925
+NO_TRADE: 1823
 Realized PnL: 1001.66
-Unrealized PnL: 419.0
-Portfolio value: 101420.66
+Unrealized PnL: 473.44
+Portfolio value: 101475.1
 Best ticker: HAL
 Worst ticker: ECL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 36
-- RELATIVE_STRENGTH_LEADER: 325
-- TREND_PULLBACK_RECLAIM: 50
+- RELATIVE_STRENGTH_LEADER: 336
+- TREND_PULLBACK_RECLAIM: 55
 - VWAP_RECLAIM: 16
 
 Top rejected candidates:
