@@ -1,13 +1,13 @@
 Daily Performance Summary
 
 Date: 2026-08-11
-Total scans: 2
-Tickers scanned: 294
+Total scans: 3
+Tickers scanned: 441
 BUY_SIMULATED: 0
-WATCH_READY: 41
-WATCH: 114
-SKIP: 168
-NO_TRADE: 152
+WATCH_READY: 61
+WATCH: 170
+SKIP: 253
+NO_TRADE: 229
 Realized PnL: 898.98
 Unrealized PnL: 620.52
 Portfolio value: 101519.5
@@ -16,22 +16,22 @@ Worst ticker: CVX
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 4
-- RELATIVE_STRENGTH_LEADER: 33
-- TREND_PULLBACK_RECLAIM: 4
-- VWAP_RECLAIM: 3
+- BREAKOUT_CONTINUATION: 6
+- RELATIVE_STRENGTH_LEADER: 49
+- TREND_PULLBACK_RECLAIM: 6
+- VWAP_RECLAIM: 4
 
 Top rejected candidates:
 - MP: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - MP: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- MP: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- EQIX: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.34.
 - EQIX: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.34.
 - EQIX: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.34.
 - EOG: WATCH score=0.55 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - PLD: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.12.
 - PLD: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.12.
-- KMI: WATCH score=0.5 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- KMI: WATCH score=0.5 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- COP: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.30 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.92.
+- PLD: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.12.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
