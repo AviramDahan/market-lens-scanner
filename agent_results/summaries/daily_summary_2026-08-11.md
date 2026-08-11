@@ -10,10 +10,10 @@ WATCH_READY session split: regular=3, off_hours=317, unknown=0
 WATCH_READY conversion: 0 converted / 31 staged
 WATCH: 1454
 SKIP: 2388
-NO_TRADE: 2296
+NO_TRADE: 2295
 Realized PnL: 1001.66
-Unrealized PnL: 578.28
-Portfolio value: 101579.94
+Unrealized PnL: 579.56
+Portfolio value: 101581.22
 Best ticker: MU
 Worst ticker: ECL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER

@@ -10,10 +10,10 @@ WATCH_READY session split: regular=5, off_hours=685, unknown=0
 WATCH_READY conversion: 0 converted / 46 staged
 WATCH: 3141
 SKIP: 4822
-NO_TRADE: 4598
+NO_TRADE: 4597
 Realized PnL: 1001.66
-Unrealized PnL: 578.28
-Portfolio value: 101579.94
+Unrealized PnL: 579.56
+Portfolio value: 101581.22
 Best ticker: ON
 Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
