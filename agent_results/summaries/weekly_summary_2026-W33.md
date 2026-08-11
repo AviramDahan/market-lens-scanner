@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 49
-Tickers scanned: 6934
+Total scans: 50
+Tickers scanned: 7064
 BUY_SIMULATED: 0
 WATCH_READY: 661
 WATCH_READY unique tickers: 43
 WATCH_READY session split: regular=4, off_hours=657, unknown=0
 WATCH_READY conversion: 0 converted / 43 staged
-WATCH: 2656
-SKIP: 3945
-NO_TRADE: 3699
+WATCH: 2698
+SKIP: 4027
+NO_TRADE: 3783
 Realized PnL: 1001.66
-Unrealized PnL: 607.02
-Portfolio value: 101608.68
+Unrealized PnL: 554.36
+Portfolio value: 101556.02
 Best ticker: ON
 Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 67
-- RELATIVE_STRENGTH_LEADER: 739
-- TREND_PULLBACK_RECLAIM: 103
+- BREAKOUT_CONTINUATION: 68
+- RELATIVE_STRENGTH_LEADER: 750
+- TREND_PULLBACK_RECLAIM: 105
 - VWAP_RECLAIM: 122
 
 Top rejected candidates:
@@ -30,11 +30,11 @@ Top rejected candidates:
 - MNST: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - PLD: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.44.
 - MRK: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+- TRU: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - EQIX: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.43.
 - OXY: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.16.
 - PBF: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.70 failed minimum 2.00 after slippage/spread adjustment.
 - COP: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.26.
-- AN: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.21.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
