@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-12
-Total scans: 32
-Tickers scanned: 4530
+Total scans: 33
+Tickers scanned: 4676
 BUY_SIMULATED: 2
 WATCH_READY: 319
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=319, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1470
-SKIP: 2806
-NO_TRADE: 2487
+WATCH: 1510
+SKIP: 2904
+NO_TRADE: 2564
 Realized PnL: 922.06
 Unrealized PnL: 1227.31
 Portfolio value: 102149.37
@@ -19,10 +19,10 @@ Worst ticker: CHD
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 28
-- RELATIVE_STRENGTH_LEADER: 371
-- TREND_PULLBACK_RECLAIM: 94
-- VWAP_RECLAIM: 37
+- BREAKOUT_CONTINUATION: 30
+- RELATIVE_STRENGTH_LEADER: 383
+- TREND_PULLBACK_RECLAIM: 96
+- VWAP_RECLAIM: 38
 
 Top rejected candidates:
 - PFE: WATCH score=0.63 reason=Gross R/R is valid, but Net R/R 1.74 failed minimum 2.00 after slippage/spread adjustment.
