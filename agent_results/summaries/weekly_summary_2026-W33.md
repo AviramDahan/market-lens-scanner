@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 72
-Tickers scanned: 10109
+Total scans: 73
+Tickers scanned: 10253
 BUY_SIMULATED: 1
-WATCH_READY: 956
+WATCH_READY: 979
 WATCH_READY unique tickers: 48
-WATCH_READY session split: regular=5, off_hours=951, unknown=0
+WATCH_READY session split: regular=5, off_hours=974, unknown=0
 WATCH_READY conversion: 0 converted / 48 staged
-WATCH: 3899
-SKIP: 5718
-NO_TRADE: 5421
+WATCH: 3961
+SKIP: 5791
+NO_TRADE: 5486
 Realized PnL: 1001.66
 Unrealized PnL: 364.8
 Portfolio value: 101366.46
@@ -19,10 +19,10 @@ Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 73
-- RELATIVE_STRENGTH_LEADER: 1003
-- TREND_PULLBACK_RECLAIM: 177
-- VWAP_RECLAIM: 149
+- BREAKOUT_CONTINUATION: 74
+- RELATIVE_STRENGTH_LEADER: 1014
+- TREND_PULLBACK_RECLAIM: 180
+- VWAP_RECLAIM: 151
 
 Top rejected candidates:
 - EOG: WATCH score=0.62 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
