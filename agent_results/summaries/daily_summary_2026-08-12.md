@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-12
-Total scans: 20
-Tickers scanned: 2828
+Total scans: 21
+Tickers scanned: 2967
 BUY_SIMULATED: 2
 WATCH_READY: 319
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=319, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1095
-SKIP: 1575
-NO_TRADE: 1428
+WATCH: 1131
+SKIP: 1670
+NO_TRADE: 1517
 Realized PnL: 922.06
-Unrealized PnL: 518.79
-Portfolio value: 101440.85
+Unrealized PnL: 777.54
+Portfolio value: 101699.6
 Best ticker: MU
 Worst ticker: BRK-B
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 13
-- RELATIVE_STRENGTH_LEADER: 219
-- TREND_PULLBACK_RECLAIM: 68
+- RELATIVE_STRENGTH_LEADER: 231
+- TREND_PULLBACK_RECLAIM: 71
 - VWAP_RECLAIM: 32
 
 Top rejected candidates:
@@ -33,8 +33,8 @@ Top rejected candidates:
 - PLD: SKIP score=0.55 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.28.
 - ASML: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.95.
 - BA: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.87.
+- AMZN: SKIP score=0.53 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.58.
 - BALL: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.33.
-- MCD: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
