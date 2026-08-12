@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-12
-Total scans: 2
-Tickers scanned: 288
+Total scans: 3
+Tickers scanned: 432
 BUY_SIMULATED: 0
-WATCH_READY: 46
+WATCH_READY: 69
 WATCH_READY unique tickers: 23
-WATCH_READY session split: regular=0, off_hours=46, unknown=0
+WATCH_READY session split: regular=0, off_hours=69, unknown=0
 WATCH_READY conversion: 0 converted / 23 staged
-WATCH: 130
-SKIP: 144
-NO_TRADE: 134
+WATCH: 195
+SKIP: 216
+NO_TRADE: 199
 Realized PnL: 1001.66
 Unrealized PnL: 579.56
 Portfolio value: 101581.22
@@ -19,9 +19,9 @@ Worst ticker: BRK-B
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 22
-- TREND_PULLBACK_RECLAIM: 6
-- VWAP_RECLAIM: 4
+- RELATIVE_STRENGTH_LEADER: 33
+- TREND_PULLBACK_RECLAIM: 9
+- VWAP_RECLAIM: 6
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
