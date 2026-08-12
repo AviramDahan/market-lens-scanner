@@ -1,0 +1,41 @@
+Daily Performance Summary
+
+Date: 2026-08-12
+Total scans: 1
+Tickers scanned: 144
+BUY_SIMULATED: 0
+WATCH_READY: 23
+WATCH_READY unique tickers: 23
+WATCH_READY session split: regular=0, off_hours=23, unknown=0
+WATCH_READY conversion: 0 converted / 23 staged
+WATCH: 66
+SKIP: 71
+NO_TRADE: 67
+Realized PnL: 1001.66
+Unrealized PnL: 579.56
+Portfolio value: 101581.22
+Best ticker: MU
+Worst ticker: BRK-B
+Best shadow strategy: RELATIVE_STRENGTH_LEADER
+Worst shadow strategy: TREND_PULLBACK_RECLAIM
+Shadow would-buy counts:
+- RELATIVE_STRENGTH_LEADER: 11
+- TREND_PULLBACK_RECLAIM: 3
+- VWAP_RECLAIM: 2
+
+Top rejected candidates:
+- MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- EOG: WATCH score=0.57 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.15.
+- MCD: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
+- MDLZ: WATCH score=0.52 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+- BA: WATCH score=0.51 reason=Gross R/R is valid, but Net R/R 1.63 failed minimum 2.00 after slippage/spread adjustment.
+- CB: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.75 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.35.
+- LNG: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.16.
+- AVGO: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.37 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.00.
+- SCCO: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.29 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
+- NVDA: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.14 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.83.
+
+Recommendations:
+- Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
+- Review shadow would-buy candidates that active gates skipped before changing thresholds.
