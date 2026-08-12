@@ -8,8 +8,8 @@ WATCH_READY: 319
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=319, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1398
-SKIP: 2606
+WATCH: 1400
+SKIP: 2604
 NO_TRADE: 2325
 Realized PnL: 922.06
 Unrealized PnL: 1227.31
@@ -20,9 +20,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 24
-- RELATIVE_STRENGTH_LEADER: 346
+- RELATIVE_STRENGTH_LEADER: 345
 - TREND_PULLBACK_RECLAIM: 90
-- VWAP_RECLAIM: 34
+- VWAP_RECLAIM: 35
 
 Top rejected candidates:
 - PFE: WATCH score=0.63 reason=Gross R/R is valid, but Net R/R 1.74 failed minimum 2.00 after slippage/spread adjustment.
@@ -34,7 +34,7 @@ Top rejected candidates:
 - KMI: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.54 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.05.
 - ASML: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.95.
 - BA: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.87.
-- AMZN: SKIP score=0.53 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.58.
+- AMZN: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.73.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.

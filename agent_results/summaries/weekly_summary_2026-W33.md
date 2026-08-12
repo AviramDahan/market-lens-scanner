@@ -8,8 +8,8 @@ WATCH_READY: 1093
 WATCH_READY unique tickers: 48
 WATCH_READY session split: regular=5, off_hours=1088, unknown=0
 WATCH_READY conversion: 2 converted / 48 staged
-WATCH: 4782
-SKIP: 7745
+WATCH: 4784
+SKIP: 7743
 NO_TRADE: 7216
 Realized PnL: 922.06
 Unrealized PnL: 1227.31
@@ -20,9 +20,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 96
-- RELATIVE_STRENGTH_LEADER: 1262
+- RELATIVE_STRENGTH_LEADER: 1261
 - TREND_PULLBACK_RECLAIM: 243
-- VWAP_RECLAIM: 167
+- VWAP_RECLAIM: 168
 
 Top rejected candidates:
 - PFE: WATCH score=0.63 reason=Gross R/R is valid, but Net R/R 1.74 failed minimum 2.00 after slippage/spread adjustment.
