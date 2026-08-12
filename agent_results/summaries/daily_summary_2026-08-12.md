@@ -1,38 +1,38 @@
 Daily Performance Summary
 
 Date: 2026-08-12
-Total scans: 19
-Tickers scanned: 2693
+Total scans: 20
+Tickers scanned: 2828
 BUY_SIMULATED: 2
 WATCH_READY: 319
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=319, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1062
-SKIP: 1481
-NO_TRADE: 1344
+WATCH: 1095
+SKIP: 1575
+NO_TRADE: 1428
 Realized PnL: 922.06
-Unrealized PnL: 551.46
-Portfolio value: 101473.52
+Unrealized PnL: 518.79
+Portfolio value: 101440.85
 Best ticker: MU
 Worst ticker: BRK-B
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 13
-- RELATIVE_STRENGTH_LEADER: 206
-- TREND_PULLBACK_RECLAIM: 63
+- RELATIVE_STRENGTH_LEADER: 219
+- TREND_PULLBACK_RECLAIM: 68
 - VWAP_RECLAIM: 32
 
 Top rejected candidates:
 - PFE: WATCH score=0.63 reason=Gross R/R is valid, but Net R/R 1.74 failed minimum 2.00 after slippage/spread adjustment.
-- TSM: WATCH score=0.61 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- TSM: SKIP score=0.61 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.21.
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - EOG: WATCH score=0.57 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.16.
 - PSA: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (19/100); skip new entry. Market regime BULL; sector WEAK; net R/R 0.78.
 - PLD: SKIP score=0.55 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.28.
-- ASML: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.66.
-- BA: SKIP score=0.53 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.80.
+- ASML: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.95.
+- BA: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.87.
 - BALL: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.33.
 - MCD: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
 
