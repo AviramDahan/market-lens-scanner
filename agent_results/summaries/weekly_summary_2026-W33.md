@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 86
-Tickers scanned: 12060
+Total scans: 87
+Tickers scanned: 12201
 BUY_SIMULATED: 3
 WATCH_READY: 1093
 WATCH_READY unique tickers: 48
 WATCH_READY session split: regular=5, off_hours=1088, unknown=0
 WATCH_READY conversion: 2 converted / 48 staged
-WATCH: 4544
-SKIP: 6908
-NO_TRADE: 6494
+WATCH: 4571
+SKIP: 7014
+NO_TRADE: 6579
 Realized PnL: 922.06
-Unrealized PnL: 895.59
-Portfolio value: 101817.65
+Unrealized PnL: 952.84
+Portfolio value: 101874.9
 Best ticker: ON
 Worst ticker: SMCI
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 85
-- RELATIVE_STRENGTH_LEADER: 1161
-- TREND_PULLBACK_RECLAIM: 228
+- BREAKOUT_CONTINUATION: 86
+- RELATIVE_STRENGTH_LEADER: 1177
+- TREND_PULLBACK_RECLAIM: 229
 - VWAP_RECLAIM: 165
 
 Top rejected candidates:
