@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 65
-Tickers scanned: 9101
+Total scans: 66
+Tickers scanned: 9245
 BUY_SIMULATED: 1
-WATCH_READY: 797
+WATCH_READY: 820
 WATCH_READY unique tickers: 48
-WATCH_READY session split: regular=5, off_hours=792, unknown=0
+WATCH_READY session split: regular=5, off_hours=815, unknown=0
 WATCH_READY conversion: 0 converted / 48 staged
-WATCH: 3450
-SKIP: 5210
-NO_TRADE: 4958
+WATCH: 3514
+SKIP: 5283
+NO_TRADE: 5025
 Realized PnL: 1001.66
 Unrealized PnL: 579.56
 Portfolio value: 101581.22
@@ -20,9 +20,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 72
-- RELATIVE_STRENGTH_LEADER: 927
-- TREND_PULLBACK_RECLAIM: 156
-- VWAP_RECLAIM: 135
+- RELATIVE_STRENGTH_LEADER: 938
+- TREND_PULLBACK_RECLAIM: 159
+- VWAP_RECLAIM: 137
 
 Top rejected candidates:
 - EOG: WATCH score=0.62 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -34,7 +34,7 @@ Top rejected candidates:
 - EQIX: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.43.
 - MCD: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.43.
 - OXY: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.16.
-- PBF: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.70 failed minimum 2.00 after slippage/spread adjustment.
+- PSA: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (19/100); skip new entry. Market regime BULL; sector WEAK; net R/R 0.78.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
