@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-12
-Total scans: 10
-Tickers scanned: 1440
+Total scans: 11
+Tickers scanned: 1584
 BUY_SIMULATED: 0
-WATCH_READY: 227
+WATCH_READY: 250
 WATCH_READY unique tickers: 24
-WATCH_READY session split: regular=0, off_hours=227, unknown=0
+WATCH_READY session split: regular=0, off_hours=250, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 640
-SKIP: 726
-NO_TRADE: 663
+WATCH: 702
+SKIP: 799
+NO_TRADE: 730
 Realized PnL: 1001.66
-Unrealized PnL: 579.56
-Portfolio value: 101581.22
+Unrealized PnL: 364.8
+Portfolio value: 101366.46
 Best ticker: MU
 Worst ticker: BRK-B
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 2
-- RELATIVE_STRENGTH_LEADER: 108
-- TREND_PULLBACK_RECLAIM: 30
-- VWAP_RECLAIM: 20
+- BREAKOUT_CONTINUATION: 3
+- RELATIVE_STRENGTH_LEADER: 119
+- TREND_PULLBACK_RECLAIM: 33
+- VWAP_RECLAIM: 22
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
