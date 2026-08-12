@@ -242,8 +242,107 @@ h2 {
   background: var(--soft-amber);
 }
 
+.risk-dashboard-panel,
 .system-health-panel {
   margin-top: 18px;
+}
+
+.risk-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.risk-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.risk-card.good {
+  border-color: #bfe4d1;
+  background: var(--soft-green);
+}
+
+.risk-card.warn {
+  border-color: #efd3a5;
+  background: var(--soft-amber);
+}
+
+.risk-card.wide {
+  grid-column: span 2;
+}
+
+.risk-card span,
+.risk-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.risk-card > span {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.risk-card strong {
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.risk-exposure-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.risk-exposure-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.risk-exposure-list li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.risk-exposure-list li span,
+.risk-exposure-list li small {
+  overflow-wrap: anywhere;
+}
+
+.risk-exposure-list li b {
+  font-size: 12px;
+}
+
+.risk-exposure-list li em {
+  grid-column: 1 / -1;
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf1f6;
+}
+
+.risk-exposure-list li i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--blue);
+}
+
+.risk-exposure-list .empty-line {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .system-health-grid {
@@ -310,6 +409,110 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin-top: 12px;
+}
+
+.why-no-buys-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.why-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.why-card.warn {
+  border-color: #efd3a5;
+  background: var(--soft-amber);
+}
+
+.why-card.bad {
+  border-color: #f1c5bf;
+  background: var(--soft-red);
+}
+
+.why-card.good {
+  border-color: #bfe4d1;
+  background: var(--soft-green);
+}
+
+.why-card span,
+.why-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.why-card span {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.why-card strong {
+  font-size: 20px;
+}
+
+.watch-funnel {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.watch-funnel:empty {
+  display: none;
+}
+
+.watch-funnel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.watch-funnel-head span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.watch-funnel-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.funnel-step {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.funnel-step.final {
+  border-color: #bfe4d1;
+  background: var(--soft-green);
+}
+
+.funnel-step span,
+.funnel-step small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.funnel-step strong {
+  font-size: 20px;
 }
 
 .conversion-card {
@@ -779,6 +982,14 @@ td {
   display: none;
 }
 
+.position-timeline-panel {
+  margin-top: 18px;
+}
+
+.position-timeline-panel.is-empty {
+  display: none;
+}
+
 .position-attention-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -827,6 +1038,71 @@ td {
 .attention-card small {
   color: var(--muted);
   line-height: 1.35;
+}
+
+.position-timeline-list {
+  display: grid;
+  gap: 12px;
+}
+
+.timeline-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.timeline-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.timeline-step {
+  display: grid;
+  gap: 5px;
+  min-width: 120px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.timeline-step.complete {
+  border-color: #bfe4d1;
+  background: var(--soft-green);
+}
+
+.timeline-step.active {
+  border-color: #bfd4e9;
+  background: var(--soft-blue);
+}
+
+.timeline-step.pending {
+  color: var(--muted);
+}
+
+.timeline-step b,
+.timeline-step small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.timeline-step strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
 }
 
 .actions-list,
@@ -1403,8 +1679,15 @@ td {
   }
 
   .run-strip,
-  .metric-grid {
+  .metric-grid,
+  .risk-dashboard-grid,
+  .why-no-buys-grid,
+  .watch-funnel-steps {
     grid-template-columns: 1fr;
+  }
+
+  .risk-card.wide {
+    grid-column: auto;
   }
 
   h1 {
@@ -1442,6 +1725,18 @@ td {
 
   .position-mini-head {
     align-items: center;
+  }
+
+  .timeline-card {
+    padding: 12px;
+  }
+
+  .timeline-card-head {
+    align-items: center;
+  }
+
+  .timeline-track {
+    grid-template-columns: repeat(5, minmax(132px, 1fr));
   }
 
   .position-mini-head .badge {

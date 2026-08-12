@@ -20,6 +20,7 @@ const state = {
   liveTimer: null,
   scheduleTimer: null,
   nextLiveSyncAt: null,
+  lastLivePriceUpdatedAt: "",
   monitorTriggerCooldowns: {},
   lastMonitorTrigger: null,
   diagnostic: {
@@ -251,11 +252,13 @@ function renderDashboard(data) {
 
   renderMetrics(data.summary);
   renderSystemHealth(data.system_health || {}, data.results_sync || {}, data.payload || {});
+  renderRiskDashboard(data.risk_dashboard || {}, data.summary || {});
   renderDiagnostics(data.decision_diagnostics || {}, data.daily_summary || {}, data.weekly_summary || {});
   renderWatchReadyPanel(data.decision_diagnostics || {});
   renderEquity(data.equity_curve, data.summary);
   renderPositionsOverview(data.open_positions);
   renderPositionAttention(data.position_attention || data.open_positions || []);
+  renderPositionTimeline(data.position_timeline || []);
   renderPositions(data.open_positions);
   renderPositionCharts(data.open_positions);
   renderActions();
@@ -300,6 +303,9 @@ function setCollapsibleSection(key, expanded, options = {}) {
   if (key === "equity" && state.chartSections[key] && state.data && !options.skipChartRender) {
     window.requestAnimationFrame(() => renderEquity(state.data.equity_curve, state.data.summary));
   }
+  if (key === "positionCharts" && state.chartSections[key] && state.data && !options.skipChartRender) {
+    window.requestAnimationFrame(() => renderPositionCharts(state.data.open_positions || []));
+  }
   if (window.lucide) {
     window.lucide.createIcons();
   }
@@ -336,14 +342,23 @@ async function refreshLivePrices() {
     if (!response.ok) return;
     const live = await response.json();
     if (live.status !== "ok" || !state.data) return;
+    state.lastLivePriceUpdatedAt = live.updated_at || "";
     state.data.summary = live.summary || state.data.summary;
     state.data.open_positions = live.open_positions || state.data.open_positions;
     state.data.position_attention = live.position_attention || buildClientPositionAttention(state.data.open_positions);
+    state.data.risk_dashboard = buildClientRiskDashboard(
+      state.data.open_positions || [],
+      state.data.summary || {},
+      state.data.risk_dashboard || {},
+    );
     renderMetrics(state.data.summary);
+    renderRiskDashboard(state.data.risk_dashboard || {}, state.data.summary || {});
     renderPositionsOverview(state.data.open_positions, live.updated_at);
     renderPositionAttention(state.data.position_attention || state.data.open_positions || [], live.updated_at);
+    renderPositionTimeline(buildClientPositionTimeline(state.data.open_positions || []), live.updated_at);
     renderPositions(state.data.open_positions, live.updated_at);
     renderPositionCharts(state.data.open_positions);
+    renderSystemHealth(state.data.system_health || {}, state.data.results_sync || {}, state.data.payload || {});
     detectAndTriggerMonitorEvents(state.data.open_positions);
   } catch (_error) {
     // Live refresh is best-effort; the committed tracker remains the fallback.
@@ -627,6 +642,110 @@ function renderMetrics(summary) {
     .join("");
 }
 
+function renderRiskDashboard(risk, summary) {
+  const grid = document.getElementById("riskDashboardGrid");
+  const meta = document.getElementById("riskDashboardMeta");
+  if (!grid || !meta) return;
+
+  const totalExposure = Number(risk.total_exposure ?? summary.exposure_ils ?? 0);
+  const maxExposure = Number(risk.max_total_exposure ?? 0);
+  const remainingCapacity = Number(risk.remaining_exposure_capacity ?? Math.max(0, maxExposure - totalExposure));
+  const newTradeBudget = Number(risk.remaining_new_trade_budget ?? Math.min(Number(summary.cash_ils || 0), remainingCapacity));
+  const sectorRows = (risk.sector_exposure || []).slice(0, 5);
+  const factorRows = (risk.factor_exposure || []).slice(0, 5);
+
+  meta.textContent = `${displayText(risk.market_regime || "UNKNOWN")} regime - ${money.format(remainingCapacity)} exposure capacity`;
+  grid.innerHTML = [
+    riskMetricCard("Market", risk.market_regime || "UNKNOWN", `Max exposure ${money.format(maxExposure)}`, "neutral"),
+    riskMetricCard("New Trade Capacity", money.format(newTradeBudget), `Cash ${money.format(Number(risk.cash ?? summary.cash_ils ?? 0))}`, newTradeBudget > 0 ? "good" : "warn"),
+    riskMetricCard("Open Risk", money.format(Number(risk.open_risk ?? summary.open_risk_ils ?? 0)), `${Number(risk.open_risk_pct || 0).toFixed(2)}% of portfolio`, Number(risk.open_risk || 0) > 0 ? "warn" : "neutral"),
+    exposureListCard("Sector Exposure", sectorRows, totalExposure),
+    exposureListCard("Factor Exposure", factorRows, totalExposure),
+  ].join("");
+}
+
+function riskMetricCard(label, value, detail, tone) {
+  return `
+    <article class="risk-card ${escapeHtml(tone || "")}">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+      <small>${escapeHtml(detail || "")}</small>
+    </article>
+  `;
+}
+
+function exposureListCard(label, rows, totalExposure) {
+  const list = rows.length
+    ? rows
+        .map((row) => {
+          const pct = Number(row.pct_of_exposure || 0);
+          return `
+            <li>
+              <div>
+                <span>${escapeHtml(row.name || "Unknown")}</span>
+                <small>${money.format(Number(row.exposure || 0))} / ${Number(row.count || 0)} pos.</small>
+              </div>
+              <b>${pct.toFixed(1)}%</b>
+              <em><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></em>
+            </li>
+          `;
+        })
+        .join("")
+    : '<li class="empty-line">No exposure</li>';
+  return `
+    <article class="risk-card wide">
+      <span>${escapeHtml(label)}</span>
+      <strong>${money.format(totalExposure)}</strong>
+      <ul class="risk-exposure-list">${list}</ul>
+    </article>
+  `;
+}
+
+function buildClientRiskDashboard(positions, summary, previous) {
+  const totalExposure = Number(summary.exposure_ils || 0);
+  const sectorMap = new Map();
+  const factorMap = new Map();
+  (positions || []).forEach((position) => {
+    const exposure = Number(position.exposure_ils || 0);
+    addExposureRow(sectorMap, position.sector || "Unknown", exposure);
+    const tags = Array.isArray(position.decision_json?.factor_tags) && position.decision_json.factor_tags.length
+      ? position.decision_json.factor_tags
+      : [position.sector || "Unclassified"];
+    tags.forEach((tag) => addExposureRow(factorMap, tag || "Unclassified", exposure));
+  });
+  return {
+    ...(previous || {}),
+    cash: Number(summary.cash_ils || previous.cash || 0),
+    total_exposure: totalExposure,
+    remaining_exposure_capacity: Math.max(0, Number(previous.max_total_exposure || 0) - totalExposure),
+    remaining_new_trade_budget: Math.max(0, Math.min(Number(summary.cash_ils || 0), Number(previous.max_total_exposure || 0) - totalExposure)),
+    open_risk: Number(summary.open_risk_ils || 0),
+    open_risk_pct: Number(summary.starting_capital_ils || 0)
+      ? (Number(summary.open_risk_ils || 0) / Number(summary.starting_capital_ils || 0)) * 100
+      : Number(previous.open_risk_pct || 0),
+    sector_exposure: mapExposureRows(sectorMap, totalExposure),
+    factor_exposure: mapExposureRows(factorMap, totalExposure),
+  };
+}
+
+function addExposureRow(map, name, exposure) {
+  const key = String(name || "Unknown");
+  const existing = map.get(key) || { name: key, exposure: 0, count: 0 };
+  existing.exposure += Number(exposure || 0);
+  existing.count += 1;
+  map.set(key, existing);
+}
+
+function mapExposureRows(map, totalExposure) {
+  return Array.from(map.values())
+    .map((row) => ({
+      ...row,
+      exposure: Number(row.exposure || 0),
+      pct_of_exposure: totalExposure ? (Number(row.exposure || 0) / totalExposure) * 100 : 0,
+    }))
+    .sort((a, b) => Number(b.exposure || 0) - Number(a.exposure || 0));
+}
+
 function renderSystemHealth(health, resultsSync, payload) {
   const grid = document.getElementById("systemHealthGrid");
   const meta = document.getElementById("systemHealthMeta");
@@ -653,10 +772,18 @@ function renderSystemHealth(health, resultsSync, payload) {
       tone: health.latest_scan_at ? "good" : "warn",
     },
     {
-      label: "Last Monitor",
+      label: "Last Monitor Action",
       value: health.latest_monitor_at ? formatDate(health.latest_monitor_at) : "No events",
-      detail: health.latest_monitor_age_minutes != null ? `${formatAgeMinutes(health.latest_monitor_age_minutes)} ago` : "Waiting for monitor update",
+      detail: health.latest_monitor_age_minutes != null
+        ? `${formatAgeMinutes(health.latest_monitor_age_minutes)} ago - only updates on TP/SL actions`
+        : "Waiting for first TP/SL action",
       tone: health.latest_monitor_at ? "good" : "",
+    },
+    {
+      label: "Live Sensor",
+      value: state.lastLivePriceUpdatedAt ? formatDate(state.lastLivePriceUpdatedAt) : "Waiting",
+      detail: state.nextLiveSyncAt ? `Next sync ${formatCountdown(state.nextLiveSyncAt - Date.now())}` : "Runs only with open current positions",
+      tone: state.lastLivePriceUpdatedAt ? "good" : "",
     },
     {
       label: "Data Sync",
@@ -682,6 +809,8 @@ function renderSystemHealth(health, resultsSync, payload) {
 function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   const grid = document.getElementById("diagnosticsGrid");
   const conversionGrid = document.getElementById("conversionGrid");
+  const whyGrid = document.getElementById("whyNoBuysGrid");
+  const funnelGrid = document.getElementById("watchReadyFunnel");
   const list = document.getElementById("nearMissList");
   const meta = document.getElementById("nearMissMeta");
   if (!grid || !list || !meta) return;
@@ -714,6 +843,49 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
       openDiagnosticModal(button.dataset.diagnosticKey || "", button.dataset.diagnosticLabel || "Setups");
     });
   });
+
+  if (whyGrid) {
+    const reasons = diagnostics.why_no_buys || [];
+    whyGrid.innerHTML = reasons.length
+      ? reasons
+          .map(
+            (reason) => `
+              <article class="why-card ${escapeHtml(reason.tone || "")}">
+                <span>${escapeHtml(reason.label || "Reason")}</span>
+                <strong>${escapeHtml(reason.count ?? 0)}</strong>
+                <small>${escapeHtml(reason.detail || "")}</small>
+              </article>
+            `,
+          )
+          .join("")
+      : '<div class="empty-state compact">No blocker summary available yet.</div>';
+  }
+
+  if (funnelGrid) {
+    const funnel = diagnostics.watch_ready_funnel || {};
+    const steps = funnel.steps || [];
+    funnelGrid.innerHTML = steps.length
+      ? `
+        <div class="watch-funnel-head">
+          <strong>WATCH_READY Funnel</strong>
+          <span>Detected -> Reviewed -> Confirmed -> R/R -> BUY</span>
+        </div>
+        <div class="watch-funnel-steps">
+          ${steps
+            .map(
+              (step, index) => `
+                <article class="funnel-step ${index === steps.length - 1 ? "final" : ""}">
+                  <span>${escapeHtml(step.label)}</span>
+                  <strong>${escapeHtml(step.value ?? 0)}</strong>
+                  <small>${escapeHtml(step.detail || "")}</small>
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+      `
+      : "";
+  }
 
   if (conversionGrid) {
     const conversion = dailySummary.WATCH_READY_conversion || weeklySummary.WATCH_READY_conversion || {};
@@ -830,6 +1002,89 @@ function renderPositionAttention(items, liveUpdatedAt = "") {
       `;
     })
     .join("");
+}
+
+function renderPositionTimeline(timelines, liveUpdatedAt = "") {
+  const panel = document.getElementById("positionTimelinePanel");
+  const list = document.getElementById("positionTimelineList");
+  const meta = document.getElementById("positionTimelineMeta");
+  if (!panel || !list || !meta) return;
+
+  const items = Array.isArray(timelines) ? timelines : [];
+  meta.textContent = liveUpdatedAt
+    ? `${items.length} open trade timelines - live ${formatDate(liveUpdatedAt)}`
+    : `${items.length} open trade timelines`;
+  if (!items.length) {
+    panel.classList.add("is-empty");
+    list.innerHTML = '<div class="empty-state compact">No open positions to timeline.</div>';
+    return;
+  }
+  panel.classList.remove("is-empty");
+  list.innerHTML = items
+    .map((item) => {
+      const steps = item.steps || [];
+      return `
+        <article class="timeline-card">
+          <div class="timeline-card-head">
+            <div class="ticker-cell">
+              <strong>${escapeHtml(tickerLabel(item))}</strong>
+              <span class="meta">${escapeHtml(item.sector || "Unknown")}</span>
+            </div>
+            <span class="badge ${item.partial_taken ? "good" : "neutral"}">${item.partial_taken ? "TP1 taken" : "Open"}</span>
+          </div>
+          <div class="timeline-track">
+            ${steps
+              .map(
+                (step) => `
+                  <div class="timeline-step ${escapeHtml(step.status || "pending")}">
+                    <b>${escapeHtml(step.label || "")}</b>
+                    <strong>${step.level ? usd.format(Number(step.level)) : "-"}</strong>
+                    <small>${escapeHtml(step.detail || "")}</small>
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function buildClientPositionTimeline(positions) {
+  return (positions || []).map((position) => {
+    const entry = Number(position.entry_price_usd || 0);
+    const current = Number(position.current_price_usd || entry || 0);
+    const stop = Number(position.stop_loss || 0);
+    const target1 = Number(position.target_1 || 0);
+    const target2 = Number(position.target_2 || 0);
+    const partialTaken = Boolean(position.partial_taken) || String(position.notes || "").toLowerCase().includes("partial");
+    const breakevenStop = entry > 0 && stop > 0 && Math.abs(stop - entry) / entry <= 0.001;
+    const attention = position.position_attention || clientAttentionForPosition(position);
+    return {
+      ticker: position.ticker,
+      company_name: position.company_name,
+      sector: position.sector,
+      partial_taken: partialTaken,
+      steps: [
+        { label: "Entry", level: entry, status: "complete", detail: `Opened ${formatDate(position.entry_date)}` },
+        {
+          label: "TP1 partial",
+          level: target1,
+          status: partialTaken ? "complete" : attention.event === "TAKE_PARTIAL_PROFIT" ? "active" : "pending",
+          detail: "Take partial profit on 50%.",
+        },
+        {
+          label: "Stop to entry",
+          level: entry,
+          status: breakevenStop ? "complete" : partialTaken ? "active" : "pending",
+          detail: "Protect the remaining shares after TP1.",
+        },
+        { label: "Current", level: current, status: "active", detail: attention.reason || "Live/current tracker price." },
+        { label: "TP2 / SL", level: target2, status: "pending", detail: `Stop ${stop ? usd.format(stop) : "N/A"}` },
+      ],
+    };
+  });
 }
 
 function normalizeAttentionItems(items) {
@@ -1100,7 +1355,7 @@ function renderDiagnosticItems(items) {
       const rr2 = Number(item.net_rr_2 || 0);
       const chart = item.chart_url
         ? `<button class="diagnostic-chart-button" type="button" data-full-src="${escapeHtml(item.chart_url)}?v=${Date.now()}">
-            <img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" />
+            <img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" loading="lazy" decoding="async" />
           </button>`
         : `<div class="diagnostic-chart-missing">
             <span>No chart saved</span>
@@ -1220,7 +1475,7 @@ function renderWatchReadyPanel(diagnostics) {
       const score = Number(item.setup_score || 0);
       const rr = Number(item.weighted_net_rr || item.net_rr || 0);
       const chart = item.chart_url
-        ? `<img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" />`
+        ? `<img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" loading="lazy" decoding="async" />`
         : `<span>No chart</span>`;
       return `
         <button class="watch-ready-card" type="button" data-watch-ready-open="true">
@@ -1406,18 +1661,24 @@ function renderPositions(positions, liveUpdatedAt = "") {
 
 function renderPositionCharts(positions) {
   const grid = document.getElementById("positionChartsGrid");
-  const withCharts = positions.filter((position) => position.chart_url);
+  const panel = document.getElementById("positionChartsPanel");
+  const safePositions = positions || [];
+  const withCharts = safePositions.filter((position) => position.chart_url);
   document.getElementById("positionChartsMeta").textContent = `${withCharts.length} chart${withCharts.length === 1 ? "" : "s"} available`;
-  if (!positions.length) {
+  if (panel?.hidden) {
+    if (grid) grid.innerHTML = "";
+    return;
+  }
+  if (!safePositions.length) {
     grid.innerHTML = '<div class="empty-state">No open positions to chart</div>';
     return;
   }
 
-  grid.innerHTML = positions
+  grid.innerHTML = safePositions
     .map((position) => {
       const chart = position.chart_url
         ? `<button class="position-chart-media clickable-media" type="button" data-full-src="${escapeHtml(position.chart_url)}?v=${Date.now()}">
-            <img src="${escapeHtml(position.chart_url)}?v=${Date.now()}" alt="${escapeHtml(position.ticker)} chart" />
+            <img src="${escapeHtml(position.chart_url)}?v=${Date.now()}" alt="${escapeHtml(position.ticker)} chart" loading="lazy" decoding="async" />
           </button>`
         : `<div class="position-chart-media missing"><span>No chart saved</span></div>`;
       return `
@@ -1475,7 +1736,7 @@ function renderActions() {
         <div class="action-row">
           ${setup.chart_url
             ? `<button class="action-chart-button" type="button" data-full-src="${escapeHtml(setup.chart_url)}?v=${Date.now()}">
-                <img class="action-chart" src="${escapeHtml(setup.chart_url)}?v=${Date.now()}" alt="${escapeHtml(setup.ticker)} chart" />
+                <img class="action-chart" src="${escapeHtml(setup.chart_url)}?v=${Date.now()}" alt="${escapeHtml(setup.ticker)} chart" loading="lazy" decoding="async" />
               </button>`
             : `<div class="action-chart missing"></div>`}
           <div class="ticker-cell">
@@ -1943,8 +2204,20 @@ function formatDate(value) {
   }).format(date);
 }
 
-function escapeHtml(value) {
+function displayText(value) {
   return String(value ?? "")
+    .replaceAll("â", "-")
+    .replaceAll("â", "-")
+    .replaceAll("â", "'")
+    .replaceAll("â", "'")
+    .replaceAll("â", '"')
+    .replaceAll("â", '"')
+    .replaceAll("Ã", "x")
+    .replaceAll("Â", "");
+}
+
+function escapeHtml(value) {
+  return displayText(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")

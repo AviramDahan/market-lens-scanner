@@ -36,6 +36,7 @@ def reset_rate_limits() -> None:
     scan_trigger._DISPATCHED_SCAN_KEYS.clear()
     main._LIVE_PRICE_CACHE.clear()
     main._AGENT_DASHBOARD_CACHE.clear()
+    main._POSITION_ATTENTION_ALERT_AT.clear()
 
 
 def test_detect_live_monitor_event_prefers_stop_first() -> None:
@@ -380,6 +381,73 @@ def test_monitor_live_endpoint_uses_lightweight_snapshot(monkeypatch, tmp_path) 
     assert response.headers["content-type"].startswith("text/plain")
     assert "status=skipped" in response.text
     assert "No open positions" in response.text
+
+
+def test_monitor_live_sends_near_tp_sl_attention_without_dispatch(monkeypatch, tmp_path) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_MONITOR_CRON_SECRET", raising=False)
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_BOT_TOKEN", "token")
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_CHAT_ID", "-100")
+    monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_TELEGRAM_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_THRESHOLD_PCT", "1.0")
+    monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_COOLDOWN_SECONDS", "300")
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_text(
+        json.dumps(
+            {
+                "status": "ok",
+                "open_positions": [
+                    {
+                        "ticker": "TEST",
+                        "entry_price_usd": 100,
+                        "current_price_usd": 104,
+                        "stop_loss": 95,
+                        "target_1": 105,
+                        "target_2": 112,
+                        "chart_url": "/agent-results/charts/test.png",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    sent_messages = []
+    sent_charts = []
+
+    async def fail_dispatch(*_args, **_kwargs):
+        raise AssertionError("near-threshold alerts must not dispatch GitHub monitor")
+
+    def fake_send(message):
+        sent_messages.append(message)
+        return types.SimpleNamespace(sent=True, status="sent")
+
+    def fake_chart(chart_ref, *, ticker, dashboard_url):
+        sent_charts.append((chart_ref, ticker, dashboard_url))
+        return types.SimpleNamespace(sent=True, status="sent")
+
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_if_enabled",
+        lambda project_root: {"enabled": False, "reason": "disabled in test"},
+    )
+    monkeypatch.setattr(main, "fetch_live_quote", lambda ticker: (104.0, "2026-06-18T14:00:00Z", 104.4, 103.6))
+    monkeypatch.setattr(main, "dispatch_position_monitor", fail_dispatch)
+    monkeypatch.setattr(main, "send_telegram_message", fake_send)
+    monkeypatch.setattr(main, "send_telegram_chart_photo", fake_chart)
+
+    client = TestClient(main.app)
+    response = client.get("/agent/monitor-live?compact=false")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["triggered"] is False
+    assert payload["status"] == "ok"
+    assert payload["attention_alerts"][0]["event_type"] == "TAKE_PARTIAL_PROFIT"
+    assert payload["attention_alerts"][0]["sent"] is True
+    assert sent_messages and "No portfolio change yet" in sent_messages[0]
+    assert sent_charts == [("/agent-results/charts/test.png", "TEST", "")]
 
 
 def test_trigger_scan_endpoint_skips_without_dispatch_outside_scan_time(monkeypatch) -> None:

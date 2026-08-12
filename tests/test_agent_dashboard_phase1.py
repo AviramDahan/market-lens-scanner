@@ -3,6 +3,8 @@ from __future__ import annotations
 from app.agent_dashboard import (
     build_position_attention,
     build_decision_diagnostics,
+    build_position_timeline,
+    build_risk_dashboard,
     compact_agent_dashboard_payload,
     compute_realized_pnl,
     dashboard_section_payload,
@@ -107,11 +109,12 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
                 "target_1": 108,
                 "target_2": 115,
                 "chart_url": "/agent-results/charts/aaa.png",
-                "reason": "WATCH_READY: waiting for regular-session confirmation",
+                "reason": "WATCH_READY: entry confirmation missing; waiting for regular-session confirmation",
                 "decision_json": {
                     "market_regime": "NEUTRAL",
                     "sector_regime": "STRONG",
                     "setup_score": 0.61,
+                    "minimum_net_rr_required": 2.0,
                     "weighted_net_rr": 2.22,
                     "net_rr_1": 1.1,
                     "net_rr_2": 3.0,
@@ -129,6 +132,73 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
     assert watch_ready["chart_url"] == "/agent-results/charts/aaa.png"
     assert watch_ready["weighted_net_rr"] == 2.22
     assert watch_ready["entry_confirmation_passed"] is False
+    assert diagnostics["why_no_buys"][0]["label"] == "Entry confirmation missing"
+    assert diagnostics["watch_ready_funnel"]["unique_detected"] == 1
+    assert diagnostics["watch_ready_funnel"]["confirmation_passed_unique"] == 0
+    assert diagnostics["watch_ready_funnel"]["rr_passed_unique"] == 1
+
+
+def test_risk_dashboard_groups_sector_factor_and_capacity() -> None:
+    positions = [
+        {
+            "ticker": "NVDA",
+            "sector": "Semiconductors",
+            "exposure_ils": 6_000,
+            "decision_json": {"factor_tags": ["AI / Semiconductors", "Mega Cap Tech"]},
+        },
+        {
+            "ticker": "MSFT",
+            "sector": "Technology",
+            "exposure_ils": 4_000,
+            "decision_json": {"factor_tags": ["Mega Cap Tech"]},
+        },
+    ]
+    summary = {
+        "starting_capital_ils": 100_000,
+        "cash_ils": 90_000,
+        "exposure_ils": 10_000,
+        "open_risk_ils": 800,
+    }
+
+    dashboard = build_risk_dashboard(positions, summary, [{"market_regime": "NEUTRAL"}])
+
+    assert dashboard["max_total_exposure"] == 20_000
+    assert dashboard["remaining_new_trade_budget"] == 10_000
+    assert dashboard["open_risk_pct"] == 0.8
+    assert dashboard["sector_exposure"][0]["name"] == "Semiconductors"
+    assert dashboard["sector_exposure"][0]["pct_of_exposure"] == 60
+    assert dashboard["factor_exposure"][0]["name"] == "Mega Cap Tech"
+    assert dashboard["factor_exposure"][0]["count"] == 2
+
+
+def test_position_timeline_marks_tp1_and_breakeven_stop() -> None:
+    positions = [
+        with_position_calculations(
+            {
+                "ticker": "BA",
+                "company_name": "Boeing",
+                "sector": "Industrials",
+                "entry_date": "2026-08-10T14:00:00",
+                "entry_price_usd": 200,
+                "current_price_usd": 214,
+                "quantity": 5,
+                "stop_loss": 200,
+                "target_1": 212,
+                "target_2": 230,
+                "notes": "Partial profit taken; stop moved to breakeven.",
+            }
+        )
+    ]
+
+    timeline = build_position_timeline(positions)
+
+    assert timeline[0]["partial_taken"] is True
+    assert timeline[0]["breakeven_stop"] is True
+    statuses = {step["label"]: step["status"] for step in timeline[0]["steps"]}
+    assert statuses["Entry"] == "complete"
+    assert statuses["TP1 partial"] == "complete"
+    assert statuses["Stop to entry"] == "complete"
+    assert statuses["Current"] == "active"
 
 
 def test_dashboard_section_payload_filters_and_sorts_diagnostics() -> None:

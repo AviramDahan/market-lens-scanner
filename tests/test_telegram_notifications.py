@@ -10,6 +10,7 @@ from app.telegram_notifications import (
     chart_photo_source,
     dashboard_url_from_app_url,
     dashboard_url_from_env,
+    format_position_attention_message,
     format_position_event_message,
     format_position_opened_message,
     format_stop_moved_to_entry_message,
@@ -458,3 +459,34 @@ def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch
     assert "Stop moved to entry" in sent_messages[1]
     assert "Previous stop: $95.00 (-5.00%)" in sent_messages[1]
     assert "New stop: $100.00 (0.00%)" in sent_messages[1]
+
+
+def test_position_attention_message_is_read_only_and_includes_distance() -> None:
+    message = format_position_attention_message(
+        position={
+            "ticker": "BA",
+            "entry_price_usd": 200,
+            "stop_loss": 190,
+            "target_1": 215,
+            "target_2": 230,
+        },
+        alert={
+            "ticker": "BA",
+            "event_type": "TAKE_PARTIAL_PROFIT",
+            "label": "Target 1",
+            "threshold": 215,
+            "distance_pct": 0.42,
+            "live_price": 213.5,
+            "live_high": 214.1,
+            "live_low": 212.8,
+        },
+        timestamp="2026-06-22T15:32:00+00:00",
+        dashboard_url="https://example.com/agent",
+    )
+
+    assert "Position near TP/SL" in message
+    assert "BA" in message
+    assert "Target 1" in message
+    assert "Distance: 0.42%" in message
+    assert "$215.00 (+7.50%)" in message
+    assert "No portfolio change yet" in message

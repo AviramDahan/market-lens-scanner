@@ -288,6 +288,40 @@ def format_stop_moved_to_entry_message(
     return "\n".join(lines)
 
 
+def format_position_attention_message(
+    *,
+    position: dict[str, Any],
+    alert: dict[str, Any],
+    timestamp: str,
+    dashboard_url: str,
+) -> str:
+    ticker = alert.get("ticker") or position.get("ticker", "")
+    entry = position.get("entry_price_usd") or position.get("entry_price")
+    label = alert.get("label") or alert.get("event_type") or "TP/SL level"
+    lines = [
+        "<b>Market Lens Paper Agent</b>",
+        "<b>Position near TP/SL</b>",
+        "",
+        f"Ticker: <b>{_escape(ticker)}</b>",
+        f"Watch level: {_escape(label)}",
+        f"Time: {_escape(_format_message_time(timestamp))}",
+        "",
+        f"Live price: {_money(alert.get('live_price'))}",
+        f"Level: {_price_with_percent(alert.get('threshold'), entry)}",
+        f"Distance: {_number(alert.get('distance_pct'), 2)}%",
+        f"Bar H/L: {_money(alert.get('live_high'))} / {_money(alert.get('live_low'))}",
+        "",
+        f"Entry: {_money(entry)}",
+        f"Stop: {_price_with_percent(position.get('stop_loss'), entry)}",
+        f"Targets: {_price_with_percent(position.get('target_1'), entry)} / {_price_with_percent(position.get('target_2'), entry)}",
+        "",
+        "Action: No portfolio change yet. The monitor updates the tracker only after an actual TP/SL touch.",
+    ]
+    if dashboard_url:
+        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+    return "\n".join(lines)
+
+
 def dashboard_url_from_env(fallback_app_url: str = "") -> str:
     explicit = os.getenv("MARKET_LENS_DASHBOARD_URL", "").strip()
     if explicit:

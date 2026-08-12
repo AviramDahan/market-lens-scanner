@@ -101,6 +101,28 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     latest_dt = parse_timestamp(latest_update.get("timestamp"))
     daily_summary = load_period_summary(summary_dir, "daily", latest_dt)
     weekly_summary = load_period_summary(summary_dir, "weekly", latest_dt)
+    summary = {
+        "starting_capital_ils": starting_capital,
+        "currency": currency,
+        "cash_ils": cash,
+        "exposure_ils": exposure,
+        "equity_ils": equity,
+        "total_pnl_ils": total_pnl,
+        "total_pnl_pct": total_pnl_pct,
+        "realized_pnl_ils": round(realized["total"], 2),
+        "unrealized_pnl_ils": round(
+            sum(to_float(position.get("unrealized_pnl_ils")) for position in open_positions),
+            2,
+        ),
+        "open_risk_ils": round(open_risk, 2),
+        "open_positions": len(open_positions),
+        "closed_trades": len(realized["closed"]),
+        "wins": realized["wins"],
+        "losses": realized["losses"],
+        "win_rate": round(realized["wins"] / len(realized["closed"]) * 100, 2)
+        if realized["closed"]
+        else 0,
+    }
 
     dashboard = {
         "status": "ok",
@@ -112,28 +134,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "is_historical": bool(selected_date),
             "available_dates": available_dates(updates),
         },
-        "summary": {
-            "starting_capital_ils": starting_capital,
-            "currency": currency,
-            "cash_ils": cash,
-            "exposure_ils": exposure,
-            "equity_ils": equity,
-            "total_pnl_ils": total_pnl,
-            "total_pnl_pct": total_pnl_pct,
-            "realized_pnl_ils": round(realized["total"], 2),
-            "unrealized_pnl_ils": round(
-                sum(to_float(position.get("unrealized_pnl_ils")) for position in open_positions),
-                2,
-            ),
-            "open_risk_ils": round(open_risk, 2),
-            "open_positions": len(open_positions),
-            "closed_trades": len(realized["closed"]),
-            "wins": realized["wins"],
-            "losses": realized["losses"],
-            "win_rate": round(realized["wins"] / len(realized["closed"]) * 100, 2)
-            if realized["closed"]
-            else 0,
-        },
+        "summary": summary,
         "latest_run": {
             "timestamp": latest_update.get("timestamp"),
             "run_id": latest_update.get("run_id"),
@@ -169,6 +170,8 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         ),
         "open_positions": open_positions,
         "position_attention": build_position_attention(open_positions),
+        "risk_dashboard": build_risk_dashboard(open_positions, summary, latest_decisions),
+        "position_timeline": build_position_timeline(open_positions),
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
         "recent_trades": annotated_trades,
         "closed_trades": realized["closed"],
@@ -520,6 +523,8 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
         "total_results": len(setups),
         "action_counts": dict(sorted(action_counts.items())),
         "blockers": dict(sorted(blockers.items(), key=lambda item: item[1], reverse=True)),
+        "why_no_buys": build_why_no_buys(blockers, action_counts, len(setups)),
+        "watch_ready_funnel": build_watch_ready_funnel(setups),
         "near_misses": near_misses[:10],
         "drilldowns": {
             key: sorted_unique_diagnostic_items(items)[:60] for key, items in sorted(drilldowns.items())
@@ -564,6 +569,151 @@ def diagnostic_drilldown_item(
         "selection_context": setup.get("selection_context", ""),
         "reason": reason,
     }
+
+
+def build_why_no_buys(
+    blockers: dict[str, int],
+    action_counts: dict[str, int],
+    total_results: int,
+) -> list[dict[str, Any]]:
+    buys = to_int(action_counts.get("BUY_SIMULATED"))
+    if buys > 0:
+        return [
+            {
+                "label": "BUY_SIMULATED found",
+                "count": buys,
+                "detail": "The latest scan opened paper positions; blockers below are only for rejected candidates.",
+                "tone": "good",
+            }
+        ]
+
+    if not total_results:
+        return [
+            {
+                "label": "No scan results",
+                "count": 0,
+                "detail": "No setup rows were available for the selected snapshot.",
+                "tone": "warn",
+            }
+        ]
+
+    ranked = sorted(blockers.items(), key=lambda item: item[1], reverse=True)
+    if not ranked:
+        return [
+            {
+                "label": "No explicit blocker",
+                "count": total_results,
+                "detail": "The scan produced results, but no dominant rejection reason was recorded.",
+                "tone": "warn",
+            }
+        ]
+
+    details = {
+        "Entry confirmation missing": "Candidates need a completed-candle trigger before BUY_SIMULATED.",
+        "R/R below gate": "Weighted/net reward did not clear the active market-regime threshold.",
+        "Setup score below gate": "Technical quality score was below the active regime floor.",
+        "No Trade": "Scanner found no actionable setup structure for these tickers.",
+        "Weak sector": "Sector regime reduced eligibility for new paper buys.",
+        "Earnings blackout": "Earnings timing blocked fresh entries.",
+        "BEAR blocks new buys": "Market regime blocked all new BUY_SIMULATED entries.",
+    }
+    return [
+        {
+            "label": label,
+            "count": count,
+            "detail": details.get(label, "Recorded by the active risk/decision layer."),
+            "tone": "bad" if label in {"BEAR blocks new buys", "Earnings blackout"} else "warn",
+        }
+        for label, count in ranked[:5]
+    ]
+
+
+def build_watch_ready_funnel(setups: list[dict[str, Any]]) -> dict[str, Any]:
+    detected_records = []
+    unique_tickers = set()
+    regular_reviewed = set()
+    confirmation_passed = set()
+    rr_passed = set()
+    bought = set()
+
+    for setup in setups:
+        ticker = str(setup.get("ticker") or "").upper()
+        if not ticker:
+            continue
+        action = str(setup.get("action") or "").upper()
+        decision = setup.get("decision_json") or {}
+        warnings = [str(warning).upper() for warning in decision.get("warnings") or []]
+        watch_ready = action == "WATCH_READY" or any(warning.startswith("WATCH_READY:") for warning in warnings)
+        if action == "BUY_SIMULATED":
+            bought.add(ticker)
+        if not watch_ready and action != "BUY_SIMULATED":
+            continue
+        detected_records.append(setup)
+        unique_tickers.add(ticker)
+
+        session = str(decision.get("market_session") or decision.get("confirmation_session") or "").lower()
+        if "regular" in session or not session:
+            regular_reviewed.add(ticker)
+        if bool(decision.get("entry_confirmation_passed")):
+            confirmation_passed.add(ticker)
+        weighted_rr = to_float(decision.get("weighted_net_rr") or decision.get("decision_rr"))
+        net_rr = to_float(decision.get("net_rr"))
+        required = minimum_net_rr_for_decision(decision)
+        if max(weighted_rr, net_rr) >= required:
+            rr_passed.add(ticker)
+
+    return {
+        "detected_records": len(detected_records),
+        "unique_detected": len(unique_tickers),
+        "regular_reviewed_unique": len(regular_reviewed),
+        "confirmation_passed_unique": len(confirmation_passed),
+        "rr_passed_unique": len(rr_passed),
+        "buy_simulated_unique": len(bought),
+        "steps": [
+            {
+                "key": "detected",
+                "label": "Detected",
+                "value": len(unique_tickers),
+                "detail": f"{len(detected_records)} WATCH_READY/BUY records",
+            },
+            {
+                "key": "regular",
+                "label": "Regular reviewed",
+                "value": len(regular_reviewed),
+                "detail": "Reviewed in or eligible for regular-session confirmation",
+            },
+            {
+                "key": "confirmation",
+                "label": "Confirmation passed",
+                "value": len(confirmation_passed),
+                "detail": "Completed-candle entry confirmation passed",
+            },
+            {
+                "key": "rr",
+                "label": "R/R passed",
+                "value": len(rr_passed),
+                "detail": "Weighted/net R/R passed the active threshold",
+            },
+            {
+                "key": "buy",
+                "label": "BUY",
+                "value": len(bought),
+                "detail": "Opened as paper trades by active gates",
+            },
+        ],
+    }
+
+
+def minimum_net_rr_for_decision(decision: dict[str, Any]) -> float:
+    explicit = to_float(decision.get("minimum_net_rr_required") or decision.get("required_net_rr"))
+    if explicit:
+        return explicit
+    regime = str(decision.get("market_regime") or "").upper()
+    if regime == "NEUTRAL":
+        return 2.5
+    if regime == "BEAR":
+        return 999.0
+    return 2.0
 
 
 def sorted_unique_diagnostic_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -619,8 +769,6 @@ def build_system_health(
         notes.append("No scanner update found in tracker.")
     elif scan_age is not None and scan_age > 36 * 60:
         notes.append("Latest scanner update is older than 36 hours.")
-    if not latest_monitor_update:
-        notes.append("No position-monitor update found yet.")
     try:
         tracker_mtime = datetime.utcfromtimestamp(tracker_path.stat().st_mtime).replace(microsecond=0)
     except OSError:
@@ -638,6 +786,7 @@ def build_system_health(
         "latest_monitor_at": latest_monitor_at.isoformat() if latest_monitor_at != datetime.min else "",
         "latest_monitor_run_id": latest_monitor_update.get("run_id", ""),
         "latest_monitor_age_minutes": monitor_age,
+        "latest_monitor_policy": "Monitor action timestamp only changes after TP/SL portfolio updates.",
         "recent_runs_loaded": len(updates),
         "notes": notes,
     }
@@ -1091,6 +1240,148 @@ def build_position_attention(positions: list[dict[str, Any]]) -> list[dict[str, 
         )
     )
     return candidates[:8]
+
+
+def build_risk_dashboard(
+    positions: list[dict[str, Any]],
+    summary: dict[str, Any],
+    latest_decisions: list[dict[str, Any]],
+) -> dict[str, Any]:
+    exposure = to_float(summary.get("exposure_ils"))
+    cash = to_float(summary.get("cash_ils"))
+    open_risk = to_float(summary.get("open_risk_ils"))
+    starting_capital = to_float(summary.get("starting_capital_ils"), 100_000.0)
+    latest_decision = latest_decisions[0] if latest_decisions else {}
+    market_regime = str(latest_decision.get("market_regime") or "UNKNOWN").upper()
+    max_total_exposure = market_exposure_limit(market_regime)
+    remaining_capacity = max(0.0, max_total_exposure - exposure)
+
+    sector_totals: dict[str, dict[str, Any]] = defaultdict(lambda: {"name": "", "exposure": 0.0, "count": 0})
+    factor_totals: dict[str, dict[str, Any]] = defaultdict(lambda: {"name": "", "exposure": 0.0, "count": 0})
+    for position in positions:
+        position_exposure = to_float(position.get("exposure_ils"))
+        sector = str(position.get("sector") or "Unknown")
+        sector_totals[sector]["name"] = sector
+        sector_totals[sector]["exposure"] += position_exposure
+        sector_totals[sector]["count"] += 1
+
+        tags = factor_tags_for_position(position)
+        for tag in tags:
+            factor_totals[tag]["name"] = tag
+            factor_totals[tag]["exposure"] += position_exposure
+            factor_totals[tag]["count"] += 1
+
+    return {
+        "market_regime": market_regime,
+        "cash": round(cash, 2),
+        "total_exposure": round(exposure, 2),
+        "max_total_exposure": round(max_total_exposure, 2),
+        "remaining_exposure_capacity": round(remaining_capacity, 2),
+        "remaining_new_trade_budget": round(max(0.0, min(cash, remaining_capacity)), 2),
+        "open_risk": round(open_risk, 2),
+        "open_risk_pct": round(open_risk / starting_capital * 100, 2) if starting_capital else 0.0,
+        "sector_exposure": exposure_rows(sector_totals, exposure),
+        "factor_exposure": exposure_rows(factor_totals, exposure),
+    }
+
+
+def market_exposure_limit(market_regime: str) -> float:
+    if market_regime == "BULL":
+        return 40_000.0
+    if market_regime == "NEUTRAL":
+        return 20_000.0
+    if market_regime == "BEAR":
+        return 0.0
+    return 20_000.0
+
+
+def factor_tags_for_position(position: dict[str, Any]) -> list[str]:
+    decision = position.get("decision_json") if isinstance(position.get("decision_json"), dict) else {}
+    raw_tags = decision.get("factor_tags") if isinstance(decision, dict) else []
+    tags = [str(tag).strip() for tag in raw_tags or [] if str(tag).strip()]
+    if tags:
+        return tags
+    sector = str(position.get("sector") or "").strip()
+    return [sector] if sector else ["Unclassified"]
+
+
+def exposure_rows(groups: dict[str, dict[str, Any]], total_exposure: float) -> list[dict[str, Any]]:
+    rows = []
+    for item in groups.values():
+        exposure = to_float(item.get("exposure"))
+        rows.append(
+            {
+                "name": item.get("name") or "Unknown",
+                "exposure": round(exposure, 2),
+                "pct_of_exposure": round(exposure / total_exposure * 100, 2) if total_exposure else 0.0,
+                "count": to_int(item.get("count")),
+            }
+        )
+    rows.sort(key=lambda row: (to_float(row.get("exposure")), str(row.get("name") or "")), reverse=True)
+    return rows
+
+
+def build_position_timeline(positions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    timelines = []
+    for position in positions:
+        current = to_float(position.get("current_price_usd"), position.get("entry_price_usd"))
+        entry = to_float(position.get("entry_price_usd"), current)
+        stop = to_float(position.get("stop_loss"))
+        target_1 = to_float(position.get("target_1"))
+        target_2 = to_float(position.get("target_2"))
+        partial_taken = bool(position.get("partial_taken")) or "partial profit taken" in str(position.get("notes") or "").lower()
+        breakeven_stop = entry > 0 and stop > 0 and abs(stop - entry) / entry <= 0.001
+        next_attention = position.get("position_attention") or position_attention_status(position)
+
+        steps = [
+            {
+                "label": "Entry",
+                "level": round(entry, 2),
+                "status": "complete",
+                "detail": f"Opened {position.get('entry_date') or ''}".strip(),
+            },
+            {
+                "label": "TP1 partial",
+                "level": round(target_1, 2) if target_1 else None,
+                "status": "complete" if partial_taken else "active" if next_attention.get("event") == "TAKE_PARTIAL_PROFIT" else "pending",
+                "detail": "Take partial profit on 50% and reduce risk.",
+            },
+            {
+                "label": "Stop to entry",
+                "level": round(entry, 2) if entry else None,
+                "status": "complete" if breakeven_stop else "active" if partial_taken else "pending",
+                "detail": "After TP1, remaining stop should be protected at entry.",
+            },
+            {
+                "label": "Current",
+                "level": round(current, 2) if current else None,
+                "status": "active",
+                "detail": (next_attention.get("reason") or "Live/current tracker price."),
+            },
+            {
+                "label": "TP2 / SL",
+                "level": round(target_2, 2) if target_2 else None,
+                "status": "pending",
+                "detail": f"Stop {round(stop, 2) if stop else 'N/A'} / Target 2 {round(target_2, 2) if target_2 else 'N/A'}",
+            },
+        ]
+        timelines.append(
+            {
+                "ticker": position.get("ticker", ""),
+                "company_name": position.get("company_name", ""),
+                "sector": position.get("sector", ""),
+                "entry_price_usd": round(entry, 2),
+                "current_price_usd": round(current, 2),
+                "stop_loss": round(stop, 2) if stop else None,
+                "target_1": round(target_1, 2) if target_1 else None,
+                "target_2": round(target_2, 2) if target_2 else None,
+                "partial_taken": partial_taken,
+                "breakeven_stop": breakeven_stop,
+                "chart_url": position.get("chart_url", ""),
+                "steps": steps,
+            }
+        )
+    return timelines
 
 
 def position_attention_status(position: dict[str, Any]) -> dict[str, Any]:

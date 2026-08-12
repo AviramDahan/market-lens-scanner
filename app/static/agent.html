@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260811-agent-analytics2" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260812-risk-ui" />
   </head>
   <body>
     <main class="agent-shell">
@@ -94,6 +94,16 @@
 
       <section class="metric-grid" id="metricGrid"></section>
 
+      <section class="panel risk-dashboard-panel" id="riskDashboardPanel">
+        <div class="panel-head">
+          <div>
+            <h2>Risk Dashboard</h2>
+            <p id="riskDashboardMeta">Exposure, cash, risk and concentration</p>
+          </div>
+        </div>
+        <div id="riskDashboardGrid" class="risk-dashboard-grid"></div>
+      </section>
+
       <section class="panel positions-overview-panel" id="positionsOverviewPanel">
         <div class="panel-head">
           <div>
@@ -114,6 +124,16 @@
         <div id="positionAttentionList" class="position-attention-list"></div>
       </section>
 
+      <section class="panel position-timeline-panel" id="positionTimelinePanel">
+        <div class="panel-head">
+          <div>
+            <h2>Position Timeline</h2>
+            <p id="positionTimelineMeta">Trade lifecycle for open positions</p>
+          </div>
+        </div>
+        <div id="positionTimelineList" class="position-timeline-list"></div>
+      </section>
+
       <section class="panel diagnostics-panel">
         <div class="panel-head">
           <div>
@@ -122,6 +142,8 @@
           </div>
         </div>
         <div id="diagnosticsGrid" class="diagnostics-grid"></div>
+        <div id="whyNoBuysGrid" class="why-no-buys-grid"></div>
+        <div id="watchReadyFunnel" class="watch-funnel"></div>
         <div id="conversionGrid" class="conversion-grid"></div>
         <div class="near-miss-wrap">
           <div class="near-miss-head">
@@ -334,6 +356,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260811-agent-analytics2"></script>
+    <script src="/static/agent.js?v=20260812-risk-ui"></script>
   </body>
 </html>

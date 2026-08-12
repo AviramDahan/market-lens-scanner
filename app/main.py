@@ -15,12 +15,15 @@ from app.agent_dashboard import (
     build_agent_dashboard,
     build_decision_diagnostics,
     build_position_attention,
+    build_position_timeline,
+    build_risk_dashboard,
     build_system_health,
     compact_agent_dashboard_payload,
     dashboard_section_payload,
     load_period_summary,
     parse_timestamp,
     sanitize_dashboard_media_urls,
+    to_float,
     with_position_calculations,
 )
 from app.auth import auth_is_configured, auth_is_open, get_current_user_required, supabase_publishable_key
@@ -50,6 +53,13 @@ from app.scan_trigger import (
 from app.smart_universe import build_curated_universe_fallback, build_smart_universe
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
 from app.strategy import apply_strategy_decisions
+from app.telegram_notifications import (
+    dashboard_url_from_env,
+    format_position_attention_message,
+    send_telegram_chart_photo,
+    send_telegram_message,
+    telegram_configured,
+)
 from app.watchlists import list_watchlists
 
 app = FastAPI(title="Market Lens", version="0.1.0", description="Swing trade scanner")
@@ -68,6 +78,7 @@ LIVE_PRICE_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_LIVE_PRICE_CACHE_TTL",
 _LIVE_PRICE_CACHE: dict[str, tuple[float, float, str, float, float]] = {}
 DASHBOARD_CACHE_TTL_SECONDS = int(os.getenv("MARKET_LENS_AGENT_DASHBOARD_CACHE_TTL", "120"))
 _AGENT_DASHBOARD_CACHE: dict[tuple[str, int, int], tuple[float, dict]] = {}
+_POSITION_ATTENTION_ALERT_AT: dict[str, float] = {}
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/charts", StaticFiles(directory=CHART_DIR), name="charts")
@@ -139,8 +150,21 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     dashboard = sanitize_dashboard_media_urls(dashboard, PROJECT_ROOT)
     latest_setups = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
     decision_diagnostics = dashboard.get("decision_diagnostics")
-    if not isinstance(decision_diagnostics, dict) or "drilldowns" not in decision_diagnostics:
+    if (
+        not isinstance(decision_diagnostics, dict)
+        or "drilldowns" not in decision_diagnostics
+        or "why_no_buys" not in decision_diagnostics
+        or "watch_ready_funnel" not in decision_diagnostics
+    ):
         dashboard["decision_diagnostics"] = build_decision_diagnostics(latest_setups)
+
+    positions = dashboard.get("open_positions") if isinstance(dashboard.get("open_positions"), list) else []
+    summary = dashboard.get("summary") if isinstance(dashboard.get("summary"), dict) else {}
+    latest_decisions = dashboard.get("latest_decisions") if isinstance(dashboard.get("latest_decisions"), list) else []
+    if "risk_dashboard" not in dashboard:
+        dashboard["risk_dashboard"] = build_risk_dashboard(positions, summary, latest_decisions)
+    if "position_timeline" not in dashboard:
+        dashboard["position_timeline"] = build_position_timeline(positions)
 
     latest_run = dashboard.get("latest_run") if isinstance(dashboard.get("latest_run"), dict) else {}
     latest_dt = parse_timestamp(latest_run.get("timestamp"))
@@ -544,6 +568,7 @@ async def monitor_live_positions(
 
     checked = []
     detected_events = []
+    attention_alerts = []
     warnings = {}
     dispatchable_event = None
     rate_limited = []
@@ -570,6 +595,17 @@ async def monitor_live_positions(
         }
         checked.append(checked_item)
         if not event:
+            attention_alert = detect_position_attention_alert(position, live_price, live_high, live_low)
+            if attention_alert:
+                sent_alert = send_position_attention_alert(position, attention_alert, source_time)
+                attention_alerts.append(sent_alert)
+                checked_item["status"] = "attention_alert" if sent_alert.get("sent") else "near_threshold"
+                checked_item["attention_alert"] = {
+                    "event_type": attention_alert.get("event_type"),
+                    "threshold": attention_alert.get("threshold"),
+                    "distance_pct": attention_alert.get("distance_pct"),
+                    "status": sent_alert.get("status"),
+                }
             continue
 
         event_payload = live_monitor_event_payload(event)
@@ -592,6 +628,7 @@ async def monitor_live_positions(
             "open_positions": len(positions),
             "positions_checked": len(checked),
             "checked": checked,
+            "attention_alerts": attention_alerts,
             "warnings": warnings,
             "reason": "No open position touched stop loss or targets.",
         }, compact)
@@ -605,6 +642,7 @@ async def monitor_live_positions(
             "open_positions": len(positions),
             "positions_checked": len(checked),
             "detected_events": detected_events,
+            "attention_alerts": attention_alerts,
             "warnings": warnings,
             "reason": "GitHub monitor trigger token is not configured on the server.",
         }, compact)
@@ -619,6 +657,7 @@ async def monitor_live_positions(
             "positions_checked": len(checked),
             "detected_events": detected_events,
             "rate_limited": rate_limited,
+            "attention_alerts": attention_alerts,
             "warnings": warnings,
             "reason": "Monitor trigger cooldown is active.",
         }, compact)
@@ -637,6 +676,7 @@ async def monitor_live_positions(
         "positions_checked": len(checked),
         "detected_events": detected_events,
         "dispatched_event": live_monitor_event_payload(dispatchable_event),
+        "attention_alerts": attention_alerts,
         "warnings": warnings,
         "reason": dispatchable_event.reason,
         "dispatch": compact_dispatch_payload(dispatch),
@@ -728,6 +768,168 @@ def validate_agent_cron_secret(header_secret: str | None, query_secret: str | No
     if provided != expected:
         raise HTTPException(status_code=401, detail="Invalid agent cron secret.")
     return {"protected": True}
+
+
+def detect_position_attention_alert(
+    position: dict,
+    live_price: float,
+    live_high: float | None,
+    live_low: float | None,
+) -> dict | None:
+    if not position_attention_alert_enabled() or live_price <= 0:
+        return None
+    ticker = str(position.get("ticker") or "").upper().strip()
+    if not ticker:
+        return None
+
+    threshold_pct = position_attention_threshold_pct()
+    high = float(live_high or live_price)
+    low = float(live_low or live_price)
+    entry = to_float(position.get("entry_price_usd") or position.get("entry_price"))
+    stop = to_float(position.get("stop_loss"))
+    target_1 = to_float(position.get("target_1"))
+    target_2 = to_float(position.get("target_2"))
+    partial_taken = bool(position.get("partial_taken")) or "partial" in str(position.get("notes") or "").lower()
+    candidates = []
+
+    if stop > 0 and low > stop:
+        distance_pct = (low - stop) / live_price * 100
+        label = "Breakeven stop" if entry > 0 and abs(stop - entry) / entry <= 0.001 else "Stop loss"
+        candidates.append(
+            attention_alert_payload(
+                ticker=ticker,
+                event_type="EXIT_STOP",
+                label=label,
+                threshold=stop,
+                distance_pct=distance_pct,
+                live_price=live_price,
+                live_high=high,
+                live_low=low,
+                side="below",
+            )
+        )
+    if target_2 > 0 and high < target_2:
+        candidates.append(
+            attention_alert_payload(
+                ticker=ticker,
+                event_type="TAKE_PROFIT",
+                label="Target 2",
+                threshold=target_2,
+                distance_pct=(target_2 - high) / live_price * 100,
+                live_price=live_price,
+                live_high=high,
+                live_low=low,
+                side="above",
+            )
+        )
+    if target_1 > 0 and high < target_1 and not partial_taken:
+        candidates.append(
+            attention_alert_payload(
+                ticker=ticker,
+                event_type="TAKE_PARTIAL_PROFIT",
+                label="Target 1",
+                threshold=target_1,
+                distance_pct=(target_1 - high) / live_price * 100,
+                live_price=live_price,
+                live_high=high,
+                live_low=low,
+                side="above",
+            )
+        )
+
+    eligible = [candidate for candidate in candidates if 0 <= to_float(candidate.get("distance_pct"), 999) <= threshold_pct]
+    if not eligible:
+        return None
+    eligible.sort(key=lambda item: to_float(item.get("distance_pct"), 999))
+    return eligible[0]
+
+
+def attention_alert_payload(
+    *,
+    ticker: str,
+    event_type: str,
+    label: str,
+    threshold: float,
+    distance_pct: float,
+    live_price: float,
+    live_high: float,
+    live_low: float,
+    side: str,
+) -> dict:
+    distance = round(max(0.0, distance_pct), 3)
+    direction = "above" if side == "above" else "below"
+    return {
+        "ticker": ticker,
+        "event_type": event_type,
+        "label": label,
+        "threshold": round(threshold, 4),
+        "distance_pct": distance,
+        "live_price": round(live_price, 4),
+        "live_high": round(live_high, 4),
+        "live_low": round(live_low, 4),
+        "reason": f"{ticker} is {distance:.2f}% from {label} {threshold:.2f} ({direction} current 1m range).",
+    }
+
+
+def send_position_attention_alert(position: dict, alert: dict, source_time: str) -> dict:
+    key = f"{alert.get('ticker')}:{alert.get('event_type')}"
+    now = time.monotonic()
+    cooldown = position_attention_cooldown_seconds()
+    last_sent = _POSITION_ATTENTION_ALERT_AT.get(key, 0.0)
+    if cooldown > 0 and now - last_sent < cooldown:
+        return {**alert, "sent": False, "status": "cooldown", "reason": f"Telegram attention cooldown active ({cooldown}s)."}
+
+    if not position_attention_alert_enabled():
+        return {**alert, "sent": False, "status": "disabled", "reason": "Position attention Telegram alerts are disabled."}
+    if not telegram_configured():
+        return {**alert, "sent": False, "status": "not_configured", "reason": "Telegram is not configured."}
+
+    dashboard_url = dashboard_url_from_env()
+    message = format_position_attention_message(
+        position=position,
+        alert=alert,
+        timestamp=source_time,
+        dashboard_url=dashboard_url,
+    )
+    message_result = send_telegram_message(message)
+    chart_result = send_telegram_chart_photo(
+        position.get("chart_url") or position.get("screenshot_url") or "",
+        ticker=alert.get("ticker") or position.get("ticker"),
+        dashboard_url=dashboard_url,
+    )
+    if message_result.sent:
+        _POSITION_ATTENTION_ALERT_AT[key] = now
+    return {
+        **alert,
+        "sent": bool(message_result.sent),
+        "status": message_result.status,
+        "message_status": message_result.status,
+        "chart_status": chart_result.status,
+        "reason": alert.get("reason", ""),
+    }
+
+
+def position_attention_alert_enabled() -> bool:
+    return os.getenv("MARKET_LENS_POSITION_ATTENTION_TELEGRAM_ENABLED", "true").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def position_attention_threshold_pct() -> float:
+    try:
+        return max(0.0, float(os.getenv("MARKET_LENS_POSITION_ATTENTION_THRESHOLD_PCT", "1.0")))
+    except ValueError:
+        return 1.0
+
+
+def position_attention_cooldown_seconds() -> int:
+    try:
+        return max(0, int(os.getenv("MARKET_LENS_POSITION_ATTENTION_COOLDOWN_SECONDS", "1800")))
+    except ValueError:
+        return 1800
 
 
 def live_monitor_event_payload(event) -> dict:
