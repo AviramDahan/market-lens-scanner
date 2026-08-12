@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-12
-Total scans: 24
-Tickers scanned: 3388
+Total scans: 25
+Tickers scanned: 3532
 BUY_SIMULATED: 2
 WATCH_READY: 319
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=319, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1215
-SKIP: 1983
-NO_TRADE: 1784
+WATCH: 1244
+SKIP: 2090
+NO_TRADE: 1877
 Realized PnL: 922.06
-Unrealized PnL: 1029.22
-Portfolio value: 101951.28
-Best ticker: MU
+Unrealized PnL: 1138.3
+Portfolio value: 102060.36
+Best ticker: HAL
 Worst ticker: CHD
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 15
-- RELATIVE_STRENGTH_LEADER: 275
-- TREND_PULLBACK_RECLAIM: 76
+- BREAKOUT_CONTINUATION: 16
+- RELATIVE_STRENGTH_LEADER: 286
+- TREND_PULLBACK_RECLAIM: 78
 - VWAP_RECLAIM: 32
 
 Top rejected candidates:
