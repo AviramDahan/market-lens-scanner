@@ -67,6 +67,141 @@ const MARKET_CONFIRMATION_TIMES = new Set(["09:45", "10:30", "11:30", "13:30", "
 const CLOSE_REVIEW_TIMES = new Set(["16:15"]);
 const SATURDAY_SCAN_TIMES = ["11:00"];
 const SUNDAY_SCAN_TIMES = ["18:30", "22:00"];
+const SECTION_HELP = {
+  dashboardOverview: {
+    title: "Agent Dashboard",
+    intro: "This page is the control room for the paper-trading agent. It shows the latest scan, open paper positions, risk, diagnostics, logs, and system status.",
+    items: [
+      "Top run cards show the latest scan time, scan status, ticker count, next scheduled scan, live price sync, monitor trigger status, and trade-ready count.",
+      "The metric cards below summarize paper equity, total P/L, cash, exposure, open risk, and win rate.",
+      "All trading shown here is simulated paper trading only. The app does not place real broker orders.",
+    ],
+  },
+  riskDashboard: {
+    title: "Risk Dashboard",
+    intro: "This section explains how much paper capital is currently exposed and where the risk is concentrated.",
+    items: [
+      "Market shows the current market regime used by the agent, such as BULL, NEUTRAL, or BEAR.",
+      "New Trade Capacity estimates how much more exposure the agent can add under the active exposure limit.",
+      "Open Risk is the estimated loss to active stop levels if all open positions hit their stops.",
+      "Sector Exposure shows concentration by business sector. Factor Exposure shows hidden theme exposure such as Technology, Defensive, or Consumer Cyclical.",
+    ],
+  },
+  openPositions: {
+    title: "Open Positions",
+    intro: "This is the current simulated portfolio: paper trades that are still open.",
+    items: [
+      "Each card shows entry, current price, stop, TP1/TP2, exposure, unrealized P/L, and progress toward TP1.",
+      "Stop and target prices include percentage distance from entry in brackets.",
+      "Prices refresh live while open positions exist, but the tracker is updated only when the monitor records a real paper action.",
+    ],
+  },
+  positionAttention: {
+    title: "Position Attention",
+    intro: "This section highlights open positions that are close to a target or stop.",
+    items: [
+      "High or medium attention means the current live price is near TP1, TP2, or stop loss.",
+      "This is an alert/monitoring layer. It does not mean the trade has already closed.",
+      "When price actually touches TP/SL, the server-side monitor can trigger the position monitor workflow.",
+    ],
+  },
+  positionTimeline: {
+    title: "Position Timeline",
+    intro: "This section shows the lifecycle of every open paper position.",
+    items: [
+      "Entry is when the simulated position was opened.",
+      "TP1 partial means the agent should take partial paper profit, usually 50% of the position.",
+      "Stop to entry means that after TP1, the remaining stop should move to breakeven.",
+      "Current shows where the position is now relative to its next important level.",
+      "TP2 / SL is the final target or stop path for the remaining position.",
+    ],
+  },
+  entryDiagnostics: {
+    title: "Entry Diagnostics",
+    intro: "This section explains why the latest scan did or did not open new paper trades.",
+    items: [
+      "The top cards group candidates by action or blocker: BUY, WATCH_READY, R/R blocked, score blocked, confirmation/session, weak sector, or earnings.",
+      "Why No Buys ranks the most common reasons the agent did not open new BUY_SIMULATED trades.",
+      "WATCH_READY Funnel shows where staged candidates are dropping off: detected, reviewed, confirmation passed, R/R passed, and finally BUY.",
+      "Nearest missed entries shows the strongest candidates that were close but did not pass all entry gates.",
+    ],
+  },
+  portfolioEquity: {
+    title: "Portfolio Equity",
+    intro: "This chart tracks the simulated account value over time.",
+    items: [
+      "The line shows paper portfolio equity across recorded runs.",
+      "It combines cash and open exposure based on the tracker values.",
+      "Use it to see whether the agent is improving, flat, or drawing down over time.",
+    ],
+  },
+  positionCharts: {
+    title: "Position Charts",
+    intro: "This section stores the chart images and selection context for open positions.",
+    items: [
+      "Charts are loaded only after pressing Show, to keep the dashboard faster.",
+      "Click a chart to enlarge it.",
+      "Selection context explains why the stock was originally selected and what setup/risk conditions were present.",
+    ],
+  },
+  watchReady: {
+    title: "WATCH_READY",
+    intro: "WATCH_READY means the stock is close enough to be staged, but it is not a BUY yet.",
+    items: [
+      "A WATCH_READY candidate usually has a meaningful technical setup, but still needs regular-session confirmation, stronger price action, better R/R, or another gate to pass.",
+      "The agent keeps these candidates visible so they can be reviewed again on later scans.",
+      "Even if WATCH_READY looks strong, the active strategy does not open a paper trade until all BUY_SIMULATED conditions are met.",
+    ],
+  },
+  latestActions: {
+    title: "Latest Actions",
+    intro: "This is the raw decision log from the latest scan.",
+    items: [
+      "Each row shows the ticker, action, setup type, decision reason, checklist, and risk checks.",
+      "Actions include BUY_SIMULATED, HOLD, WATCH_READY, WATCH, SKIP, TAKE_PARTIAL_PROFIT, TAKE_PROFIT, and EXIT_STOP.",
+      "The list loads in chunks of 10 to avoid freezing the dashboard.",
+    ],
+  },
+  tradeLog: {
+    title: "Trade Log",
+    intro: "This section records simulated portfolio actions over time.",
+    items: [
+      "BUY_SIMULATED rows are paper entries.",
+      "TAKE_PARTIAL_PROFIT, TAKE_PROFIT, and EXIT_STOP rows are paper exits or reductions.",
+      "Closed trades include P/L and R multiple when the data is available.",
+      "The log loads in chunks of 10 for performance.",
+    ],
+  },
+  scoreCalibration: {
+    title: "Score Calibration",
+    intro: "This section checks whether setup scores are actually useful over time.",
+    items: [
+      "Closed trades are grouped by setup score bucket.",
+      "Each bucket shows trade count, win rate, and total P/L.",
+      "This helps decide later whether score thresholds are too strict, too loose, or well calibrated.",
+    ],
+  },
+  latestSummary: {
+    title: "Latest Summary",
+    intro: "This is the written summary created by the agent after the latest run.",
+    items: [
+      "It includes run status, tickers scanned, valid setups, actions, watch-ready candidates, open/closed positions, cash, exposure, risk, saved files, and errors.",
+      "It is useful for auditing one run without opening the Excel tracker.",
+      "Long summaries are trimmed in the dashboard for load speed; full files remain in agent_results.",
+    ],
+  },
+  systemHealth: {
+    title: "System Health",
+    intro: "This section shows whether the scanner, monitor, dashboard payload, and data sync are healthy.",
+    items: [
+      "Payload indicates whether heavy lists are loaded lazily.",
+      "Last Scan shows when the scanner last wrote a valid update.",
+      "Last Monitor Action updates only when a TP/SL paper portfolio action is recorded.",
+      "Live Sensor shows the latest live price refresh for open positions.",
+      "Data Sync shows whether dashboard assets are available locally or synced from GitHub.",
+    ],
+  },
+};
 
 let money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -126,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   setupCollapsibleSections();
   setupMediaModal();
+  setupSectionHelpModal();
   setupDiagnosticModal();
   loadDashboard(selectedDate);
   updateScheduleIndicators();
@@ -1168,7 +1304,9 @@ function setupDiagnosticModal() {
     if (event.target === modal) closeDiagnosticModal();
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !event.marketLensMediaHandled) closeDiagnosticModal();
+    if (event.key === "Escape" && !event.marketLensMediaHandled && !event.marketLensSectionHelpHandled) {
+      closeDiagnosticModal();
+    }
   });
   document.getElementById("loadMoreDiagnostics").addEventListener("click", () => loadDiagnosticPage(false));
   document.getElementById("diagnosticResetFilters").addEventListener("click", () => {
@@ -1194,6 +1332,72 @@ function setupDiagnosticModal() {
       loadDiagnosticPage(true);
     });
   });
+}
+
+function setupSectionHelpModal() {
+  const modal = document.getElementById("sectionHelpModal");
+  const close = document.getElementById("sectionHelpClose");
+  if (!modal || !close) return;
+
+  document.querySelectorAll("[data-section-help]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openSectionHelp(button.dataset.sectionHelp || "");
+    });
+  });
+  close.addEventListener("click", closeSectionHelpModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeSectionHelpModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isSectionHelpModalOpen()) {
+      event.marketLensSectionHelpHandled = true;
+      closeSectionHelpModal();
+    }
+  });
+}
+
+function openSectionHelp(key) {
+  const modal = document.getElementById("sectionHelpModal");
+  const title = document.getElementById("sectionHelpTitle");
+  const eyebrow = document.getElementById("sectionHelpEyebrow");
+  const body = document.getElementById("sectionHelpBody");
+  const content = SECTION_HELP[key] || {
+    title: "Dashboard section",
+    intro: "This section explains one part of the Market Lens Agent dashboard.",
+    items: ["No specific guide is configured for this section yet."],
+  };
+  if (!modal || !title || !eyebrow || !body) return;
+
+  title.textContent = content.title;
+  eyebrow.textContent = "Section guide";
+  body.innerHTML = sectionHelpBodyHtml(content);
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
+function closeSectionHelpModal() {
+  const modal = document.getElementById("sectionHelpModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function isSectionHelpModalOpen() {
+  return Boolean(document.getElementById("sectionHelpModal")?.classList.contains("open"));
+}
+
+function sectionHelpBodyHtml(content) {
+  const intro = content.intro ? `<p>${escapeHtml(content.intro)}</p>` : "";
+  const items = Array.isArray(content.items) ? content.items : [];
+  const list = items.length
+    ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : "";
+  return `${intro}${list}`;
 }
 
 function openDiagnosticModal(key, label) {

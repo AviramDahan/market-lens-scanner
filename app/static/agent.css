@@ -95,6 +95,38 @@ h2 {
   letter-spacing: 0;
 }
 
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.section-help-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--blue);
+  background: #fff;
+  cursor: pointer;
+}
+
+.section-help-button:hover,
+.section-help-button:focus-visible {
+  border-color: #bdd5ea;
+  background: var(--soft-blue);
+}
+
+.section-help-button svg {
+  width: 16px;
+  height: 16px;
+}
+
 .top-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1597,6 +1629,87 @@ td {
   padding: 14px;
 }
 
+.section-help-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 48;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.54);
+}
+
+.section-help-modal.open {
+  display: grid;
+}
+
+.section-help-panel {
+  width: min(620px, 94vw);
+  max-height: min(620px, 88vh);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.section-help-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-help-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.section-help-body {
+  display: grid;
+  gap: 14px;
+  max-height: calc(min(620px, 88vh) - 78px);
+  overflow: auto;
+  padding: 18px 20px 20px;
+}
+
+.section-help-body p {
+  color: #253044;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.section-help-body ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.section-help-body li {
+  position: relative;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.section-help-body li::before {
+  position: absolute;
+  top: 9px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--blue);
+  content: "";
+}
+
 .diagnostic-detail-head {
   display: flex;
   align-items: flex-start;
@@ -1789,6 +1902,24 @@ td {
   .diagnostic-detail-head {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .section-help-modal {
+    padding: 12px;
+  }
+
+  .section-help-panel {
+    width: 100%;
+    max-height: 92vh;
+  }
+
+  .section-help-head {
+    padding: 14px;
+  }
+
+  .section-help-body {
+    max-height: calc(92vh - 72px);
+    padding: 14px;
   }
 
   .diagnostic-metrics,
