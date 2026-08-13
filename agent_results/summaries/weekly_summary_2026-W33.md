@@ -8,24 +8,24 @@ WATCH_READY: 1093
 WATCH_READY unique tickers: 48
 WATCH_READY session split: regular=5, off_hours=1088, unknown=0
 WATCH_READY conversion: 2 converted / 48 staged
-WATCH: 5480
-SKIP: 9677
-NO_TRADE: 8690
+WATCH: 5482
+SKIP: 9675
+NO_TRADE: 8688
 Realized PnL: 922.06
-Unrealized PnL: 1744.75
-Portfolio value: 102666.81
+Unrealized PnL: 1667.49
+Portfolio value: 102589.55
 Best ticker: MSTR
-Worst ticker: SMCI
+Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 133
 - RELATIVE_STRENGTH_LEADER: 1511
-- TREND_PULLBACK_RECLAIM: 283
+- TREND_PULLBACK_RECLAIM: 285
 - VWAP_RECLAIM: 187
 
 Top rejected candidates:
-- PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.71 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
+- PFE: WATCH score=0.63 reason=Gross R/R is valid, but Net R/R 1.74 failed minimum 2.00 after slippage/spread adjustment.
 - EOG: WATCH score=0.62 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - TSM: SKIP score=0.61 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.27.
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
