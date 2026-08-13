@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-13
-Total scans: 26
-Tickers scanned: 3657
+Total scans: 27
+Tickers scanned: 3785
 BUY_SIMULATED: 0
-WATCH_READY: 1
-WATCH_READY unique tickers: 1
-WATCH_READY session split: regular=1, off_hours=0, unknown=0
-WATCH_READY conversion: 0 converted / 1 staged
-WATCH: 977
-SKIP: 2481
-NO_TRADE: 2084
+WATCH_READY: 10
+WATCH_READY unique tickers: 9
+WATCH_READY session split: regular=1, off_hours=9, unknown=0
+WATCH_READY conversion: 0 converted / 9 staged
+WATCH: 1023
+SKIP: 2556
+NO_TRADE: 2159
 Realized PnL: 1233.68
-Unrealized PnL: 941.21
-Portfolio value: 102174.89
+Unrealized PnL: 830.61
+Portfolio value: 102064.29
 Best ticker: MSTR
 Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 41
-- RELATIVE_STRENGTH_LEADER: 324
-- TREND_PULLBACK_RECLAIM: 59
-- VWAP_RECLAIM: 16
+- BREAKOUT_CONTINUATION: 43
+- RELATIVE_STRENGTH_LEADER: 338
+- TREND_PULLBACK_RECLAIM: 62
+- VWAP_RECLAIM: 17
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.71 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
@@ -38,5 +38,6 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
