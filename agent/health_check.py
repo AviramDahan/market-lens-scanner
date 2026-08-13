@@ -10,10 +10,13 @@ from typing import Any
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from app.telegram_notifications import send_telegram_message
 
 
-ROOT = Path(__file__).resolve().parents[1]
 NEW_YORK_TZ = ZoneInfo("America/New_York")
 
 
