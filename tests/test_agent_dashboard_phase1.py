@@ -136,6 +136,57 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
     assert diagnostics["watch_ready_funnel"]["unique_detected"] == 1
     assert diagnostics["watch_ready_funnel"]["confirmation_passed_unique"] == 0
     assert diagnostics["watch_ready_funnel"]["rr_passed_unique"] == 1
+    assert diagnostics["entry_blockers_summary"][0]["label"] == "Entry confirmation missing"
+    assert diagnostics["closest_to_entry"][0]["ticker"] == "AAA"
+    assert diagnostics["closest_to_entry"][0]["entry_readiness_score"] > 50
+    assert diagnostics["closest_to_entry"][0]["missing_conditions"][0]["key"] == "entry_confirmation"
+
+
+def test_decision_diagnostics_ranks_closest_to_entry_above_weak_candidates() -> None:
+    diagnostics = build_decision_diagnostics(
+        [
+            {
+                "ticker": "CLOSE",
+                "action": "WATCH_READY",
+                "setup_type": "Breakout + Retest",
+                "score": 0.62,
+                "reason": "WATCH_READY: needs completed entry confirmation",
+                "decision_json": {
+                    "market_regime": "BULL",
+                    "sector_regime": "STRONG",
+                    "setup_score": 0.62,
+                    "minimum_setup_score_required": 0.45,
+                    "minimum_net_rr_required": 2.0,
+                    "weighted_net_rr": 1.92,
+                    "net_rr_1": 1.05,
+                    "net_rr_2": 3.2,
+                    "entry_confirmation_passed": False,
+                },
+            },
+            {
+                "ticker": "WEAK",
+                "action": "SKIP",
+                "setup_type": "Fib 61.8",
+                "score": 0.38,
+                "reason": "SKIP: sector regime is weak and weighted risk/reward is below minimum",
+                "decision_json": {
+                    "market_regime": "BULL",
+                    "sector_regime": "WEAK",
+                    "setup_score": 0.38,
+                    "minimum_setup_score_required": 0.45,
+                    "minimum_net_rr_required": 2.0,
+                    "weighted_net_rr": 0.8,
+                    "entry_confirmation_passed": False,
+                },
+            },
+        ]
+    )
+
+    assert diagnostics["closest_to_entry"][0]["ticker"] == "CLOSE"
+    assert diagnostics["closest_to_entry"][0]["entry_readiness_score"] > diagnostics["closest_to_entry"][1]["entry_readiness_score"]
+    blocker_labels = [item["label"] for item in diagnostics["entry_blockers_summary"]]
+    assert "Weak sector" in blocker_labels
+    assert "Weighted/net R/R below gate" in blocker_labels
 
 
 def test_risk_dashboard_groups_sector_factor_and_capacity() -> None:

@@ -489,6 +489,101 @@ h2 {
   font-size: 20px;
 }
 
+.entry-blockers-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.entry-blockers-grid:empty {
+  display: none;
+}
+
+.entry-blockers-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.entry-blockers-head span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.entry-blockers-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.entry-blocker-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.entry-blocker-card.fail {
+  border-color: #f1c5bf;
+  background: var(--soft-red);
+}
+
+.entry-blocker-card.warn {
+  border-color: #efd3a5;
+  background: var(--soft-amber);
+}
+
+.entry-blocker-card.need {
+  border-color: #bfd4e9;
+  background: var(--soft-blue);
+}
+
+.entry-blocker-card > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.entry-blocker-card span,
+.entry-blocker-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.entry-blocker-card > div:first-child span {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.entry-blocker-card strong {
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.blocker-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.blocker-examples span {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-weight: 800;
+}
+
 .watch-funnel {
   display: grid;
   gap: 10px;
@@ -657,6 +752,73 @@ h2 {
   font-style: normal;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+.readiness-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.readiness-row span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.readiness-row strong {
+  font-size: 14px;
+}
+
+.readiness-bar {
+  grid-column: 1 / -1;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eef4;
+}
+
+.readiness-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--amber), var(--green));
+}
+
+.missing-conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.missing-conditions span {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.missing-conditions span.fail {
+  border-color: #f1c5bf;
+  color: #9c2d20;
+}
+
+.missing-conditions span.warn {
+  border-color: #efd3a5;
+  color: #8a5a08;
+}
+
+.missing-conditions span.need {
+  border-color: #bfd4e9;
+  color: #1c5f99;
+}
+
+.missing-conditions span.pass {
+  border-color: #bfe4d1;
+  color: #177245;
 }
 
 .agent-layout {

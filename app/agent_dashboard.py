@@ -467,9 +467,11 @@ def load_period_summary(summary_dir: Path, period: str, timestamp: datetime) -> 
 
 def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
     blockers: dict[str, int] = defaultdict(int)
+    entry_blockers: dict[str, dict[str, Any]] = {}
     action_counts: dict[str, int] = defaultdict(int)
     drilldowns: dict[str, list[dict[str, Any]]] = defaultdict(list)
     near_misses: list[dict[str, Any]] = []
+    closest_to_entry: list[dict[str, Any]] = []
 
     for setup in setups:
         action = str(setup.get("action") or "UNKNOWN").upper()
@@ -480,6 +482,9 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
         warnings = " ".join(str(warning) for warning in decision.get("warnings") or [])
         text = f"{reason} {warnings}".lower()
         drilldown_item = diagnostic_drilldown_item(setup, decision, action, setup_type, reason)
+        missing_conditions = entry_missing_conditions(setup, decision, action, setup_type, text)
+        drilldown_item["missing_conditions"] = missing_conditions
+        drilldown_item["entry_readiness_score"] = entry_readiness_score(setup, decision, action, setup_type, missing_conditions)
 
         if action == "BUY_SIMULATED":
             drilldowns["BUY"].append(drilldown_item)
@@ -508,11 +513,24 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             blockers["Weak sector"] += 1
             drilldowns["WEAK_EARNINGS"].append(drilldown_item)
 
+        for condition in missing_conditions:
+            register_entry_blocker(entry_blockers, condition, drilldown_item)
+
         if action in {"WATCH", "WATCH_READY", "SKIP"} and setup_type and setup_type.lower() != "no trade":
             near_misses.append(drilldown_item)
+            closest_to_entry.append(drilldown_item)
 
     near_misses.sort(
         key=lambda item: (
+            item.get("action") == "WATCH_READY",
+            to_float(item.get("setup_score")),
+            to_float(item.get("weighted_net_rr") or item.get("net_rr")),
+        ),
+        reverse=True,
+    )
+    closest_to_entry.sort(
+        key=lambda item: (
+            to_float(item.get("entry_readiness_score")),
             item.get("action") == "WATCH_READY",
             to_float(item.get("setup_score")),
             to_float(item.get("weighted_net_rr") or item.get("net_rr")),
@@ -523,9 +541,11 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
         "total_results": len(setups),
         "action_counts": dict(sorted(action_counts.items())),
         "blockers": dict(sorted(blockers.items(), key=lambda item: item[1], reverse=True)),
+        "entry_blockers_summary": sorted_entry_blockers(entry_blockers),
         "why_no_buys": build_why_no_buys(blockers, action_counts, len(setups)),
         "watch_ready_funnel": build_watch_ready_funnel(setups),
         "near_misses": near_misses[:10],
+        "closest_to_entry": closest_to_entry[:10],
         "drilldowns": {
             key: sorted_unique_diagnostic_items(items)[:60] for key, items in sorted(drilldowns.items())
         },
@@ -536,6 +556,185 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             or any(str(warning).upper().startswith("WATCH_READY:") for warning in (setup.get("decision_json") or {}).get("warnings") or [])
         ),
     }
+
+
+def register_entry_blocker(
+    entry_blockers: dict[str, dict[str, Any]],
+    condition: dict[str, Any],
+    item: dict[str, Any],
+) -> None:
+    key = str(condition.get("key") or condition.get("label") or "unknown")
+    current = entry_blockers.setdefault(
+        key,
+        {
+            "key": key,
+            "label": condition.get("label") or key,
+            "count": 0,
+            "severity": condition.get("severity") or "warn",
+            "detail": condition.get("detail") or "",
+            "examples": [],
+        },
+    )
+    current["count"] += 1
+    if len(current["examples"]) < 5:
+        current["examples"].append(
+            {
+                "ticker": item.get("ticker"),
+                "action": item.get("action"),
+                "setup_type": item.get("setup_type"),
+                "readiness": item.get("entry_readiness_score"),
+                "reason": item.get("reason"),
+            }
+        )
+
+
+def sorted_entry_blockers(entry_blockers: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    severity_rank = {"fail": 3, "warn": 2, "need": 1}
+    return sorted(
+        entry_blockers.values(),
+        key=lambda item: (to_int(item.get("count")), severity_rank.get(str(item.get("severity")), 0)),
+        reverse=True,
+    )
+
+
+def entry_missing_conditions(
+    setup: dict[str, Any],
+    decision: dict[str, Any],
+    action: str,
+    setup_type: str,
+    text: str,
+) -> list[dict[str, Any]]:
+    if action in {"BUY_SIMULATED", "HOLD", "TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+        return []
+
+    conditions: list[dict[str, Any]] = []
+    normalized_setup = str(setup_type or "").lower()
+    setup_score = to_float(decision.get("setup_score") or setup.get("score"))
+    min_setup_score = to_float(decision.get("minimum_setup_score_required"))
+    net_rr = to_float(decision.get("weighted_net_rr") or decision.get("net_rr"))
+    min_rr = minimum_net_rr_for_decision(decision)
+    net_rr_1 = to_float(decision.get("net_rr_1") or decision.get("gross_rr_1"))
+    target_status = str(decision.get("target_feasibility_status") or "").upper()
+    session_phase = str(decision.get("market_session_phase") or decision.get("market_session") or "").upper()
+
+    if normalized_setup == "no trade" or "no trade result" in text:
+        conditions.append(blocker_condition("no_trade", "No technical setup", "No actionable setup structure was detected.", "warn"))
+    if str(decision.get("market_regime") or "").upper() == "BEAR":
+        conditions.append(blocker_condition("market_bear", "BEAR market", "Bear market regime blocks new paper buys.", "fail"))
+    if str(decision.get("sector_regime") or "").upper() == "WEAK" or "weak sector" in text:
+        conditions.append(blocker_condition("weak_sector", "Weak sector", "Sector regime is weak, so auto-buy eligibility is blocked.", "fail"))
+    if min_setup_score and setup_score < min_setup_score:
+        conditions.append(
+            blocker_condition(
+                "setup_score",
+                "Setup score below gate",
+                f"Score {setup_score:.2f}, needs {min_setup_score:.2f}.",
+                "warn",
+            )
+        )
+    if min_rr and net_rr < min_rr and min_rr < 900:
+        conditions.append(
+            blocker_condition(
+                "net_rr",
+                "Weighted/net R/R below gate",
+                f"Weighted/net R/R {net_rr:.2f}x, needs {min_rr:.2f}x.",
+                "warn",
+            )
+        )
+    if net_rr_1 and net_rr_1 < 0.8:
+        conditions.append(
+            blocker_condition(
+                "primary_rr",
+                "TP1 R/R too low",
+                f"Primary R/R {net_rr_1:.2f}x is below the minimum TP1 gate.",
+                "warn",
+            )
+        )
+    if bool(decision.get("earnings_blackout")) or "earnings blackout" in text:
+        conditions.append(blocker_condition("earnings", "Earnings blackout", "Earnings timing blocks a fresh entry.", "fail"))
+    if bool(decision.get("sector_exposure_limit_exceeded")):
+        conditions.append(blocker_condition("sector_exposure", "Sector exposure cap", "The trade would exceed sector exposure limits.", "fail"))
+    if bool(decision.get("factor_exposure_limit_exceeded")):
+        conditions.append(blocker_condition("factor_exposure", "Factor exposure cap", "The trade would exceed factor/theme exposure limits.", "fail"))
+    if bool(decision.get("cooldown_active")) or "stop-loss cooldown" in text:
+        conditions.append(blocker_condition("cooldown", "Stop cooldown", "Recent stop-loss cooldown blocks re-entry.", "warn"))
+    if bool(decision.get("correlation_warning")):
+        ticker = decision.get("highest_correlation_ticker") or "an open position"
+        value = to_float(decision.get("highest_correlation_value"))
+        conditions.append(
+            blocker_condition("correlation", "Correlation warning", f"High correlation with {ticker} ({value:.2f}).", "warn")
+        )
+    if not bool(decision.get("entry_confirmation_passed")) and (
+        "entry confirmation" in text
+        or "confirmed entry" in text
+        or action in {"WATCH", "WATCH_READY"}
+        or bool(decision.get("regular_session_confirmation_required"))
+    ):
+        conditions.append(
+            blocker_condition(
+                "entry_confirmation",
+                "Entry confirmation missing",
+                "Needs completed-candle confirmation before BUY_SIMULATED.",
+                "warn",
+            )
+        )
+    if bool(decision.get("regular_session_confirmation_required")) or "outside regular market hours" in text or session_phase in {"PRE_MARKET", "AFTER_MARKET", "OVERNIGHT", "WEEKEND"}:
+        conditions.append(blocker_condition("session", "Regular-session confirmation", "Off-hours candidate must be reviewed during regular market hours.", "need"))
+    if target_status and target_status not in {"OK", "UNKNOWN"}:
+        conditions.append(blocker_condition("target_quality", "Target quality", f"Target feasibility status: {target_status}.", "warn"))
+    if "target 1 is too close" in text:
+        conditions.append(blocker_condition("target1_distance", "TP1 too close", "Target 1 is too close versus daily ATR.", "warn"))
+
+    deduped: dict[str, dict[str, Any]] = {}
+    for condition in conditions:
+        deduped[str(condition["key"])] = condition
+    return list(deduped.values())
+
+
+def blocker_condition(key: str, label: str, detail: str, severity: str) -> dict[str, Any]:
+    return {"key": key, "label": label, "detail": detail, "severity": severity}
+
+
+def entry_readiness_score(
+    setup: dict[str, Any],
+    decision: dict[str, Any],
+    action: str,
+    setup_type: str,
+    missing_conditions: list[dict[str, Any]],
+) -> int:
+    if action == "BUY_SIMULATED":
+        return 100
+    if str(setup_type or "").lower() == "no trade":
+        return 0
+
+    setup_score = max(0.0, min(1.0, to_float(decision.get("setup_score") or setup.get("score"))))
+    min_score = to_float(decision.get("minimum_setup_score_required")) or 0.45
+    rr = to_float(decision.get("weighted_net_rr") or decision.get("net_rr"))
+    min_rr = minimum_net_rr_for_decision(decision)
+    rr_component = 0.0 if min_rr >= 900 else max(0.0, min(1.0, rr / min_rr if min_rr else 0.0))
+    score_component = max(0.0, min(1.0, setup_score / min_score if min_score else setup_score))
+    confirmation_component = 1.0 if decision.get("entry_confirmation_passed") else 0.0
+    sector_component = 0.0 if str(decision.get("sector_regime") or "").upper() == "WEAK" else 1.0
+    target_component = 1.0 if str(decision.get("target_feasibility_status") or "").upper() in {"", "OK", "UNKNOWN"} else 0.45
+    base = (
+        setup_score * 30
+        + score_component * 15
+        + rr_component * 25
+        + confirmation_component * 15
+        + sector_component * 10
+        + target_component * 5
+    )
+    for condition in missing_conditions:
+        key = condition.get("key")
+        if key in {"earnings", "market_bear"}:
+            base -= 35
+        elif key in {"sector_exposure", "factor_exposure", "weak_sector"}:
+            base -= 18
+        elif key in {"cooldown", "correlation"}:
+            base -= 10
+        elif key == "session":
+            base -= 5
+    return int(max(0, min(100, round(base))))
 
 
 def diagnostic_drilldown_item(

@@ -122,6 +122,7 @@ const SECTION_HELP = {
     items: [
       "The top cards group candidates by action or blocker: BUY, WATCH_READY, R/R blocked, score blocked, confirmation/session, weak sector, or earnings.",
       "Why No Buys ranks the most common reasons the agent did not open new BUY_SIMULATED trades.",
+      "Entry Blockers breaks down the exact gates blocking the strongest candidates: R/R, confirmation, targets, sector, earnings, exposure, or session.",
       "WATCH_READY Funnel shows where staged candidates are dropping off: detected, reviewed, confirmation passed, R/R passed, and finally BUY.",
       "Nearest missed entries shows the strongest candidates that were close but did not pass all entry gates.",
     ],
@@ -946,6 +947,7 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   const grid = document.getElementById("diagnosticsGrid");
   const conversionGrid = document.getElementById("conversionGrid");
   const whyGrid = document.getElementById("whyNoBuysGrid");
+  const blockerGrid = document.getElementById("entryBlockersGrid");
   const funnelGrid = document.getElementById("watchReadyFunnel");
   const list = document.getElementById("nearMissList");
   const meta = document.getElementById("nearMissMeta");
@@ -995,6 +997,35 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
           )
           .join("")
       : '<div class="empty-state compact">No blocker summary available yet.</div>';
+  }
+
+  if (blockerGrid) {
+    const blockerSummary = diagnostics.entry_blockers_summary || [];
+    blockerGrid.innerHTML = blockerSummary.length
+      ? `
+        <div class="entry-blockers-head">
+          <strong>Entry Blockers Analytics</strong>
+          <span>Exact gates blocking WATCH / WATCH_READY / SKIP candidates</span>
+        </div>
+        <div class="entry-blockers-list">
+          ${blockerSummary
+            .slice(0, 8)
+            .map(
+              (blocker) => `
+                <article class="entry-blocker-card ${escapeHtml(blocker.severity || "")}">
+                  <div>
+                    <span>${escapeHtml(blocker.label || "Blocker")}</span>
+                    <strong>${escapeHtml(blocker.count ?? 0)}</strong>
+                  </div>
+                  <small>${escapeHtml(blocker.detail || "")}</small>
+                  ${renderBlockerExamples(blocker.examples || [])}
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+      `
+      : "";
   }
 
   if (funnelGrid) {
@@ -1074,7 +1105,7 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
       .join("");
   }
 
-  const nearMisses = diagnostics.near_misses || [];
+  const nearMisses = diagnostics.closest_to_entry || diagnostics.near_misses || [];
   meta.textContent = `${nearMisses.length} shown / ${diagnostics.total_results || 0} scan results`;
   if (!nearMisses.length) {
     list.innerHTML = '<div class="empty-state">No near-miss setups in the latest scan.</div>';
@@ -1084,6 +1115,7 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
     .map((item) => {
       const rr = Number(item.weighted_net_rr || item.net_rr || 0);
       const score = Number(item.setup_score || 0);
+      const readiness = Number(item.entry_readiness_score || 0);
       const confirmed = item.entry_confirmation_passed ? "Confirmed" : "No confirmation";
       return `
         <article class="near-miss-card">
@@ -1091,8 +1123,14 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
             <strong>${escapeHtml(tickerLabel(item))}</strong>
             <span class="${actionBadgeClass(item.action)}">${escapeHtml(item.action)}</span>
           </div>
+          <div class="readiness-row">
+            <span>Entry readiness</span>
+            <strong>${readiness}%</strong>
+            <div class="readiness-bar"><span style="width: ${Math.max(0, Math.min(100, readiness))}%"></span></div>
+          </div>
           <p>${escapeHtml(item.setup_type || "Setup")}</p>
           <small>Score ${score.toFixed(2)} / weighted R/R ${rr.toFixed(2)}x / ${escapeHtml(confirmed)}</small>
+          ${renderMissingConditions(item.missing_conditions || [])}
           <em>${escapeHtml(item.reason || "No reason provided")}</em>
         </article>
       `;
@@ -1103,6 +1141,30 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
   if (weeklyRecommendation) {
     meta.textContent += ` - Weekly: ${weeklyRecommendation}`;
   }
+}
+
+function renderBlockerExamples(examples) {
+  if (!examples.length) return "";
+  return `
+    <div class="blocker-examples">
+      ${examples
+        .slice(0, 3)
+        .map((example) => `<span>${escapeHtml(example.ticker || "")} ${escapeHtml(example.action || "")}</span>`)
+        .join("")}
+    </div>
+  `;
+}
+
+function renderMissingConditions(conditions) {
+  if (!conditions.length) return '<div class="missing-conditions"><span class="pass">No missing gates recorded</span></div>';
+  return `
+    <div class="missing-conditions">
+      ${conditions
+        .slice(0, 4)
+        .map((condition) => `<span class="${escapeHtml(condition.severity || "warn")}" title="${escapeHtml(condition.detail || "")}">${escapeHtml(condition.label || "")}</span>`)
+        .join("")}
+    </div>
+  `;
 }
 
 function renderPositionAttention(items, liveUpdatedAt = "") {

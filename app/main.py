@@ -155,6 +155,8 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
         or "drilldowns" not in decision_diagnostics
         or "why_no_buys" not in decision_diagnostics
         or "watch_ready_funnel" not in decision_diagnostics
+        or "entry_blockers_summary" not in decision_diagnostics
+        or "closest_to_entry" not in decision_diagnostics
     ):
         dashboard["decision_diagnostics"] = build_decision_diagnostics(latest_setups)
 

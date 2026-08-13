@@ -131,6 +131,8 @@ def test_current_agent_dashboard_enriches_legacy_snapshot(monkeypatch, tmp_path)
 
     assert dashboard["decision_diagnostics"]["blockers"]["Entry confirmation missing"] == 1
     assert dashboard["decision_diagnostics"]["near_misses"][0]["ticker"] == "TEST"
+    assert dashboard["decision_diagnostics"]["entry_blockers_summary"][0]["label"] == "Entry confirmation missing"
+    assert dashboard["decision_diagnostics"]["closest_to_entry"][0]["ticker"] == "TEST"
     assert dashboard["daily_summary"]["WATCH_READY_count"] == 1
     assert dashboard["recent_trades"][0]["chart_url"] == ""
 
