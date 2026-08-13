@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-13
-Total scans: 9
-Tickers scanned: 1323
+Total scans: 10
+Tickers scanned: 1470
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 335
-SKIP: 916
-NO_TRADE: 690
+WATCH: 372
+SKIP: 1018
+NO_TRADE: 766
 Realized PnL: 922.06
 Unrealized PnL: 1227.31
 Portfolio value: 102149.37
@@ -19,10 +19,10 @@ Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 18
-- RELATIVE_STRENGTH_LEADER: 112
-- TREND_PULLBACK_RECLAIM: 18
-- VWAP_RECLAIM: 10
+- BREAKOUT_CONTINUATION: 20
+- RELATIVE_STRENGTH_LEADER: 125
+- TREND_PULLBACK_RECLAIM: 20
+- VWAP_RECLAIM: 11
 
 Top rejected candidates:
 - TSM: SKIP score=0.61 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.09.
