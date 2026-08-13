@@ -69,3 +69,14 @@ def test_health_message_marks_failures() -> None:
     assert "Market Lens Health Alert" in message
     assert "Status: FAIL" in message
     assert "Latest scan breadth" in message
+
+
+def test_timestamp_age_accepts_naive_utc_or_new_york_values(monkeypatch) -> None:
+    class FixedDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 8, 13, 21, 20, tzinfo=tz)
+
+    monkeypatch.setattr(health_check, "datetime", FixedDatetime)
+
+    assert health_check.timestamp_age_minutes("2026-08-13T21:10:00") == 10

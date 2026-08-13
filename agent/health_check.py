@@ -244,10 +244,17 @@ def timestamp_age_minutes(value: str) -> float | None:
     try:
         normalized = value.replace("Z", "+00:00")
         parsed = datetime.fromisoformat(normalized)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=NEW_YORK_TZ)
         now = datetime.now(timezone.utc)
-        return max(0.0, (now - parsed.astimezone(timezone.utc)).total_seconds() / 60)
+        if parsed.tzinfo is not None:
+            return max(0.0, (now - parsed.astimezone(timezone.utc)).total_seconds() / 60)
+        ages = [
+            (now - parsed.replace(tzinfo=timezone.utc)).total_seconds() / 60,
+            (now - parsed.replace(tzinfo=NEW_YORK_TZ).astimezone(timezone.utc)).total_seconds() / 60,
+        ]
+        non_negative = [age for age in ages if age >= 0]
+        if non_negative:
+            return min(non_negative)
+        return max(ages)
     except Exception:
         return None
 
