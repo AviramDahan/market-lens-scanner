@@ -30,14 +30,15 @@ class TelegramSendResult:
 
 
 def load_telegram_settings() -> TelegramSettings:
+    allow_legacy_env = _env_bool("MARKET_LENS_TELEGRAM_ALLOW_LEGACY_ENV", False)
+    bot_token = os.getenv("MARKET_LENS_TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.getenv("MARKET_LENS_TELEGRAM_CHAT_ID", "").strip()
+    if allow_legacy_env:
+        bot_token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN", "").strip() or os.getenv("TELEGRAM_TOKEN_BOT", "").strip()
+        chat_id = chat_id or os.getenv("TELEGRAM_CHAT_ID", "").strip()
     return TelegramSettings(
-        bot_token=(
-            os.getenv("MARKET_LENS_TELEGRAM_BOT_TOKEN")
-            or os.getenv("TELEGRAM_BOT_TOKEN")
-            or os.getenv("TELEGRAM_TOKEN_BOT")
-            or ""
-        ).strip(),
-        chat_id=(os.getenv("MARKET_LENS_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID") or "").strip(),
+        bot_token=bot_token,
+        chat_id=chat_id,
         enabled=_env_bool("MARKET_LENS_TELEGRAM_ENABLED", True),
         timeout_seconds=max(1, int(os.getenv("MARKET_LENS_TELEGRAM_TIMEOUT_SECONDS", "10"))),
     )

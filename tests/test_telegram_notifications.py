@@ -14,6 +14,7 @@ from app.telegram_notifications import (
     format_position_event_message,
     format_position_opened_message,
     format_stop_moved_to_entry_message,
+    load_telegram_settings,
     send_telegram_message,
     send_telegram_photo,
     telegram_configured,
@@ -204,6 +205,32 @@ def test_telegram_configured_requires_token_and_chat() -> None:
     assert telegram_configured(TelegramSettings(bot_token="token", chat_id="-1")) is True
     assert telegram_configured(TelegramSettings(bot_token="token", chat_id="", enabled=True)) is False
     assert telegram_configured(TelegramSettings(bot_token="token", chat_id="-1", enabled=False)) is False
+
+
+def test_telegram_settings_use_market_lens_env_only_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("MARKET_LENS_TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("MARKET_LENS_TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.delenv("MARKET_LENS_TELEGRAM_ALLOW_LEGACY_ENV", raising=False)
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "legacy-token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "-legacy-chat")
+
+    settings = load_telegram_settings()
+
+    assert settings.bot_token == ""
+    assert settings.chat_id == ""
+
+
+def test_telegram_settings_can_opt_in_to_legacy_env(monkeypatch) -> None:
+    monkeypatch.delenv("MARKET_LENS_TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("MARKET_LENS_TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_ALLOW_LEGACY_ENV", "true")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "legacy-token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "-legacy-chat")
+
+    settings = load_telegram_settings()
+
+    assert settings.bot_token == "legacy-token"
+    assert settings.chat_id == "-legacy-chat"
 
 
 def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
