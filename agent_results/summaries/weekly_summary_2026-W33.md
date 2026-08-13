@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 120
-Tickers scanned: 16920
+Total scans: 121
+Tickers scanned: 17049
 BUY_SIMULATED: 3
 WATCH_READY: 1093
 WATCH_READY unique tickers: 48
 WATCH_READY session split: regular=5, off_hours=1088, unknown=0
 WATCH_READY conversion: 2 converted / 48 staged
-WATCH: 5755
-SKIP: 10291
-NO_TRADE: 9281
+WATCH: 5796
+SKIP: 10372
+NO_TRADE: 9362
 Realized PnL: 1233.68
-Unrealized PnL: 735.59
-Portfolio value: 101969.27
+Unrealized PnL: 776.47
+Portfolio value: 102010.15
 Best ticker: MSTR
 Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 140
-- RELATIVE_STRENGTH_LEADER: 1594
-- TREND_PULLBACK_RECLAIM: 303
+- BREAKOUT_CONTINUATION: 142
+- RELATIVE_STRENGTH_LEADER: 1606
+- TREND_PULLBACK_RECLAIM: 304
 - VWAP_RECLAIM: 187
 
 Top rejected candidates:
