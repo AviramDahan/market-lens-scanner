@@ -4,13 +4,13 @@ Date: 2026-08-13
 Total scans: 28
 Tickers scanned: 3931
 BUY_SIMULATED: 0
-WATCH_READY: 18
-WATCH_READY unique tickers: 12
-WATCH_READY session split: regular=1, off_hours=17, unknown=0
-WATCH_READY conversion: 0 converted / 12 staged
-WATCH: 1075
-SKIP: 2641
-NO_TRADE: 2243
+WATCH_READY: 24
+WATCH_READY unique tickers: 15
+WATCH_READY session split: regular=1, off_hours=23, unknown=0
+WATCH_READY conversion: 0 converted / 15 staged
+WATCH: 1077
+SKIP: 2639
+NO_TRADE: 2241
 Realized PnL: 1233.68
 Unrealized PnL: 825.34
 Portfolio value: 102059.02
@@ -20,7 +20,7 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 45
-- RELATIVE_STRENGTH_LEADER: 349
+- RELATIVE_STRENGTH_LEADER: 350
 - TREND_PULLBACK_RECLAIM: 65
 - VWAP_RECLAIM: 19
 
@@ -31,7 +31,7 @@ Top rejected candidates:
 - KMI: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.79 failed minimum 2.00 after slippage/spread adjustment.
 - AMZN: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.78 failed minimum 2.00 after slippage/spread adjustment.
 - MET: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.77 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.14.
-- SUI: WATCH_READY score=0.53 reason=Gross R/R is valid, but Net R/R 1.89 failed minimum 2.00 after slippage/spread adjustment.
+- SUI: WATCH_READY score=0.53 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - BA: SKIP score=0.53 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector STRONG; net R/R 1.62.
 - MU: SKIP score=0.52 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.17.
 - XOM: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.09.

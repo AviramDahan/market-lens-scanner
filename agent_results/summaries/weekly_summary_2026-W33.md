@@ -4,13 +4,13 @@ Date: 2026-08-10
 Total scans: 126
 Tickers scanned: 17708
 BUY_SIMULATED: 3
-WATCH_READY: 1111
+WATCH_READY: 1117
 WATCH_READY unique tickers: 57
-WATCH_READY session split: regular=6, off_hours=1105, unknown=0
+WATCH_READY session split: regular=6, off_hours=1111, unknown=0
 WATCH_READY conversion: 2 converted / 57 staged
-WATCH: 6004
-SKIP: 10785
-NO_TRADE: 9775
+WATCH: 6006
+SKIP: 10783
+NO_TRADE: 9773
 Realized PnL: 1233.68
 Unrealized PnL: 825.34
 Portfolio value: 102059.02
@@ -20,7 +20,7 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 149
-- RELATIVE_STRENGTH_LEADER: 1661
+- RELATIVE_STRENGTH_LEADER: 1662
 - TREND_PULLBACK_RECLAIM: 316
 - VWAP_RECLAIM: 191
 
