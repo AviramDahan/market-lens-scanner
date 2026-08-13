@@ -77,19 +77,20 @@ Why these filters exist:
 Current cloud defaults:
 
 ```text
-MARKET_LENS_AGENT_UNIVERSE_TARGET=100
-MARKET_LENS_AGENT_UNIVERSE_POOL=100
-MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=300
-MARKET_LENS_AGENT_MAX_PER_SECTOR=15
-MARKET_LENS_AGENT_SCAN_BATCH_SIZE=20
+MARKET_LENS_AGENT_UNIVERSE_TARGET=150
+MARKET_LENS_AGENT_UNIVERSE_POOL=350
+MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=500
+MARKET_LENS_AGENT_MAX_PER_SECTOR=20
+MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=180
+MARKET_LENS_AGENT_SCAN_BATCH_SIZE=10
 ```
 
 Meaning:
 
-- the target is up to 100 tickers per Agent scan
+- the target is up to 150 fresh tickers per Agent scan
 - candidates are selected from a wider ranked pool
 - sector concentration is capped
-- scanning runs in batches of 20 to reduce load on Render, GitHub Actions, and yfinance
+- scanning runs in batches of 10 with retry/split protection to reduce load on Render, GitHub Actions, and yfinance
 
 Additional behavior:
 

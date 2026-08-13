@@ -178,13 +178,13 @@ Universe, then chooses a diversified scan basket from that universe.
 
 Default cloud scan configuration:
 
-- `MARKET_LENS_AGENT_UNIVERSE_TARGET=100`
-- `MARKET_LENS_AGENT_UNIVERSE_POOL=220`
-- `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=450`
-- `MARKET_LENS_AGENT_MAX_PER_SECTOR=15`
-- `MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=150`
-- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=6`
-- `MARKET_LENS_AGENT_BATCH_PAUSE_MS=1500`
+- `MARKET_LENS_AGENT_UNIVERSE_TARGET=150`
+- `MARKET_LENS_AGENT_UNIVERSE_POOL=350`
+- `MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=500`
+- `MARKET_LENS_AGENT_MAX_PER_SECTOR=20`
+- `MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=180`
+- `MARKET_LENS_AGENT_SCAN_BATCH_SIZE=10`
+- `MARKET_LENS_AGENT_BATCH_PAUSE_MS=750`
 - `MARKET_LENS_AGENT_RETRY_PAUSE_MS=20000`
 - `MARKET_LENS_AGENT_RECENT_SKIP_FALLBACK=true`
 - `MARKET_LENS_AGENT_CARRY_FORWARD_LIMIT=30`
@@ -226,6 +226,32 @@ briefly, and can split the failed batch into smaller chunks.
 If the deployed `/smart-universe` endpoint is temporarily unavailable, the
 agent falls back to the curated sector universe instead of timing out in the UI
 select-all flow.
+
+Each cloud run also writes runtime metrics under `agent_results/runtime/`.
+These metrics record the main phase timings, requested ticker count, result
+cards read, valid setup count, and errors. They are used to decide whether the
+150-name scan size is stable or whether the agent should temporarily drop back
+to a smaller opening configuration.
+
+### Upgrade Health Check
+
+`Market Lens Upgrade Health Check` is a read-only GitHub Actions workflow that
+runs after the scan-size increase at early, midday, and end-of-day checkpoints.
+It checks:
+
+- production `/health`, `/agent`, and `/agent/data`
+- latest `market-lens-agent.yml` run status
+- latest runtime metrics under `agent_results/runtime`
+- stale scan data, fake zero-result scans, low result-card counts, and long runs
+
+Default alert thresholds:
+
+- `MARKET_LENS_HEALTH_MAX_SCAN_AGE_MINUTES=240`
+- `MARKET_LENS_HEALTH_MIN_RESULT_CARDS=120`
+- `MARKET_LENS_HEALTH_MAX_RUNTIME_SECONDS=1260`
+
+The workflow sends Telegram status messages when configured. It does not update
+Excel, positions, decisions, monitor state, or strategy thresholds.
 
 The public `/smart-universe` endpoint also has a bounded timeout
 (`MARKET_LENS_SMART_UNIVERSE_TIMEOUT_SECONDS`, default `25`). If the full broad

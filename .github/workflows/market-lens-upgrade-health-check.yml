@@ -1,0 +1,43 @@
+name: Market Lens Upgrade Health Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Early, midday, and end-of-day New York checks during EDT.
+    # These are read-only checks; scanner timing still lives in /agent/trigger-scan.
+    - cron: "20 14 * * 1-5"
+    - cron: "40 17 * * 1-5"
+    - cron: "30 20 * * 1-5"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check production health after scan-size upgrade
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
+          MARKET_LENS_HEALTH_SCAN_WORKFLOW: market-lens-agent.yml
+          MARKET_LENS_HEALTH_MAX_SCAN_AGE_MINUTES: "240"
+          MARKET_LENS_HEALTH_MIN_RESULT_CARDS: "120"
+          MARKET_LENS_HEALTH_MAX_RUNTIME_SECONDS: "1260"
+          MARKET_LENS_HEALTH_NOTIFY_SUCCESS: "true"
+          MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
+          MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
+        run: python agent/health_check.py

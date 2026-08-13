@@ -77,19 +77,20 @@ MARKET_LENS_SMART_SOURCE=broad
 ברירת המחדל הנוכחית בענן:
 
 ```text
-MARKET_LENS_AGENT_UNIVERSE_TARGET=100
-MARKET_LENS_AGENT_UNIVERSE_POOL=100
-MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=300
-MARKET_LENS_AGENT_MAX_PER_SECTOR=15
-MARKET_LENS_AGENT_SCAN_BATCH_SIZE=20
+MARKET_LENS_AGENT_UNIVERSE_TARGET=150
+MARKET_LENS_AGENT_UNIVERSE_POOL=350
+MARKET_LENS_AGENT_UNIVERSE_MAX_POOL=500
+MARKET_LENS_AGENT_MAX_PER_SECTOR=20
+MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT=180
+MARKET_LENS_AGENT_SCAN_BATCH_SIZE=10
 ```
 
 המשמעות:
 
-- המטרה היא לסרוק עד 100 מניות בריצה.
+- המטרה היא לסרוק עד 150 מניות חדשות בריצה.
 - מניות נבחרות מתוך pool רחב יותר.
 - יש תקרת פיזור לפי סקטורים.
-- הסריקה מתבצעת בבאצ'ים של 20 כדי לא להעמיס על Render / GitHub Actions / yfinance.
+- הסריקה מתבצעת בבאצ'ים של 10 עם retry/split כדי לא להעמיס על Render / GitHub Actions / yfinance.
 
 בנוסף:
 
@@ -1947,3 +1948,4 @@ Universe
 לא כל Setup הוא כניסה.
 כניסה מתבצעת רק כאשר הטכני, השוק, הסקטור, הסיכון והביצוע כולם מסתדרים יחד.
 ```
+

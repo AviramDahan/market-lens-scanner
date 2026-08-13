@@ -41,6 +41,7 @@ SCREENSHOT_DIR = RUN_DIR / "screenshots"
 SUMMARY_DIR = RUN_DIR / "summaries"
 CHART_DIR = RUN_DIR / "charts"
 DECISION_DIR = RUN_DIR / "decisions"
+RUNTIME_DIR = RUN_DIR / "runtime"
 APP_READY_SELECTOR = '[data-testid="auth-email"], #authStatus'
 NEW_YORK_TZ = ZoneInfo("America/New_York")
 
@@ -92,9 +93,11 @@ def main() -> None:
     SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
     CHART_DIR.mkdir(parents=True, exist_ok=True)
     DECISION_DIR.mkdir(parents=True, exist_ok=True)
+    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     screenshot_path = SCREENSHOT_DIR / f"market_lens_agent_{run_id}.png"
     summary_path = SUMMARY_DIR / f"market_lens_agent_{run_id}.md"
     decision_path = DECISION_DIR / f"market_lens_agent_{run_id}.jsonl"
+    runtime_path = RUNTIME_DIR / f"market_lens_agent_{run_id}.json"
 
     errors: list[str] = []
     results: list[SetupResult] = []
@@ -102,25 +105,50 @@ def main() -> None:
     login_status = "not_started"
     scan_status = "not_started"
     auth_failed = False
+    scan_tickers: list[str] = []
     deadline = time.monotonic() + settings.timeout_seconds
+    run_started_at = datetime.now().isoformat(timespec="seconds")
+    total_started = time.monotonic()
+    runtime_metrics: dict[str, Any] = {
+        "run_id": run_id,
+        "started_at": run_started_at,
+        "url": settings.url,
+        "universe": settings.universe,
+        "analysis_period": settings.analysis_period,
+        "timeout_seconds": settings.timeout_seconds,
+        "target_tickers": agent_target_count() if settings.universe == "smart-universe" else len(settings.tickers),
+        "total_scan_limit": int(os.getenv("MARKET_LENS_AGENT_TOTAL_SCAN_LIMIT", "0") or "0"),
+        "batch_size": int(os.getenv("MARKET_LENS_AGENT_SCAN_BATCH_SIZE", "20")),
+    }
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=settings.headless)
         page = browser.new_page(viewport={"width": 1440, "height": 1200})
         try:
             log("Opening Market Lens UI")
+            phase_started = time.monotonic()
             open_app(page, settings.url, deadline)
+            mark_runtime_phase(runtime_metrics, "open_app_seconds", phase_started)
             log("Logging in")
+            phase_started = time.monotonic()
             login_status = login(page, settings, deadline)
+            mark_runtime_phase(runtime_metrics, "login_seconds", phase_started)
             log(f"Login status: {login_status}")
             log("Configuring scan")
+            phase_started = time.monotonic()
             scan_tickers = configure_scan(page, settings, deadline)
+            mark_runtime_phase(runtime_metrics, "configure_scan_seconds", phase_started)
+            runtime_metrics["tickers_requested"] = len(scan_tickers)
             log("Running UI scan")
+            phase_started = time.monotonic()
             results = run_scan_batches(page, scan_tickers, deadline)
+            mark_runtime_phase(runtime_metrics, "scan_seconds", phase_started)
             log(f"Scan completed: {len(results)} results")
             scan_status = f"completed: {len(results)} results"
             log("Saving screenshot")
+            phase_started = time.monotonic()
             page.screenshot(path=str(screenshot_path), full_page=True)
+            mark_runtime_phase(runtime_metrics, "screenshot_seconds", phase_started)
         except Exception as exc:
             message = str(exc)
             if is_auth_failure(message):
@@ -147,6 +175,7 @@ def main() -> None:
         decisions = {}
     else:
         log("Updating workbook")
+        phase_started = time.monotonic()
         workbook_context = update_workbook(
             settings=settings,
             run_id=run_id,
@@ -156,7 +185,19 @@ def main() -> None:
             decision_path=decision_path,
             errors=errors,
         )
+        mark_runtime_phase(runtime_metrics, "workbook_update_seconds", phase_started)
         decisions = workbook_context["decisions"]
+    runtime_metrics["finished_at"] = datetime.now().isoformat(timespec="seconds")
+    runtime_metrics["total_seconds"] = round(time.monotonic() - total_started, 3)
+    runtime_metrics["run_status"] = workbook_context.get("run_status") or ("OK" if not errors else "ISSUES")
+    runtime_metrics["login_status"] = login_status
+    runtime_metrics["scan_status"] = scan_status
+    runtime_metrics["tickers_requested"] = len(scan_tickers)
+    runtime_metrics["result_cards_read"] = len(results)
+    runtime_metrics["valid_setups"] = sum(1 for result in results if result.setup_type != "No Trade")
+    runtime_metrics["errors"] = errors
+    write_runtime_metrics(runtime_path, runtime_metrics)
+    workbook_context["runtime_metrics_path"] = runtime_path
     log("Writing summary")
     write_summary(
         settings=settings,
@@ -173,6 +214,15 @@ def main() -> None:
     print(f"Agent run complete: {summary_path}")
     if workbook_context.get("run_status") in {"AUTH_FAILED", "RUN_FAILED"}:
         raise SystemExit(2)
+
+
+def mark_runtime_phase(metrics: dict[str, Any], key: str, started_at: float) -> None:
+    metrics[key] = round(time.monotonic() - started_at, 3)
+
+
+def write_runtime_metrics(path: Path, metrics: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(metrics, indent=2, sort_keys=True, default=str), encoding="utf-8")
 
 
 def load_settings() -> Settings:
@@ -1864,6 +1914,11 @@ def write_summary(
         if workbook_context.get("decision_path")
         else "Decision JSONL saved: skipped"
     )
+    runtime_line = (
+        f"Runtime metrics saved: {workbook_context.get('runtime_metrics_path')}"
+        if workbook_context.get("runtime_metrics_path")
+        else "Runtime metrics saved: skipped"
+    )
     lines = [
         "Market Lens Agent Update",
         "",
@@ -1886,6 +1941,7 @@ def write_summary(
         excel_line,
         f"Screenshot saved: {screenshot_path}",
         decision_line,
+        runtime_line,
         f"Daily summary saved: {workbook_context.get('daily_summary_path') or 'skipped'}",
         f"Weekly summary saved: {workbook_context.get('weekly_summary_path') or 'skipped'}",
         f"Errors: {'; '.join(errors) if errors else 'None'}",
