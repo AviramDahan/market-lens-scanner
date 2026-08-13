@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 116
-Tickers scanned: 16405
+Total scans: 117
+Tickers scanned: 16534
 BUY_SIMULATED: 3
 WATCH_READY: 1093
 WATCH_READY unique tickers: 48
 WATCH_READY session split: regular=5, off_hours=1088, unknown=0
 WATCH_READY conversion: 2 converted / 48 staged
-WATCH: 5594
-SKIP: 9965
-NO_TRADE: 8956
+WATCH: 5636
+SKIP: 10045
+NO_TRADE: 9035
 Realized PnL: 1233.68
-Unrealized PnL: 874.05
-Portfolio value: 102107.73
+Unrealized PnL: 763.99
+Portfolio value: 101997.67
 Best ticker: MSTR
 Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 136
-- RELATIVE_STRENGTH_LEADER: 1556
-- TREND_PULLBACK_RECLAIM: 294
+- BREAKOUT_CONTINUATION: 137
+- RELATIVE_STRENGTH_LEADER: 1567
+- TREND_PULLBACK_RECLAIM: 298
 - VWAP_RECLAIM: 187
 
 Top rejected candidates:
@@ -33,8 +33,8 @@ Top rejected candidates:
 - PLD: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.44.
 - MRK: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - TRU: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+- KMI: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.79 failed minimum 2.00 after slippage/spread adjustment.
 - EQIX: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.43.
-- MCD: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.85 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.43.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
