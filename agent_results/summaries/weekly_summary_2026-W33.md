@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 139
-Tickers scanned: 19858
+Total scans: 140
+Tickers scanned: 20027
 BUY_SIMULATED: 3
-WATCH_READY: 1371
+WATCH_READY: 1393
 WATCH_READY unique tickers: 65
-WATCH_READY session split: regular=6, off_hours=1365, unknown=0
+WATCH_READY session split: regular=6, off_hours=1387, unknown=0
 WATCH_READY conversion: 2 converted / 65 staged
-WATCH: 6767
-SKIP: 12049
-NO_TRADE: 10949
+WATCH: 6827
+SKIP: 12149
+NO_TRADE: 11042
 Realized PnL: 1233.68
 Unrealized PnL: 825.34
 Portfolio value: 102059.02
@@ -19,10 +19,10 @@ Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 175
-- RELATIVE_STRENGTH_LEADER: 1849
-- TREND_PULLBACK_RECLAIM: 354
-- VWAP_RECLAIM: 229
+- BREAKOUT_CONTINUATION: 177
+- RELATIVE_STRENGTH_LEADER: 1865
+- TREND_PULLBACK_RECLAIM: 356
+- VWAP_RECLAIM: 232
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.71 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
