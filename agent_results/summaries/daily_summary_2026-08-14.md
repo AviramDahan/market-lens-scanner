@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 26
-Tickers scanned: 4441
+Total scans: 27
+Tickers scanned: 4608
 BUY_SIMULATED: 0
-WATCH_READY: 316
-WATCH_READY unique tickers: 24
-WATCH_READY session split: regular=0, off_hours=316, unknown=0
-WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1390
-SKIP: 2849
-NO_TRADE: 2687
+WATCH_READY: 336
+WATCH_READY unique tickers: 37
+WATCH_READY session split: regular=0, off_hours=336, unknown=0
+WATCH_READY conversion: 0 converted / 37 staged
+WATCH: 1448
+SKIP: 2952
+NO_TRADE: 2784
 Realized PnL: 1233.68
-Unrealized PnL: 960.59
-Portfolio value: 102194.27
+Unrealized PnL: 892.23
+Portfolio value: 102125.91
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 51
-- RELATIVE_STRENGTH_LEADER: 426
-- TREND_PULLBACK_RECLAIM: 76
-- VWAP_RECLAIM: 45
+- BREAKOUT_CONTINUATION: 52
+- RELATIVE_STRENGTH_LEADER: 449
+- TREND_PULLBACK_RECLAIM: 80
+- VWAP_RECLAIM: 46
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.34.
@@ -34,7 +34,7 @@ Top rejected candidates:
 - MU: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.81.
 - PAYX: WATCH score=0.52 reason=Gross R/R is valid, but Net R/R 1.63 failed minimum 2.00 after slippage/spread adjustment.
 - EXR: WATCH score=0.51 reason=Gross R/R is valid, but Net R/R 1.55 failed minimum 2.00 after slippage/spread adjustment.
-- LRCX: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
+- BA: WATCH score=0.5 reason=Gross R/R is valid, but Net R/R 1.54 failed minimum 2.00 after slippage/spread adjustment.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
