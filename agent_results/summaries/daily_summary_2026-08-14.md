@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 30
-Tickers scanned: 5101
+Total scans: 31
+Tickers scanned: 5266
 BUY_SIMULATED: 0
-WATCH_READY: 391
+WATCH_READY: 410
 WATCH_READY unique tickers: 38
-WATCH_READY session split: regular=0, off_hours=391, unknown=0
+WATCH_READY session split: regular=0, off_hours=410, unknown=0
 WATCH_READY conversion: 0 converted / 38 staged
-WATCH: 1624
-SKIP: 3251
-NO_TRADE: 3061
+WATCH: 1682
+SKIP: 3352
+NO_TRADE: 3155
 Realized PnL: 1233.68
 Unrealized PnL: 892.05
 Portfolio value: 102125.73
@@ -19,10 +19,10 @@ Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 55
-- RELATIVE_STRENGTH_LEADER: 505
-- TREND_PULLBACK_RECLAIM: 90
-- VWAP_RECLAIM: 52
+- BREAKOUT_CONTINUATION: 56
+- RELATIVE_STRENGTH_LEADER: 526
+- TREND_PULLBACK_RECLAIM: 92
+- VWAP_RECLAIM: 54
 
 Top rejected candidates:
 - PFE: WATCH score=0.64 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.34.
