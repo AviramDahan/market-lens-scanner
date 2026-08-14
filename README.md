@@ -504,13 +504,16 @@ scan slot and dispatches GitHub Actions with `force=true` only when appropriate.
 Regular-session confirmation scans:
 
 - 09:45 New York
+- 10:30 New York
 - 11:30 New York
+- 13:30 New York
 - 14:30 New York
+- 15:30 New York
 - 16:15 New York
 
 Off-hours staging scans:
 
-- weekdays: 08:30 and 20:15 New York
+- weekdays: 00:30, 01:30, 02:30, 03:30, 04:30, 05:30, 06:30, 07:30, 08:30, 09:10, 09:35, 10:00, 11:00, 12:00, 12:30, 13:00, 14:00, 15:00, 15:55, 16:20, 17:30, 18:30, 19:30, 20:15, 21:30, 22:30, and 23:30 New York
 - Saturday: 11:00 New York
 - Sunday: 18:30 and 22:00 New York
 
@@ -573,9 +576,9 @@ By default the cloud agent uses `Smart Universe`, not a fixed sector. The app
 builds this list from broad US equity sources plus the curated dropdown sector
 lists, filters for price, dollar volume, ATR%, relative strength, trend quality,
 and sector health, then limits concentration to keep the final scan diversified
-across sectors. The current cloud target is 100 fresh tickers per run, with
+across sectors. The current cloud target is 150 fresh tickers per run, with
 recent WATCH/WATCH_READY and near-miss candidates added outside that fresh
-quota and bounded by a 150-name stability cap.
+quota and bounded by a 180-name stability cap.
 Sector scan quota is dynamic: strong sectors can receive more names, neutral
 sectors stay tighter, and weak sectors are excluded from new candidates.
 
@@ -637,9 +640,9 @@ disabled by default.
 
 The cloud setup has two separate workflows:
 
-- `Market Lens Paper Agent` runs cost-capped confirmation scans at 09:45, 11:30, 14:30, and 16:15 New York time.
-- The same agent can also run limited off-hours staging scans at 08:30 and 20:15 New York time on weekdays, plus Saturday 11:00 and Sunday 18:30/22:00 New York time.
-- `/agent/trigger-scan` also enforces `MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES` and `MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES`, so repeated cron calls cannot burn GitHub Actions minutes indefinitely.
+- `Market Lens Paper Agent` runs confirmation scans at 09:45, 10:30, 11:30, 13:30, 14:30, 15:30, and 16:15 New York time.
+- The same agent can also run broad off-hours staging scans through the configured weekday night, pre-market, midday, after-market, and evening scan slots, plus Saturday 11:00 and Sunday 18:30/22:00 New York time.
+- The repository is public, so standard GitHub-hosted Actions minutes are not charged against the private-repository included-minute quota. `MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES` and `MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES` remain available as optional safety valves if the repository becomes private again or a provider limit appears.
 - Off-hours scans can save candidates as `WATCH_READY`, but `MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS=false` prevents new `BUY_SIMULATED` entries until a regular-session confirmation scan runs.
 - `Market Lens Position Monitor` is the official portfolio updater for open positions.
 - `/agent/trigger-scan` is the server-side scan scheduler gate. cron-job.org should call this endpoint instead of calling GitHub Actions directly; the server dispatches `Market Lens Paper Agent` with `force=true` only inside a configured New York scan slot.
@@ -699,8 +702,8 @@ MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_MB=80
 MARKET_LENS_AGENT_CRON_SECRET=...
 MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES=4
 MARKET_LENS_ALLOW_TRIGGER_SCAN_FORCE=false
-MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES=5
-MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES=60
+MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES=0
+MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES=0
 MARKET_LENS_MONITOR_CRON_SECRET=...
 MARKET_LENS_MONITOR_TRIGGER_GLOBAL_COOLDOWN_SECONDS=60
 MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS=300
@@ -726,7 +729,7 @@ debugging.
 Default New York weekday scan slots:
 
 ```text
-08:30, 09:45, 11:30, 14:30, 16:15, 20:15
+00:30, 01:30, 02:30, 03:30, 04:30, 05:30, 06:30, 07:30, 08:30, 09:10, 09:35, 09:45, 10:00, 10:30, 11:00, 11:30, 12:00, 12:30, 13:00, 13:30, 14:00, 14:30, 15:00, 15:30, 15:55, 16:15, 16:20, 17:30, 18:30, 19:30, 20:15, 21:30, 22:30, 23:30
 ```
 
 Override with `MARKET_LENS_AGENT_WEEKDAY_SCAN_TIMES` on Render if a narrower or

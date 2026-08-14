@@ -13,12 +13,40 @@ from app.monitor_trigger import github_actions_token
 NEW_YORK_TZ = ZoneInfo("America/New_York")
 
 DEFAULT_WEEKDAY_SCAN_TIMES = {
+    "00:30",
+    "01:30",
+    "02:30",
+    "03:30",
+    "04:30",
+    "05:30",
+    "06:30",
+    "07:30",
     "08:30",
+    "09:10",
+    "09:35",
     "09:45",
+    "10:00",
+    "10:30",
+    "11:00",
     "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+    "13:30",
+    "14:00",
     "14:30",
+    "15:00",
+    "15:30",
+    "15:55",
     "16:15",
+    "16:20",
+    "17:30",
+    "18:30",
+    "19:30",
     "20:15",
+    "21:30",
+    "22:30",
+    "23:30",
 }
 DEFAULT_SATURDAY_SCAN_TIMES = {"11:00"}
 DEFAULT_SUNDAY_SCAN_TIMES = {"18:30", "22:00"}
@@ -160,8 +188,8 @@ def scan_already_dispatched(scan_key: str) -> bool:
 
 
 def scan_dispatch_budget_reason(scan_key: str) -> str:
-    max_daily = env_int("MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES", 5)
-    min_interval_minutes = env_int("MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES", 60)
+    max_daily = env_int("MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES", 0)
+    min_interval_minutes = env_int("MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES", 0)
     current = parse_scan_key(scan_key)
     if current is None:
         return ""

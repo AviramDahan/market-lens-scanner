@@ -634,6 +634,17 @@ def test_trigger_scan_endpoint_respects_daily_dispatch_budget(monkeypatch) -> No
     assert dispatches == ["agent-server-scan-scheduler"]
 
 
+def test_scan_dispatch_budget_is_disabled_by_default(monkeypatch) -> None:
+    reset_rate_limits()
+    monkeypatch.delenv("MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES", raising=False)
+    monkeypatch.delenv("MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES", raising=False)
+
+    scan_trigger.mark_scan_dispatched("2026-06-23T09:45")
+    scan_trigger.mark_scan_dispatched("2026-06-23T10:00")
+
+    assert scan_trigger.scan_dispatch_budget_reason("2026-06-23T10:30") == ""
+
+
 def test_trigger_scan_endpoint_respects_dispatch_cooldown(monkeypatch) -> None:
     reset_rate_limits()
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "test-token")
@@ -784,37 +795,37 @@ def test_scan_schedule_allows_short_cold_start_window(monkeypatch) -> None:
     assert decision.scan_key == "2026-06-23T09:45"
 
 
-def test_scan_schedule_includes_late_morning_slot(monkeypatch) -> None:
+def test_scan_schedule_includes_midday_slot(monkeypatch) -> None:
     monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
 
     decision = scan_trigger.scan_schedule_decision(
-        now=datetime.fromisoformat("2026-06-23T11:32:00-04:00"),
+        now=datetime.fromisoformat("2026-06-23T12:02:00-04:00"),
     )
 
     assert decision.should_run is True
-    assert decision.scan_key == "2026-06-23T11:30"
+    assert decision.scan_key == "2026-06-23T12:00"
 
 
 def test_scan_schedule_includes_after_market_slots(monkeypatch) -> None:
     monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
 
     decision = scan_trigger.scan_schedule_decision(
-        now=datetime.fromisoformat("2026-06-23T20:17:00-04:00"),
+        now=datetime.fromisoformat("2026-06-23T19:32:00-04:00"),
     )
 
     assert decision.should_run is True
-    assert decision.scan_key == "2026-06-23T20:15"
+    assert decision.scan_key == "2026-06-23T19:30"
 
 
 def test_scan_schedule_includes_premarket_slot(monkeypatch) -> None:
     monkeypatch.setenv("MARKET_LENS_AGENT_TRIGGER_WINDOW_MINUTES", "4")
 
     decision = scan_trigger.scan_schedule_decision(
-        now=datetime.fromisoformat("2026-06-23T08:32:00-04:00"),
+        now=datetime.fromisoformat("2026-06-23T02:33:00-04:00"),
     )
 
     assert decision.should_run is True
-    assert decision.scan_key == "2026-06-23T08:30"
+    assert decision.scan_key == "2026-06-23T02:30"
 
 
 def test_scan_schedule_times_can_be_overridden_by_env(monkeypatch) -> None:

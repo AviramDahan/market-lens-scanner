@@ -3,8 +3,10 @@ name: Market Lens Upgrade Health Check
 on:
   workflow_dispatch:
   schedule:
-    # Cost-capped end-of-day New York check during EDT.
+    # Early, midday, and end-of-day New York checks during EDT.
     # Scanner timing still lives in /agent/trigger-scan.
+    - cron: "20 14 * * 1-5"
+    - cron: "40 17 * * 1-5"
     - cron: "30 20 * * 1-5"
 
 permissions:
