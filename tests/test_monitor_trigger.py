@@ -420,11 +420,11 @@ def test_monitor_live_sends_near_tp_sl_attention_without_dispatch(monkeypatch, t
     async def fail_dispatch(*_args, **_kwargs):
         raise AssertionError("near-threshold alerts must not dispatch GitHub monitor")
 
-    def fake_send(message):
+    def fake_send(message, **_kwargs):
         sent_messages.append(message)
         return types.SimpleNamespace(sent=True, status="sent")
 
-    def fake_chart(chart_ref, *, ticker, dashboard_url):
+    def fake_chart(chart_ref, *, ticker, dashboard_url, **_kwargs):
         sent_charts.append((chart_ref, ticker, dashboard_url))
         return types.SimpleNamespace(sent=True, status="sent")
 

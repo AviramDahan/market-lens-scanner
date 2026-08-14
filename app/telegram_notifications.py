@@ -5,7 +5,7 @@ import json
 import mimetypes
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlsplit, urlunsplit
@@ -54,12 +54,15 @@ def send_telegram_message(
     *,
     settings: TelegramSettings | None = None,
     opener: Callable[..., Any] = urlopen,
+    dedupe_key: str = "",
 ) -> TelegramSendResult:
     current = settings or load_telegram_settings()
     if not current.enabled:
         return TelegramSendResult(False, "disabled", "Telegram notifications are disabled.")
     if not current.bot_token or not current.chat_id:
         return TelegramSendResult(False, "not_configured", "Telegram bot token or chat id is missing.")
+    if telegram_dedupe_seen(dedupe_key):
+        return TelegramSendResult(False, "duplicate", "Telegram notification already sent for this event.")
 
     payload = {
         "chat_id": current.chat_id,
@@ -77,6 +80,7 @@ def send_telegram_message(
         with opener(request, timeout=current.timeout_seconds) as response:
             status_code = int(getattr(response, "status", 0) or response.getcode())
             if 200 <= status_code < 300:
+                mark_telegram_dedupe_sent(dedupe_key)
                 return TelegramSendResult(True, "sent", f"Telegram API returned {status_code}.")
             return TelegramSendResult(False, "failed", f"Telegram API returned {status_code}.")
     except Exception as exc:
@@ -89,12 +93,15 @@ def send_telegram_photo(
     caption: str = "",
     settings: TelegramSettings | None = None,
     opener: Callable[..., Any] = urlopen,
+    dedupe_key: str = "",
 ) -> TelegramSendResult:
     current = settings or load_telegram_settings()
     if not current.enabled:
         return TelegramSendResult(False, "disabled", "Telegram notifications are disabled.")
     if not current.bot_token or not current.chat_id:
         return TelegramSendResult(False, "not_configured", "Telegram bot token or chat id is missing.")
+    if telegram_dedupe_seen(dedupe_key):
+        return TelegramSendResult(False, "duplicate", "Telegram notification already sent for this event.")
 
     photo_source = str(photo or "").strip()
     if not photo_source:
@@ -134,6 +141,7 @@ def send_telegram_photo(
         with opener(request, timeout=current.timeout_seconds) as response:
             status_code = int(getattr(response, "status", 0) or response.getcode())
             if 200 <= status_code < 300:
+                mark_telegram_dedupe_sent(dedupe_key)
                 return TelegramSendResult(True, "sent", f"Telegram API returned {status_code}.")
             return TelegramSendResult(False, "failed", f"Telegram API returned {status_code}.")
     except Exception as exc:
@@ -147,13 +155,14 @@ def send_telegram_chart_photo(
     dashboard_url: str = "",
     settings: TelegramSettings | None = None,
     opener: Callable[..., Any] = urlopen,
+    dedupe_key: str = "",
 ) -> TelegramSendResult:
     source = chart_photo_source(chart_ref, dashboard_url)
     if not source:
         return TelegramSendResult(False, "no_photo", "No chart image is available.")
     ticker_text = str(ticker or "").upper()
     caption = f"<b>{_escape(ticker_text)} chart</b>" if ticker_text else "<b>Position chart</b>"
-    return send_telegram_photo(source, caption=caption, settings=settings, opener=opener)
+    return send_telegram_photo(source, caption=caption, settings=settings, opener=opener, dedupe_key=dedupe_key)
 
 
 def chart_photo_source(chart_ref: Any, dashboard_url: str = "") -> str:
@@ -338,6 +347,71 @@ def dashboard_url_from_app_url(app_url: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, "/agent", "", ""))
 
 
+def build_telegram_dedupe_key(*parts: Any) -> str:
+    clean_parts = []
+    for part in parts:
+        text = str(part if part is not None else "").strip()
+        if text:
+            clean_parts.append(text.replace("\n", " ")[:120])
+    return "|".join(clean_parts)
+
+
+def telegram_dedupe_seen(dedupe_key: str) -> bool:
+    key = str(dedupe_key or "").strip()
+    if not key or not _env_bool("MARKET_LENS_TELEGRAM_DEDUP_ENABLED", True):
+        return False
+    log_path = telegram_dedupe_log_path()
+    if not log_path.exists():
+        return False
+    cutoff = telegram_dedupe_cutoff()
+    try:
+        for line in log_path.read_text(encoding="utf-8").splitlines():
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if payload.get("key") != key:
+                continue
+            sent_at = _parse_utc(payload.get("sent_at"))
+            if cutoff is None or sent_at is None or sent_at >= cutoff:
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def mark_telegram_dedupe_sent(dedupe_key: str) -> None:
+    key = str(dedupe_key or "").strip()
+    if not key or not _env_bool("MARKET_LENS_TELEGRAM_DEDUP_ENABLED", True):
+        return
+    log_path = telegram_dedupe_log_path()
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "sent_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "key": key,
+        }
+        with log_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, separators=(",", ":"), ensure_ascii=False) + "\n")
+    except OSError:
+        return
+
+
+def telegram_dedupe_log_path() -> Path:
+    raw_path = os.getenv("MARKET_LENS_TELEGRAM_DEDUP_LOG", "agent_results/telegram_notifications.jsonl").strip()
+    return Path(raw_path or "agent_results/telegram_notifications.jsonl")
+
+
+def telegram_dedupe_cutoff() -> datetime | None:
+    try:
+        days = int(os.getenv("MARKET_LENS_TELEGRAM_DEDUP_DAYS", "14"))
+    except ValueError:
+        days = 14
+    if days <= 0:
+        return None
+    return datetime.now(timezone.utc) - timedelta(days=days)
+
+
 def _env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
     if value is None:
@@ -403,6 +477,19 @@ def _format_message_time(value: Any) -> str:
         if len(compact) >= 16:
             return compact[:16]
         return compact
+
+
+def _parse_utc(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def _message_timezone() -> ZoneInfo:

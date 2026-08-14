@@ -41,8 +41,9 @@ def main() -> None:
     checks.append(check_latest_runtime_metrics(max_runtime_seconds))
 
     failed = [check for check in checks if not check.ok]
+    should_notify_telegram = health_telegram_enabled()
     should_notify_success = env_bool("MARKET_LENS_HEALTH_NOTIFY_SUCCESS", False)
-    if failed or should_notify_success:
+    if should_notify_telegram and (failed or should_notify_success):
         message = format_health_message(public_url=public_url, checks=checks)
         result = send_telegram_message(message)
         if not result.sent and result.status != "not_configured":
@@ -88,6 +89,10 @@ def check_render_endpoints(public_url: str, max_scan_age_minutes: int, min_resul
     if data_ok:
         checks.extend(check_dashboard_payload(data_payload["data"], max_scan_age_minutes, min_result_cards))
     return checks
+
+
+def health_telegram_enabled() -> bool:
+    return env_bool("MARKET_LENS_HEALTH_TELEGRAM_ENABLED", False)
 
 
 def check_dashboard_payload(payload: dict[str, Any], max_scan_age_minutes: int, min_result_cards: int) -> list[HealthCheck]:

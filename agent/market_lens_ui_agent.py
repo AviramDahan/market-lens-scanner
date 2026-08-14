@@ -28,6 +28,7 @@ from app.smart_universe import base_universe, build_sector_health, build_smart_u
 from app.strategy import StrategyDecision as Decision
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
 from app.telegram_notifications import (
+    build_telegram_dedupe_key,
     dashboard_url_from_env,
     format_position_opened_message,
     send_telegram_chart_photo,
@@ -1173,18 +1174,33 @@ def send_new_buy_notifications(
             timestamp=timestamp,
             dashboard_url=dashboard_url,
         )
-        outcome = send_telegram_message(message)
+        dedupe_key = build_telegram_dedupe_key(
+            "BUY_SIMULATED",
+            result.ticker,
+            str(timestamp)[:10],
+            position.get("entry_price"),
+            position.get("quantity"),
+            position.get("stop_loss"),
+            position.get("target_1"),
+            position.get("target_2"),
+        )
+        outcome = send_telegram_message(message, dedupe_key=dedupe_key)
         if outcome.sent:
             log(f"Telegram position-open notification sent for {result.ticker}.")
             chart_outcome = send_telegram_chart_photo(
                 position.get("chart_url") or result.chart_url,
                 ticker=result.ticker,
                 dashboard_url=dashboard_url,
+                dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
             )
             if chart_outcome.sent:
                 log(f"Telegram position-open chart sent for {result.ticker}.")
+            elif chart_outcome.status == "duplicate":
+                log(f"Telegram position-open chart duplicate skipped for {result.ticker}.")
             elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
                 log(f"Telegram position-open chart skipped for {result.ticker}: {chart_outcome.reason}")
+        elif outcome.status == "duplicate":
+            log(f"Telegram position-open duplicate skipped for {result.ticker}.")
         elif outcome.status != "not_configured":
             log(f"Telegram position-open notification skipped for {result.ticker}: {outcome.reason}")
 

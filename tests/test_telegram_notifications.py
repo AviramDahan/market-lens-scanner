@@ -77,6 +77,35 @@ def test_telegram_send_uses_json_payload_without_exposing_secret() -> None:
     assert "SECRET_TOKEN" not in result.reason
 
 
+def test_telegram_message_dedupe_skips_repeated_event(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_DEDUP_LOG", str(tmp_path / "telegram_notifications.jsonl"))
+    calls = []
+
+    def opener(request, timeout):
+        calls.append((request.full_url, timeout))
+        return FakeTelegramResponse()
+
+    settings = TelegramSettings(bot_token="SECRET_TOKEN", chat_id="-100", timeout_seconds=4)
+    first = send_telegram_message(
+        "<b>TP1</b>",
+        settings=settings,
+        opener=opener,
+        dedupe_key="POSITION_EVENT|MSFT|TAKE_PARTIAL_PROFIT|2026-06-22T15:31:00Z|110|5",
+    )
+    second = send_telegram_message(
+        "<b>TP1</b>",
+        settings=settings,
+        opener=opener,
+        dedupe_key="POSITION_EVENT|MSFT|TAKE_PARTIAL_PROFIT|2026-06-22T15:31:00Z|110|5",
+    )
+
+    assert first.sent is True
+    assert first.status == "sent"
+    assert second.sent is False
+    assert second.status == "duplicate"
+    assert len(calls) == 1
+
+
 def test_telegram_send_photo_uses_json_payload_for_remote_chart() -> None:
     captured = {}
 
@@ -237,11 +266,11 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
     sent_messages = []
     sent_charts = []
 
-    def fake_send(message: str):
+    def fake_send(message: str, **_kwargs):
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 
-    def fake_send_chart(chart_ref, *, ticker, dashboard_url):
+    def fake_send_chart(chart_ref, *, ticker, dashboard_url, **_kwargs):
         sent_charts.append((chart_ref, ticker, dashboard_url))
         return TelegramSendResult(True, "sent")
 
@@ -400,11 +429,11 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
     sent_messages = []
     sent_charts = []
 
-    def fake_send(message: str):
+    def fake_send(message: str, **_kwargs):
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 
-    def fake_send_chart(chart_ref, *, ticker, dashboard_url):
+    def fake_send_chart(chart_ref, *, ticker, dashboard_url, **_kwargs):
         sent_charts.append((chart_ref, ticker, dashboard_url))
         return TelegramSendResult(True, "sent")
 
@@ -448,7 +477,7 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
 def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch, tmp_path) -> None:
     sent_messages = []
 
-    def fake_send(message: str):
+    def fake_send(message: str, **_kwargs):
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 

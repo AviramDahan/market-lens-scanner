@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
 
 from app.data import fetch_intraday_frame
 from app.telegram_notifications import (
+    build_telegram_dedupe_key,
     dashboard_url_from_env,
     format_position_event_message,
     format_stop_moved_to_entry_message,
@@ -178,18 +179,31 @@ def send_position_event_notifications(
             timestamp=timestamp,
             dashboard_url=settings.dashboard_url,
         )
-        outcome = send_telegram_message(message)
+        dedupe_key = build_telegram_dedupe_key(
+            "POSITION_EVENT",
+            event.ticker,
+            event.action,
+            event.triggered_at,
+            event.trigger_price,
+            event.quantity,
+        )
+        outcome = send_telegram_message(message, dedupe_key=dedupe_key)
         if outcome.sent:
             print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
             chart_outcome = send_telegram_chart_photo(
                 position.get("chart_url"),
                 ticker=event.ticker,
                 dashboard_url=settings.dashboard_url,
+                dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
             )
             if chart_outcome.sent:
                 print(f"Telegram position-event chart sent for {event.ticker}:{event.action}.")
+            elif chart_outcome.status == "duplicate":
+                print(f"Telegram position-event chart duplicate skipped for {event.ticker}:{event.action}.")
             elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
                 print(f"Telegram position-event chart skipped for {event.ticker}:{event.action}: {chart_outcome.reason}")
+        elif outcome.status == "duplicate":
+            print(f"Telegram position-event duplicate skipped for {event.ticker}:{event.action}.")
         elif outcome.status != "not_configured":
             print(f"Telegram position-event notification skipped for {event.ticker}:{event.action}: {outcome.reason}")
         if should_notify_stop_moved_to_entry(position, event):
@@ -200,9 +214,14 @@ def send_position_event_notifications(
                 timestamp=timestamp,
                 dashboard_url=settings.dashboard_url,
             )
-            stop_outcome = send_telegram_message(stop_message)
+            stop_outcome = send_telegram_message(
+                stop_message,
+                dedupe_key=build_telegram_dedupe_key(dedupe_key, "STOP_TO_ENTRY"),
+            )
             if stop_outcome.sent:
                 print(f"Telegram stop-to-entry notification sent for {event.ticker}.")
+            elif stop_outcome.status == "duplicate":
+                print(f"Telegram stop-to-entry duplicate skipped for {event.ticker}.")
             elif stop_outcome.status != "not_configured":
                 print(f"Telegram stop-to-entry notification skipped for {event.ticker}: {stop_outcome.reason}")
 

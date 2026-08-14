@@ -662,6 +662,11 @@ sends a message for `TAKE_PARTIAL_PROFIT`, `TAKE_PROFIT`, and `EXIT_STOP`
 events after the Excel tracker is updated. Set `MARKET_LENS_PUBLIC_URL` or
 `MARKET_LENS_DASHBOARD_URL` so alerts link to the public `/agent` dashboard
 instead of the local GitHub runner URL.
+Trading alerts use `MARKET_LENS_TELEGRAM_DEDUP_LOG` to skip duplicate Telegram
+messages when the same GitHub Action is retried or the same TP/SL event is
+detected more than once. Health-check Telegram alerts are disabled by default;
+leave `MARKET_LENS_HEALTH_TELEGRAM_ENABLED=false` unless you intentionally want
+system-health messages in the trading chat.
 Generic `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` variables are ignored by
 default to avoid accidentally sending alerts to another project or chat. Only
 set `MARKET_LENS_TELEGRAM_ALLOW_LEGACY_ENV=true` if that fallback is deliberate.

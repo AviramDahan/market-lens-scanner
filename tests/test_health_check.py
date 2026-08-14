@@ -71,6 +71,18 @@ def test_health_message_marks_failures() -> None:
     assert "Latest scan breadth" in message
 
 
+def test_health_telegram_is_disabled_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("MARKET_LENS_HEALTH_TELEGRAM_ENABLED", raising=False)
+
+    assert health_check.health_telegram_enabled() is False
+
+
+def test_health_telegram_can_be_enabled_explicitly(monkeypatch) -> None:
+    monkeypatch.setenv("MARKET_LENS_HEALTH_TELEGRAM_ENABLED", "true")
+
+    assert health_check.health_telegram_enabled() is True
+
+
 def test_timestamp_age_accepts_naive_utc_or_new_york_values(monkeypatch) -> None:
     class FixedDatetime(datetime):
         @classmethod
