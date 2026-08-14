@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-10
-Total scans: 150
-Tickers scanned: 21743
+Total scans: 151
+Tickers scanned: 21920
 BUY_SIMULATED: 3
 WATCH_READY: 1505
 WATCH_READY unique tickers: 65
 WATCH_READY session split: regular=6, off_hours=1499, unknown=0
 WATCH_READY conversion: 2 converted / 65 staged
-WATCH: 7357
-SKIP: 13259
-NO_TRADE: 12100
+WATCH: 7404
+SKIP: 13383
+NO_TRADE: 12217
 Realized PnL: 1233.68
-Unrealized PnL: 895.09
-Portfolio value: 102128.77
+Unrealized PnL: 955.12
+Portfolio value: 102188.8
 Best ticker: MSTR
 Worst ticker: USB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 200
-- RELATIVE_STRENGTH_LEADER: 2029
-- TREND_PULLBACK_RECLAIM: 383
+- BREAKOUT_CONTINUATION: 202
+- RELATIVE_STRENGTH_LEADER: 2049
+- TREND_PULLBACK_RECLAIM: 388
 - VWAP_RECLAIM: 250
 
 Top rejected candidates:
@@ -30,7 +30,7 @@ Top rejected candidates:
 - TSM: SKIP score=0.61 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime BULL; sector NEUTRAL; net R/R 2.27.
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - MNST: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
-- RRC: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.48 failed minimum 2.00 after slippage/spread adjustment.
+- RRC: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.75 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.14.
 - TSN: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - PLD: SKIP score=0.56 reason=SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.44.
 - MRK: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
