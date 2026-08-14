@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 1
-Tickers scanned: 172
+Total scans: 2
+Tickers scanned: 342
 BUY_SIMULATED: 0
-WATCH_READY: 23
-WATCH_READY unique tickers: 23
-WATCH_READY session split: regular=0, off_hours=23, unknown=0
-WATCH_READY conversion: 0 converted / 23 staged
-WATCH: 61
-SKIP: 101
-NO_TRADE: 93
+WATCH_READY: 47
+WATCH_READY unique tickers: 24
+WATCH_READY session split: regular=0, off_hours=47, unknown=0
+WATCH_READY conversion: 0 converted / 24 staged
+WATCH: 122
+SKIP: 200
+NO_TRADE: 185
 Realized PnL: 1233.68
 Unrealized PnL: 825.34
 Portfolio value: 102059.02
@@ -19,10 +19,10 @@ Worst ticker: BRK-B
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 2
-- RELATIVE_STRENGTH_LEADER: 16
-- TREND_PULLBACK_RECLAIM: 4
-- VWAP_RECLAIM: 3
+- BREAKOUT_CONTINUATION: 4
+- RELATIVE_STRENGTH_LEADER: 32
+- TREND_PULLBACK_RECLAIM: 7
+- VWAP_RECLAIM: 6
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -30,11 +30,11 @@ Top rejected candidates:
 - SUI: WATCH_READY score=0.53 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - TSN: WATCH score=0.49 reason=WATCH: Normalized quality score is too low for a new entry (32.79/100).
 - KDP: WATCH score=0.49 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- CTVA: WATCH score=0.48 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - RRC: WATCH score=0.48 reason=Gross R/R is valid, but Net R/R 1.45 failed minimum 2.00 after slippage/spread adjustment.
 - ABT: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.12 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.79.
 - PLD: SKIP score=0.47 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.56.
 - OXY: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.67 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
-- MRK: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.38 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.98.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
