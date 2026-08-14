@@ -47,6 +47,7 @@ from app.scan_trigger import (
     dispatch_agent_scan,
     mark_scan_dispatched,
     scan_already_dispatched,
+    scan_dispatch_budget_reason,
     scan_schedule_decision,
     scan_trigger_configured,
 )
@@ -723,6 +724,14 @@ async def trigger_agent_scan(
             **base_payload,
             "status": "skipped",
             "reason": "This scan slot was already dispatched by the server.",
+        }, compact)
+
+    budget_reason = scan_dispatch_budget_reason(decision.scan_key)
+    if budget_reason:
+        return compact_cron_response({
+            **base_payload,
+            "status": "skipped",
+            "reason": budget_reason,
         }, compact)
 
     if not trigger_configured:

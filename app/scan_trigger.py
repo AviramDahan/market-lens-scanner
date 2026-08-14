@@ -13,40 +13,12 @@ from app.monitor_trigger import github_actions_token
 NEW_YORK_TZ = ZoneInfo("America/New_York")
 
 DEFAULT_WEEKDAY_SCAN_TIMES = {
-    "00:30",
-    "01:30",
-    "02:30",
-    "03:30",
-    "04:30",
-    "05:30",
-    "06:30",
-    "07:30",
     "08:30",
-    "09:10",
-    "09:35",
     "09:45",
-    "10:00",
-    "10:30",
-    "11:00",
     "11:30",
-    "12:00",
-    "12:30",
-    "13:00",
-    "13:30",
-    "14:00",
     "14:30",
-    "15:00",
-    "15:30",
-    "15:55",
     "16:15",
-    "16:20",
-    "17:30",
-    "18:30",
-    "19:30",
     "20:15",
-    "21:30",
-    "22:30",
-    "23:30",
 }
 DEFAULT_SATURDAY_SCAN_TIMES = {"11:00"}
 DEFAULT_SUNDAY_SCAN_TIMES = {"18:30", "22:00"}
@@ -185,6 +157,54 @@ def mark_scan_dispatched(scan_key: str) -> None:
 
 def scan_already_dispatched(scan_key: str) -> bool:
     return scan_key in _DISPATCHED_SCAN_KEYS
+
+
+def scan_dispatch_budget_reason(scan_key: str) -> str:
+    max_daily = env_int("MARKET_LENS_AGENT_MAX_DAILY_DISPATCHES", 5)
+    min_interval_minutes = env_int("MARKET_LENS_AGENT_MIN_DISPATCH_INTERVAL_MINUTES", 60)
+    current = parse_scan_key(scan_key)
+    if current is None:
+        return ""
+
+    previous = sorted(
+        parsed
+        for parsed in (parse_scan_key(key) for key in _DISPATCHED_SCAN_KEYS)
+        if parsed is not None
+    )
+    same_day = [value for value in previous if value.date() == current.date()]
+
+    if max_daily > 0 and len(same_day) >= max_daily:
+        return (
+            f"Daily GitHub Actions scan budget reached "
+            f"({len(same_day)}/{max_daily}); dispatch skipped to preserve included minutes."
+        )
+
+    if min_interval_minutes > 0 and previous:
+        latest = previous[-1]
+        elapsed = (current - latest).total_seconds()
+        if 0 <= elapsed < min_interval_minutes * 60:
+            remaining = int((min_interval_minutes * 60 - elapsed + 59) // 60)
+            return (
+                f"GitHub Actions scan cooldown is active; next dispatch allowed in "
+                f"about {remaining} minute(s)."
+            )
+
+    return ""
+
+
+def parse_scan_key(scan_key: str) -> datetime | None:
+    try:
+        parsed = datetime.strptime(scan_key, "%Y-%m-%dT%H:%M")
+    except ValueError:
+        return None
+    return parsed.replace(tzinfo=NEW_YORK_TZ)
+
+
+def env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)) or default)
+    except ValueError:
+        return default
 
 
 async def dispatch_agent_scan(source: str = "agent-server-scan-scheduler") -> dict[str, Any]:
