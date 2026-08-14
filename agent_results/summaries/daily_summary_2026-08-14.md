@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 17
-Tickers scanned: 2889
+Total scans: 18
+Tickers scanned: 3066
 BUY_SIMULATED: 0
 WATCH_READY: 316
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=316, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 981
-SKIP: 1760
-NO_TRADE: 1652
+WATCH: 1030
+SKIP: 1882
+NO_TRADE: 1770
 Realized PnL: 1233.68
-Unrealized PnL: 958.59
-Portfolio value: 102192.27
+Unrealized PnL: 899.22
+Portfolio value: 102132.9
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 38
-- RELATIVE_STRENGTH_LEADER: 274
-- TREND_PULLBACK_RECLAIM: 45
+- BREAKOUT_CONTINUATION: 40
+- RELATIVE_STRENGTH_LEADER: 290
+- TREND_PULLBACK_RECLAIM: 47
 - VWAP_RECLAIM: 45
 
 Top rejected candidates:
@@ -33,7 +33,7 @@ Top rejected candidates:
 - SUI: WATCH_READY score=0.53 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - MU: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.81.
 - EXR: WATCH score=0.51 reason=Gross R/R is valid, but Net R/R 1.55 failed minimum 2.00 after slippage/spread adjustment.
-- PAYX: WATCH score=0.5 reason=Gross R/R is valid, but Net R/R 1.53 failed minimum 2.00 after slippage/spread adjustment.
+- PAYX: WATCH score=0.5 reason=Gross R/R is valid, but Net R/R 1.56 failed minimum 2.00 after slippage/spread adjustment.
 - KDP: WATCH score=0.49 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 
 Recommendations:
