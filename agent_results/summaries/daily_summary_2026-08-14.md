@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 21
-Tickers scanned: 3594
+Total scans: 22
+Tickers scanned: 3766
 BUY_SIMULATED: 0
 WATCH_READY: 316
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=316, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1164
-SKIP: 2258
-NO_TRADE: 2128
+WATCH: 1205
+SKIP: 2383
+NO_TRADE: 2246
 Realized PnL: 1233.68
-Unrealized PnL: 953.47
-Portfolio value: 102187.15
+Unrealized PnL: 956.13
+Portfolio value: 102189.81
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 45
-- RELATIVE_STRENGTH_LEADER: 348
-- TREND_PULLBACK_RECLAIM: 58
+- BREAKOUT_CONTINUATION: 47
+- RELATIVE_STRENGTH_LEADER: 366
+- TREND_PULLBACK_RECLAIM: 62
 - VWAP_RECLAIM: 45
 
 Top rejected candidates:
@@ -32,9 +32,9 @@ Top rejected candidates:
 - TSM: WATCH_READY score=0.56 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - SUI: WATCH_READY score=0.53 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - MU: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.81.
-- PAYX: WATCH score=0.51 reason=Gross R/R is valid, but Net R/R 1.62 failed minimum 2.00 after slippage/spread adjustment.
+- PAYX: WATCH score=0.52 reason=Gross R/R is valid, but Net R/R 1.63 failed minimum 2.00 after slippage/spread adjustment.
 - EXR: WATCH score=0.51 reason=Gross R/R is valid, but Net R/R 1.55 failed minimum 2.00 after slippage/spread adjustment.
-- LRCX: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
+- LRCX: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.45.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
