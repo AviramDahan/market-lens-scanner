@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 25
-Tickers scanned: 4272
+Total scans: 26
+Tickers scanned: 4441
 BUY_SIMULATED: 0
 WATCH_READY: 316
 WATCH_READY unique tickers: 24
 WATCH_READY session split: regular=0, off_hours=316, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 1341
-SKIP: 2735
-NO_TRADE: 2580
+WATCH: 1390
+SKIP: 2849
+NO_TRADE: 2687
 Realized PnL: 1233.68
-Unrealized PnL: 922.12
-Portfolio value: 102155.8
+Unrealized PnL: 960.59
+Portfolio value: 102194.27
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 50
-- RELATIVE_STRENGTH_LEADER: 409
-- TREND_PULLBACK_RECLAIM: 72
+- BREAKOUT_CONTINUATION: 51
+- RELATIVE_STRENGTH_LEADER: 426
+- TREND_PULLBACK_RECLAIM: 76
 - VWAP_RECLAIM: 45
 
 Top rejected candidates:
