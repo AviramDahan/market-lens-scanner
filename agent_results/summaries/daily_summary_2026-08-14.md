@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-14
-Total scans: 4
-Tickers scanned: 682
+Total scans: 5
+Tickers scanned: 851
 BUY_SIMULATED: 0
-WATCH_READY: 93
+WATCH_READY: 115
 WATCH_READY unique tickers: 24
-WATCH_READY session split: regular=0, off_hours=93, unknown=0
+WATCH_READY session split: regular=0, off_hours=115, unknown=0
 WATCH_READY conversion: 0 converted / 24 staged
-WATCH: 244
-SKIP: 399
-NO_TRADE: 370
+WATCH: 304
+SKIP: 499
+NO_TRADE: 463
 Realized PnL: 1233.68
 Unrealized PnL: 825.34
 Portfolio value: 102059.02
@@ -19,10 +19,10 @@ Worst ticker: BRK-B
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 8
-- RELATIVE_STRENGTH_LEADER: 62
-- TREND_PULLBACK_RECLAIM: 13
-- VWAP_RECLAIM: 12
+- BREAKOUT_CONTINUATION: 10
+- RELATIVE_STRENGTH_LEADER: 78
+- TREND_PULLBACK_RECLAIM: 15
+- VWAP_RECLAIM: 15
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -33,7 +33,7 @@ Top rejected candidates:
 - CTVA: WATCH score=0.48 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - RRC: WATCH score=0.48 reason=Gross R/R is valid, but Net R/R 1.45 failed minimum 2.00 after slippage/spread adjustment.
 - ABT: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.12 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.79.
-- PLD: SKIP score=0.47 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.56.
+- PLD: SKIP score=0.47 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.57.
 - OXY: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.67 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
 
 Recommendations:
