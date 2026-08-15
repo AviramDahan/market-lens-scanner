@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-15
-Total scans: 1
-Tickers scanned: 167
+Total scans: 2
+Tickers scanned: 334
 BUY_SIMULATED: 0
-WATCH_READY: 21
+WATCH_READY: 42
 WATCH_READY unique tickers: 21
-WATCH_READY session split: regular=0, off_hours=21, unknown=0
+WATCH_READY session split: regular=0, off_hours=42, unknown=0
 WATCH_READY conversion: 0 converted / 21 staged
-WATCH: 64
-SKIP: 97
-NO_TRADE: 91
+WATCH: 128
+SKIP: 194
+NO_TRADE: 182
 Realized PnL: 1233.68
 Unrealized PnL: 892.05
 Portfolio value: 102125.73
@@ -19,10 +19,10 @@ Worst ticker: RGLD
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 2
-- RELATIVE_STRENGTH_LEADER: 20
-- TREND_PULLBACK_RECLAIM: 3
-- VWAP_RECLAIM: 2
+- BREAKOUT_CONTINUATION: 4
+- RELATIVE_STRENGTH_LEADER: 40
+- TREND_PULLBACK_RECLAIM: 6
+- VWAP_RECLAIM: 4
 
 Top rejected candidates:
 - RRC: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.08.
