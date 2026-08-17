@@ -628,6 +628,15 @@ It reads `agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx` and
 `agent_results/` from the repository, so each successful GitHub Actions run can
 publish the latest paper portfolio state back into the public app.
 
+The dashboard shows two win-rate views:
+
+- `Exit Win Rate` counts each realized exit event separately, so TP1 partial
+  profit and a later final exit are separate events.
+- `Trade Win Rate` groups all exits back to the original entry lot and counts
+  one completed trade only after the full quantity is closed. A trade that takes
+  TP1 and later exits the remainder at breakeven is counted as one winning
+  trade if the total realized P/L is positive.
+
 Agent result commits use `[skip render]` so every scan does not trigger a full
 Render deploy. Each Agent/monitor run writes `agent_results/dashboard_snapshot.json`,
 and the deployed dashboard reads that compact snapshot instead of rebuilding the

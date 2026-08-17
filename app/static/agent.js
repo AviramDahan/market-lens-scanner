@@ -93,7 +93,7 @@ const SECTION_HELP = {
     intro: "This page is the control room for the paper-trading agent. It shows the latest scan, open paper positions, risk, diagnostics, logs, and system status.",
     items: [
       "Top run cards show the latest scan time, scan status, ticker count, next scheduled scan, live price sync, monitor trigger status, and trade-ready count.",
-      "The metric cards below summarize paper equity, total P/L, cash, exposure, open risk, and win rate.",
+      "The metric cards below summarize paper equity, total P/L, cash, exposure, open risk, exit-event win rate, and full-trade win rate.",
       "All trading shown here is simulated paper trading only. The app does not place real broker orders.",
     ],
   },
@@ -747,6 +747,13 @@ function formatAgeMinutes(minutes) {
 }
 
 function renderMetrics(summary) {
+  const exitWinRate = Number(summary.exit_event_win_rate ?? summary.win_rate ?? 0);
+  const exitWins = Number(summary.exit_event_wins ?? summary.wins ?? 0);
+  const exitLosses = Number(summary.exit_event_losses ?? summary.losses ?? 0);
+  const tradeWinRate = Number(summary.full_trade_win_rate ?? 0);
+  const tradeWins = Number(summary.full_trade_wins ?? 0);
+  const tradeLosses = Number(summary.full_trade_losses ?? 0);
+  const tradeBreakeven = Number(summary.full_trade_breakeven ?? 0);
   const metrics = [
     {
       label: "Equity",
@@ -779,9 +786,15 @@ function renderMetrics(summary) {
       tone: summary.open_risk_ils > 0 ? "warn" : "",
     },
     {
-      label: "Win Rate",
-      value: `${summary.win_rate.toFixed(1)}%`,
-      detail: `${summary.wins} wins / ${summary.losses} losses`,
+      label: "Exit Win Rate",
+      value: `${exitWinRate.toFixed(1)}%`,
+      detail: `${exitWins} wins / ${exitLosses} losses`,
+      tone: "",
+    },
+    {
+      label: "Trade Win Rate",
+      value: `${tradeWinRate.toFixed(1)}%`,
+      detail: `${tradeWins} wins / ${tradeLosses} losses / ${tradeBreakeven} flat`,
       tone: "",
     },
   ];

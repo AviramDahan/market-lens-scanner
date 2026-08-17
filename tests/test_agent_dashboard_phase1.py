@@ -6,6 +6,7 @@ from app.agent_dashboard import (
     build_position_timeline,
     build_risk_dashboard,
     compact_agent_dashboard_payload,
+    compute_full_trade_performance,
     compute_realized_pnl,
     dashboard_section_payload,
     with_position_calculations,
@@ -51,6 +52,134 @@ def test_compute_realized_pnl_annotates_exit_trade_with_entry_and_r() -> None:
     assert result["closed"][0]["pnl_pct"] == 12
     assert result["closed"][0]["r_multiple"] == 2.4
     assert result["trades"][1]["pnl_ils"] == 120
+
+
+def test_full_trade_winrate_counts_partial_then_breakeven_as_one_win() -> None:
+    trades = [
+        {
+            "timestamp": "2026-08-05T14:00:00",
+            "action": "BUY_SIMULATED",
+            "ticker": "AAA",
+            "entry_price_usd": 100,
+            "price_usd": 100,
+            "quantity": 10,
+            "cash_out_ils": 1000,
+            "buy_value_ils": 1000,
+            "cash_in_ils": 0,
+            "stop_loss": 95,
+        },
+        {
+            "timestamp": "2026-08-05T15:00:00",
+            "action": "TAKE_PARTIAL_PROFIT",
+            "ticker": "AAA",
+            "exit_price_usd": 110,
+            "price_usd": 110,
+            "quantity": 5,
+            "cash_out_ils": 0,
+            "cash_in_ils": 550,
+            "sell_value_ils": 550,
+            "stop_loss": 95,
+        },
+        {
+            "timestamp": "2026-08-06T15:00:00",
+            "action": "EXIT_STOP",
+            "ticker": "AAA",
+            "exit_price_usd": 100,
+            "price_usd": 100,
+            "quantity": 5,
+            "cash_out_ils": 0,
+            "cash_in_ils": 500,
+            "sell_value_ils": 500,
+            "stop_loss": 100,
+        },
+    ]
+
+    exit_events = compute_realized_pnl(trades)
+    full_trades = compute_full_trade_performance(trades)
+
+    assert exit_events["wins"] == 1
+    assert exit_events["losses"] == 0
+    assert exit_events["breakeven"] == 1
+    assert len(exit_events["closed"]) == 2
+    assert full_trades["closed_count"] == 1
+    assert full_trades["wins"] == 1
+    assert full_trades["losses"] == 0
+    assert full_trades["breakeven"] == 0
+    assert full_trades["closed"][0]["pnl_ils"] == 50
+    assert full_trades["closed"][0]["exit_actions"] == ["TAKE_PARTIAL_PROFIT", "EXIT_STOP"]
+
+
+def test_full_trade_winrate_counts_stop_loss_as_money_loss() -> None:
+    trades = [
+        {
+            "timestamp": "2026-08-05T14:00:00",
+            "action": "BUY_SIMULATED",
+            "ticker": "AAA",
+            "entry_price_usd": 100,
+            "price_usd": 100,
+            "quantity": 10,
+            "cash_out_ils": 1000,
+            "buy_value_ils": 1000,
+            "cash_in_ils": 0,
+            "stop_loss": 95,
+        },
+        {
+            "timestamp": "2026-08-06T15:00:00",
+            "action": "EXIT_STOP",
+            "ticker": "AAA",
+            "exit_price_usd": 95,
+            "price_usd": 95,
+            "quantity": 10,
+            "cash_out_ils": 0,
+            "cash_in_ils": 950,
+            "sell_value_ils": 950,
+            "stop_loss": 95,
+        },
+    ]
+
+    full_trades = compute_full_trade_performance(trades)
+
+    assert full_trades["closed_count"] == 1
+    assert full_trades["wins"] == 0
+    assert full_trades["losses"] == 1
+    assert full_trades["closed"][0]["result"] == "LOSS"
+    assert full_trades["closed"][0]["pnl_ils"] == -50
+
+
+def test_full_trade_winrate_ignores_still_open_partial_position() -> None:
+    trades = [
+        {
+            "timestamp": "2026-08-05T14:00:00",
+            "action": "BUY_SIMULATED",
+            "ticker": "AAA",
+            "entry_price_usd": 100,
+            "price_usd": 100,
+            "quantity": 10,
+            "cash_out_ils": 1000,
+            "buy_value_ils": 1000,
+            "cash_in_ils": 0,
+            "stop_loss": 95,
+        },
+        {
+            "timestamp": "2026-08-05T15:00:00",
+            "action": "TAKE_PARTIAL_PROFIT",
+            "ticker": "AAA",
+            "exit_price_usd": 110,
+            "price_usd": 110,
+            "quantity": 5,
+            "cash_out_ils": 0,
+            "cash_in_ils": 550,
+            "sell_value_ils": 550,
+            "stop_loss": 95,
+        },
+    ]
+
+    full_trades = compute_full_trade_performance(trades)
+
+    assert full_trades["closed_count"] == 0
+    assert full_trades["open_count"] == 1
+    assert full_trades["wins"] == 0
+    assert full_trades["losses"] == 0
 
 
 def test_compact_dashboard_payload_trims_heavy_collections_and_keeps_totals() -> None:

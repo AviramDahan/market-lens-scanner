@@ -61,6 +61,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         else reconstruct_open_positions(scoped_trades, setup_rows, latest_run_timestamp)
     )
     realized = compute_realized_pnl(scoped_trades)
+    full_trade_performance = compute_full_trade_performance(scoped_trades)
     annotated_trades = realized.get("trades", scoped_trades)
     latest_monitor_update = select_latest_monitor_update(updates, latest_update)
 
@@ -122,6 +123,19 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         "win_rate": round(realized["wins"] / len(realized["closed"]) * 100, 2)
         if realized["closed"]
         else 0,
+        "exit_event_wins": realized["wins"],
+        "exit_event_losses": realized["losses"],
+        "exit_event_breakeven": realized.get("breakeven", 0),
+        "exit_event_win_rate": round(realized["wins"] / len(realized["closed"]) * 100, 2)
+        if realized["closed"]
+        else 0,
+        "full_trades": full_trade_performance["closed_count"],
+        "full_trade_wins": full_trade_performance["wins"],
+        "full_trade_losses": full_trade_performance["losses"],
+        "full_trade_breakeven": full_trade_performance["breakeven"],
+        "full_trade_win_rate": full_trade_performance["win_rate"],
+        "full_trade_realized_pnl_ils": full_trade_performance["total_pnl_ils"],
+        "open_full_trades": full_trade_performance["open_count"],
     }
 
     dashboard = {
@@ -175,6 +189,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         "equity_curve": build_equity_curve(scoped_updates, starting_capital),
         "recent_trades": annotated_trades,
         "closed_trades": realized["closed"],
+        "full_trade_performance": full_trade_performance,
         "score_calibration": build_score_calibration(realized["closed"]),
         "recent_runs": scoped_updates[-20:],
         "pagination": {
@@ -1749,7 +1764,147 @@ def compute_realized_pnl(trades: list[dict[str, Any]]) -> dict[str, Any]:
         closed.append(annotated_trade)
         annotated.append(annotated_trade)
 
-    return {"total": total, "closed": closed, "wins": wins, "losses": losses, "trades": annotated}
+    breakeven = len(closed) - wins - losses
+    return {"total": total, "closed": closed, "wins": wins, "losses": losses, "breakeven": breakeven, "trades": annotated}
+
+
+def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, Any]:
+    lots: dict[str, deque[dict[str, Any]]] = defaultdict(deque)
+    closed: list[dict[str, Any]] = []
+    wins = 0
+    losses = 0
+    breakeven = 0
+    total_pnl = 0.0
+
+    for trade in trades:
+        ticker = str(trade.get("ticker") or "").upper().strip()
+        action = str(trade.get("action") or "")
+        quantity = to_int(trade.get("quantity"))
+        if not ticker or quantity <= 0:
+            continue
+
+        if action == "BUY_SIMULATED":
+            cash_out = to_float(trade.get("cash_out_ils"), trade.get("buy_value_ils"))
+            entry_price = to_float(trade.get("entry_price_usd"), trade.get("price_usd"))
+            usd_ils = to_float(trade.get("usd_ils"), 1.0)
+            stop = to_float(trade.get("stop_loss"))
+            risk_per_share = max(0.0, entry_price - stop) * usd_ils
+            lot = {
+                "trade_id": trade_identity(trade),
+                "ticker": ticker,
+                "entry_timestamp": trade.get("timestamp"),
+                "entry_price_usd": entry_price,
+                "stop_loss": stop,
+                "initial_quantity": quantity,
+                "remaining_quantity": quantity,
+                "unit_cost_ils": cash_out / quantity if quantity else 0.0,
+                "cost_basis_ils": cash_out,
+                "initial_risk_ils": risk_per_share * quantity,
+                "realized_pnl_ils": 0.0,
+                "cash_in_ils": 0.0,
+                "exit_events": [],
+                "setup_type": trade.get("setup_type") or (trade.get("decision_json") or {}).get("setup_type", ""),
+                "setup_score_bucket": trade.get("setup_score_bucket", ""),
+                "sector": trade.get("sector", ""),
+            }
+            lots[ticker].append(lot)
+            continue
+
+        if action not in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            continue
+
+        remaining = quantity
+        cash_in = to_float(trade.get("cash_in_ils"), trade.get("sell_value_ils"))
+        exit_price = to_float(trade.get("exit_price_usd"), trade.get("price_usd"))
+        timestamp = trade.get("timestamp")
+        while remaining > 0 and lots[ticker]:
+            lot = lots[ticker][0]
+            used = min(remaining, to_int(lot.get("remaining_quantity")))
+            if used <= 0:
+                lots[ticker].popleft()
+                continue
+            ratio = used / quantity if quantity else 0.0
+            allocated_cash_in = cash_in * ratio if cash_in else exit_price * used * to_float(trade.get("usd_ils"), 1.0)
+            cost_basis = used * to_float(lot.get("unit_cost_ils"))
+            pnl = round(allocated_cash_in - cost_basis, 2)
+            lot["realized_pnl_ils"] = round(to_float(lot.get("realized_pnl_ils")) + pnl, 2)
+            lot["cash_in_ils"] = round(to_float(lot.get("cash_in_ils")) + allocated_cash_in, 2)
+            lot["remaining_quantity"] = to_int(lot.get("remaining_quantity")) - used
+            lot["exit_events"].append(
+                {
+                    "timestamp": timestamp,
+                    "action": action,
+                    "quantity": used,
+                    "price_usd": round(exit_price, 2) if exit_price else None,
+                    "pnl_ils": pnl,
+                }
+            )
+            remaining -= used
+
+            if to_int(lot.get("remaining_quantity")) <= 0:
+                completed = completed_full_trade(lot, timestamp)
+                closed.append(completed)
+                total_pnl = round(total_pnl + to_float(completed.get("pnl_ils")), 2)
+                if to_float(completed.get("pnl_ils")) > 0:
+                    wins += 1
+                elif to_float(completed.get("pnl_ils")) < 0:
+                    losses += 1
+                else:
+                    breakeven += 1
+                lots[ticker].popleft()
+
+    open_lots = [lot for ticker_lots in lots.values() for lot in ticker_lots if to_int(lot.get("remaining_quantity")) > 0]
+    closed_count = len(closed)
+    return {
+        "closed_count": closed_count,
+        "open_count": len(open_lots),
+        "wins": wins,
+        "losses": losses,
+        "breakeven": breakeven,
+        "win_rate": round(wins / closed_count * 100, 2) if closed_count else 0,
+        "total_pnl_ils": total_pnl,
+        "closed": closed,
+    }
+
+
+def trade_identity(trade: dict[str, Any]) -> str:
+    explicit = str(trade.get("trade_id") or "").strip()
+    if explicit:
+        return explicit
+    return "|".join(
+        [
+            str(trade.get("ticker") or "").upper(),
+            str(trade.get("timestamp") or ""),
+            str(trade.get("entry_price_usd") or trade.get("price_usd") or ""),
+            str(trade.get("quantity") or ""),
+        ]
+    )
+
+
+def completed_full_trade(lot: dict[str, Any], exit_timestamp: Any) -> dict[str, Any]:
+    pnl = round(to_float(lot.get("realized_pnl_ils")), 2)
+    cost_basis = to_float(lot.get("cost_basis_ils"))
+    initial_risk = to_float(lot.get("initial_risk_ils"))
+    exit_events = list(lot.get("exit_events") or [])
+    return {
+        "trade_id": lot.get("trade_id", ""),
+        "ticker": lot.get("ticker", ""),
+        "entry_timestamp": lot.get("entry_timestamp"),
+        "exit_timestamp": exit_timestamp,
+        "entry_price_usd": round(to_float(lot.get("entry_price_usd")), 2),
+        "stop_loss": round(to_float(lot.get("stop_loss")), 2),
+        "initial_quantity": to_int(lot.get("initial_quantity")),
+        "pnl_ils": pnl,
+        "pnl_pct": round(pnl / cost_basis * 100, 2) if cost_basis else 0,
+        "r_multiple": round(pnl / initial_risk, 4) if initial_risk else None,
+        "result": "WIN" if pnl > 0 else "LOSS" if pnl < 0 else "BREAKEVEN",
+        "exit_count": len(exit_events),
+        "exit_actions": [str(event.get("action") or "") for event in exit_events],
+        "exit_events": exit_events,
+        "setup_type": lot.get("setup_type", ""),
+        "setup_score_bucket": lot.get("setup_score_bucket", ""),
+        "sector": lot.get("sector", ""),
+    }
 
 
 def build_score_calibration(closed_trades: list[dict[str, Any]]) -> list[dict[str, Any]]:
