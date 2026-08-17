@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 20
-Tickers scanned: 3365
+Total scans: 21
+Tickers scanned: 3523
 BUY_SIMULATED: 0
-WATCH_READY: 276
-WATCH_READY unique tickers: 26
-WATCH_READY session split: regular=0, off_hours=276, unknown=0
-WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 1104
-SKIP: 2139
-NO_TRADE: 2031
+WATCH_READY: 296
+WATCH_READY unique tickers: 36
+WATCH_READY session split: regular=0, off_hours=296, unknown=0
+WATCH_READY conversion: 0 converted / 36 staged
+WATCH: 1159
+SKIP: 2237
+NO_TRADE: 2118
 Realized PnL: 1110.56
-Unrealized PnL: 827.07
-Portfolio value: 101937.63
+Unrealized PnL: 818.4
+Portfolio value: 101928.96
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 34
-- RELATIVE_STRENGTH_LEADER: 323
+- RELATIVE_STRENGTH_LEADER: 336
 - TREND_PULLBACK_RECLAIM: 68
-- VWAP_RECLAIM: 23
+- VWAP_RECLAIM: 24
 
 Top rejected candidates:
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.
@@ -38,5 +38,6 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
