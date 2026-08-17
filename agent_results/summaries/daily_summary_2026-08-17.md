@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-17
-Total scans: 14
-Tickers scanned: 2384
+Total scans: 15
+Tickers scanned: 2556
 BUY_SIMULATED: 0
 WATCH_READY: 276
 WATCH_READY unique tickers: 26
 WATCH_READY session split: regular=0, off_hours=276, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 848
-SKIP: 1444
-NO_TRADE: 1363
+WATCH: 893
+SKIP: 1566
+NO_TRADE: 1481
 Realized PnL: 1110.56
-Unrealized PnL: 809.35
-Portfolio value: 101919.91
+Unrealized PnL: 784.26
+Portfolio value: 101894.82
 Best ticker: MSTR
 Worst ticker: HAL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 31
-- RELATIVE_STRENGTH_LEADER: 262
-- TREND_PULLBACK_RECLAIM: 62
+- BREAKOUT_CONTINUATION: 33
+- RELATIVE_STRENGTH_LEADER: 269
+- TREND_PULLBACK_RECLAIM: 64
 - VWAP_RECLAIM: 23
 
 Top rejected candidates:
@@ -34,7 +34,7 @@ Top rejected candidates:
 - COF: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.43 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.96.
 - ABT: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.95.
 - HSY: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 0.95.
-- MRK: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.32 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.92.
+- MRK: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.32 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.93.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
