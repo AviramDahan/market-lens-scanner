@@ -1,0 +1,42 @@
+Daily Performance Summary
+
+Date: 2026-08-17
+Total scans: 1
+Tickers scanned: 171
+BUY_SIMULATED: 0
+WATCH_READY: 25
+WATCH_READY unique tickers: 25
+WATCH_READY session split: regular=0, off_hours=25, unknown=0
+WATCH_READY conversion: 0 converted / 25 staged
+WATCH: 66
+SKIP: 98
+NO_TRADE: 92
+Realized PnL: 1233.68
+Unrealized PnL: 892.05
+Portfolio value: 102125.73
+Best ticker: RMBS
+Worst ticker: RTX
+Best shadow strategy: RELATIVE_STRENGTH_LEADER
+Worst shadow strategy: TREND_PULLBACK_RECLAIM
+Shadow would-buy counts:
+- BREAKOUT_CONTINUATION: 2
+- RELATIVE_STRENGTH_LEADER: 22
+- TREND_PULLBACK_RECLAIM: 5
+- VWAP_RECLAIM: 2
+
+Top rejected candidates:
+- BA: WATCH score=0.5 reason=Gross R/R is valid, but Net R/R 1.52 failed minimum 2.00 after slippage/spread adjustment.
+- KDP: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.81 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.44.
+- ARW: WATCH score=0.49 reason=Gross R/R is valid, but Net R/R 1.58 failed minimum 2.00 after slippage/spread adjustment.
+- AIZ: WATCH score=0.49 reason=Gross R/R is valid, but Net R/R 1.42 failed minimum 2.00 after slippage/spread adjustment.
+- MRK: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.89.
+- TMO: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.01.
+- ABT: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.12 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.78.
+- RMBS: WATCH score=0.47 reason=WATCH: Normalized quality score is too low for a new entry (30.62/100).
+- MAA: WATCH_READY score=0.47 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- PLD: SKIP score=0.47 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.65.
+
+Recommendations:
+- Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
+- Review shadow would-buy candidates that active gates skipped before changing thresholds.
