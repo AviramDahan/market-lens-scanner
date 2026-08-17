@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-17
-Total scans: 10
-Tickers scanned: 1701
+Total scans: 11
+Tickers scanned: 1871
 BUY_SIMULATED: 0
-WATCH_READY: 251
+WATCH_READY: 276
 WATCH_READY unique tickers: 26
-WATCH_READY session split: regular=0, off_hours=251, unknown=0
+WATCH_READY session split: regular=0, off_hours=276, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 648
-SKIP: 983
-NO_TRADE: 920
+WATCH: 713
+SKIP: 1081
+NO_TRADE: 1012
 Realized PnL: 1233.68
 Unrealized PnL: 892.05
 Portfolio value: 102125.73
@@ -19,10 +19,10 @@ Worst ticker: RTX
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 20
-- RELATIVE_STRENGTH_LEADER: 207
-- TREND_PULLBACK_RECLAIM: 51
-- VWAP_RECLAIM: 20
+- BREAKOUT_CONTINUATION: 22
+- RELATIVE_STRENGTH_LEADER: 228
+- TREND_PULLBACK_RECLAIM: 58
+- VWAP_RECLAIM: 22
 
 Top rejected candidates:
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.
