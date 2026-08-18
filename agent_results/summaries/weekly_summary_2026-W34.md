@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 48
-Tickers scanned: 7953
+Total scans: 49
+Tickers scanned: 8111
 BUY_SIMULATED: 0
 WATCH_READY: 610
 WATCH_READY unique tickers: 45
 WATCH_READY session split: regular=0, off_hours=610, unknown=0
 WATCH_READY conversion: 0 converted / 45 staged
-WATCH: 2545
-SKIP: 5146
-NO_TRADE: 4780
+WATCH: 2588
+SKIP: 5256
+NO_TRADE: 4884
 Realized PnL: 1110.56
-Unrealized PnL: 806.61
-Portfolio value: 101917.17
+Unrealized PnL: 776.31
+Portfolio value: 101886.87
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 55
-- RELATIVE_STRENGTH_LEADER: 742
-- TREND_PULLBACK_RECLAIM: 98
+- BREAKOUT_CONTINUATION: 56
+- RELATIVE_STRENGTH_LEADER: 751
+- TREND_PULLBACK_RECLAIM: 100
 - VWAP_RECLAIM: 55
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- ICE: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.76 failed minimum 2.00 after slippage/spread adjustment.
+- ICE: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.
 - ENTG: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - DUK: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.65.
