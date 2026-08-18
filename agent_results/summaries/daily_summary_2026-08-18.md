@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-18
-Total scans: 21
-Tickers scanned: 3490
+Total scans: 22
+Tickers scanned: 3654
 BUY_SIMULATED: 0
 WATCH_READY: 214
 WATCH_READY unique tickers: 32
 WATCH_READY session split: regular=0, off_hours=214, unknown=0
 WATCH_READY conversion: 0 converted / 32 staged
-WATCH: 1077
-SKIP: 2308
-NO_TRADE: 2118
+WATCH: 1121
+SKIP: 2423
+NO_TRADE: 2226
 Realized PnL: 1110.56
-Unrealized PnL: 829.57
-Portfolio value: 101940.13
+Unrealized PnL: 806.61
+Portfolio value: 101917.17
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 20
-- RELATIVE_STRENGTH_LEADER: 328
-- TREND_PULLBACK_RECLAIM: 29
-- VWAP_RECLAIM: 25
+- BREAKOUT_CONTINUATION: 21
+- RELATIVE_STRENGTH_LEADER: 341
+- TREND_PULLBACK_RECLAIM: 30
+- VWAP_RECLAIM: 26
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
