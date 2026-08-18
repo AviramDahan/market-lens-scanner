@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-18
-Total scans: 2
-Tickers scanned: 320
+Total scans: 3
+Tickers scanned: 479
 BUY_SIMULATED: 0
-WATCH_READY: 51
+WATCH_READY: 76
 WATCH_READY unique tickers: 26
-WATCH_READY session split: regular=0, off_hours=51, unknown=0
+WATCH_READY session split: regular=0, off_hours=76, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 114
-SKIP: 196
-NO_TRADE: 175
+WATCH: 170
+SKIP: 294
+NO_TRADE: 262
 Realized PnL: 1110.56
 Unrealized PnL: 816.04
 Portfolio value: 101926.6
@@ -19,8 +19,8 @@ Worst ticker: NOC
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 33
-- VWAP_RECLAIM: 2
+- RELATIVE_STRENGTH_LEADER: 49
+- VWAP_RECLAIM: 3
 
 Top rejected candidates:
 - ABT: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.92.
