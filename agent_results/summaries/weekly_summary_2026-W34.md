@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 34
-Tickers scanned: 5628
+Total scans: 35
+Tickers scanned: 5797
 BUY_SIMULATED: 0
-WATCH_READY: 543
+WATCH_READY: 556
 WATCH_READY unique tickers: 45
-WATCH_READY session split: regular=0, off_hours=543, unknown=0
+WATCH_READY session split: regular=0, off_hours=556, unknown=0
 WATCH_READY conversion: 0 converted / 45 staged
-WATCH: 1861
-SKIP: 3575
-NO_TRADE: 3324
+WATCH: 1913
+SKIP: 3687
+NO_TRADE: 3426
 Realized PnL: 1110.56
 Unrealized PnL: 870.09
 Portfolio value: 101980.65
@@ -19,10 +19,10 @@ Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 39
-- RELATIVE_STRENGTH_LEADER: 533
+- BREAKOUT_CONTINUATION: 40
+- RELATIVE_STRENGTH_LEADER: 549
 - TREND_PULLBACK_RECLAIM: 70
-- VWAP_RECLAIM: 42
+- VWAP_RECLAIM: 44
 
 Top rejected candidates:
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.

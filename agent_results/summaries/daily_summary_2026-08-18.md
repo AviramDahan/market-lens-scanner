@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-18
-Total scans: 8
-Tickers scanned: 1329
+Total scans: 9
+Tickers scanned: 1498
 BUY_SIMULATED: 0
-WATCH_READY: 147
+WATCH_READY: 160
 WATCH_READY unique tickers: 32
-WATCH_READY session split: regular=0, off_hours=147, unknown=0
+WATCH_READY session split: regular=0, off_hours=160, unknown=0
 WATCH_READY conversion: 0 converted / 32 staged
-WATCH: 437
-SKIP: 852
-NO_TRADE: 770
+WATCH: 489
+SKIP: 964
+NO_TRADE: 872
 Realized PnL: 1110.56
 Unrealized PnL: 870.09
 Portfolio value: 101980.65
@@ -19,10 +19,10 @@ Worst ticker: HAL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 5
-- RELATIVE_STRENGTH_LEADER: 132
+- BREAKOUT_CONTINUATION: 6
+- RELATIVE_STRENGTH_LEADER: 148
 - TREND_PULLBACK_RECLAIM: 2
-- VWAP_RECLAIM: 13
+- VWAP_RECLAIM: 15
 
 Top rejected candidates:
 - ABT: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.92.
