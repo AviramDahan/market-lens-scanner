@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 44
-Tickers scanned: 7338
+Total scans: 45
+Tickers scanned: 7464
 BUY_SIMULATED: 0
 WATCH_READY: 610
 WATCH_READY unique tickers: 45
 WATCH_READY session split: regular=0, off_hours=610, unknown=0
 WATCH_READY conversion: 0 converted / 45 staged
-WATCH: 2373
-SKIP: 4723
-NO_TRADE: 4392
+WATCH: 2407
+SKIP: 4810
+NO_TRADE: 4465
 Realized PnL: 1110.56
-Unrealized PnL: 706.39
-Portfolio value: 101816.95
+Unrealized PnL: 725.02
+Portfolio value: 101835.58
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 52
-- RELATIVE_STRENGTH_LEADER: 697
-- TREND_PULLBACK_RECLAIM: 87
+- BREAKOUT_CONTINUATION: 53
+- RELATIVE_STRENGTH_LEADER: 708
+- TREND_PULLBACK_RECLAIM: 90
 - VWAP_RECLAIM: 53
 
 Top rejected candidates:
@@ -29,7 +29,7 @@ Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.
 - ENTG: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
-- MDLZ: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.99 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.59.
+- MDLZ: WATCH score=0.53 reason=Gross R/R is valid, but Net R/R 1.65 failed minimum 2.00 after slippage/spread adjustment.
 - SUI: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.15.
 - CL: WATCH score=0.52 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ABT: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.08.
