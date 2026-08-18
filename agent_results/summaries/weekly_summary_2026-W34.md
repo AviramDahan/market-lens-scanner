@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 52
-Tickers scanned: 8566
+Total scans: 53
+Tickers scanned: 8717
 BUY_SIMULATED: 0
 WATCH_READY: 610
 WATCH_READY unique tickers: 45
 WATCH_READY session split: regular=0, off_hours=610, unknown=0
 WATCH_READY conversion: 0 converted / 45 staged
-WATCH: 2716
-SKIP: 5568
-NO_TRADE: 5170
+WATCH: 2755
+SKIP: 5675
+NO_TRADE: 5266
 Realized PnL: 1110.56
-Unrealized PnL: 729.62
-Portfolio value: 101840.18
+Unrealized PnL: 732.34
+Portfolio value: 101842.9
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 60
-- RELATIVE_STRENGTH_LEADER: 779
-- TREND_PULLBACK_RECLAIM: 109
+- RELATIVE_STRENGTH_LEADER: 786
+- TREND_PULLBACK_RECLAIM: 110
 - VWAP_RECLAIM: 55
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ICE: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.
 - ENTG: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - DUK: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.65.
