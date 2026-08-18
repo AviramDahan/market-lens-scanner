@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 53
-Tickers scanned: 8717
+Total scans: 54
+Tickers scanned: 8865
 BUY_SIMULATED: 0
-WATCH_READY: 610
-WATCH_READY unique tickers: 45
-WATCH_READY session split: regular=0, off_hours=610, unknown=0
-WATCH_READY conversion: 0 converted / 45 staged
-WATCH: 2755
-SKIP: 5675
-NO_TRADE: 5266
+WATCH_READY: 624
+WATCH_READY unique tickers: 52
+WATCH_READY session split: regular=0, off_hours=624, unknown=0
+WATCH_READY conversion: 0 converted / 52 staged
+WATCH: 2798
+SKIP: 5774
+NO_TRADE: 5348
 Realized PnL: 1110.56
-Unrealized PnL: 732.34
-Portfolio value: 101842.9
-Best ticker: MSTR
+Unrealized PnL: 654.88
+Portfolio value: 101765.44
+Best ticker: ORCL
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 60
-- RELATIVE_STRENGTH_LEADER: 786
-- TREND_PULLBACK_RECLAIM: 110
+- RELATIVE_STRENGTH_LEADER: 794
+- TREND_PULLBACK_RECLAIM: 112
 - VWAP_RECLAIM: 55
 
 Top rejected candidates:
