@@ -1,32 +1,33 @@
 Daily Performance Summary
 
 Date: 2026-08-18
-Total scans: 20
-Tickers scanned: 3326
+Total scans: 21
+Tickers scanned: 3490
 BUY_SIMULATED: 0
 WATCH_READY: 214
 WATCH_READY unique tickers: 32
 WATCH_READY session split: regular=0, off_hours=214, unknown=0
 WATCH_READY conversion: 0 converted / 32 staged
-WATCH: 1029
-SKIP: 2197
-NO_TRADE: 2013
+WATCH: 1077
+SKIP: 2308
+NO_TRADE: 2118
 Realized PnL: 1110.56
-Unrealized PnL: 796.73
-Portfolio value: 101907.29
+Unrealized PnL: 829.57
+Portfolio value: 101940.13
 Best ticker: MSTR
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 19
-- RELATIVE_STRENGTH_LEADER: 317
-- TREND_PULLBACK_RECLAIM: 27
+- BREAKOUT_CONTINUATION: 20
+- RELATIVE_STRENGTH_LEADER: 328
+- TREND_PULLBACK_RECLAIM: 29
 - VWAP_RECLAIM: 25
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- ICE: WATCH score=0.59 reason=Gross R/R is valid, but Net R/R 1.76 failed minimum 2.00 after slippage/spread adjustment.
 - ENTG: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - DUK: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.65.
 - MDLZ: WATCH score=0.53 reason=Gross R/R is valid, but Net R/R 1.65 failed minimum 2.00 after slippage/spread adjustment.
@@ -34,7 +35,6 @@ Top rejected candidates:
 - CL: WATCH score=0.52 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ALL: WATCH score=0.51 reason=Gross R/R is valid, but Net R/R 1.50 failed minimum 2.00 after slippage/spread adjustment.
 - MS: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.78 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.39.
-- HSIC: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.21 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.76.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
