@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 74
-Tickers scanned: 11805
+Total scans: 75
+Tickers scanned: 11974
 BUY_SIMULATED: 0
 WATCH_READY: 880
 WATCH_READY unique tickers: 55
 WATCH_READY session split: regular=1, off_hours=879, unknown=0
 WATCH_READY conversion: 0 converted / 55 staged
-WATCH: 3589
-SKIP: 7810
-NO_TRADE: 7087
+WATCH: 3631
+SKIP: 7933
+NO_TRADE: 7204
 Realized PnL: 1110.56
-Unrealized PnL: 562.96
-Portfolio value: 101673.52
-Best ticker: TXN
+Unrealized PnL: 556.56
+Portfolio value: 101667.12
+Best ticker: ORCL
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 66
-- RELATIVE_STRENGTH_LEADER: 953
-- TREND_PULLBACK_RECLAIM: 142
-- VWAP_RECLAIM: 56
+- BREAKOUT_CONTINUATION: 68
+- RELATIVE_STRENGTH_LEADER: 964
+- TREND_PULLBACK_RECLAIM: 145
+- VWAP_RECLAIM: 59
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
