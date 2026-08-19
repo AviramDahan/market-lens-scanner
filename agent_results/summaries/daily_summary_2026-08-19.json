@@ -1,20 +1,29 @@
 {
   "BUY_SIMULATED_count": 1,
-  "NO_TRADE_count": 2022,
-  "SKIP_count": 2267,
+  "NO_TRADE_count": 2115,
+  "SKIP_count": 2374,
   "SL_hits": 2,
   "TP1_hits": 0,
   "TP2_hits": 1,
   "WATCH_READY_conversion": {
-    "conversion_rate_pct": 4.76,
+    "conversion_rate_pct": 3.33,
     "converted_tickers": [
       "CYTK"
     ],
     "converted_unique_count": 1,
     "pending_review_tickers": [
-      "NUE"
+      "ACI",
+      "ALB",
+      "AMD",
+      "GE",
+      "GS",
+      "ICE",
+      "LIN",
+      "MS",
+      "NUE",
+      "SUI"
     ],
-    "pending_review_unique_count": 1,
+    "pending_review_unique_count": 10,
     "reviewed_conversion_rate_pct": 5.0,
     "reviewed_not_converted_tickers": [
       "BRK-B",
@@ -39,16 +48,19 @@
     ],
     "reviewed_not_converted_unique_count": 19,
     "reviewed_unique_count": 20,
-    "source_unique_count": 21
+    "source_unique_count": 30
   },
-  "WATCH_READY_conversion_rate": 4.76,
-  "WATCH_READY_count": 186,
-  "WATCH_READY_off_hours_count": 185,
+  "WATCH_READY_conversion_rate": 3.33,
+  "WATCH_READY_count": 200,
+  "WATCH_READY_off_hours_count": 199,
   "WATCH_READY_regular_session_count": 1,
   "WATCH_READY_session_breakdown": {
     "off_hours": {
-      "records": 185,
+      "records": 199,
       "tickers": [
+        "ACI",
+        "ALB",
+        "AMD",
         "BRK-B",
         "CAT",
         "CB",
@@ -56,21 +68,18 @@
         "CL",
         "CYTK",
         "DHR",
+        "GE",
+        "GS",
         "HAL",
+        "ICE",
         "KDP",
+        "LIN",
         "MCD",
         "MDLZ",
-        "NUE",
-        "ORCL",
-        "PEP",
-        "PG",
-        "PPG",
-        "QCOM",
-        "SCCO",
-        "SHW",
-        "STZ"
+        "MS",
+        "NUE"
       ],
-      "unique_tickers": 21
+      "unique_tickers": 30
     },
     "regular": {
       "records": 1,
@@ -85,23 +94,23 @@
       "unique_tickers": 0
     }
   },
-  "WATCH_READY_unique_count": 21,
-  "WATCH_READY_unique_off_hours_count": 21,
+  "WATCH_READY_unique_count": 30,
+  "WATCH_READY_unique_off_hours_count": 30,
   "WATCH_READY_unique_regular_session_count": 1,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_count": 833,
+  "WATCH_count": 883,
   "average_R": 1.0962,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5493,
-    "RELATIVE_STRENGTH_LEADER": 0.6276,
-    "TREND_PULLBACK_RECLAIM": 0.4926,
-    "VWAP_RECLAIM": 0.5407
+    "BREAKOUT_CONTINUATION": 0.5497,
+    "RELATIVE_STRENGTH_LEADER": 0.6284,
+    "TREND_PULLBACK_RECLAIM": 0.4931,
+    "VWAP_RECLAIM": 0.5414
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.3758,
-  "average_rr_to_target_2": 1.215,
-  "average_setup_score": 0.1342,
+  "average_rr_to_target_1": 0.3769,
+  "average_rr_to_target_2": 1.2185,
+  "average_setup_score": 0.1349,
   "average_winner": 3.2886,
   "best_sector": "Technology",
   "best_setup_type": "Breakout + Retest",
@@ -190,14 +199,14 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 1.6693,
+  "daily_return_pct": 1.6403,
   "data_quality_issues": [
     {
-      "count": 2022,
+      "count": 2115,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 2022,
+      "count": 2115,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
@@ -205,23 +214,23 @@
       "name": "US10Y data unavailable: ^TNX: only 19 rows for interval=1d, need at least 50"
     },
     {
-      "count": 702,
+      "count": 744,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 330,
+      "count": 348,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 263,
+      "count": 277,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 201,
+      "count": 215,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 197,
+      "count": 206,
       "name": "Earnings blackout active."
     },
     {
@@ -241,19 +250,19 @@
   "median_R": 0.0,
   "most_common_rejection_reasons": [
     {
-      "count": 1992,
+      "count": 2084,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 558,
+      "count": 594,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 228,
+      "count": 240,
       "name": "WATCH: BULL market requires setup score (0"
     },
     {
-      "count": 140,
+      "count": 151,
       "name": "SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry"
     },
     {
@@ -265,16 +274,16 @@
       "name": "SKIP: Earnings blackout active"
     },
     {
-      "count": 19,
+      "count": 20,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
-      "count": 17,
-      "name": "Gross R/R is valid, but Net R/R 1"
+      "count": 20,
+      "name": "SKIP: Semiconductors sector regime is weak (22/100); skip new entry"
     },
     {
-      "count": 16,
-      "name": "SKIP: Semiconductors sector regime is weak (22/100); skip new entry"
+      "count": 18,
+      "name": "Gross R/R is valid, but Net R/R 1"
     },
     {
       "count": 11,
@@ -283,11 +292,11 @@
   ],
   "most_common_warnings": [
     {
-      "count": 2022,
+      "count": 2115,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 2022,
+      "count": 2115,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
@@ -295,23 +304,23 @@
       "name": "US10Y data unavailable: ^TNX: only 19 rows for interval=1d, need at least 50"
     },
     {
-      "count": 702,
+      "count": 744,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 330,
+      "count": 348,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 263,
+      "count": 277,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 201,
+      "count": 215,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 197,
+      "count": 206,
       "name": "Earnings blackout active."
     },
     {
@@ -327,23 +336,24 @@
   "open_positions_start": 5,
   "partial_exits": 0,
   "performance_by_market_regime": {
-    "BULL": 3206
+    "BULL": 3366
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 830,
-    "STRONG": 1841,
-    "WEAK": 535
+    "NEUTRAL": 866,
+    "STRONG": 1942,
+    "WEAK": 558
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 380,
-    "0.50-0.59": 46,
-    "<0.40": 2780
+    "0.40-0.49": 394,
+    "0.50-0.59": 48,
+    "0.60-0.69": 1,
+    "<0.40": 2923
   },
   "performance_by_shadow_strategy": {
     "BREAKOUT_CONTINUATION": 14,
-    "RELATIVE_STRENGTH_LEADER": 156,
-    "TREND_PULLBACK_RECLAIM": 40,
-    "VWAP_RECLAIM": 7
+    "RELATIVE_STRENGTH_LEADER": 160,
+    "TREND_PULLBACK_RECLAIM": 42,
+    "VWAP_RECLAIM": 9
   },
   "positions_closed_today": 3,
   "positions_opened_today": 1,
@@ -376,10 +386,11 @@
       "agent_results/decisions/market_lens_agent_20260819_173605.jsonl",
       "agent_results/decisions/market_lens_agent_20260819_180443.jsonl",
       "agent_results/decisions/market_lens_agent_20260819_183513.jsonl",
-      "agent_results/decisions/market_lens_agent_20260819_191347.jsonl"
+      "agent_results/decisions/market_lens_agent_20260819_191347.jsonl",
+      "agent_results/decisions/market_lens_agent_20260819_203804.jsonl"
     ],
-    "records": 3206,
-    "run_id": "20260819_191347"
+    "records": 3366,
+    "run_id": "20260819_203804"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -629,17 +640,17 @@
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
     "BREAKOUT_CONTINUATION": 14,
-    "RELATIVE_STRENGTH_LEADER": 156,
-    "TREND_PULLBACK_RECLAIM": 40,
-    "VWAP_RECLAIM": 7
+    "RELATIVE_STRENGTH_LEADER": 160,
+    "TREND_PULLBACK_RECLAIM": 42,
+    "VWAP_RECLAIM": 9
   },
   "summary_type": "daily",
   "top_rejected_candidates": [
     {
       "final_action": "WATCH",
-      "net_rr": 1.8445,
+      "net_rr": 1.9974,
       "reason": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.",
-      "setup_score": 0.59,
+      "setup_score": 0.6,
       "ticker": "ICE"
     },
     {
@@ -655,6 +666,13 @@
       "reason": "Gross R/R is valid, but Net R/R 1.73 failed minimum 2.00 after slippage/spread adjustment.",
       "setup_score": 0.58,
       "ticker": "KDP"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.4676,
+      "reason": "Gross R/R is valid, but Net R/R 1.47 failed minimum 2.00 after slippage/spread adjustment.",
+      "setup_score": 0.56,
+      "ticker": "SUI"
     },
     {
       "final_action": "WATCH",
@@ -679,17 +697,17 @@
     },
     {
       "final_action": "WATCH",
-      "net_rr": 1.1659,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.67 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.17.",
-      "setup_score": 0.52,
-      "ticker": "SUI"
-    },
-    {
-      "final_action": "WATCH",
       "net_rr": 1.0943,
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.09.",
       "setup_score": 0.52,
       "ticker": "MRK"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 2.0114,
+      "reason": "SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.01.",
+      "setup_score": 0.51,
+      "ticker": "XEL"
     },
     {
       "final_action": "WATCH",
@@ -697,24 +715,17 @@
       "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.29 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 0.94.",
       "setup_score": 0.51,
       "ticker": "SCCO"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.4,
-      "reason": "SKIP: Utilities / Real Assets sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.40.",
-      "setup_score": 0.5,
-      "ticker": "DUK"
     }
   ],
   "total_BUY_SIMULATED": 1,
-  "total_WATCH_READY": 186,
+  "total_WATCH_READY": 200,
   "total_closed_trades": 3,
-  "total_portfolio_value": 101669.31,
-  "total_result_cards_read": 3206,
-  "total_scans": 21,
-  "total_tickers_scanned": 3206,
+  "total_portfolio_value": 101640.33,
+  "total_result_cards_read": 3366,
+  "total_scans": 22,
+  "total_tickers_scanned": 3366,
   "total_trading_days": null,
-  "unrealized_pnl": 316.05,
+  "unrealized_pnl": 287.07,
   "week_end": null,
   "week_start": null,
   "win_rate": 33.33,
