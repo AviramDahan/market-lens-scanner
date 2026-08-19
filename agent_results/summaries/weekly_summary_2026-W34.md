@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 79
-Tickers scanned: 12634
-BUY_SIMULATED: 0
+Total scans: 80
+Tickers scanned: 12797
+BUY_SIMULATED: 1
 WATCH_READY: 880
 WATCH_READY unique tickers: 55
 WATCH_READY session split: regular=1, off_hours=879, unknown=0
-WATCH_READY conversion: 0 converted / 55 staged
-WATCH: 3789
-SKIP: 8419
-NO_TRADE: 7671
-Realized PnL: 1110.56
-Unrealized PnL: 554.6
-Portfolio value: 101665.16
+WATCH_READY conversion: 1 converted / 55 staged
+WATCH: 3831
+SKIP: 8537
+NO_TRADE: 7781
+Realized PnL: 1353.26
+Unrealized PnL: 316.05
+Portfolio value: 101669.31
 Best ticker: TXN
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 73
-- RELATIVE_STRENGTH_LEADER: 987
-- TREND_PULLBACK_RECLAIM: 157
-- VWAP_RECLAIM: 59
+- BREAKOUT_CONTINUATION: 74
+- RELATIVE_STRENGTH_LEADER: 990
+- TREND_PULLBACK_RECLAIM: 161
+- VWAP_RECLAIM: 62
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -39,5 +39,4 @@ Top rejected candidates:
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
 - Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
-- After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
