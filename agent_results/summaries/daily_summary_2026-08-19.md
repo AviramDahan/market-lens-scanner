@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-19
-Total scans: 6
-Tickers scanned: 863
+Total scans: 7
+Tickers scanned: 1005
 BUY_SIMULATED: 0
-WATCH_READY: 95
+WATCH_READY: 111
 WATCH_READY unique tickers: 21
-WATCH_READY session split: regular=0, off_hours=95, unknown=0
+WATCH_READY session split: regular=0, off_hours=111, unknown=0
 WATCH_READY conversion: 0 converted / 21 staged
-WATCH: 242
-SKIP: 585
-NO_TRADE: 493
+WATCH: 282
+SKIP: 682
+NO_TRADE: 574
 Realized PnL: 1110.56
-Unrealized PnL: 930.27
-Portfolio value: 102040.83
+Unrealized PnL: 656.06
+Portfolio value: 101766.62
 Best ticker: ORCL
 Worst ticker: HSY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 3
-- RELATIVE_STRENGTH_LEADER: 50
-- TREND_PULLBACK_RECLAIM: 9
+- RELATIVE_STRENGTH_LEADER: 58
+- TREND_PULLBACK_RECLAIM: 11
 
 Top rejected candidates:
 - MRK: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.09.
