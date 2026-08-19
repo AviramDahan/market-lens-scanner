@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-19
-Total scans: 18
-Tickers scanned: 2716
+Total scans: 19
+Tickers scanned: 2880
 BUY_SIMULATED: 0
 WATCH_READY: 186
 WATCH_READY unique tickers: 21
 WATCH_READY session split: regular=1, off_hours=185, unknown=0
 WATCH_READY conversion: 0 converted / 21 staged
-WATCH: 714
-SKIP: 1907
-NO_TRADE: 1681
+WATCH: 755
+SKIP: 2026
+NO_TRADE: 1794
 Realized PnL: 1110.56
-Unrealized PnL: 527.31
-Portfolio value: 101637.87
+Unrealized PnL: 550.33
+Portfolio value: 101660.89
 Best ticker: TXN
 Worst ticker: ECL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 11
-- RELATIVE_STRENGTH_LEADER: 143
-- TREND_PULLBACK_RECLAIM: 29
+- BREAKOUT_CONTINUATION: 12
+- RELATIVE_STRENGTH_LEADER: 148
+- TREND_PULLBACK_RECLAIM: 33
 - VWAP_RECLAIM: 4
 
 Top rejected candidates:
