@@ -1,26 +1,26 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 71
-Tickers scanned: 11306
+Total scans: 72
+Tickers scanned: 11471
 BUY_SIMULATED: 0
 WATCH_READY: 879
 WATCH_READY unique tickers: 55
 WATCH_READY session split: regular=0, off_hours=879, unknown=0
 WATCH_READY conversion: 0 converted / 55 staged
-WATCH: 3475
-SKIP: 7440
-NO_TRADE: 6741
+WATCH: 3513
+SKIP: 7562
+NO_TRADE: 6851
 Realized PnL: 1110.56
-Unrealized PnL: 656.06
-Portfolio value: 101766.62
+Unrealized PnL: 601.82
+Portfolio value: 101712.38
 Best ticker: ORCL
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 63
-- RELATIVE_STRENGTH_LEADER: 932
+- RELATIVE_STRENGTH_LEADER: 941
 - TREND_PULLBACK_RECLAIM: 139
 - VWAP_RECLAIM: 55
 
@@ -28,13 +28,13 @@ Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ICE: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- KDP: WATCH score=0.55 reason=Gross R/R is valid, but Net R/R 1.50 failed minimum 2.00 after slippage/spread adjustment.
 - AIZ: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.44 failed minimum 2.00 after slippage/spread adjustment.
 - ENTG: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - DUK: SKIP score=0.53 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.65.
 - MDLZ: WATCH score=0.53 reason=Gross R/R is valid, but Net R/R 1.65 failed minimum 2.00 after slippage/spread adjustment.
 - SUI: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.15.
 - CL: WATCH score=0.52 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- MRK: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.09.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
