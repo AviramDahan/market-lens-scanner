@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-20
-Total scans: 32
-Tickers scanned: 5221
+Total scans: 33
+Tickers scanned: 5376
 BUY_SIMULATED: 0
-WATCH_READY: 373
+WATCH_READY: 393
 WATCH_READY unique tickers: 33
-WATCH_READY session split: regular=0, off_hours=373, unknown=0
+WATCH_READY session split: regular=0, off_hours=393, unknown=0
 WATCH_READY conversion: 0 converted / 33 staged
-WATCH: 1501
-SKIP: 3603
-NO_TRADE: 3156
+WATCH: 1545
+SKIP: 3711
+NO_TRADE: 3247
 Realized PnL: 1353.26
 Unrealized PnL: 229.19
 Portfolio value: 101582.45
@@ -20,8 +20,8 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 9
-- RELATIVE_STRENGTH_LEADER: 217
-- TREND_PULLBACK_RECLAIM: 73
+- RELATIVE_STRENGTH_LEADER: 224
+- TREND_PULLBACK_RECLAIM: 74
 - VWAP_RECLAIM: 29
 
 Top rejected candidates:
@@ -29,11 +29,11 @@ Top rejected candidates:
 - KDP: WATCH_READY score=0.6 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - ICE: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - SUI: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.38 failed minimum 2.00 after slippage/spread adjustment.
-- ECL: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.13 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.70.
+- ECL: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.85.
 - SMCI: SKIP score=0.52 reason=SKIP: Semiconductors sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.15.
 - OMC: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.57 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.09.
 - XEL: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.03.
-- CBRE: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
+- CBRE: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.78 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.14.
 - PSA: SKIP score=0.5 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 0.81.
 
 Recommendations:
