@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-20
-Total scans: 5
-Tickers scanned: 823
+Total scans: 6
+Tickers scanned: 987
 BUY_SIMULATED: 0
-WATCH_READY: 105
+WATCH_READY: 126
 WATCH_READY unique tickers: 22
-WATCH_READY session split: regular=0, off_hours=105, unknown=0
+WATCH_READY session split: regular=0, off_hours=126, unknown=0
 WATCH_READY conversion: 0 converted / 22 staged
-WATCH: 274
-SKIP: 525
-NO_TRADE: 454
+WATCH: 328
+SKIP: 630
+NO_TRADE: 545
 Realized PnL: 1353.26
 Unrealized PnL: 287.07
 Portfolio value: 101640.33
@@ -19,9 +19,10 @@ Worst ticker: HSY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 36
-- TREND_PULLBACK_RECLAIM: 20
-- VWAP_RECLAIM: 10
+- BREAKOUT_CONTINUATION: 1
+- RELATIVE_STRENGTH_LEADER: 43
+- TREND_PULLBACK_RECLAIM: 24
+- VWAP_RECLAIM: 12
 
 Top rejected candidates:
 - KDP: WATCH_READY score=0.6 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
