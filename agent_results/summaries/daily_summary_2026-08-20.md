@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-20
-Total scans: 28
-Tickers scanned: 4604
+Total scans: 30
+Tickers scanned: 4912
 BUY_SIMULATED: 0
-WATCH_READY: 293
-WATCH_READY unique tickers: 22
-WATCH_READY session split: regular=0, off_hours=293, unknown=0
-WATCH_READY conversion: 0 converted / 22 staged
-WATCH: 1334
-SKIP: 3165
-NO_TRADE: 2786
+WATCH_READY: 333
+WATCH_READY unique tickers: 33
+WATCH_READY session split: regular=0, off_hours=333, unknown=0
+WATCH_READY conversion: 0 converted / 33 staged
+WATCH: 1416
+SKIP: 3385
+NO_TRADE: 2972
 Realized PnL: 1353.26
-Unrealized PnL: 248.01
-Portfolio value: 101601.27
+Unrealized PnL: 229.19
+Portfolio value: 101582.45
 Best ticker: CCI
 Worst ticker: HAL
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 9
-- RELATIVE_STRENGTH_LEADER: 189
-- TREND_PULLBACK_RECLAIM: 69
+- RELATIVE_STRENGTH_LEADER: 203
+- TREND_PULLBACK_RECLAIM: 71
 - VWAP_RECLAIM: 29
 
 Top rejected candidates:
@@ -38,5 +38,6 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
