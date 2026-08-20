@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-20
-Total scans: 6
-Tickers scanned: 987
+Total scans: 7
+Tickers scanned: 1151
 BUY_SIMULATED: 0
-WATCH_READY: 126
+WATCH_READY: 147
 WATCH_READY unique tickers: 22
-WATCH_READY session split: regular=0, off_hours=126, unknown=0
+WATCH_READY session split: regular=0, off_hours=147, unknown=0
 WATCH_READY conversion: 0 converted / 22 staged
-WATCH: 328
-SKIP: 630
-NO_TRADE: 545
+WATCH: 382
+SKIP: 735
+NO_TRADE: 635
 Realized PnL: 1353.26
 Unrealized PnL: 287.07
 Portfolio value: 101640.33
@@ -20,9 +20,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 43
-- TREND_PULLBACK_RECLAIM: 24
-- VWAP_RECLAIM: 12
+- RELATIVE_STRENGTH_LEADER: 50
+- TREND_PULLBACK_RECLAIM: 28
+- VWAP_RECLAIM: 14
 
 Top rejected candidates:
 - KDP: WATCH_READY score=0.6 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
@@ -32,7 +32,7 @@ Top rejected candidates:
 - OMC: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.57 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.09.
 - XEL: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.03.
 - PSA: SKIP score=0.5 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 0.81.
-- CBRE: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.14 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.76.
+- CBRE: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.14 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.77.
 - HSY: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.12 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.71.
 - COST: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.62 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.09.
 
