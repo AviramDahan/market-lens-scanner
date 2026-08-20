@@ -1,26 +1,26 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 105
-Tickers scanned: 16928
+Total scans: 106
+Tickers scanned: 17094
 BUY_SIMULATED: 1
 WATCH_READY: 1231
 WATCH_READY unique tickers: 69
 WATCH_READY session split: regular=1, off_hours=1230, unknown=0
 WATCH_READY conversion: 1 converted / 69 staged
-WATCH: 5111
-SKIP: 11292
-NO_TRADE: 10188
+WATCH: 5152
+SKIP: 11414
+NO_TRADE: 10297
 Realized PnL: 1353.26
-Unrealized PnL: 138.23
-Portfolio value: 101491.49
+Unrealized PnL: 132.7
+Portfolio value: 101485.96
 Best ticker: TXN
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 83
-- RELATIVE_STRENGTH_LEADER: 1172
+- RELATIVE_STRENGTH_LEADER: 1179
 - TREND_PULLBACK_RECLAIM: 238
 - VWAP_RECLAIM: 99
 
