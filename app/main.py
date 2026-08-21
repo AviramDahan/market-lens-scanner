@@ -55,6 +55,7 @@ from app.smart_universe import build_curated_universe_fallback, build_smart_univ
 from app.storage import init_storage, list_setups, refresh_setup, save_setup, using_external_storage
 from app.strategy import apply_strategy_decisions
 from app.telegram_notifications import (
+    build_telegram_dedupe_key,
     dashboard_url_from_env,
     format_position_attention_message,
     send_telegram_chart_photo,
@@ -902,11 +903,19 @@ def send_position_attention_alert(position: dict, alert: dict, source_time: str)
         timestamp=source_time,
         dashboard_url=dashboard_url,
     )
-    message_result = send_telegram_message(message)
+    dedupe_key = build_telegram_dedupe_key(
+        "POSITION_ATTENTION",
+        alert.get("ticker") or position.get("ticker"),
+        alert.get("event_type"),
+        _attention_position_identity(position),
+        alert.get("threshold"),
+    )
+    message_result = send_telegram_message(message, dedupe_key=dedupe_key)
     chart_result = send_telegram_chart_photo(
         position.get("chart_url") or position.get("screenshot_url") or "",
         ticker=alert.get("ticker") or position.get("ticker"),
         dashboard_url=dashboard_url,
+        dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
     )
     if message_result.sent:
         _POSITION_ATTENTION_ALERT_AT[key] = now
@@ -918,6 +927,25 @@ def send_position_attention_alert(position: dict, alert: dict, source_time: str)
         "chart_status": chart_result.status,
         "reason": alert.get("reason", ""),
     }
+
+
+def _attention_position_identity(position: dict) -> str:
+    decision = position.get("decision_json")
+    if isinstance(decision, str):
+        try:
+            decision = json.loads(decision)
+        except json.JSONDecodeError:
+            decision = {}
+    if isinstance(decision, dict) and decision.get("trade_id"):
+        return str(decision.get("trade_id"))
+    return build_telegram_dedupe_key(
+        position.get("entry_date") or position.get("opened_at"),
+        position.get("entry_price_usd") or position.get("entry_price"),
+        position.get("quantity"),
+        position.get("stop_loss"),
+        position.get("target_1"),
+        position.get("target_2"),
+    )
 
 
 def position_attention_alert_enabled() -> bool:

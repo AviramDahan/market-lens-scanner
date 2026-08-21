@@ -206,13 +206,14 @@ def test_position_opened_message_contains_trade_plan() -> None:
         dashboard_url="https://example.com/agent",
     )
 
-    assert "BUY_SIMULATED opened" in message
+    assert "BUY | NVDA" in message
     assert "NVDA" in message
     assert "Time: 2026-06-22 13:30" in message
     assert "Time: 2026-06-22T10:30:00" not in message
     assert "$210.00" in message
     assert "$195.00 (-7.14%)" in message
-    assert "$225.00 (+7.14%) / $245.00 (+16.67%)" in message
+    assert "TP1: $225.00 (+7.14%)" in message
+    assert "TP2: $245.00 (+16.67%)" in message
     assert "2.34" in message
     assert "https://example.com/agent" in message
 
@@ -339,7 +340,7 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
     )
 
     assert len(sent_messages) == 1
-    assert "BUY_SIMULATED opened" in sent_messages[0]
+    assert "BUY | BUY" in sent_messages[0]
     assert "BUY" in sent_messages[0]
     assert "WATCH" not in sent_messages[0]
     assert sent_charts == [("agent_results/charts/buy.png", "BUY", "https://market-lens-scanner-fb63.onrender.com/agent")]
@@ -374,15 +375,15 @@ def test_position_event_message_contains_exit_details() -> None:
         dashboard_url="https://example.com/agent",
     )
 
-    assert "TP1 hit - partial profit" in message
+    assert "TP1 | PARTIAL SOLD" in message
     assert "BA" in message
     assert "Time: 2026-06-22 18:32" in message
-    assert "Triggered at: 2026-06-22 18:31" in message
     assert "$215.00" in message
     assert "$190.00 (-5.00%)" in message
-    assert "$215.00 (+7.50%) / $230.00 (+15.00%)" in message
+    assert "TP1: $215.00 (+7.50%)" in message
+    assert "TP2: $230.00 (+15.00%)" in message
     assert "+$75.00" in message
-    assert "stop moves to breakeven" in message
+    assert "stop moves to entry" in message
     assert "https://example.com/agent" in message
 
 
@@ -416,13 +417,13 @@ def test_stop_moved_to_entry_message_contains_breakeven_update() -> None:
         dashboard_url="https://example.com/agent",
     )
 
-    assert "Stop moved to entry" in message
+    assert "STOP TO ENTRY | BA" in message
     assert "BA" in message
     assert "Time: 2026-06-22 18:32" in message
-    assert "Previous stop: $190.00 (-5.00%)" in message
-    assert "New stop: $200.00 (0.00%)" in message
-    assert "Remaining quantity: 5" in message
-    assert "TP1 was hit" in message
+    assert "Old SL: $190.00 (-5.00%)" in message
+    assert "New SL: $200.00 (0.00%)" in message
+    assert "Remaining qty: 5" in message
+    assert "TP1 hit" in message
 
 
 def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_path) -> None:
@@ -468,10 +469,49 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
     )
 
     assert len(sent_messages) == 1
-    assert "Stop hit - position closed" in sent_messages[0]
+    assert "STOP | POSITION CLOSED" in sent_messages[0]
     assert "MSFT" in sent_messages[0]
     assert "-$15.00" in sent_messages[0]
     assert sent_charts == [("agent_results/charts/msft.png", "MSFT", "https://example.com/agent")]
+
+
+def test_position_event_dedupe_key_is_stable_across_monitor_runs() -> None:
+    position = {
+        "ticker": "MSFT",
+        "entry_date": "2026-06-22T14:30:00+00:00",
+        "entry_price": 100,
+        "quantity": 10,
+        "stop_loss": 95,
+        "target_1": 110,
+        "target_2": 120,
+        "decision_json": '{"trade_id":"MSFT-20260622-001"}',
+    }
+    first = position_monitor.PositionEvent(
+        ticker="MSFT",
+        action="TAKE_PARTIAL_PROFIT",
+        triggered_at="2026-06-22T15:31:00+00:00",
+        trigger_price=110,
+        high=111,
+        low=101,
+        close=109,
+        quantity=5,
+        cash_in=550,
+        note="Target 1 touched.",
+    )
+    second = position_monitor.PositionEvent(
+        ticker="MSFT",
+        action="TAKE_PARTIAL_PROFIT",
+        triggered_at="2026-06-22T15:35:00+00:00",
+        trigger_price=110,
+        high=111,
+        low=101,
+        close=109,
+        quantity=5,
+        cash_in=550,
+        note="Target 1 touched again.",
+    )
+
+    assert position_monitor.position_event_dedupe_key(position, first) == position_monitor.position_event_dedupe_key(position, second)
 
 
 def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch, tmp_path) -> None:
@@ -511,10 +551,10 @@ def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch
     )
 
     assert len(sent_messages) == 2
-    assert "TP1 hit - partial profit" in sent_messages[0]
-    assert "Stop moved to entry" in sent_messages[1]
-    assert "Previous stop: $95.00 (-5.00%)" in sent_messages[1]
-    assert "New stop: $100.00 (0.00%)" in sent_messages[1]
+    assert "TP1 | PARTIAL SOLD" in sent_messages[0]
+    assert "STOP TO ENTRY" in sent_messages[1]
+    assert "Old SL: $95.00 (-5.00%)" in sent_messages[1]
+    assert "New SL: $100.00 (0.00%)" in sent_messages[1]
 
 
 def test_position_attention_message_is_read_only_and_includes_distance() -> None:
@@ -540,9 +580,8 @@ def test_position_attention_message_is_read_only_and_includes_distance() -> None
         dashboard_url="https://example.com/agent",
     )
 
-    assert "Position near TP/SL" in message
+    assert "NEAR TP1 | BA" in message
     assert "BA" in message
-    assert "Target 1" in message
     assert "Distance: 0.42%" in message
     assert "$215.00 (+7.50%)" in message
-    assert "No portfolio change yet" in message
+    assert "no portfolio change yet" in message

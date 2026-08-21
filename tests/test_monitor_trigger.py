@@ -415,17 +415,21 @@ def test_monitor_live_sends_near_tp_sl_attention_without_dispatch(monkeypatch, t
         encoding="utf-8",
     )
     sent_messages = []
+    sent_message_keys = []
     sent_charts = []
+    sent_chart_keys = []
 
     async def fail_dispatch(*_args, **_kwargs):
         raise AssertionError("near-threshold alerts must not dispatch GitHub monitor")
 
-    def fake_send(message, **_kwargs):
+    def fake_send(message, **kwargs):
         sent_messages.append(message)
+        sent_message_keys.append(kwargs.get("dedupe_key"))
         return types.SimpleNamespace(sent=True, status="sent")
 
-    def fake_chart(chart_ref, *, ticker, dashboard_url, **_kwargs):
+    def fake_chart(chart_ref, *, ticker, dashboard_url, **kwargs):
         sent_charts.append((chart_ref, ticker, dashboard_url))
+        sent_chart_keys.append(kwargs.get("dedupe_key"))
         return types.SimpleNamespace(sent=True, status="sent")
 
     monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
@@ -448,7 +452,9 @@ def test_monitor_live_sends_near_tp_sl_attention_without_dispatch(monkeypatch, t
     assert payload["status"] == "ok"
     assert payload["attention_alerts"][0]["event_type"] == "TAKE_PARTIAL_PROFIT"
     assert payload["attention_alerts"][0]["sent"] is True
-    assert sent_messages and "No portfolio change yet" in sent_messages[0]
+    assert sent_messages and "no portfolio change yet" in sent_messages[0]
+    assert sent_message_keys[0].startswith("POSITION_ATTENTION|TEST|TAKE_PARTIAL_PROFIT")
+    assert sent_chart_keys[0].endswith("|chart")
     assert sent_charts == [("/agent-results/charts/test.png", "TEST", "")]
 
 

@@ -191,31 +191,27 @@ def format_position_opened_message(
     dashboard_url: str,
 ) -> str:
     decision_json = getattr(decision, "decision_json", {}) or {}
+    ticker = getattr(result, "ticker", "")
+    entry = position.get("entry_price") or getattr(result, "current_price", 0)
+    target_1 = position.get("target_1")
+    target_2 = position.get("target_2")
     lines = [
-        "<b>Market Lens Paper Agent</b>",
-        "<b>BUY_SIMULATED opened</b>",
-        "",
-        f"Ticker: <b>{_escape(getattr(result, 'ticker', ''))}</b>",
-        f"Setup: {_escape(getattr(result, 'setup_type', ''))}",
+        f"<b>BUY | {_escape(ticker)}</b>",
         f"Time: {_escape(_format_message_time(timestamp))}",
-        f"Run: {_escape(run_id)}",
+        f"Setup: {_escape(getattr(result, 'setup_type', ''))}",
         "",
-        f"Entry: {_money(position.get('entry_price') or getattr(result, 'current_price', 0))}",
-        f"Quantity: {_escape(position.get('quantity', 0))}",
-        f"Exposure: {_money(position.get('exposure_ils'))}",
-        f"Risk: {_money(position.get('risk_ils'))}",
-        f"Stop: {_price_with_percent(position.get('stop_loss'), position.get('entry_price') or getattr(result, 'current_price', 0))}",
-        f"Targets: {_price_with_percent(position.get('target_1'), position.get('entry_price') or getattr(result, 'current_price', 0))} / {_price_with_percent(position.get('target_2'), position.get('entry_price') or getattr(result, 'current_price', 0))}",
+        f"Entry: {_money(entry)} | Qty: {_escape(position.get('quantity', 0))}",
+        f"Exposure: {_money(position.get('exposure_ils'))} | Risk: {_money(position.get('risk_ils'))}",
+        f"SL: {_price_with_percent(position.get('stop_loss'), entry)}",
+        f"TP1: {_price_with_percent(target_1, entry)}",
+        f"TP2: {_price_with_percent(target_2, entry)}",
         "",
-        f"Setup score: {_number(getattr(result, 'score', 0), 2)}",
-        f"Net R/R: {_number(decision_json.get('net_rr'), 2)}",
-        f"Market: {_escape(decision_json.get('market_regime', '-'))}",
-        f"Sector: {_escape(decision_json.get('sector', '-'))} ({_escape(decision_json.get('sector_regime', '-'))})",
-        "",
-        f"Reason: {_escape(_shorten(getattr(decision, 'feedback', '') or decision_json.get('reason', '')))}",
+        f"Score: {_number(getattr(result, 'score', 0), 2)} | Net R/R: {_number(decision_json.get('net_rr'), 2)}",
+        f"Regime: {_escape(decision_json.get('market_regime', '-'))} | Sector: {_escape(decision_json.get('sector_regime', '-'))}",
+        f"Why: {_escape(_shorten(getattr(decision, 'feedback', '') or decision_json.get('reason', ''), 220))}",
     ]
     if dashboard_url:
-        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+        lines.append(f"Dashboard: {_escape(dashboard_url)}")
     return "\n".join(lines)
 
 
@@ -229,39 +225,34 @@ def format_position_event_message(
 ) -> str:
     action = str(getattr(event, "action", "") or "")
     action_title = {
-        "TAKE_PARTIAL_PROFIT": "TP1 hit - partial profit",
-        "TAKE_PROFIT": "TP2 hit - position closed",
-        "EXIT_STOP": "Stop hit - position closed",
+        "TAKE_PARTIAL_PROFIT": "TP1 | PARTIAL SOLD",
+        "TAKE_PROFIT": "TP2 | POSITION CLOSED",
+        "EXIT_STOP": "STOP | POSITION CLOSED",
     }.get(action, action or "Position event")
     entry = _to_float(position.get("entry_price"))
     trigger = _to_float(getattr(event, "trigger_price", 0))
     quantity = int(_to_float(getattr(event, "quantity", 0)))
     pnl = (trigger - entry) * quantity if entry > 0 and trigger > 0 and quantity > 0 else None
+    ticker = getattr(event, "ticker", "") or position.get("ticker", "")
     lines = [
-        "<b>Market Lens Paper Agent</b>",
-        f"<b>{_escape(action_title)}</b>",
-        "",
-        f"Ticker: <b>{_escape(getattr(event, 'ticker', '') or position.get('ticker', ''))}</b>",
+        f"<b>{_escape(action_title)} | {_escape(ticker)}</b>",
         f"Time: {_escape(_format_message_time(timestamp))}",
-        f"Triggered at: {_escape(_format_message_time(getattr(event, 'triggered_at', '')))}",
-        f"Run: {_escape(run_id)}",
-        "",
-        f"Trigger price: {_money(trigger)}",
-        f"Quantity: {_escape(quantity)}",
-        f"Estimated P/L: {_signed_money(pnl)}",
-        f"Cash in: {_money(getattr(event, 'cash_in', None))}",
+        f"Price: {_money(trigger)} | Qty: {_escape(quantity)}",
+        f"P/L: {_signed_money(pnl)} | Cash: {_money(getattr(event, 'cash_in', None))}",
         "",
         f"Entry: {_money(entry)}",
-        f"Stop: {_price_with_percent(position.get('stop_loss'), entry)}",
-        f"Targets: {_price_with_percent(position.get('target_1'), entry)} / {_price_with_percent(position.get('target_2'), entry)}",
+        f"SL: {_price_with_percent(position.get('stop_loss'), entry)}",
+        f"TP1: {_price_with_percent(position.get('target_1'), entry)}",
+        f"TP2: {_price_with_percent(position.get('target_2'), entry)}",
         f"Bar H/L/C: {_money(getattr(event, 'high', None))} / {_money(getattr(event, 'low', None))} / {_money(getattr(event, 'close', None))}",
-        "",
-        f"Note: {_escape(_shorten(getattr(event, 'note', '')))}",
     ]
     if action == "TAKE_PARTIAL_PROFIT":
-        lines.append("Risk update: remaining stop moves to breakeven.")
+        lines.append("Next: remaining stop moves to entry.")
+    note = _shorten(getattr(event, "note", ""), 180)
+    if note:
+        lines.append(f"Note: {_escape(note)}")
     if dashboard_url:
-        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+        lines.append(f"Dashboard: {_escape(dashboard_url)}")
     return "\n".join(lines)
 
 
@@ -278,23 +269,18 @@ def format_stop_moved_to_entry_message(
     total_quantity = int(_to_float(position.get("quantity", 0)))
     closed_quantity = int(_to_float(getattr(event, "quantity", 0)))
     remaining_quantity = max(0, total_quantity - closed_quantity)
+    ticker = getattr(event, "ticker", "") or position.get("ticker", "")
     lines = [
-        "<b>Market Lens Paper Agent</b>",
-        "<b>Stop moved to entry</b>",
-        "",
-        f"Ticker: <b>{_escape(getattr(event, 'ticker', '') or position.get('ticker', ''))}</b>",
+        f"<b>STOP TO ENTRY | {_escape(ticker)}</b>",
         f"Time: {_escape(_format_message_time(timestamp))}",
-        f"Run: {_escape(run_id)}",
         "",
-        f"Entry: {_money(entry)}",
-        f"Previous stop: {_price_with_percent(old_stop, entry)}",
-        f"New stop: {_price_with_percent(entry, entry)}",
-        f"Remaining quantity: {_escape(remaining_quantity)}",
-        "",
-        "Reason: TP1 was hit and the remaining paper position is now protected at breakeven.",
+        f"Old SL: {_price_with_percent(old_stop, entry)}",
+        f"New SL: {_price_with_percent(entry, entry)}",
+        f"Remaining qty: {_escape(remaining_quantity)}",
+        "Reason: TP1 hit; remaining paper position is protected at breakeven.",
     ]
     if dashboard_url:
-        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+        lines.append(f"Dashboard: {_escape(dashboard_url)}")
     return "\n".join(lines)
 
 
@@ -308,27 +294,21 @@ def format_position_attention_message(
     ticker = alert.get("ticker") or position.get("ticker", "")
     entry = position.get("entry_price_usd") or position.get("entry_price")
     label = alert.get("label") or alert.get("event_type") or "TP/SL level"
+    alert_title = _attention_title(alert.get("event_type"), label)
     lines = [
-        "<b>Market Lens Paper Agent</b>",
-        "<b>Position near TP/SL</b>",
-        "",
-        f"Ticker: <b>{_escape(ticker)}</b>",
-        f"Watch level: {_escape(label)}",
+        f"<b>{_escape(alert_title)} | {_escape(ticker)}</b>",
         f"Time: {_escape(_format_message_time(timestamp))}",
         "",
-        f"Live price: {_money(alert.get('live_price'))}",
+        f"Live: {_money(alert.get('live_price'))}",
         f"Level: {_price_with_percent(alert.get('threshold'), entry)}",
         f"Distance: {_number(alert.get('distance_pct'), 2)}%",
-        f"Bar H/L: {_money(alert.get('live_high'))} / {_money(alert.get('live_low'))}",
+        f"Range H/L: {_money(alert.get('live_high'))} / {_money(alert.get('live_low'))}",
         "",
-        f"Entry: {_money(entry)}",
-        f"Stop: {_price_with_percent(position.get('stop_loss'), entry)}",
-        f"Targets: {_price_with_percent(position.get('target_1'), entry)} / {_price_with_percent(position.get('target_2'), entry)}",
-        "",
-        "Action: No portfolio change yet. The monitor updates the tracker only after an actual TP/SL touch.",
+        "Status: no portfolio change yet.",
+        "Tracker updates only after actual TP/SL touch.",
     ]
     if dashboard_url:
-        lines.extend(["", f"Dashboard: {_escape(dashboard_url)}"])
+        lines.append(f"Dashboard: {_escape(dashboard_url)}")
     return "\n".join(lines)
 
 
@@ -354,6 +334,18 @@ def build_telegram_dedupe_key(*parts: Any) -> str:
         if text:
             clean_parts.append(text.replace("\n", " ")[:120])
     return "|".join(clean_parts)
+
+
+def _attention_title(event_type: Any, label: Any) -> str:
+    event = str(event_type or "").upper()
+    if event == "EXIT_STOP":
+        return "NEAR STOP"
+    if event == "TAKE_PROFIT":
+        return "NEAR TP2"
+    if event == "TAKE_PARTIAL_PROFIT":
+        return "NEAR TP1"
+    clean_label = str(label or "").strip().upper()
+    return f"NEAR {clean_label}" if clean_label else "NEAR TP/SL"
 
 
 def telegram_dedupe_seen(dedupe_key: str) -> bool:

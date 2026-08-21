@@ -179,14 +179,7 @@ def send_position_event_notifications(
             timestamp=timestamp,
             dashboard_url=settings.dashboard_url,
         )
-        dedupe_key = build_telegram_dedupe_key(
-            "POSITION_EVENT",
-            event.ticker,
-            event.action,
-            event.triggered_at,
-            event.trigger_price,
-            event.quantity,
-        )
+        dedupe_key = position_event_dedupe_key(position, event)
         outcome = send_telegram_message(message, dedupe_key=dedupe_key)
         if outcome.sent:
             print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
@@ -224,6 +217,25 @@ def send_position_event_notifications(
                 print(f"Telegram stop-to-entry duplicate skipped for {event.ticker}.")
             elif stop_outcome.status != "not_configured":
                 print(f"Telegram stop-to-entry notification skipped for {event.ticker}: {stop_outcome.reason}")
+
+
+def position_event_dedupe_key(position: dict[str, Any], event: PositionEvent) -> str:
+    decision = parse_decision_json(position.get("decision_json"))
+    position_identity = decision.get("trade_id") or build_telegram_dedupe_key(
+        position.get("entry_date"),
+        position.get("entry_price"),
+        position.get("quantity"),
+        position.get("stop_loss"),
+        position.get("target_1"),
+        position.get("target_2"),
+    )
+    return build_telegram_dedupe_key(
+        "POSITION_EVENT",
+        event.ticker,
+        event.action,
+        position_identity,
+        event.trigger_price,
+    )
 
 
 def should_notify_stop_moved_to_entry(position: dict[str, Any], event: PositionEvent) -> bool:
