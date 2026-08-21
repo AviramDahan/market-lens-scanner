@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-21
-Total scans: 30
-Tickers scanned: 4876
+Total scans: 31
+Tickers scanned: 5040
 BUY_SIMULATED: 1
-WATCH_READY: 377
+WATCH_READY: 394
 WATCH_READY unique tickers: 34
-WATCH_READY session split: regular=0, off_hours=377, unknown=0
+WATCH_READY session split: regular=0, off_hours=394, unknown=0
 WATCH_READY conversion: 0 converted / 34 staged
-WATCH: 1291
-SKIP: 3484
-NO_TRADE: 3088
+WATCH: 1339
+SKIP: 3596
+NO_TRADE: 3187
 Realized PnL: 0.0
 Unrealized PnL: 244.72
 Portfolio value: 101597.98
@@ -20,13 +20,13 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 6
-- RELATIVE_STRENGTH_LEADER: 258
-- TREND_PULLBACK_RECLAIM: 53
-- VWAP_RECLAIM: 19
+- RELATIVE_STRENGTH_LEADER: 269
+- TREND_PULLBACK_RECLAIM: 54
+- VWAP_RECLAIM: 20
 
 Top rejected candidates:
 - TKO: WATCH score=0.61 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- TSN: WATCH score=0.56 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
+- TSN: WATCH score=0.57 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
 - MU: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.65.
 - ICE: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 - KR: WATCH score=0.55 reason=WATCH: Neutral market requires stronger normalized quality (40.02/100).
