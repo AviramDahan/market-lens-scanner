@@ -1,31 +1,31 @@
 Daily Performance Summary
 
 Date: 2026-08-21
-Total scans: 20
-Tickers scanned: 3196
+Total scans: 21
+Tickers scanned: 3370
 BUY_SIMULATED: 1
 WATCH_READY: 344
 WATCH_READY unique tickers: 28
 WATCH_READY session split: regular=0, off_hours=344, unknown=0
 WATCH_READY conversion: 0 converted / 28 staged
-WATCH: 902
-SKIP: 2233
-NO_TRADE: 1940
+WATCH: 943
+SKIP: 2362
+NO_TRADE: 2062
 Realized PnL: 1353.26
-Unrealized PnL: 318.49
-Portfolio value: 101671.75
+Unrealized PnL: 311.93
+Portfolio value: 101665.19
 Best ticker: CCI
 Worst ticker: HSY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 2
-- RELATIVE_STRENGTH_LEADER: 160
-- TREND_PULLBACK_RECLAIM: 37
-- VWAP_RECLAIM: 12
+- BREAKOUT_CONTINUATION: 3
+- RELATIVE_STRENGTH_LEADER: 170
+- TREND_PULLBACK_RECLAIM: 38
+- VWAP_RECLAIM: 14
 
 Top rejected candidates:
-- TKO: WATCH score=0.6 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.50 after slippage/spread adjustment.
+- TKO: WATCH score=0.61 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ICE: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 - KR: WATCH score=0.55 reason=WATCH: Neutral market requires stronger normalized quality (40.02/100).
 - SUI: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).

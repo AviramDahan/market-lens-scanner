@@ -1,34 +1,34 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 138
-Tickers scanned: 22164
+Total scans: 139
+Tickers scanned: 22338
 BUY_SIMULATED: 2
 WATCH_READY: 1695
 WATCH_READY unique tickers: 81
 WATCH_READY session split: regular=1, off_hours=1694, unknown=0
 WATCH_READY conversion: 2 converted / 81 staged
-WATCH: 6526
-SKIP: 15013
-NO_TRADE: 13426
+WATCH: 6567
+SKIP: 15142
+NO_TRADE: 13548
 Realized PnL: 1353.26
-Unrealized PnL: 318.49
-Portfolio value: 101671.75
+Unrealized PnL: 311.93
+Portfolio value: 101665.19
 Best ticker: TXN
 Worst ticker: NLY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 85
-- RELATIVE_STRENGTH_LEADER: 1398
-- TREND_PULLBACK_RECLAIM: 281
-- VWAP_RECLAIM: 111
+- BREAKOUT_CONTINUATION: 86
+- RELATIVE_STRENGTH_LEADER: 1408
+- TREND_PULLBACK_RECLAIM: 282
+- VWAP_RECLAIM: 113
 
 Top rejected candidates:
+- TKO: WATCH score=0.61 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - KDP: WATCH_READY score=0.6 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - ICE: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- TKO: WATCH score=0.6 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.50 after slippage/spread adjustment.
 - TSN: WATCH score=0.59 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ECL: WATCH score=0.59 reason=WATCH: Technical setup detected, but weighted risk/reward 1.11 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.69.
 - SUI: WATCH score=0.57 reason=Gross R/R is valid, but Net R/R 1.38 failed minimum 2.00 after slippage/spread adjustment.
