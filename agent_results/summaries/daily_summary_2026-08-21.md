@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-21
-Total scans: 8
-Tickers scanned: 1235
+Total scans: 9
+Tickers scanned: 1392
 BUY_SIMULATED: 0
-WATCH_READY: 196
+WATCH_READY: 220
 WATCH_READY unique tickers: 27
-WATCH_READY session split: regular=0, off_hours=196, unknown=0
+WATCH_READY session split: regular=0, off_hours=220, unknown=0
 WATCH_READY conversion: 0 converted / 27 staged
-WATCH: 369
-SKIP: 842
-NO_TRADE: 708
+WATCH: 415
+SKIP: 950
+NO_TRADE: 799
 Realized PnL: 1353.26
 Unrealized PnL: 229.19
 Portfolio value: 101582.45
@@ -19,8 +19,8 @@ Worst ticker: CPB
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 58
-- TREND_PULLBACK_RECLAIM: 15
+- RELATIVE_STRENGTH_LEADER: 65
+- TREND_PULLBACK_RECLAIM: 17
 - VWAP_RECLAIM: 5
 
 Top rejected candidates:
