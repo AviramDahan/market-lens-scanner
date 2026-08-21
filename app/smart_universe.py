@@ -226,7 +226,9 @@ def build_smart_universe(
         "count": len(selected),
         "tickers": [item.ticker for item in selected],
         "companies": [candidate_to_company(item) for item in selected],
-        "ranked": [candidate_to_company(item) for item in ranked[:100]],
+        # Keep the diversified display selection unchanged, but expose enough
+        # ranked candidates for the Agent's same-day rotation pool.
+        "ranked": [candidate_to_company(item) for item in ranked[:limit]],
         "sector_counts": sector_counts(selected),
         "sector_health": sector_health,
         "errors": errors,

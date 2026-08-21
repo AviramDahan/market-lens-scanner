@@ -29,7 +29,9 @@ These values are a comparison baseline, not a promise of future performance.
 4. Expected confirmation/target warnings are ignored for `No Trade` records.
 5. Fresh Smart Universe scans rotate away from tickers already reviewed during
    the same day; open positions and carry-forward candidates remain outside the
-   fresh quota and can still be rescanned.
+   fresh quota and can still be rescanned. The API exposes the full requested
+   ranked pool for rotation while leaving its diversified display selection,
+   scoring, filters, and ranking unchanged.
 6. `STOP_RECLAIM_REENTRY` runs in shadow mode only and preserves the active
    cooldown and final action.
 7. Shadow candidates in a neutral sector receive a 50% sizing suggestion only;
