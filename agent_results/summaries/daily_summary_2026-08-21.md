@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-21
-Total scans: 27
-Tickers scanned: 4384
+Total scans: 28
+Tickers scanned: 4550
 BUY_SIMULATED: 1
 WATCH_READY: 344
 WATCH_READY unique tickers: 28
 WATCH_READY session split: regular=0, off_hours=344, unknown=0
 WATCH_READY conversion: 0 converted / 28 staged
-WATCH: 1162
-SKIP: 3133
-NO_TRADE: 2778
+WATCH: 1197
+SKIP: 3260
+NO_TRADE: 2892
 Realized PnL: 1353.26
-Unrealized PnL: 295.54
-Portfolio value: 101648.8
+Unrealized PnL: 300.89
+Portfolio value: 101654.15
 Best ticker: CCI
 Worst ticker: HSY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 5
-- RELATIVE_STRENGTH_LEADER: 228
-- TREND_PULLBACK_RECLAIM: 49
+- BREAKOUT_CONTINUATION: 6
+- RELATIVE_STRENGTH_LEADER: 237
+- TREND_PULLBACK_RECLAIM: 50
 - VWAP_RECLAIM: 14
 
 Top rejected candidates:
