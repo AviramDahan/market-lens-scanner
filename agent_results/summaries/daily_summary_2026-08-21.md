@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-21
-Total scans: 24
-Tickers scanned: 3883
+Total scans: 25
+Tickers scanned: 4051
 BUY_SIMULATED: 1
 WATCH_READY: 344
 WATCH_READY unique tickers: 28
 WATCH_READY session split: regular=0, off_hours=344, unknown=0
 WATCH_READY conversion: 0 converted / 28 staged
-WATCH: 1047
-SKIP: 2759
-NO_TRADE: 2436
+WATCH: 1086
+SKIP: 2884
+NO_TRADE: 2551
 Realized PnL: 1353.26
-Unrealized PnL: 294.67
-Portfolio value: 101647.93
+Unrealized PnL: 307.75
+Portfolio value: 101661.01
 Best ticker: CCI
 Worst ticker: HSY
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- RELATIVE_STRENGTH_LEADER: 197
-- TREND_PULLBACK_RECLAIM: 46
+- RELATIVE_STRENGTH_LEADER: 207
+- TREND_PULLBACK_RECLAIM: 48
 - VWAP_RECLAIM: 14
 
 Top rejected candidates:
@@ -31,8 +31,8 @@ Top rejected candidates:
 - SUI: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - MP: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - KDP: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.77 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.39.
+- ORCL: WATCH score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - VICI: WATCH score=0.48 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
-- ORCL: WATCH score=0.48 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
 - GOOGL: SKIP score=0.48 reason=SKIP: Communication Services sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.41.
 - OKE: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.99 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.28.
 
