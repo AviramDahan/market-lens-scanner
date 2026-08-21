@@ -88,6 +88,8 @@ def build_period_summary(
     rr1_values = [to_float(record.get("net_rr_1")) for record in records if record.get("net_rr_1") is not None]
     rr2_values = [to_float(record.get("net_rr_2")) for record in records if record.get("net_rr_2") is not None]
     shadow = shadow_metrics(records)
+    shadow_outcomes = shadow_outcome_metrics(records)
+    shadow["outcome_metrics_by_strategy"] = shadow_outcomes["by_strategy"]
     watch_ready_metrics = watch_ready_analytics(records)
     trade_r_values = [
         to_float(event.get("r_multiple"))
@@ -113,6 +115,14 @@ def build_period_summary(
         positions_closed=positions_closed,
         fallback=portfolio.get("open_positions_start"),
     )
+    period_realized_pnl = realized_pnl_from_events(period_trade_events)
+    if period_realized_pnl is None:
+        period_realized_pnl = 0.0 if trade_events is not None else portfolio.get("realized_pnl")
+    trade_performance = trade_performance_metrics(period_trade_events)
+    setup_performance = trade_performance_by(trade_performance["closed_events"], "setup_type")
+    market_regime_performance = trade_performance_by(trade_performance["closed_events"], "market_regime")
+    sector_regime_performance = trade_performance_by(trade_performance["closed_events"], "sector_regime")
+    score_bucket_performance = trade_performance_by(trade_performance["closed_events"], "setup_score_bucket")
 
     summary = {
         "summary_type": period,
@@ -146,7 +156,9 @@ def build_period_summary(
         "TP2_hits": trade_actions.get("TAKE_PROFIT", actions.get("TAKE_PROFIT", 0)),
         "SL_hits": trade_actions.get("EXIT_STOP", actions.get("EXIT_STOP", 0)),
         "partial_exits": trade_actions.get("TAKE_PARTIAL_PROFIT", actions.get("TAKE_PARTIAL_PROFIT", 0)),
-        "realized_pnl": portfolio.get("realized_pnl", realized_pnl_from_events(period_trade_events)),
+        "realized_pnl": period_realized_pnl,
+        "period_realized_pnl": period_realized_pnl,
+        "portfolio_realized_pnl": portfolio.get("realized_pnl"),
         "unrealized_pnl": portfolio.get("unrealized_pnl"),
         "total_portfolio_value": portfolio.get("total_portfolio_value"),
         "daily_return_pct": portfolio.get("daily_return_pct") if period == "daily" else None,
@@ -162,6 +174,8 @@ def build_period_summary(
         "average_rr_to_target_1": rounded_mean(rr1_values),
         "average_rr_to_target_2": rounded_mean(rr2_values),
         "average_confidence_by_shadow_strategy": shadow["average_confidence_by_strategy"],
+        "shadow_outcome_metrics_by_strategy": shadow_outcomes["by_strategy"],
+        "shadow_outcome_source": shadow_outcomes["source"],
         "shadow_strategies_would_buy_count_by_strategy": shadow["would_buy_count_by_strategy"],
         "shadow_strategies_top_candidates": shadow["top_candidates"],
         "shadow_strategies_that_would_buy_but_active_agent_skipped": shadow["would_buy_but_active_skipped"],
@@ -173,6 +187,7 @@ def build_period_summary(
         },
         "errors_retries_timeouts": [],
         "data_quality_issues": counter_items(warning_counter(records)),
+        "data_completeness": data_completeness(records, period_trade_events),
         "total_BUY_SIMULATED": trade_actions.get("BUY_SIMULATED", actions.get("BUY_SIMULATED", 0)),
         "total_WATCH_READY": watch_ready_count,
         "total_closed_trades": positions_closed,
@@ -183,14 +198,17 @@ def build_period_summary(
         "average_winner": rounded_mean(winners),
         "average_loser": rounded_mean(losers),
         "max_drawdown": None,
-        "best_setup_type": best_counter(actionable_setups),
-        "worst_setup_type": None,
-        "best_shadow_strategy": best_shadow_strategy(shadow),
-        "worst_shadow_strategy": worst_shadow_strategy(shadow),
-        "performance_by_market_regime": group_counts(records, "market_regime"),
-        "performance_by_sector_regime": group_counts(records, "sector_regime"),
-        "performance_by_setup_score_bucket": group_counts(records, "setup_score_bucket"),
-        "performance_by_shadow_strategy": shadow["would_buy_count_by_strategy"],
+        "most_frequent_actionable_setup": best_counter(actionable_setups),
+        "best_setup_type": best_performance_group(setup_performance),
+        "worst_setup_type": worst_performance_group(setup_performance),
+        "highest_confidence_shadow_strategy": best_confidence_shadow_strategy(shadow),
+        "best_shadow_strategy": shadow_outcomes["best_strategy"],
+        "worst_shadow_strategy": shadow_outcomes["worst_strategy"],
+        "performance_by_market_regime": market_regime_performance,
+        "performance_by_sector_regime": sector_regime_performance,
+        "performance_by_setup_score_bucket": score_bucket_performance,
+        "performance_by_setup_type": setup_performance,
+        "performance_by_shadow_strategy": shadow_outcomes["by_strategy"],
         "WATCH_READY_conversion_rate": watch_ready_metrics["conversion"]["conversion_rate_pct"],
         "common_missed_opportunities": shadow["would_buy_but_active_skipped"],
         "common_false_positives": [],
@@ -401,6 +419,93 @@ def shadow_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def shadow_outcome_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Calibrate shadow signals against later observed scan prices.
+
+    Signals are deduplicated by ticker, strategy and signal date. This remains
+    read-only and cannot alter the active action or production gates.
+    """
+    ordered = sorted(records, key=record_sort_key)
+    prices: dict[str, dict[date, float]] = defaultdict(dict)
+    for record in ordered:
+        ticker = str(record.get("ticker") or "").upper()
+        current_date = record_date(record)
+        price = first_float(record, "price", "current_price", "executable_entry")
+        if ticker and current_date and price and price > 0:
+            prices[ticker][current_date] = price
+
+    signals: dict[tuple[str, str, date], dict[str, Any]] = {}
+    for record in ordered:
+        ticker = str(record.get("ticker") or "").upper()
+        signal_date = record_date(record)
+        if not ticker or signal_date is None:
+            continue
+        for strategy in record.get("shadow_strategies") or []:
+            if not strategy.get("would_buy"):
+                continue
+            name = str(strategy.get("name") or "UNKNOWN")
+            entry = first_float(strategy, "entry_price") or first_float(
+                record, "price", "current_price", "executable_entry"
+            )
+            if entry and entry > 0:
+                signals.setdefault(
+                    (ticker, name, signal_date),
+                    {"ticker": ticker, "strategy": name, "date": signal_date, "entry": entry},
+                )
+
+    horizons = (1, 3, 5, 10)
+    returns: dict[str, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
+    signal_counts: Counter[str] = Counter()
+    for signal in signals.values():
+        name = signal["strategy"]
+        signal_counts[name] += 1
+        later_dates = sorted(day for day in prices.get(signal["ticker"], {}) if day > signal["date"])
+        for horizon in horizons:
+            if len(later_dates) < horizon:
+                continue
+            future_price = prices[signal["ticker"]][later_dates[horizon - 1]]
+            outcome = (future_price / signal["entry"] - 1) * 100
+            returns[name][horizon].append(round(outcome, 4))
+
+    by_strategy: dict[str, dict[str, Any]] = {}
+    for name in sorted(set(signal_counts) | set(returns)):
+        item: dict[str, Any] = {"signals": signal_counts[name]}
+        for horizon in horizons:
+            values = returns[name].get(horizon, [])
+            item[f"matured_{horizon}d"] = len(values)
+            item[f"average_return_{horizon}d_pct"] = rounded_mean(values)
+            item[f"positive_rate_{horizon}d_pct"] = (
+                round(sum(1 for value in values if value > 0) / len(values) * 100, 2) if values else None
+            )
+        by_strategy[name] = item
+
+    ranked: list[tuple[str, float]] = []
+    for name, item in by_strategy.items():
+        for horizon in (5, 3, 1):
+            value = item.get(f"average_return_{horizon}d_pct")
+            if value is not None and item.get(f"matured_{horizon}d", 0) >= 1:
+                ranked.append((name, float(value)))
+                break
+    return {
+        "source": "deduplicated future scan-price observations",
+        "by_strategy": by_strategy,
+        "best_strategy": max(ranked, key=lambda item: item[1])[0] if ranked else "INSUFFICIENT_OUTCOMES",
+        "worst_strategy": min(ranked, key=lambda item: item[1])[0] if ranked else "INSUFFICIENT_OUTCOMES",
+    }
+
+
+def first_float(source: dict[str, Any], *keys: str) -> float | None:
+    for key in keys:
+        value = source.get(key)
+        if value in (None, ""):
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
 
@@ -549,8 +654,15 @@ def reason_counter(records: list[dict[str, Any]]) -> Counter[str]:
 def warning_counter(records: list[dict[str, Any]]) -> Counter[str]:
     counter: Counter[str] = Counter()
     for record in records:
+        no_trade = str(record.get("setup_type") or "").strip().lower() in {"no trade", "no_trade"}
         for warning in record.get("warnings") or []:
-            counter[str(warning)[:140]] += 1
+            warning_text = str(warning)
+            if no_trade and any(
+                token in warning_text.lower()
+                for token in ("entry confirmation", "target atr feasibility", "market structure target")
+            ):
+                continue
+            counter[warning_text[:140]] += 1
     return counter
 
 
@@ -582,14 +694,84 @@ def best_counter(counter: Counter[str]) -> str:
     return counter.most_common(1)[0][0] if counter else ""
 
 
-def best_shadow_strategy(metrics: dict[str, Any]) -> str:
+def best_confidence_shadow_strategy(metrics: dict[str, Any]) -> str:
     values = metrics.get("average_confidence_by_strategy") or {}
     return max(values.items(), key=lambda item: item[1])[0] if values else ""
 
 
-def worst_shadow_strategy(metrics: dict[str, Any]) -> str:
-    values = metrics.get("average_confidence_by_strategy") or {}
-    return min(values.items(), key=lambda item: item[1])[0] if values else ""
+def trade_performance_metrics(events: list[dict[str, Any]]) -> dict[str, Any]:
+    closed_events = []
+    for event in events:
+        if str(event.get("action") or "") not in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            continue
+        if event.get("pnl_ils") in (None, ""):
+            continue
+        decision = event.get("decision_json") if isinstance(event.get("decision_json"), dict) else {}
+        closed_events.append(
+            {
+                **event,
+                "setup_type": event.get("setup_type") or decision.get("setup_type") or "Unknown",
+                "market_regime": event.get("market_regime") or decision.get("market_regime") or "Unknown",
+                "sector_regime": event.get("sector_regime") or decision.get("sector_regime") or "Unknown",
+                "setup_score_bucket": event.get("setup_score_bucket") or decision.get("setup_score_bucket") or "Unknown",
+            }
+        )
+    return {"closed_events": closed_events}
+
+
+def trade_performance_by(events: list[dict[str, Any]], key: str) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for event in events:
+        grouped[str(event.get(key) or "Unknown")].append(event)
+    output: dict[str, dict[str, Any]] = {}
+    for name, items in sorted(grouped.items()):
+        pnl_values = [to_float(item.get("pnl_ils")) for item in items]
+        r_values = [to_float(item.get("r_multiple")) for item in items if item.get("r_multiple") not in (None, "")]
+        wins = sum(1 for value in pnl_values if value > 0)
+        losses = sum(1 for value in pnl_values if value < 0)
+        output[name] = {
+            "exit_events": len(items),
+            "wins": wins,
+            "losses": losses,
+            "breakeven": len(items) - wins - losses,
+            "realized_pnl": round(sum(pnl_values), 2),
+            "average_pnl": rounded_mean(pnl_values),
+            "average_R": rounded_mean(r_values),
+            "win_rate": round(wins / len(items) * 100, 2) if items else None,
+        }
+    return output
+
+
+def best_performance_group(values: dict[str, dict[str, Any]]) -> str:
+    eligible = [(name, item) for name, item in values.items() if name != "Unknown" and item.get("exit_events", 0)]
+    return max(eligible, key=lambda pair: (to_float(pair[1].get("realized_pnl")), to_float(pair[1].get("average_R"))))[0] if eligible else "INSUFFICIENT_DATA"
+
+
+def worst_performance_group(values: dict[str, dict[str, Any]]) -> str:
+    eligible = [(name, item) for name, item in values.items() if name != "Unknown" and item.get("exit_events", 0)]
+    return min(eligible, key=lambda pair: (to_float(pair[1].get("realized_pnl")), to_float(pair[1].get("average_R"))))[0] if eligible else "INSUFFICIENT_DATA"
+
+
+def data_completeness(records: list[dict[str, Any]], events: list[dict[str, Any]]) -> dict[str, Any]:
+    closed = [event for event in events if str(event.get("action") or "") in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}]
+
+    def coverage(items: list[dict[str, Any]], key: str) -> dict[str, Any]:
+        populated = sum(1 for item in items if item.get(key) not in (None, ""))
+        return {
+            "populated": populated,
+            "total": len(items),
+            "coverage_pct": round(populated / len(items) * 100, 2) if items else None,
+        }
+
+    return {
+        "decision_trade_id": coverage(records, "trade_id"),
+        "closed_event_trade_id": coverage(closed, "trade_id"),
+        "closed_event_mfe": coverage(closed, "mfe"),
+        "closed_event_mae": coverage(closed, "mae"),
+        "closed_event_r_multiple": coverage(closed, "r_multiple"),
+        "closed_event_duration": coverage(closed, "duration"),
+        "closed_event_outcome_after_5d": coverage(closed, "outcome_after_5d"),
+    }
 
 
 def recommendations(

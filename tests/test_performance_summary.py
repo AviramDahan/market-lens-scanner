@@ -405,4 +405,54 @@ def test_summary_uses_trade_events_for_monitor_outcomes(tmp_path: Path) -> None:
     assert daily["realized_pnl"] == 20
     assert weekly["total_closed_trades"] == 1
     assert weekly["average_R"] == 0.075
-    assert weekly["best_setup_type"] == "Breakout + Retest"
+    assert weekly["best_setup_type"] == "INSUFFICIENT_DATA"
+    assert weekly["most_frequent_actionable_setup"] == "Breakout + Retest"
+
+
+def test_summary_separates_period_and_portfolio_pnl_and_uses_outcome_groups(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260806_153000.jsonl"
+    records = sample_records()
+    records[0]["timestamp"] = "2026-08-06T15:30:00"
+    records[0]["price"] = 100
+    records[1]["timestamp"] = "2026-08-06T15:30:00"
+    write_decisions(decision_path, records)
+
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260806_153000",
+        timestamp="2026-08-06T15:30:00",
+        portfolio={"realized_pnl": 1250},
+        trade_events=[{
+            "timestamp": "2026-08-06T15:00:00", "action": "EXIT_STOP", "ticker": "AAA",
+            "pnl_ils": -25, "r_multiple": -0.5, "trade_id": "trade-1",
+            "decision_json": {"setup_type": "Breakout + Retest", "market_regime": "NEUTRAL", "sector_regime": "STRONG", "setup_score_bucket": "0.50-0.59"},
+        }],
+    )
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+
+    assert daily["period_realized_pnl"] == -25
+    assert daily["portfolio_realized_pnl"] == 1250
+    assert daily["best_setup_type"] == "Breakout + Retest"
+    assert daily["performance_by_market_regime"]["NEUTRAL"]["realized_pnl"] == -25
+    assert daily["data_completeness"]["closed_event_trade_id"]["coverage_pct"] == 100
+    assert not any("Target ATR feasibility" in item["name"] for item in daily["most_common_warnings"])
+
+
+def test_weekly_shadow_calibration_uses_future_scan_prices(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    first_path = decision_dir / "market_lens_agent_20260803_100000.jsonl"
+    second_path = decision_dir / "market_lens_agent_20260804_100000.jsonl"
+    write_decisions(first_path, [{"timestamp": "2026-08-03T10:00:00", "ticker": "AAA", "price": 100, "final_action": "WATCH", "setup_type": "Breakout + Retest", "warnings": [], "shadow_strategies": [{"name": "BREAKOUT_CONTINUATION", "would_buy": True, "confidence": 0.8, "entry_price": 100}]}])
+    write_decisions(second_path, [{"timestamp": "2026-08-04T10:00:00", "ticker": "AAA", "price": 103, "final_action": "WATCH", "setup_type": "Breakout + Retest", "warnings": [], "shadow_strategies": []}])
+    paths = write_performance_summaries(summary_dir=summary_dir, decision_dir=decision_dir, current_decision_path=second_path, run_id="20260804_100000", timestamp="2026-08-04T10:00:00", portfolio={})
+    weekly = json.loads(paths["weekly_summary_json"].read_text(encoding="utf-8"))
+
+    metrics = weekly["shadow_outcome_metrics_by_strategy"]["BREAKOUT_CONTINUATION"]
+    assert metrics["matured_1d"] == 1
+    assert metrics["average_return_1d_pct"] == 3.0
+    assert weekly["best_shadow_strategy"] == "BREAKOUT_CONTINUATION"

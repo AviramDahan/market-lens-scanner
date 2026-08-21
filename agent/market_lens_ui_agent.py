@@ -367,6 +367,8 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
         watch_ready_tickers=watch_ready_tickers,
     )
     skipped_tickers = read_recent_skip_tickers(settings.excel_path)
+    scanned_today_tickers = read_today_scanned_tickers(settings.excel_path)
+    rotation_exclusions = unique_tickers(skipped_tickers + scanned_today_tickers)
     if carry_forward_tickers:
         log(
             "Carry-forward tickers added outside universe quota: "
@@ -390,12 +392,17 @@ def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]
             f"{len(skipped_tickers)} ({' '.join(skipped_tickers[:20])}"
             f"{' ...' if len(skipped_tickers) > 20 else ''})"
         )
+    if scanned_today_tickers:
+        log(
+            "Daily scan rotation excluding already reviewed base candidates: "
+            f"{len(scanned_today_tickers)} ticker(s). Carry-forward names remain eligible."
+        )
     if settings.tickers:
         tickers = unique_tickers(settings.tickers + carry_forward_tickers)
         set_scan_basket(page, tickers)
         return tickers
 
-    agent_tickers = build_agent_scan_tickers(settings, carry_forward_tickers, skipped_tickers)
+    agent_tickers = build_agent_scan_tickers(settings, carry_forward_tickers, rotation_exclusions)
     if agent_tickers:
         set_scan_basket(page, agent_tickers)
         log(f"Agent selected {len(agent_tickers)} tickers: {' '.join(agent_tickers)}")
@@ -1501,6 +1508,18 @@ def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list
     cooldown_hours = hours or int(os.getenv("MARKET_LENS_SKIP_COOLDOWN_HOURS", "8"))
     cutoff = datetime.now() - timedelta(hours=cooldown_hours)
     return read_recent_action_tickers(excel_path, "SKIP", cutoff)
+
+
+def read_today_scanned_tickers(excel_path: Path, now: datetime | None = None) -> list[str]:
+    if not env_bool("MARKET_LENS_AGENT_DAILY_ROTATION_ENABLED", True):
+        return []
+    current = (now or datetime.now()).replace(tzinfo=None)
+    cutoff = datetime.combine(current.date(), datetime_time.min)
+    return read_recent_action_tickers(
+        excel_path,
+        {"BUY_SIMULATED", "WATCH", "WATCH_READY", "SKIP", "HOLD"},
+        cutoff,
+    )
 
 
 def read_recent_stop_events(wb: Any, cooldown_days: int) -> dict[str, dict[str, Any]]:

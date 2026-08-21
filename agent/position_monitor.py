@@ -433,12 +433,32 @@ def parse_decision_json(value: Any) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
-def event_r_multiple(position: dict[str, Any], event: PositionEvent) -> float | None:
+def event_r_multiple(
+    position: dict[str, Any],
+    event: PositionEvent,
+    decision: dict[str, Any] | None = None,
+) -> float | None:
     entry = float(position.get("entry_price") or 0)
-    stop = float(position.get("stop_loss") or 0)
+    stop = float((decision or {}).get("stop_loss") or position.get("stop_loss") or 0)
     if entry <= 0 or stop <= 0 or entry <= stop:
         return None
     return round((event.trigger_price - entry) / (entry - stop), 4)
+
+
+def position_duration(entry_date: Any, exit_date: Any) -> str | None:
+    entry = parse_timestamp(entry_date)
+    exit_at = parse_timestamp(exit_date)
+    if entry is None or exit_at is None:
+        return None
+    if entry.tzinfo is None:
+        entry = entry.replace(tzinfo=timezone.utc)
+    if exit_at.tzinfo is None:
+        exit_at = exit_at.replace(tzinfo=timezone.utc)
+    hours = max(
+        0.0,
+        (exit_at.astimezone(timezone.utc) - entry.astimezone(timezone.utc)).total_seconds() / 3600,
+    )
+    return f"{hours:.2f} hours"
 
 
 def trade_analytics_values(decision: dict[str, Any]) -> list[Any]:
@@ -658,7 +678,8 @@ def append_trade_log_row(
     ws.cell(row, 20, position.get("decision_json", ""))
     analytics = parse_decision_json(position.get("decision_json", ""))
     analytics["exit_reason"] = event.action
-    analytics["r_multiple"] = event_r_multiple(position, event)
+    analytics["r_multiple"] = event_r_multiple(position, event, analytics)
+    analytics["duration"] = position_duration(position.get("entry_date"), event.triggered_at)
     for col_idx, value in enumerate(trade_analytics_values(analytics), start=21):
         ws.cell(row, col_idx, value)
 

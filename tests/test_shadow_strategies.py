@@ -74,3 +74,27 @@ def test_shadow_missing_data_fails_closed_without_exception() -> None:
     assert len(records) == len(STRATEGY_NAMES)
     assert all(record["would_buy"] is False for record in records)
     assert all(record["reason"] for record in records)
+
+
+def test_stop_reclaim_reentry_is_shadow_only_and_preserves_cooldown() -> None:
+    decision = base_decision()
+    decision.update({"last_stop_date": "2026-08-20T15:30:00", "cooldown_active": True, "trigger_level": 99.5, "price": 100.0, "setup_score": 0.66, "net_rr_1": 1.4})
+    original_action = decision["final_action"]
+    records = evaluate_shadow_strategies(base_result(), decision)
+    reentry = next(item for item in records if item["name"] == "STOP_RECLAIM_REENTRY")
+
+    assert reentry["would_buy"] is True
+    assert reentry["active_cooldown_preserved"] is True
+    assert decision["final_action"] == original_action
+
+
+def test_neutral_sector_shadow_sizing_is_only_a_suggestion() -> None:
+    decision = base_decision()
+    decision["sector_regime"] = "NEUTRAL"
+    original_action = decision["final_action"]
+    records = evaluate_shadow_strategies(base_result(), decision)
+    would_buy = [item for item in records if item["would_buy"]]
+
+    assert would_buy
+    assert all(item["position_size_multiplier"] == 0.5 for item in would_buy)
+    assert decision["final_action"] == original_action

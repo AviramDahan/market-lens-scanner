@@ -156,3 +156,19 @@ def test_read_recent_watch_ready_uses_decision_json_staging_flags(tmp_path) -> N
     wb.save(tracker)
 
     assert agent.read_recent_watch_ready_tickers(tracker, days=5) == ["READY"]
+
+
+def test_daily_rotation_excludes_all_already_scanned_actions(tmp_path) -> None:
+    tracker = tmp_path / "tracker.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Setup Watchlist"
+    ws.append([f"Col {index}" for index in range(1, 19)])
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    for ticker, action in (("SKIPPED", "SKIP"), ("WATCHED", "WATCH"), ("OPENED", "BUY_SIMULATED")):
+        row = ["" for _ in range(18)]
+        row[0], row[1], row[12] = timestamp, ticker, action
+        ws.append(row)
+    wb.save(tracker)
+
+    assert set(agent.read_today_scanned_tickers(tracker)) == {"SKIPPED", "WATCHED", "OPENED"}
