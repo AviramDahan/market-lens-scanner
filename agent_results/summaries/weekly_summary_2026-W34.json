@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 1,
-  "NO_TRADE_count": 12740,
-  "SKIP_count": 14266,
+  "NO_TRADE_count": 12843,
+  "SKIP_count": 14381,
   "SL_hits": 3,
   "TP1_hits": 0,
   "TP2_hits": 1,
@@ -12,23 +12,11 @@
     ],
     "converted_unique_count": 1,
     "pending_review_tickers": [
-      "ANET",
-      "AXP",
-      "CHD",
       "CMI",
-      "COF",
-      "CRH",
-      "HD",
-      "INTC",
-      "SBAC",
-      "SBUX",
-      "SFM",
-      "SYK",
-      "TPL",
-      "WMT"
+      "COF"
     ],
-    "pending_review_unique_count": 14,
-    "reviewed_conversion_rate_pct": 1.49,
+    "pending_review_unique_count": 2,
+    "reviewed_conversion_rate_pct": 1.27,
     "reviewed_not_converted_tickers": [
       "ABBV",
       "ACI",
@@ -37,8 +25,10 @@
       "AIZ",
       "ALB",
       "AMD",
+      "ANET",
       "ARW",
       "AVGO",
+      "AXP",
       "BA",
       "BALL",
       "BRK-B",
@@ -47,12 +37,10 @@
       "CCK",
       "CELH",
       "CF",
-      "CL",
-      "DHR",
-      "ECL"
+      "CHD"
     ],
-    "reviewed_not_converted_unique_count": 66,
-    "reviewed_unique_count": 67,
+    "reviewed_not_converted_unique_count": 78,
+    "reviewed_unique_count": 79,
     "source_unique_count": 81
   },
   "WATCH_READY_conversion_rate": 1.23,
@@ -104,20 +92,20 @@
   "WATCH_READY_unique_regular_session_count": 1,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_count": 6273,
+  "WATCH_count": 6315,
   "average_R": 0.5722,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5576,
-    "RELATIVE_STRENGTH_LEADER": 0.65,
-    "TREND_PULLBACK_RECLAIM": 0.5004,
-    "VWAP_RECLAIM": 0.5456
+    "BREAKOUT_CONTINUATION": 0.5573,
+    "RELATIVE_STRENGTH_LEADER": 0.6498,
+    "TREND_PULLBACK_RECLAIM": 0.5002,
+    "VWAP_RECLAIM": 0.5454
   },
   "average_loser": -1.0,
-  "average_rr_to_target_1": 0.4035,
-  "average_rr_to_target_2": 1.2764,
-  "average_setup_score": 0.1427,
+  "average_rr_to_target_1": 0.4033,
+  "average_rr_to_target_2": 1.276,
+  "average_setup_score": 0.1426,
   "average_winner": 3.2886,
-  "best_sector": "Technology",
+  "best_sector": "Consumer",
   "best_setup_type": "Breakout + Retest",
   "best_shadow_strategy": "RELATIVE_STRENGTH_LEADER",
   "best_ticker": "TXN",
@@ -207,19 +195,19 @@
   "daily_return_pct": null,
   "data_quality_issues": [
     {
-      "count": 12740,
+      "count": 12843,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 12740,
+      "count": 12843,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 5228,
+      "count": 5276,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 2525,
+      "count": 2558,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -231,7 +219,7 @@
       "name": "US10Y data unavailable: ^TNX: only 20 rows for interval=1d, need at least 50"
     },
     {
-      "count": 1956,
+      "count": 1970,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -243,7 +231,7 @@
       "name": "US10Y data unavailable: ^TNX: only 16 rows for interval=1d, need at least 50"
     },
     {
-      "count": 1089,
+      "count": 1096,
       "name": "Earnings blackout active."
     }
   ],
@@ -255,11 +243,11 @@
   "median_R": 0.0,
   "most_common_rejection_reasons": [
     {
-      "count": 12523,
+      "count": 12625,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 3948,
+      "count": 3972,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
@@ -267,7 +255,7 @@
       "name": "WATCH: BULL market requires setup score (0"
     },
     {
-      "count": 536,
+      "count": 551,
       "name": "WATCH: NEUTRAL market requires setup score (0"
     },
     {
@@ -283,7 +271,7 @@
       "name": "SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry"
     },
     {
-      "count": 166,
+      "count": 167,
       "name": "Gross R/R is valid, but Net R/R 1"
     },
     {
@@ -297,19 +285,19 @@
   ],
   "most_common_warnings": [
     {
-      "count": 12740,
+      "count": 12843,
       "name": "Target ATR feasibility unavailable."
     },
     {
-      "count": 12740,
+      "count": 12843,
       "name": "Entry confirmation data unavailable; blocking auto-buy."
     },
     {
-      "count": 5228,
+      "count": 5276,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 2525,
+      "count": 2558,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -321,7 +309,7 @@
       "name": "US10Y data unavailable: ^TNX: only 20 rows for interval=1d, need at least 50"
     },
     {
-      "count": 1956,
+      "count": 1970,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -333,7 +321,7 @@
       "name": "US10Y data unavailable: ^TNX: only 16 rows for interval=1d, need at least 50"
     },
     {
-      "count": 1089,
+      "count": 1096,
       "name": "Earnings blackout active."
     }
   ],
@@ -342,24 +330,24 @@
   "partial_exits": 0,
   "performance_by_market_regime": {
     "BULL": 16564,
-    "NEUTRAL": 4581
+    "NEUTRAL": 4741
   },
   "performance_by_sector_regime": {
-    "NEUTRAL": 4272,
-    "STRONG": 13457,
-    "WEAK": 3416
+    "NEUTRAL": 4311,
+    "STRONG": 13540,
+    "WEAK": 3454
   },
   "performance_by_setup_score_bucket": {
-    "0.40-0.49": 2471,
-    "0.50-0.59": 315,
+    "0.40-0.49": 2485,
+    "0.50-0.59": 316,
     "0.60-0.69": 27,
-    "<0.40": 18332
+    "<0.40": 18477
   },
   "performance_by_shadow_strategy": {
     "BREAKOUT_CONTINUATION": 83,
-    "RELATIVE_STRENGTH_LEADER": 1338,
-    "TREND_PULLBACK_RECLAIM": 271,
-    "VWAP_RECLAIM": 104
+    "RELATIVE_STRENGTH_LEADER": 1347,
+    "TREND_PULLBACK_RECLAIM": 273,
+    "VWAP_RECLAIM": 105
   },
   "positions_closed_today": 4,
   "positions_opened_today": 1,
@@ -503,10 +491,11 @@
       "agent_results/decisions/market_lens_agent_20260821_103359.jsonl",
       "agent_results/decisions/market_lens_agent_20260821_113302.jsonl",
       "agent_results/decisions/market_lens_agent_20260821_123225.jsonl",
-      "agent_results/decisions/market_lens_agent_20260821_131224.jsonl"
+      "agent_results/decisions/market_lens_agent_20260821_131224.jsonl",
+      "agent_results/decisions/market_lens_agent_20260821_133709.jsonl"
     ],
-    "records": 21145,
-    "run_id": "20260821_131224"
+    "records": 21305,
+    "run_id": "20260821_133709"
   },
   "shadow_strategies_that_agreed_with_active_agent": [
     {
@@ -756,9 +745,9 @@
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
     "BREAKOUT_CONTINUATION": 83,
-    "RELATIVE_STRENGTH_LEADER": 1338,
-    "TREND_PULLBACK_RECLAIM": 271,
-    "VWAP_RECLAIM": 104
+    "RELATIVE_STRENGTH_LEADER": 1347,
+    "TREND_PULLBACK_RECLAIM": 273,
+    "VWAP_RECLAIM": 105
   },
   "summary_type": "weekly",
   "top_rejected_candidates": [
@@ -799,6 +788,13 @@
     },
     {
       "final_action": "WATCH",
+      "net_rr": 1.4541,
+      "reason": "Gross R/R is valid, but Net R/R 1.45 failed minimum 2.50 after slippage/spread adjustment.",
+      "setup_score": 0.57,
+      "ticker": "TKO"
+    },
+    {
+      "final_action": "WATCH",
       "net_rr": 1.3805,
       "reason": "Gross R/R is valid, but Net R/R 1.38 failed minimum 2.00 after slippage/spread adjustment.",
       "setup_score": 0.57,
@@ -824,24 +820,17 @@
       "reason": "SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.65.",
       "setup_score": 0.53,
       "ticker": "DUK"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.6519,
-      "reason": "Gross R/R is valid, but Net R/R 1.65 failed minimum 2.00 after slippage/spread adjustment.",
-      "setup_score": 0.53,
-      "ticker": "MDLZ"
     }
   ],
   "total_BUY_SIMULATED": 1,
   "total_WATCH_READY": 1695,
   "total_closed_trades": 4,
-  "total_portfolio_value": 101582.45,
-  "total_result_cards_read": 21145,
-  "total_scans": 132,
-  "total_tickers_scanned": 21145,
+  "total_portfolio_value": 101627.38,
+  "total_result_cards_read": 21305,
+  "total_scans": 133,
+  "total_tickers_scanned": 21305,
   "total_trading_days": 5,
-  "unrealized_pnl": 229.19,
+  "unrealized_pnl": 274.12,
   "week_end": "2026-08-23",
   "week_start": "2026-08-17",
   "win_rate": 25.0,
