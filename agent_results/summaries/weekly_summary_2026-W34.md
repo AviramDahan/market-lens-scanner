@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-17
-Total scans: 119
-Tickers scanned: 19125
+Total scans: 120
+Tickers scanned: 19283
 BUY_SIMULATED: 1
-WATCH_READY: 1376
+WATCH_READY: 1400
 WATCH_READY unique tickers: 80
-WATCH_READY session split: regular=1, off_hours=1375, unknown=0
+WATCH_READY session split: regular=1, off_hours=1399, unknown=0
 WATCH_READY conversion: 1 converted / 80 staged
-WATCH: 5671
-SKIP: 12887
-NO_TRADE: 11576
+WATCH: 5718
+SKIP: 12995
+NO_TRADE: 11667
 Realized PnL: 1353.26
 Unrealized PnL: 229.19
 Portfolio value: 101582.45
@@ -20,9 +20,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: TREND_PULLBACK_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 83
-- RELATIVE_STRENGTH_LEADER: 1246
-- TREND_PULLBACK_RECLAIM: 246
-- VWAP_RECLAIM: 100
+- RELATIVE_STRENGTH_LEADER: 1253
+- TREND_PULLBACK_RECLAIM: 248
+- VWAP_RECLAIM: 101
 
 Top rejected candidates:
 - MP: WATCH score=0.6 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
