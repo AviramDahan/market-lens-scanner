@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-22
-Total scans: 3
-Tickers scanned: 467
+Total scans: 4
+Tickers scanned: 622
 BUY_SIMULATED: 0
-WATCH_READY: 58
+WATCH_READY: 77
 WATCH_READY unique tickers: 20
-WATCH_READY session split: regular=0, off_hours=58, unknown=0
+WATCH_READY session split: regular=0, off_hours=77, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 146
-SKIP: 309
-NO_TRADE: 270
+WATCH: 194
+SKIP: 412
+NO_TRADE: 360
 Realized PnL: 0.0
 Unrealized PnL: 244.72
 Portfolio value: 101597.98
@@ -19,9 +19,9 @@ Worst ticker: HAL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 34
-- TREND_PULLBACK_RECLAIM: 3
-- VWAP_RECLAIM: 7
+- RELATIVE_STRENGTH_LEADER: 45
+- TREND_PULLBACK_RECLAIM: 4
+- VWAP_RECLAIM: 9
 
 Top rejected candidates:
 - TSN: WATCH score=0.57 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
