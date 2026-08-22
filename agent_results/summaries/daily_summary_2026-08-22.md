@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-22
-Total scans: 4
-Tickers scanned: 622
+Total scans: 5
+Tickers scanned: 777
 BUY_SIMULATED: 0
-WATCH_READY: 77
+WATCH_READY: 96
 WATCH_READY unique tickers: 20
-WATCH_READY session split: regular=0, off_hours=77, unknown=0
+WATCH_READY session split: regular=0, off_hours=96, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 194
-SKIP: 412
-NO_TRADE: 360
+WATCH: 242
+SKIP: 515
+NO_TRADE: 450
 Realized PnL: 0.0
 Unrealized PnL: 244.72
 Portfolio value: 101597.98
@@ -19,14 +19,14 @@ Worst ticker: HAL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 45
-- TREND_PULLBACK_RECLAIM: 4
-- VWAP_RECLAIM: 9
+- RELATIVE_STRENGTH_LEADER: 56
+- TREND_PULLBACK_RECLAIM: 5
+- VWAP_RECLAIM: 11
 
 Top rejected candidates:
-- TSN: WATCH score=0.57 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
+- TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
 - MU: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.65.
-- CF: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.09.
+- CF: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.09.
 - KO: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.43 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.96.
 - ECL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.83.
 - ORCL: WATCH score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
