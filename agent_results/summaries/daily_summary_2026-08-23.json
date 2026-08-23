@@ -1,0 +1,813 @@
+{
+  "BUY_SIMULATED_count": 0,
+  "NO_TRADE_count": 96,
+  "SKIP_count": 109,
+  "SL_hits": 0,
+  "TP1_hits": 0,
+  "TP2_hits": 0,
+  "WATCH_READY_conversion": {
+    "conversion_rate_pct": 0.0,
+    "converted_tickers": [],
+    "converted_unique_count": 0,
+    "pending_review_tickers": [
+      "AMD",
+      "BRK-B",
+      "C",
+      "CL",
+      "EVR",
+      "GMED",
+      "HD",
+      "INTC",
+      "JPM",
+      "MO",
+      "OKE",
+      "ORCL",
+      "PANW",
+      "PPG",
+      "QCOM",
+      "SHW",
+      "SYK",
+      "TPL",
+      "TSN",
+      "TTWO"
+    ],
+    "pending_review_unique_count": 22,
+    "reviewed_conversion_rate_pct": null,
+    "reviewed_not_converted_tickers": [],
+    "reviewed_not_converted_unique_count": 0,
+    "reviewed_unique_count": 0,
+    "source_unique_count": 22
+  },
+  "WATCH_READY_conversion_rate": 0.0,
+  "WATCH_READY_count": 22,
+  "WATCH_READY_off_hours_count": 22,
+  "WATCH_READY_regular_session_count": 0,
+  "WATCH_READY_session_breakdown": {
+    "off_hours": {
+      "records": 22,
+      "tickers": [
+        "AMD",
+        "BRK-B",
+        "C",
+        "CL",
+        "EVR",
+        "GMED",
+        "HD",
+        "INTC",
+        "JPM",
+        "MO",
+        "OKE",
+        "ORCL",
+        "PANW",
+        "PPG",
+        "QCOM",
+        "SHW",
+        "SYK",
+        "TPL",
+        "TSN",
+        "TTWO"
+      ],
+      "unique_tickers": 22
+    },
+    "regular": {
+      "records": 0,
+      "tickers": [],
+      "unique_tickers": 0
+    },
+    "unknown": {
+      "records": 0,
+      "tickers": [],
+      "unique_tickers": 0
+    }
+  },
+  "WATCH_READY_unique_count": 22,
+  "WATCH_READY_unique_off_hours_count": 22,
+  "WATCH_READY_unique_regular_session_count": 0,
+  "WATCH_READY_unique_unknown_session_count": 0,
+  "WATCH_READY_unknown_session_count": 0,
+  "WATCH_count": 52,
+  "average_R": null,
+  "average_confidence_by_shadow_strategy": {
+    "BREAKOUT_CONTINUATION": 0.5525,
+    "RELATIVE_STRENGTH_LEADER": 0.6545,
+    "STOP_RECLAIM_REENTRY": 0.4243,
+    "TREND_PULLBACK_RECLAIM": 0.5039,
+    "VWAP_RECLAIM": 0.5475
+  },
+  "average_loser": null,
+  "average_rr_to_target_1": 0.4466,
+  "average_rr_to_target_2": 1.4706,
+  "average_setup_score": 0.1582,
+  "average_winner": null,
+  "best_sector": "Semiconductors",
+  "best_setup_type": "INSUFFICIENT_DATA",
+  "best_shadow_strategy": "INSUFFICIENT_OUTCOMES",
+  "best_ticker": "CCI",
+  "common_false_positives": [],
+  "common_missed_opportunities": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "FRPT",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GMED",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "CB",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MCD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SHW",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "JPM",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "HD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SYK",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "VWAP reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "WMT",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "TPL",
+      "would_buy": true
+    }
+  ],
+  "daily_return_pct": 1.598,
+  "data_completeness": {
+    "closed_event_duration": {
+      "coverage_pct": null,
+      "populated": 0,
+      "total": 0
+    },
+    "closed_event_mae": {
+      "coverage_pct": null,
+      "populated": 0,
+      "total": 0
+    },
+    "closed_event_mfe": {
+      "coverage_pct": null,
+      "populated": 0,
+      "total": 0
+    },
+    "closed_event_outcome_after_5d": {
+      "coverage_pct": null,
+      "populated": 0,
+      "total": 0
+    },
+    "closed_event_r_multiple": {
+      "coverage_pct": null,
+      "populated": 0,
+      "total": 0
+    },
+    "closed_event_trade_id": {
+      "coverage_pct": null,
+      "populated": 0,
+      "total": 0
+    },
+    "decision_trade_id": {
+      "coverage_pct": 0.0,
+      "populated": 0,
+      "total": 165
+    }
+  },
+  "data_quality_issues": [
+    {
+      "count": 46,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 24,
+      "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
+    },
+    {
+      "count": 22,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 18,
+      "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
+    },
+    {
+      "count": 11,
+      "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 11,
+      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+    },
+    {
+      "count": 7,
+      "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
+    },
+    {
+      "count": 6,
+      "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 5,
+      "name": "Earnings blackout active."
+    },
+    {
+      "count": 5,
+      "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
+    }
+  ],
+  "date": "2026-08-23",
+  "errors_retries_timeouts": [],
+  "highest_confidence_shadow_strategy": "RELATIVE_STRENGTH_LEADER",
+  "market_session": "",
+  "max_drawdown": null,
+  "max_intraday_drawdown": null,
+  "median_R": null,
+  "most_common_rejection_reasons": [
+    {
+      "count": 94,
+      "name": "SKIP: No Trade result"
+    },
+    {
+      "count": 30,
+      "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
+    },
+    {
+      "count": 18,
+      "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
+    },
+    {
+      "count": 7,
+      "name": "SKIP: Industrials sector regime is weak (30/100); skip new entry"
+    },
+    {
+      "count": 5,
+      "name": "SKIP: Semiconductors sector regime is weak (22/100); skip new entry"
+    },
+    {
+      "count": 3,
+      "name": "SKIP: Utilities / Real Assets sector regime is weak (17/100); skip new entry"
+    },
+    {
+      "count": 2,
+      "name": "WATCH: Position cannot be opened because Healthcare sector exposure cap leaves no executable size"
+    },
+    {
+      "count": 2,
+      "name": "WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size"
+    }
+  ],
+  "most_common_warnings": [
+    {
+      "count": 46,
+      "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
+    },
+    {
+      "count": 24,
+      "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
+    },
+    {
+      "count": 22,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 18,
+      "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
+    },
+    {
+      "count": 11,
+      "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 11,
+      "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+    },
+    {
+      "count": 7,
+      "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
+    },
+    {
+      "count": 6,
+      "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+    },
+    {
+      "count": 5,
+      "name": "Earnings blackout active."
+    },
+    {
+      "count": 5,
+      "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
+    }
+  ],
+  "most_frequent_actionable_setup": "Breakout + Retest",
+  "open_positions_end": 4,
+  "open_positions_start": 4,
+  "partial_exits": 0,
+  "performance_by_market_regime": {},
+  "performance_by_sector_regime": {},
+  "performance_by_setup_score_bucket": {},
+  "performance_by_setup_type": {},
+  "performance_by_shadow_strategy": {
+    "RELATIVE_STRENGTH_LEADER": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 12
+    },
+    "TREND_PULLBACK_RECLAIM": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
+    },
+    "VWAP_RECLAIM": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 2
+    }
+  },
+  "period_realized_pnl": 0.0,
+  "portfolio_realized_pnl": 1353.26,
+  "positions_closed_today": 0,
+  "positions_opened_today": 0,
+  "profit_factor": null,
+  "realized_pnl": 0.0,
+  "recommendations_for_next_week": [
+    "Track WATCH_READY conversion during regular-session confirmation scans.",
+    "Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.",
+    "Review shadow would-buy candidates that active gates skipped before changing thresholds."
+  ],
+  "runtime_metrics": {
+    "decision_files": [
+      "agent_results/decisions/market_lens_agent_20260823_223235.jsonl"
+    ],
+    "records": 165,
+    "run_id": "20260823_223235"
+  },
+  "shadow_outcome_metrics_by_strategy": {
+    "RELATIVE_STRENGTH_LEADER": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 12
+    },
+    "TREND_PULLBACK_RECLAIM": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
+    },
+    "VWAP_RECLAIM": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 2
+    }
+  },
+  "shadow_outcome_source": "deduplicated future scan-price observations",
+  "shadow_strategies_that_agreed_with_active_agent": [
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.5,
+      "reason": "Breakout continuation: shadow buy blocked because breakout/retest setup detected.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "MRK",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.4286,
+      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "MRK",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.5,
+      "reason": "VWAP reclaim: shadow buy blocked because VWAP setup detected.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "MRK",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.6667,
+      "reason": "Relative strength leader: shadow buy blocked because technical setup exists.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MRK",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.4286,
+      "reason": "Stop reclaim re-entry: shadow buy blocked because a recent stop-loss event exists.",
+      "strategy": "STOP_RECLAIM_REENTRY",
+      "ticker": "MRK",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.5,
+      "reason": "Breakout continuation: shadow buy blocked because breakout/retest setup detected.",
+      "strategy": "BREAKOUT_CONTINUATION",
+      "ticker": "AMGN",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.4286,
+      "reason": "Trend pullback reclaim: shadow buy blocked because pullback/reclaim setup detected.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "AMGN",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.5,
+      "reason": "VWAP reclaim: shadow buy blocked because VWAP setup detected.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "AMGN",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.6667,
+      "reason": "Relative strength leader: shadow buy blocked because technical setup exists.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "AMGN",
+      "would_buy": false
+    },
+    {
+      "active_final_action": "SKIP",
+      "confidence": 0.4286,
+      "reason": "Stop reclaim re-entry: shadow buy blocked because a recent stop-loss event exists.",
+      "strategy": "STOP_RECLAIM_REENTRY",
+      "ticker": "AMGN",
+      "would_buy": false
+    }
+  ],
+  "shadow_strategies_that_would_buy_but_active_agent_skipped": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "FRPT",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GMED",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "CB",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MCD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SHW",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "JPM",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "HD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SYK",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "VWAP reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "WMT",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "TPL",
+      "would_buy": true
+    }
+  ],
+  "shadow_strategies_top_candidates": [
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "FRPT",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "GMED",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "CB",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "MCD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SHW",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "JPM",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "HD",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Relative strength leader: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "RELATIVE_STRENGTH_LEADER",
+      "ticker": "SYK",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "VWAP reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "VWAP_RECLAIM",
+      "ticker": "WMT",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "TPL",
+      "would_buy": true
+    }
+  ],
+  "shadow_strategies_would_buy_count_by_strategy": {
+    "RELATIVE_STRENGTH_LEADER": 12,
+    "TREND_PULLBACK_RECLAIM": 1,
+    "VWAP_RECLAIM": 2
+  },
+  "summary_type": "daily",
+  "top_rejected_candidates": [
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.8197,
+      "reason": "WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.",
+      "setup_score": 0.59,
+      "ticker": "TSN"
+    },
+    {
+      "final_action": "SKIP",
+      "net_rr": 1.6486,
+      "reason": "SKIP: Semiconductors sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.65.",
+      "setup_score": 0.56,
+      "ticker": "MU"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.9609,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.43 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.96.",
+      "setup_score": 0.51,
+      "ticker": "KO"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.8325,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.83.",
+      "setup_score": 0.5,
+      "ticker": "ECL"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.439,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.49,
+      "ticker": "ORCL"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.721,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.72.",
+      "setup_score": 0.48,
+      "ticker": "AMCR"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 3.9286,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.47,
+      "ticker": "INTC"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 0.7856,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.11 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.79.",
+      "setup_score": 0.47,
+      "ticker": "MOS"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.3962,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.46,
+      "ticker": "OKE"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.3541,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.80 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.",
+      "setup_score": 0.46,
+      "ticker": "SUI"
+    }
+  ],
+  "total_BUY_SIMULATED": 0,
+  "total_WATCH_READY": 22,
+  "total_closed_trades": 0,
+  "total_portfolio_value": 101597.98,
+  "total_result_cards_read": 165,
+  "total_scans": 1,
+  "total_tickers_scanned": 165,
+  "total_trading_days": null,
+  "unrealized_pnl": 244.72,
+  "week_end": null,
+  "week_start": null,
+  "win_rate": null,
+  "worst_sector": "Energy",
+  "worst_setup_type": "INSUFFICIENT_DATA",
+  "worst_shadow_strategy": "INSUFFICIENT_OUTCOMES",
+  "worst_ticker": "AMCR"
+}
