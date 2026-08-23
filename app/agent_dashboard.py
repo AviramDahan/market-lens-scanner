@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import re
+import tempfile
 from collections import defaultdict, deque
 from datetime import datetime, time
 from pathlib import Path
 from typing import Any
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from openpyxl import load_workbook
 
@@ -31,7 +35,8 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "tracker_url": "/agent/tracker",
         }
 
-    wb = load_workbook(tracker_path, data_only=True, read_only=True)
+    workbook_path = historical_tracker_copy(tracker_path) if selected_date else tracker_path
+    wb = load_workbook(workbook_path, data_only=True, read_only=True)
     settings = read_settings(wb)
     currency = str(settings.get("budget_currency") or "USD").upper()
     starting_capital = to_float(
@@ -50,6 +55,13 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         if selected_date
         else read_setup_rows(wb, run_date=latest_scan_timestamp)
     )
+    if selected_date and not setup_rows:
+        decision_path = resolve_record_file(
+            latest_scan_update.get("decision_jsonl") or latest_update.get("decision_jsonl"),
+            decision_dir,
+            ".jsonl",
+        )
+        setup_rows = read_decision_setup_rows(decision_path)
     if not setup_rows and not selected_date:
         setup_rows = read_setup_rows(wb, recent_limit=25)
     scoped_updates = filter_records_until(updates, latest_run_timestamp)
@@ -205,6 +217,33 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     return sanitize_dashboard_media_urls(dashboard, project_root)
 
 
+def historical_tracker_copy(tracker_path: Path) -> Path:
+    """Cache a workbook without the oversized watchlist sheet for historical views."""
+    try:
+        stat = tracker_path.stat()
+        cache_dir = Path(tempfile.gettempdir()) / "market-lens-dashboard"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        source_key = hashlib.sha1(str(tracker_path.resolve()).encode("utf-8")).hexdigest()[:12]
+        cached = cache_dir / f"tracker-{source_key}-{stat.st_size}-{stat.st_mtime_ns}.xlsx"
+        if cached.exists():
+            return cached
+
+        pending = cached.with_suffix(".tmp")
+        empty_sheet = (
+            b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            b'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            b"<sheetData/></worksheet>"
+        )
+        with ZipFile(tracker_path) as source, ZipFile(pending, "w", ZIP_DEFLATED) as target:
+            for item in source.infolist():
+                content = empty_sheet if item.filename == "xl/worksheets/sheet2.xml" else source.read(item.filename)
+                target.writestr(item, content)
+        os.replace(pending, cached)
+        return cached
+    except (OSError, ValueError):
+        return tracker_path
+
+
 def compact_agent_dashboard_payload(
     dashboard: dict[str, Any],
     *,
@@ -222,7 +261,13 @@ def compact_agent_dashboard_payload(
     compact["latest_setups"] = actions[: max(0, action_limit)]
     compact["latest_decisions"] = []
     compact["recent_trades"] = list(reversed(trades))[: max(0, trade_limit)]
-    compact["closed_trades"] = closed[: max(0, trade_limit)]
+    compact["closed_trades"] = []
+    compact["recent_runs"] = []
+    compact["full_trade_performance"] = {}
+    compact["equity_curve"] = downsample_dashboard_series(dashboard.get("equity_curve"), max_points=240)
+    compact["decision_diagnostics"] = compact_decision_diagnostics(dashboard.get("decision_diagnostics"))
+    compact["daily_summary"] = compact_performance_summary(dashboard.get("daily_summary"))
+    compact["weekly_summary"] = compact_performance_summary(dashboard.get("weekly_summary"))
     compact["payload"] = {
         "mode": "compact",
         "generated_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
@@ -243,10 +288,45 @@ def compact_agent_dashboard_payload(
             "has_more": len(trades) > len(compact["recent_trades"]),
         },
     }
-    latest_run = compact.get("latest_run")
+    latest_run = dict(compact.get("latest_run")) if isinstance(compact.get("latest_run"), dict) else None
     if isinstance(latest_run, dict):
         latest_run["summary_text"] = trim_text(str(latest_run.get("summary_text") or ""), 24_000)
+        compact["latest_run"] = latest_run
     return compact
+
+
+def downsample_dashboard_series(value: Any, *, max_points: int) -> list[Any]:
+    rows = list(value) if isinstance(value, list) else []
+    if max_points <= 0:
+        return []
+    if len(rows) <= max_points:
+        return rows
+    if max_points == 1:
+        return [rows[-1]]
+    last_index = len(rows) - 1
+    indexes = {round(index * last_index / (max_points - 1)) for index in range(max_points)}
+    return [rows[index] for index in sorted(indexes)]
+
+
+def compact_decision_diagnostics(value: Any) -> dict[str, Any]:
+    diagnostics = dict(value) if isinstance(value, dict) else {}
+    drilldowns = diagnostics.get("drilldowns") if isinstance(diagnostics.get("drilldowns"), dict) else {}
+    watch_ready = drilldowns.get("WATCH_READY") if isinstance(drilldowns.get("WATCH_READY"), list) else []
+    diagnostics["drilldowns"] = {"WATCH_READY": watch_ready[:4]}
+    return diagnostics
+
+
+def compact_performance_summary(value: Any) -> dict[str, Any]:
+    summary = value if isinstance(value, dict) else {}
+    keys = {
+        "BUY_SIMULATED_count",
+        "WATCH_READY_count",
+        "WATCH_READY_unique_count",
+        "WATCH_READY_conversion",
+        "WATCH_READY_session_breakdown",
+        "recommendations_for_next_week",
+    }
+    return {key: summary[key] for key in keys if key in summary}
 
 
 def write_diagnostic_snapshot(project_root: Path, dashboard: dict[str, Any]) -> Path | None:
@@ -1185,6 +1265,47 @@ def read_setup_rows(
                 "chart_url": resolve_asset_url(cell(row, 15)),
                 "selection_context": cell(row, 16),
                 "decision_json": parse_json(cell(row, 17), {}),
+            }
+        )
+        rows.append(with_setup_potential(setup))
+    return rows
+
+
+def read_decision_setup_rows(path: Path | None) -> list[dict[str, Any]]:
+    if not path or not path.exists():
+        return []
+
+    rows = []
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    for line in lines:
+        try:
+            decision = json.loads(line)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if not isinstance(decision, dict):
+            continue
+        setup = with_ticker_meta(
+            {
+                "run_date": decision.get("timestamp"),
+                "ticker": decision.get("ticker"),
+                "setup_type": decision.get("setup_type") or "No Trade",
+                "score": round(to_float(decision.get("setup_score")), 2),
+                "current_price_usd": round(to_float(decision.get("price")), 2),
+                "buy_zone_low": decision.get("buy_zone_low"),
+                "buy_zone_high": decision.get("buy_zone_high"),
+                "stop_loss": decision.get("stop_loss"),
+                "target_1": decision.get("target_1"),
+                "target_2": decision.get("target_2"),
+                "risk_reward": round(to_float(decision.get("net_rr")), 2),
+                "reason": decision.get("reason") or "",
+                "action": decision.get("final_action") or "",
+                "feedback": decision.get("reason") or "",
+                "chart_url": resolve_asset_url(decision.get("chart_url")),
+                "selection_context": decision.get("scan_source") or "",
+                "decision_json": decision,
             }
         )
         rows.append(with_setup_potential(setup))

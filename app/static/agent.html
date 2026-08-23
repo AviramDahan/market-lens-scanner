@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260812-section-help" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260824-dashboard-redesign" />
   </head>
   <body>
     <main class="agent-shell">
@@ -37,6 +37,13 @@
           </a>
         </div>
       </header>
+
+      <nav class="dashboard-nav" aria-label="Dashboard sections">
+        <a href="#positionsOverviewPanel"><i data-lucide="briefcase-business"></i><span>Positions</span></a>
+        <a href="#setupsSection"><i data-lucide="radar"></i><span>Setups</span></a>
+        <a href="#performanceSection"><i data-lucide="chart-no-axes-combined"></i><span>Performance</span></a>
+        <a href="#systemSection"><i data-lucide="activity"></i><span>System</span></a>
+      </nav>
 
       <section class="run-strip">
         <div>
@@ -97,24 +104,7 @@
         </div>
       </section>
 
-      <section class="metric-grid" id="metricGrid"></section>
-
-      <section class="panel risk-dashboard-panel" id="riskDashboardPanel">
-        <div class="panel-head">
-          <div>
-            <h2 class="section-title">
-              Risk Dashboard
-              <button class="section-help-button" type="button" data-section-help="riskDashboard" aria-label="Explain Risk Dashboard">
-                <i data-lucide="circle-help"></i>
-              </button>
-            </h2>
-            <p id="riskDashboardMeta">Exposure, cash, risk and concentration</p>
-          </div>
-        </div>
-        <div id="riskDashboardGrid" class="risk-dashboard-grid"></div>
-      </section>
-
-      <section class="panel positions-overview-panel" id="positionsOverviewPanel">
+      <section class="panel positions-overview-panel section-anchor" id="positionsOverviewPanel">
         <div class="panel-head">
           <div>
             <h2 class="section-title">
@@ -144,6 +134,23 @@
         <div id="positionAttentionList" class="position-attention-list"></div>
       </section>
 
+      <section class="metric-grid" id="metricGrid" aria-label="Portfolio summary"></section>
+
+      <section class="panel risk-dashboard-panel" id="riskDashboardPanel">
+        <div class="panel-head">
+          <div>
+            <h2 class="section-title">
+              Risk Dashboard
+              <button class="section-help-button" type="button" data-section-help="riskDashboard" aria-label="Explain Risk Dashboard">
+                <i data-lucide="circle-help"></i>
+              </button>
+            </h2>
+            <p id="riskDashboardMeta">Exposure, cash, risk and concentration</p>
+          </div>
+        </div>
+        <div id="riskDashboardGrid" class="risk-dashboard-grid"></div>
+      </section>
+
       <section class="panel position-timeline-panel" id="positionTimelinePanel">
         <div class="panel-head">
           <div>
@@ -155,8 +162,33 @@
             </h2>
             <p id="positionTimelineMeta">Trade lifecycle for open positions</p>
           </div>
+          <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="positionTimeline" data-collapse-target="positionTimelineContent" data-show-label="Show timeline" data-hide-label="Hide timeline" aria-expanded="false">
+            <i data-lucide="chevron-down"></i>
+            <span>Show</span>
+          </button>
         </div>
-        <div id="positionTimelineList" class="position-timeline-list"></div>
+        <div id="positionTimelineContent" class="collapsible-content" hidden>
+          <div id="positionTimelineList" class="position-timeline-list"></div>
+        </div>
+      </section>
+
+      <section class="panel watch-ready-panel section-anchor" id="setupsSection">
+        <div class="panel-head">
+          <div>
+            <h2 class="section-title">
+              WATCH_READY
+              <button class="section-help-button" type="button" data-section-help="watchReady" aria-label="Explain WATCH_READY">
+                <i data-lucide="circle-help"></i>
+              </button>
+            </h2>
+            <p id="watchReadyMeta">Candidates staged for confirmation</p>
+          </div>
+          <button id="openWatchReadyDiagnostics" class="icon-button secondary" type="button">
+            <i data-lucide="list-filter"></i>
+            <span>Review all</span>
+          </button>
+        </div>
+        <div id="watchReadyList" class="watch-ready-list"></div>
       </section>
 
       <section class="panel diagnostics-panel">
@@ -170,30 +202,36 @@
             </h2>
             <p id="diagnosticsMeta">Why setups did or did not enter</p>
           </div>
+          <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="diagnosticsDetail" data-collapse-target="diagnosticsDetailPanel" data-show-label="Show analysis" data-hide-label="Hide analysis" aria-expanded="false">
+            <i data-lucide="chevron-down"></i>
+            <span>Show analysis</span>
+          </button>
         </div>
         <div id="diagnosticsGrid" class="diagnostics-grid"></div>
-        <div id="whyNoBuysGrid" class="why-no-buys-grid"></div>
-        <div id="entryBlockersGrid" class="entry-blockers-grid"></div>
-        <div id="watchReadyFunnel" class="watch-funnel"></div>
-        <div id="conversionGrid" class="conversion-grid"></div>
-        <div class="near-miss-wrap">
-          <div class="near-miss-head">
-            <strong>Nearest missed entries</strong>
-            <div class="panel-actions">
-              <span id="nearMissMeta">Waiting for scan data</span>
-              <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="nearMisses" data-collapse-target="nearMissPanel" aria-expanded="false">
-                <i data-lucide="chevron-down"></i>
-                <span>Show</span>
-              </button>
+        <div id="diagnosticsDetailPanel" class="collapsible-content diagnostics-detail" hidden>
+          <div id="whyNoBuysGrid" class="why-no-buys-grid"></div>
+          <div id="entryBlockersGrid" class="entry-blockers-grid"></div>
+          <div id="watchReadyFunnel" class="watch-funnel"></div>
+          <div id="conversionGrid" class="conversion-grid"></div>
+          <div class="near-miss-wrap">
+            <div class="near-miss-head">
+              <strong>Nearest missed entries</strong>
+              <div class="panel-actions">
+                <span id="nearMissMeta">Waiting for scan data</span>
+                <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="nearMisses" data-collapse-target="nearMissPanel" aria-expanded="false">
+                  <i data-lucide="chevron-down"></i>
+                  <span>Show</span>
+                </button>
+              </div>
             </div>
-          </div>
-          <div id="nearMissPanel" class="collapsible-content" hidden>
-            <div id="nearMissList" class="near-miss-list"></div>
+            <div id="nearMissPanel" class="collapsible-content" hidden>
+              <div id="nearMissList" class="near-miss-list"></div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="agent-layout">
+      <section class="agent-layout section-anchor" id="performanceSection">
         <div class="panel wide">
           <div class="panel-head">
             <div>
@@ -239,25 +277,6 @@
         <div id="positionChartsPanel" class="collapsible-content" hidden>
           <div id="positionChartsGrid" class="position-chart-grid"></div>
         </div>
-      </section>
-
-      <section class="panel watch-ready-panel">
-        <div class="panel-head">
-          <div>
-            <h2 class="section-title">
-              WATCH_READY
-              <button class="section-help-button" type="button" data-section-help="watchReady" aria-label="Explain WATCH_READY">
-                <i data-lucide="circle-help"></i>
-              </button>
-            </h2>
-            <p id="watchReadyMeta">Candidates staged for confirmation</p>
-          </div>
-          <button id="openWatchReadyDiagnostics" class="icon-button secondary" type="button">
-            <i data-lucide="list-filter"></i>
-            <span>Review</span>
-          </button>
-        </div>
-        <div id="watchReadyList" class="watch-ready-list"></div>
       </section>
 
       <section class="agent-layout lower">
@@ -323,8 +342,14 @@
             </h2>
             <p id="calibrationMeta">Closed trades by setup score bucket</p>
           </div>
+          <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="scoreCalibration" data-collapse-target="calibrationPanel" aria-expanded="false">
+            <i data-lucide="chevron-down"></i>
+            <span>Show</span>
+          </button>
         </div>
-        <div id="calibrationList" class="calibration-list"></div>
+        <div id="calibrationPanel" class="collapsible-content" hidden>
+          <div id="calibrationList" class="calibration-list"></div>
+        </div>
       </section>
 
       <section class="panel">
@@ -338,11 +363,17 @@
             </h2>
             <p id="summaryMeta">Agent written update</p>
           </div>
+          <button class="icon-button secondary collapse-toggle" type="button" data-collapse-key="latestSummary" data-collapse-target="latestSummaryPanel" aria-expanded="false">
+            <i data-lucide="chevron-down"></i>
+            <span>Show</span>
+          </button>
         </div>
-        <pre id="summaryText" class="summary-text">Loading</pre>
+        <div id="latestSummaryPanel" class="collapsible-content" hidden>
+          <pre id="summaryText" class="summary-text">Loading</pre>
+        </div>
       </section>
 
-      <section class="panel system-health-panel">
+      <section class="panel system-health-panel section-anchor" id="systemSection">
         <div class="panel-head">
           <div>
             <h2 class="section-title">
@@ -442,6 +473,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260812-section-help"></script>
+    <script src="/static/agent.js?v=20260824-dashboard-redesign"></script>
   </body>
 </html>

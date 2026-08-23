@@ -16,6 +16,10 @@ const state = {
     equity: false,
     nearMisses: false,
     positionCharts: false,
+    positionTimeline: false,
+    diagnosticsDetail: false,
+    scoreCalibration: false,
+    latestSummary: false,
   },
   liveTimer: null,
   scheduleTimer: null,
@@ -452,9 +456,11 @@ function setCollapsibleSection(key, expanded, options = {}) {
     const target = document.getElementById(button.dataset.collapseTarget);
     if (target) target.hidden = !state.chartSections[key];
     button.setAttribute("aria-expanded", String(state.chartSections[key]));
+    const showLabel = button.dataset.showLabel || "Show";
+    const hideLabel = button.dataset.hideLabel || "Hide";
     button.innerHTML = `
       <i data-lucide="${state.chartSections[key] ? "chevron-up" : "chevron-down"}"></i>
-      <span>${state.chartSections[key] ? "Hide" : "Show"}</span>
+      <span>${state.chartSections[key] ? hideLabel : showLabel}</span>
     `;
   });
   if (key === "equity" && state.chartSections[key] && state.data && !options.skipChartRender) {
@@ -1768,18 +1774,16 @@ function renderWatchReadyPanel(diagnostics) {
     list.innerHTML = '<div class="empty-state compact">No WATCH_READY candidates right now.</div>';
     return;
   }
-  const topItems = items.slice(0, 6);
+  const topItems = items.slice(0, 4);
   list.innerHTML = topItems
     .map((item) => {
       const score = Number(item.setup_score || 0);
       const rr = Number(item.weighted_net_rr || item.net_rr || 0);
-      const chart = item.chart_url
-        ? `<img src="${escapeHtml(item.chart_url)}?v=${Date.now()}" alt="${escapeHtml(item.ticker)} chart" loading="lazy" decoding="async" />`
-        : `<span>No chart</span>`;
+      const confirmation = item.entry_confirmation_passed ? "Confirmed" : "Needs confirmation";
       return `
         <button class="watch-ready-card" type="button" data-watch-ready-open="true">
-          <span class="watch-ready-thumb">${chart}</span>
           <strong>${escapeHtml(tickerLabel(item))}</strong>
+          <span class="candidate-status"><span>Readiness</span><b>${escapeHtml(confirmation)}</b></span>
           <small>${escapeHtml(tickerMeta(item, item.setup_type || "Setup"))}</small>
           <em>Score ${score.toFixed(2)} / R/R ${rr.toFixed(2)}x</em>
         </button>

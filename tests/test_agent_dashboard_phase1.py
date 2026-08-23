@@ -9,6 +9,8 @@ from app.agent_dashboard import (
     compute_full_trade_performance,
     compute_realized_pnl,
     dashboard_section_payload,
+    historical_tracker_copy,
+    read_decision_setup_rows,
     with_position_calculations,
     write_diagnostic_snapshot,
 )
@@ -190,6 +192,21 @@ def test_compact_dashboard_payload_trims_heavy_collections_and_keeps_totals() ->
         "latest_decisions": [{"ticker": "heavy"}],
         "recent_trades": [{"ticker": f"T{index}"} for index in range(18)],
         "closed_trades": [{"ticker": f"C{index}"} for index in range(7)],
+        "recent_runs": [{"run": index} for index in range(20)],
+        "equity_curve": [{"run": index} for index in range(500)],
+        "full_trade_performance": {"closed": [1, 2, 3]},
+        "decision_diagnostics": {
+            "watch_ready_count": 6,
+            "drilldowns": {
+                "WATCH_READY": [{"ticker": f"W{index}"} for index in range(6)],
+                "RR_BLOCKED": [{"ticker": "HEAVY"}],
+            },
+        },
+        "daily_summary": {
+            "BUY_SIMULATED_count": 1,
+            "WATCH_READY_count": 6,
+            "heavy_records": list(range(1_000)),
+        },
     }
 
     compact = compact_agent_dashboard_payload(dashboard, action_limit=10, trade_limit=5)
@@ -199,10 +216,67 @@ def test_compact_dashboard_payload_trims_heavy_collections_and_keeps_totals() ->
     assert compact["latest_decisions"] == []
     assert len(compact["recent_trades"]) == 5
     assert compact["recent_trades"][0]["ticker"] == "T17"
+    assert compact["closed_trades"] == []
+    assert compact["recent_runs"] == []
+    assert compact["full_trade_performance"] == {}
+    assert len(compact["equity_curve"]) == 240
+    assert compact["equity_curve"][0] == {"run": 0}
+    assert compact["equity_curve"][-1] == {"run": 499}
+    assert len(compact["decision_diagnostics"]["drilldowns"]["WATCH_READY"]) == 4
+    assert "RR_BLOCKED" not in compact["decision_diagnostics"]["drilldowns"]
+    assert compact["daily_summary"] == {"BUY_SIMULATED_count": 1, "WATCH_READY_count": 6}
     assert compact["pagination"]["actions"]["total"] == 25
     assert compact["pagination"]["actions"]["has_more"] is True
     assert compact["pagination"]["trades"]["closed_total"] == 7
     assert "trimmed" in compact["latest_run"]["summary_text"].lower()
+    assert len(dashboard["latest_run"]["summary_text"]) == 30_000
+
+
+def test_historical_tracker_copy_removes_watchlist_rows_and_keeps_other_sheets(tmp_path) -> None:
+    from openpyxl import Workbook, load_workbook
+
+    tracker = tmp_path / "tracker.xlsx"
+    workbook = Workbook()
+    workbook.active.title = "Dashboard"
+    workbook.create_sheet("Setup Watchlist").append(["large", "row"])
+    workbook.create_sheet("Trade Log").append(["trade"])
+    workbook.create_sheet("Open Positions")
+    workbook.create_sheet("Update Log").append(["update"])
+    workbook.create_sheet("Settings")
+    workbook.create_sheet("Sources")
+    workbook.create_sheet("Agent Control")
+    workbook.create_sheet("Position Events")
+    workbook.save(tracker)
+
+    compact_tracker = historical_tracker_copy(tracker)
+    loaded = load_workbook(compact_tracker, data_only=True, read_only=True)
+
+    assert compact_tracker != tracker
+    assert loaded["Setup Watchlist"]["A1"].value is None
+    assert loaded["Update Log"]["A1"].value == "update"
+
+
+def test_read_decision_setup_rows_recovers_historical_scan(tmp_path) -> None:
+    path = tmp_path / "decisions.jsonl"
+    path.write_text(
+        "\n".join(
+            [
+                "not-json",
+                '{"timestamp":"2026-08-21T15:00:00","ticker":"MSFT","setup_type":"Breakout + Retest",'
+                '"setup_score":0.58,"price":421.5,"buy_zone_low":418,"buy_zone_high":422,'
+                '"stop_loss":412,"target_1":435,"target_2":448,"net_rr":2.3,'
+                '"final_action":"WATCH_READY","reason":"Waiting for confirmation"}',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    rows = read_decision_setup_rows(path)
+
+    assert len(rows) == 1
+    assert rows[0]["ticker"] == "MSFT"
+    assert rows[0]["action"] == "WATCH_READY"
+    assert rows[0]["decision_json"]["net_rr"] == 2.3
 
 
 def test_dashboard_section_payload_paginates_actions_and_trades() -> None:
