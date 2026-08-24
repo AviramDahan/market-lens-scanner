@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-24
-Total scans: 10
-Tickers scanned: 1651
+Total scans: 11
+Tickers scanned: 1816
 BUY_SIMULATED: 0
-WATCH_READY: 260
+WATCH_READY: 286
 WATCH_READY unique tickers: 26
-WATCH_READY session split: regular=0, off_hours=260, unknown=0
+WATCH_READY session split: regular=0, off_hours=286, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 541
-SKIP: 1070
-NO_TRADE: 940
+WATCH: 595
+SKIP: 1177
+NO_TRADE: 1034
 Realized PnL: 0.0
 Unrealized PnL: 244.72
 Portfolio value: 101597.98
@@ -19,9 +19,9 @@ Worst ticker: AMCR
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 140
-- TREND_PULLBACK_RECLAIM: 20
-- VWAP_RECLAIM: 20
+- RELATIVE_STRENGTH_LEADER: 154
+- TREND_PULLBACK_RECLAIM: 22
+- VWAP_RECLAIM: 22
 
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
