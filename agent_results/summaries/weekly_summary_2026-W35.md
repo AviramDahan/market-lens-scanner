@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 16
-Tickers scanned: 2674
+Total scans: 17
+Tickers scanned: 2851
 BUY_SIMULATED: 1
 WATCH_READY: 286
 WATCH_READY unique tickers: 26
 WATCH_READY session split: regular=0, off_hours=286, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 759
-SKIP: 1854
-NO_TRADE: 1632
+WATCH: 795
+SKIP: 1992
+NO_TRADE: 1754
 Realized PnL: 31.16
-Unrealized PnL: 255.35
-Portfolio value: 101639.77
+Unrealized PnL: 266.37
+Portfolio value: 101650.79
 Best ticker: CCI
 Worst ticker: OXY
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 198
-- TREND_PULLBACK_RECLAIM: 31
+- RELATIVE_STRENGTH_LEADER: 210
+- TREND_PULLBACK_RECLAIM: 32
 - VWAP_RECLAIM: 23
 
 Top rejected candidates:
@@ -33,8 +33,8 @@ Top rejected candidates:
 - RHP: WATCH score=0.5 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ECL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.83.
 - ORCL: WATCH score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- CL: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.89 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.30.
-- AMCR: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.72.
+- MP: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
+- CL: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.92 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.31.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
