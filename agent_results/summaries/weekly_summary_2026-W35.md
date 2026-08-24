@@ -8,20 +8,20 @@ WATCH_READY: 286
 WATCH_READY unique tickers: 26
 WATCH_READY session split: regular=0, off_hours=286, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 620
-SKIP: 1313
-NO_TRADE: 1155
+WATCH: 631
+SKIP: 1302
+NO_TRADE: 1144
 Realized PnL: -207.36
-Unrealized PnL: 462.4
-Portfolio value: 101608.3
+Unrealized PnL: 489.0
+Portfolio value: 101634.9
 Best ticker: CCI
-Worst ticker: AMCR
+Worst ticker: OXY
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 164
+- RELATIVE_STRENGTH_LEADER: 163
 - TREND_PULLBACK_RECLAIM: 22
-- VWAP_RECLAIM: 22
+- VWAP_RECLAIM: 23
 
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
@@ -33,7 +33,7 @@ Top rejected candidates:
 - ORCL: WATCH score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - AMCR: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.72.
 - INTC: WATCH score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- OKE: WATCH score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- OMC: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.51 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.04.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
