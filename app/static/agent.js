@@ -94,7 +94,7 @@ const SUNDAY_SCAN_TIMES = ["18:30", "22:00"];
 const SECTION_HELP = {
   dashboardOverview: {
     title: "Agent Dashboard",
-    intro: "This page is the control room for the paper-trading agent. It shows the latest scan, open paper positions, risk, diagnostics, logs, and system status.",
+    intro: "This page is the control room for the paper-trading agent. It shows the latest scan, open paper positions, risk, diagnostics, and logs.",
     items: [
       "Top run cards show the latest scan time, scan status, ticker count, next scheduled scan, live price sync, monitor trigger status, and trade-ready count.",
       "The metric cards below summarize paper equity, total P/L, cash, exposure, open risk, exit-event win rate, and full-trade win rate.",
@@ -108,7 +108,7 @@ const SECTION_HELP = {
       "Market shows the current market regime used by the agent, such as BULL, NEUTRAL, or BEAR.",
       "New Trade Capacity estimates how much more exposure the agent can add under the active exposure limit.",
       "Open Risk is the estimated loss to active stop levels if all open positions hit their stops.",
-      "Sector Exposure shows concentration by business sector. Factor Exposure shows hidden theme exposure such as Technology, Defensive, or Consumer Cyclical.",
+      "Factor Exposure shows hidden theme exposure such as Technology, Defensive, or Consumer Cyclical.",
     ],
   },
   openPositions: {
@@ -213,17 +213,6 @@ const SECTION_HELP = {
       "It includes run status, tickers scanned, valid setups, actions, watch-ready candidates, open/closed positions, cash, exposure, risk, saved files, and errors.",
       "It is useful for auditing one run without opening the Excel tracker.",
       "Long summaries are trimmed in the dashboard for load speed; full files remain in agent_results.",
-    ],
-  },
-  systemHealth: {
-    title: "System Health",
-    intro: "This section shows whether the scanner, monitor, dashboard payload, and data sync are healthy.",
-    items: [
-      "Payload indicates whether heavy lists are loaded lazily.",
-      "Last Scan shows when the scanner last wrote a valid update.",
-      "Last Monitor Action updates only when a TP/SL paper portfolio action is recorded.",
-      "Live Sensor shows the latest live price refresh for open positions.",
-      "Data Sync shows whether dashboard assets are available locally or synced from GitHub.",
     ],
   },
 };
@@ -412,7 +401,6 @@ function renderDashboard(data) {
   document.getElementById("tradeReadySetups").textContent = data.latest_run.trade_ready_setups ?? countTradeReady(data.latest_setups);
 
   renderMetrics(data.summary);
-  renderSystemHealth(data.system_health || {}, data.results_sync || {}, data.payload || {});
   renderRiskDashboard(data.risk_dashboard || {}, data.summary || {});
   renderDiagnostics(data.decision_diagnostics || {}, data.daily_summary || {}, data.weekly_summary || {});
   renderWatchReadyPanel(data.decision_diagnostics || {});
@@ -521,7 +509,6 @@ async function refreshLivePrices() {
     renderPositionTimeline(buildClientPositionTimeline(state.data.open_positions || []), live.updated_at);
     renderPositions(state.data.open_positions, live.updated_at);
     renderPositionCharts(state.data.open_positions);
-    renderSystemHealth(state.data.system_health || {}, state.data.results_sync || {}, state.data.payload || {});
     detectAndTriggerMonitorEvents(state.data.open_positions);
   } catch (_error) {
     // Live refresh is best-effort; the committed tracker remains the fallback.
@@ -827,7 +814,6 @@ function renderRiskDashboard(risk, summary) {
   const maxExposure = Number(risk.max_total_exposure ?? 0);
   const remainingCapacity = Number(risk.remaining_exposure_capacity ?? Math.max(0, maxExposure - totalExposure));
   const newTradeBudget = Number(risk.remaining_new_trade_budget ?? Math.min(Number(summary.cash_ils || 0), remainingCapacity));
-  const sectorRows = (risk.sector_exposure || []).slice(0, 5);
   const factorRows = (risk.factor_exposure || []).slice(0, 5);
 
   meta.textContent = `${displayText(risk.market_regime || "UNKNOWN")} regime - ${money.format(remainingCapacity)} exposure capacity`;
@@ -835,7 +821,6 @@ function renderRiskDashboard(risk, summary) {
     riskMetricCard("Market", risk.market_regime || "UNKNOWN", `Max exposure ${money.format(maxExposure)}`, "neutral"),
     riskMetricCard("New Trade Capacity", money.format(newTradeBudget), `Cash ${money.format(Number(risk.cash ?? summary.cash_ils ?? 0))}`, newTradeBudget > 0 ? "good" : "warn"),
     riskMetricCard("Open Risk", money.format(Number(risk.open_risk ?? summary.open_risk_ils ?? 0)), `${Number(risk.open_risk_pct || 0).toFixed(2)}% of portfolio`, Number(risk.open_risk || 0) > 0 ? "warn" : "neutral"),
-    exposureListCard("Sector Exposure", sectorRows, totalExposure),
     exposureListCard("Factor Exposure", factorRows, totalExposure),
   ].join("");
 }
@@ -920,66 +905,6 @@ function mapExposureRows(map, totalExposure) {
       pct_of_exposure: totalExposure ? (Number(row.exposure || 0) / totalExposure) * 100 : 0,
     }))
     .sort((a, b) => Number(b.exposure || 0) - Number(a.exposure || 0));
-}
-
-function renderSystemHealth(health, resultsSync, payload) {
-  const grid = document.getElementById("systemHealthGrid");
-  const meta = document.getElementById("systemHealthMeta");
-  if (!grid || !meta) return;
-
-  const notes = health.notes || [];
-  meta.textContent = notes.length ? notes[0] : "Scanner, monitor and dashboard sync status";
-  const syncStatus = resultsSync?.enabled === false
-    ? "Local"
-    : resultsSync?.downloaded || resultsSync?.asset_sync?.downloaded
-      ? "Synced"
-      : "Ready";
-  const cards = [
-    {
-      label: "Payload",
-      value: payload.mode === "compact" ? "Compact" : "Full",
-      detail: payload.mode === "compact" ? "Actions/trades load on demand" : "Full dashboard payload",
-      tone: payload.mode === "compact" ? "good" : "warn",
-    },
-    {
-      label: "Last Scan",
-      value: health.latest_scan_at ? formatDate(health.latest_scan_at) : "Unknown",
-      detail: health.latest_scan_age_minutes != null ? `${formatAgeMinutes(health.latest_scan_age_minutes)} ago` : "No scan timestamp",
-      tone: health.latest_scan_at ? "good" : "warn",
-    },
-    {
-      label: "Last Monitor Action",
-      value: health.latest_monitor_at ? formatDate(health.latest_monitor_at) : "No events",
-      detail: health.latest_monitor_age_minutes != null
-        ? `${formatAgeMinutes(health.latest_monitor_age_minutes)} ago - only updates on TP/SL actions`
-        : "Waiting for first TP/SL action",
-      tone: health.latest_monitor_at ? "good" : "",
-    },
-    {
-      label: "Live Sensor",
-      value: state.lastLivePriceUpdatedAt ? formatDate(state.lastLivePriceUpdatedAt) : "Waiting",
-      detail: state.nextLiveSyncAt ? `Next sync ${formatCountdown(state.nextLiveSyncAt - Date.now())}` : "Runs only with open current positions",
-      tone: state.lastLivePriceUpdatedAt ? "good" : "",
-    },
-    {
-      label: "Data Sync",
-      value: syncStatus,
-      detail: resultsSync?.reason || resultsSync?.asset_sync?.reason || "Dashboard assets checked",
-      tone: resultsSync?.error ? "bad" : "",
-    },
-  ];
-
-  grid.innerHTML = cards
-    .map(
-      (card) => `
-        <div class="health-card ${card.tone || ""}">
-          <span>${escapeHtml(card.label)}</span>
-          <strong>${escapeHtml(card.value)}</strong>
-          <small>${escapeHtml(card.detail || "")}</small>
-        </div>
-      `,
-    )
-    .join("");
 }
 
 function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {

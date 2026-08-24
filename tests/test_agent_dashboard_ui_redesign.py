@@ -15,11 +15,18 @@ def test_dashboard_prioritizes_positions_before_risk_and_setups() -> None:
 
 
 def test_dashboard_has_mobile_section_navigation() -> None:
-    for target in ("positionsOverviewPanel", "setupsSection", "performanceSection", "systemSection"):
+    for target in ("positionsOverviewPanel", "setupsSection", "performanceSection"):
         assert f'href="#{target}"' in HTML
+    assert "systemSection" not in HTML
     assert ".dashboard-nav" in CSS
     assert "position: fixed" in CSS
-    assert "grid-template-columns: repeat(4, minmax(0, 1fr))" in CSS
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in CSS
+
+
+def test_dashboard_hides_sector_exposure_and_system_health() -> None:
+    assert "System Health" not in HTML
+    assert 'exposureListCard("Sector Exposure"' not in JS
+    assert 'exposureListCard("Factor Exposure"' in JS
 
 
 def test_high_density_sections_start_collapsed() -> None:

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260824-dashboard-redesign" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260824-dashboard-cleanup" />
   </head>
   <body>
     <main class="agent-shell">
@@ -42,7 +42,6 @@
         <a href="#positionsOverviewPanel"><i data-lucide="briefcase-business"></i><span>Positions</span></a>
         <a href="#setupsSection"><i data-lucide="radar"></i><span>Setups</span></a>
         <a href="#performanceSection"><i data-lucide="chart-no-axes-combined"></i><span>Performance</span></a>
-        <a href="#systemSection"><i data-lucide="activity"></i><span>System</span></a>
       </nav>
 
       <section class="run-strip">
@@ -373,20 +372,6 @@
         </div>
       </section>
 
-      <section class="panel system-health-panel section-anchor" id="systemSection">
-        <div class="panel-head">
-          <div>
-            <h2 class="section-title">
-              System Health
-              <button class="section-help-button" type="button" data-section-help="systemHealth" aria-label="Explain System Health">
-                <i data-lucide="circle-help"></i>
-              </button>
-            </h2>
-            <p id="systemHealthMeta">Scanner, monitor and data sync status</p>
-          </div>
-        </div>
-        <div id="systemHealthGrid" class="system-health-grid"></div>
-      </section>
     </main>
 
     <div id="mediaModal" class="media-modal" aria-hidden="true">
@@ -473,6 +458,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260824-dashboard-redesign"></script>
+    <script src="/static/agent.js?v=20260824-dashboard-cleanup"></script>
   </body>
 </html>
