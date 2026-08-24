@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-24
-Total scans: 24
-Tickers scanned: 4061
+Total scans: 25
+Tickers scanned: 4232
 BUY_SIMULATED: 1
-WATCH_READY: 286
-WATCH_READY unique tickers: 26
-WATCH_READY session split: regular=0, off_hours=286, unknown=0
-WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 1033
-SKIP: 2943
-NO_TRADE: 2592
+WATCH_READY: 302
+WATCH_READY unique tickers: 36
+WATCH_READY session split: regular=0, off_hours=302, unknown=0
+WATCH_READY conversion: 0 converted / 36 staged
+WATCH: 1076
+SKIP: 3068
+NO_TRADE: 2699
 Realized PnL: 31.16
-Unrealized PnL: 257.69
-Portfolio value: 101642.11
+Unrealized PnL: 271.42
+Portfolio value: 101655.84
 Best ticker: CCI
 Worst ticker: OXY
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 275
-- TREND_PULLBACK_RECLAIM: 42
-- VWAP_RECLAIM: 23
+- RELATIVE_STRENGTH_LEADER: 287
+- TREND_PULLBACK_RECLAIM: 44
+- VWAP_RECLAIM: 24
 
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
@@ -38,5 +38,6 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
