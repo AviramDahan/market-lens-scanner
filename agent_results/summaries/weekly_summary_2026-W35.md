@@ -1,26 +1,26 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 19
-Tickers scanned: 3201
+Total scans: 20
+Tickers scanned: 3374
 BUY_SIMULATED: 1
 WATCH_READY: 286
 WATCH_READY unique tickers: 26
 WATCH_READY session split: regular=0, off_hours=286, unknown=0
 WATCH_READY conversion: 0 converted / 26 staged
-WATCH: 869
-SKIP: 2262
-NO_TRADE: 1995
+WATCH: 905
+SKIP: 2396
+NO_TRADE: 2112
 Realized PnL: 31.16
-Unrealized PnL: 252.74
-Portfolio value: 101637.16
+Unrealized PnL: 248.37
+Portfolio value: 101632.79
 Best ticker: CCI
 Worst ticker: OXY
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- RELATIVE_STRENGTH_LEADER: 229
+- RELATIVE_STRENGTH_LEADER: 241
 - TREND_PULLBACK_RECLAIM: 35
 - VWAP_RECLAIM: 23
 
