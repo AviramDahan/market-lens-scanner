@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-25
-Total scans: 13
-Tickers scanned: 2082
+Total scans: 14
+Tickers scanned: 2242
 BUY_SIMULATED: 0
-WATCH_READY: 247
+WATCH_READY: 266
 WATCH_READY unique tickers: 19
-WATCH_READY session split: regular=0, off_hours=247, unknown=0
+WATCH_READY session split: regular=0, off_hours=266, unknown=0
 WATCH_READY conversion: 0 converted / 19 staged
-WATCH: 574
-SKIP: 1469
-NO_TRADE: 1220
+WATCH: 618
+SKIP: 1582
+NO_TRADE: 1314
 Realized PnL: 0.0
 Unrealized PnL: 272.64
 Portfolio value: 101657.06
@@ -19,8 +19,8 @@ Worst ticker: EOG
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 13
-- RELATIVE_STRENGTH_LEADER: 156
+- BREAKOUT_CONTINUATION: 14
+- RELATIVE_STRENGTH_LEADER: 168
 - TREND_PULLBACK_RECLAIM: 4
 
 Top rejected candidates:
