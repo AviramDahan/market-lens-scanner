@@ -1,27 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-25
-Total scans: 23
-Tickers scanned: 3785
+Total scans: 24
+Tickers scanned: 3956
 BUY_SIMULATED: 0
 WATCH_READY: 266
 WATCH_READY unique tickers: 19
 WATCH_READY session split: regular=0, off_hours=266, unknown=0
 WATCH_READY conversion: 0 converted / 19 staged
-WATCH: 999
-SKIP: 2725
-NO_TRADE: 2360
+WATCH: 1034
+SKIP: 2859
+NO_TRADE: 2478
 Realized PnL: 0.0
-Unrealized PnL: 234.93
-Portfolio value: 101619.35
+Unrealized PnL: 246.5
+Portfolio value: 101630.92
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 25
-- RELATIVE_STRENGTH_LEADER: 261
+- BREAKOUT_CONTINUATION: 26
+- RELATIVE_STRENGTH_LEADER: 270
 - TREND_PULLBACK_RECLAIM: 20
+- VWAP_RECLAIM: 1
 
 Top rejected candidates:
 - GS: WATCH score=0.52 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -32,7 +33,7 @@ Top rejected candidates:
 - LRCX: SKIP score=0.48 reason=SKIP: Semiconductors sector regime is weak (19/100); skip new entry. Market regime BULL; sector WEAK; net R/R 5.84.
 - ASML: SKIP score=0.48 reason=SKIP: Semiconductors sector regime is weak (20/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.03.
 - CL: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.64 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.15.
-- SMCI: SKIP score=0.46 reason=SKIP: Semiconductors sector regime is weak (20/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.13.
+- SMCI: SKIP score=0.46 reason=SKIP: Semiconductors sector regime is weak (19/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.13.
 - AIG: WATCH score=0.45 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.22.
 
 Recommendations:

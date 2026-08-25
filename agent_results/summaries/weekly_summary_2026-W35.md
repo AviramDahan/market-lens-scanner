@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 53
-Tickers scanned: 8817
+Total scans: 54
+Tickers scanned: 8988
 BUY_SIMULATED: 1
 WATCH_READY: 653
 WATCH_READY unique tickers: 38
 WATCH_READY session split: regular=0, off_hours=653, unknown=0
 WATCH_READY conversion: 0 converted / 38 staged
-WATCH: 2265
-SKIP: 6388
-NO_TRADE: 5556
+WATCH: 2300
+SKIP: 6522
+NO_TRADE: 5674
 Realized PnL: 31.16
-Unrealized PnL: 234.93
-Portfolio value: 101619.35
+Unrealized PnL: 246.5
+Portfolio value: 101630.92
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
-Worst shadow strategy: BREAKOUT_CONTINUATION
+Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 26
-- RELATIVE_STRENGTH_LEADER: 608
+- BREAKOUT_CONTINUATION: 27
+- RELATIVE_STRENGTH_LEADER: 617
 - TREND_PULLBACK_RECLAIM: 71
-- VWAP_RECLAIM: 29
+- VWAP_RECLAIM: 30
 
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
