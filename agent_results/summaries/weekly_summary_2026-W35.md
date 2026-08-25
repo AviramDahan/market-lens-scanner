@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 52
-Tickers scanned: 8646
+Total scans: 53
+Tickers scanned: 8817
 BUY_SIMULATED: 1
 WATCH_READY: 653
 WATCH_READY unique tickers: 38
 WATCH_READY session split: regular=0, off_hours=653, unknown=0
 WATCH_READY conversion: 0 converted / 38 staged
-WATCH: 2231
-SKIP: 6253
-NO_TRADE: 5436
+WATCH: 2265
+SKIP: 6388
+NO_TRADE: 5556
 Realized PnL: 31.16
-Unrealized PnL: 244.03
-Portfolio value: 101628.45
+Unrealized PnL: 234.93
+Portfolio value: 101619.35
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 24
-- RELATIVE_STRENGTH_LEADER: 598
-- TREND_PULLBACK_RECLAIM: 69
+- BREAKOUT_CONTINUATION: 26
+- RELATIVE_STRENGTH_LEADER: 608
+- TREND_PULLBACK_RECLAIM: 71
 - VWAP_RECLAIM: 29
 
 Top rejected candidates:

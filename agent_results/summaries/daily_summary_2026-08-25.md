@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-25
-Total scans: 22
-Tickers scanned: 3614
+Total scans: 23
+Tickers scanned: 3785
 BUY_SIMULATED: 0
 WATCH_READY: 266
 WATCH_READY unique tickers: 19
 WATCH_READY session split: regular=0, off_hours=266, unknown=0
 WATCH_READY conversion: 0 converted / 19 staged
-WATCH: 965
-SKIP: 2590
-NO_TRADE: 2240
+WATCH: 999
+SKIP: 2725
+NO_TRADE: 2360
 Realized PnL: 0.0
-Unrealized PnL: 244.03
-Portfolio value: 101628.45
+Unrealized PnL: 234.93
+Portfolio value: 101619.35
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 23
-- RELATIVE_STRENGTH_LEADER: 251
-- TREND_PULLBACK_RECLAIM: 18
+- BREAKOUT_CONTINUATION: 25
+- RELATIVE_STRENGTH_LEADER: 261
+- TREND_PULLBACK_RECLAIM: 20
 
 Top rejected candidates:
 - GS: WATCH score=0.52 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
