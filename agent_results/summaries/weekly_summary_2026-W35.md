@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 35
-Tickers scanned: 5834
+Total scans: 36
+Tickers scanned: 5994
 BUY_SIMULATED: 1
-WATCH_READY: 482
+WATCH_READY: 501
 WATCH_READY unique tickers: 38
-WATCH_READY session split: regular=0, off_hours=482, unknown=0
+WATCH_READY session split: regular=0, off_hours=501, unknown=0
 WATCH_READY conversion: 0 converted / 38 staged
-WATCH: 1488
-SKIP: 4228
-NO_TRADE: 3664
+WATCH: 1532
+SKIP: 4341
+NO_TRADE: 3758
 Realized PnL: 31.16
 Unrealized PnL: 272.64
 Portfolio value: 101657.06
@@ -19,8 +19,8 @@ Worst ticker: OXY
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 6
-- RELATIVE_STRENGTH_LEADER: 407
+- BREAKOUT_CONTINUATION: 7
+- RELATIVE_STRENGTH_LEADER: 419
 - TREND_PULLBACK_RECLAIM: 55
 - VWAP_RECLAIM: 29
 
