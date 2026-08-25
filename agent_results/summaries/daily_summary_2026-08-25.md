@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-25
-Total scans: 17
-Tickers scanned: 2755
+Total scans: 18
+Tickers scanned: 2927
 BUY_SIMULATED: 0
 WATCH_READY: 266
 WATCH_READY unique tickers: 19
 WATCH_READY session split: regular=0, off_hours=266, unknown=0
 WATCH_READY conversion: 0 converted / 19 staged
-WATCH: 761
-SKIP: 1945
-NO_TRADE: 1648
+WATCH: 802
+SKIP: 2074
+NO_TRADE: 1764
 Realized PnL: 0.0
-Unrealized PnL: 234.61
-Portfolio value: 101619.03
+Unrealized PnL: 243.15
+Portfolio value: 101627.57
 Best ticker: LRCX
 Worst ticker: CHD
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 17
-- RELATIVE_STRENGTH_LEADER: 200
-- TREND_PULLBACK_RECLAIM: 11
+- BREAKOUT_CONTINUATION: 18
+- RELATIVE_STRENGTH_LEADER: 209
+- TREND_PULLBACK_RECLAIM: 13
 
 Top rejected candidates:
 - MTDR: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.75.
