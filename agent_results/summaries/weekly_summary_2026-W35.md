@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 50
-Tickers scanned: 8303
+Total scans: 51
+Tickers scanned: 8475
 BUY_SIMULATED: 1
 WATCH_READY: 653
 WATCH_READY unique tickers: 38
 WATCH_READY session split: regular=0, off_hours=653, unknown=0
 WATCH_READY conversion: 0 converted / 38 staged
-WATCH: 2156
-SKIP: 5989
-NO_TRADE: 5192
+WATCH: 2194
+SKIP: 6121
+NO_TRADE: 5314
 Realized PnL: 31.16
-Unrealized PnL: 236.46
-Portfolio value: 101620.88
+Unrealized PnL: 242.16
+Portfolio value: 101626.58
 Best ticker: CCI
-Worst ticker: CHD
+Worst ticker: ESS
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 22
-- RELATIVE_STRENGTH_LEADER: 578
-- TREND_PULLBACK_RECLAIM: 67
+- BREAKOUT_CONTINUATION: 23
+- RELATIVE_STRENGTH_LEADER: 587
+- TREND_PULLBACK_RECLAIM: 68
 - VWAP_RECLAIM: 29
 
 Top rejected candidates:
