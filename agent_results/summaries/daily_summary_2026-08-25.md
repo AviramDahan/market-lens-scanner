@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-08-25
-Total scans: 16
-Tickers scanned: 2582
+Total scans: 17
+Tickers scanned: 2755
 BUY_SIMULATED: 0
 WATCH_READY: 266
 WATCH_READY unique tickers: 19
 WATCH_READY session split: regular=0, off_hours=266, unknown=0
 WATCH_READY conversion: 0 converted / 19 staged
-WATCH: 712
-SKIP: 1823
-NO_TRADE: 1534
+WATCH: 761
+SKIP: 1945
+NO_TRADE: 1648
 Realized PnL: 0.0
-Unrealized PnL: 227.38
-Portfolio value: 101611.8
+Unrealized PnL: 234.61
+Portfolio value: 101619.03
 Best ticker: LRCX
 Worst ticker: CHD
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 17
-- RELATIVE_STRENGTH_LEADER: 189
-- TREND_PULLBACK_RECLAIM: 10
+- RELATIVE_STRENGTH_LEADER: 200
+- TREND_PULLBACK_RECLAIM: 11
 
 Top rejected candidates:
 - MTDR: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.75.
 - AMD: WATCH score=0.49 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - CF: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
+- MP: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.31 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.96.
 - LRCX: SKIP score=0.48 reason=SKIP: Semiconductors sector regime is weak (20/100); skip new entry. Market regime BULL; sector WEAK; net R/R 4.68.
 - ASML: SKIP score=0.48 reason=SKIP: Semiconductors sector regime is weak (20/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.03.
-- MP: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.05.
 - GS: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.72.
 - CL: WATCH score=0.47 reason=WATCH: Technical setup detected, but weighted risk/reward 1.64 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.15.
 - AIG: WATCH score=0.45 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.22.
