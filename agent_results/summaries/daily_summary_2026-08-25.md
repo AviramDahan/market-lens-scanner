@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-25
-Total scans: 26
-Tickers scanned: 4291
+Total scans: 27
+Tickers scanned: 4457
 BUY_SIMULATED: 0
 WATCH_READY: 266
 WATCH_READY unique tickers: 19
 WATCH_READY session split: regular=0, off_hours=266, unknown=0
 WATCH_READY conversion: 0 converted / 19 staged
-WATCH: 1112
-SKIP: 3112
-NO_TRADE: 2713
+WATCH: 1149
+SKIP: 3239
+NO_TRADE: 2831
 Realized PnL: 0.0
-Unrealized PnL: 246.49
-Portfolio value: 101630.91
+Unrealized PnL: 249.64
+Portfolio value: 101634.06
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 29
-- RELATIVE_STRENGTH_LEADER: 287
-- TREND_PULLBACK_RECLAIM: 22
+- BREAKOUT_CONTINUATION: 30
+- RELATIVE_STRENGTH_LEADER: 295
+- TREND_PULLBACK_RECLAIM: 25
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
