@@ -2,18 +2,18 @@ Daily Performance Summary
 
 Date: 2026-08-25
 Total scans: 28
-Tickers scanned: 4621
+Tickers scanned: 4620
 BUY_SIMULATED: 0
 WATCH_READY: 289
 WATCH_READY unique tickers: 35
 WATCH_READY session split: regular=0, off_hours=289, unknown=0
 WATCH_READY conversion: 0 converted / 35 staged
 WATCH: 1199
-SKIP: 3349
-NO_TRADE: 2926
+SKIP: 3348
+NO_TRADE: 2925
 Realized PnL: 0.0
-Unrealized PnL: 240.35
-Portfolio value: 101624.77
+Unrealized PnL: 239.77
+Portfolio value: 101624.19
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: INSUFFICIENT_OUTCOMES
@@ -25,7 +25,7 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
-- GS: WATCH score=0.53 reason=Gross R/R is valid, but Net R/R 1.58 failed minimum 2.00 after slippage/spread adjustment.
+- GS: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.60 failed minimum 2.00 after slippage/spread adjustment.
 - C: WATCH_READY score=0.51 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - MTDR: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.75.
 - LRCX: SKIP score=0.5 reason=SKIP: Semiconductors sector regime is weak (20/100); skip new entry. Market regime BULL; sector WEAK; net R/R 4.08.

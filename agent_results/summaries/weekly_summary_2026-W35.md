@@ -2,18 +2,18 @@ Weekly Performance Summary
 
 Date: 2026-08-24
 Total scans: 58
-Tickers scanned: 9653
+Tickers scanned: 9652
 BUY_SIMULATED: 1
 WATCH_READY: 676
 WATCH_READY unique tickers: 50
 WATCH_READY session split: regular=0, off_hours=676, unknown=0
 WATCH_READY conversion: 0 converted / 50 staged
 WATCH: 2465
-SKIP: 7012
-NO_TRADE: 6122
+SKIP: 7011
+NO_TRADE: 6121
 Realized PnL: 31.16
-Unrealized PnL: 240.35
-Portfolio value: 101624.77
+Unrealized PnL: 239.77
+Portfolio value: 101624.19
 Best ticker: LRCX
 Worst ticker: ESS
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
@@ -27,8 +27,8 @@ Shadow would-buy counts:
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
 - MU: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.65.
+- GS: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.60 failed minimum 2.00 after slippage/spread adjustment.
 - CF: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.09.
-- GS: WATCH score=0.53 reason=Gross R/R is valid, but Net R/R 1.58 failed minimum 2.00 after slippage/spread adjustment.
 - MTDR: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.30 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.88.
 - C: WATCH_READY score=0.51 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
 - MAA: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
