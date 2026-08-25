@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 45
-Tickers scanned: 7439
+Total scans: 44
+Tickers scanned: 7274
 BUY_SIMULATED: 1
 WATCH_READY: 653
 WATCH_READY unique tickers: 38
 WATCH_READY session split: regular=0, off_hours=653, unknown=0
 WATCH_READY conversion: 0 converted / 38 staged
-WATCH: 1928
-SKIP: 5363
-NO_TRADE: 4618
+WATCH: 1884
+SKIP: 5245
+NO_TRADE: 4510
 Realized PnL: 31.16
-Unrealized PnL: 257.7
-Portfolio value: 101642.12
+Unrealized PnL: 272.64
+Portfolio value: 101657.06
 Best ticker: CCI
-Worst ticker: CHD
+Worst ticker: OXY
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 18
-- RELATIVE_STRENGTH_LEADER: 525
-- TREND_PULLBACK_RECLAIM: 59
+- BREAKOUT_CONTINUATION: 15
+- RELATIVE_STRENGTH_LEADER: 515
+- TREND_PULLBACK_RECLAIM: 55
 - VWAP_RECLAIM: 29
 
 Top rejected candidates:
@@ -34,9 +34,10 @@ Top rejected candidates:
 - CL: WATCH score=0.5 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - RHP: WATCH score=0.5 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ECL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.83.
-- AMD: WATCH score=0.49 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- ORCL: WATCH score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
