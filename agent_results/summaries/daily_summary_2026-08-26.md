@@ -1,27 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-26
-Total scans: 20
-Tickers scanned: 3477
+Total scans: 21
+Tickers scanned: 3654
 BUY_SIMULATED: 1
 WATCH_READY: 365
 WATCH_READY unique tickers: 28
 WATCH_READY session split: regular=1, off_hours=364, unknown=0
 WATCH_READY conversion: 1 converted / 28 staged
-WATCH: 1043
-SKIP: 2373
-NO_TRADE: 2083
+WATCH: 1084
+SKIP: 2506
+NO_TRADE: 2204
 Realized PnL: 0.0
-Unrealized PnL: 212.17
-Portfolio value: 101596.59
+Unrealized PnL: 192.17
+Portfolio value: 101576.59
 Best ticker: APP
-Worst ticker: KR
+Worst ticker: ECL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 3
-- RELATIVE_STRENGTH_LEADER: 214
-- TREND_PULLBACK_RECLAIM: 53
+- RELATIVE_STRENGTH_LEADER: 222
+- TREND_PULLBACK_RECLAIM: 55
 - VWAP_RECLAIM: 30
 
 Top rejected candidates:
