@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-26
-Total scans: 9
-Tickers scanned: 1557
+Total scans: 10
+Tickers scanned: 1730
 BUY_SIMULATED: 0
-WATCH_READY: 234
+WATCH_READY: 260
 WATCH_READY unique tickers: 27
-WATCH_READY session split: regular=0, off_hours=234, unknown=0
+WATCH_READY session split: regular=0, off_hours=260, unknown=0
 WATCH_READY conversion: 0 converted / 27 staged
-WATCH: 502
-SKIP: 1026
-NO_TRADE: 882
+WATCH: 558
+SKIP: 1140
+NO_TRADE: 980
 Realized PnL: 0.0
 Unrealized PnL: 239.77
 Portfolio value: 101624.19
@@ -19,9 +19,9 @@ Worst ticker: KR
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 101
-- TREND_PULLBACK_RECLAIM: 27
-- VWAP_RECLAIM: 18
+- RELATIVE_STRENGTH_LEADER: 112
+- TREND_PULLBACK_RECLAIM: 30
+- VWAP_RECLAIM: 20
 
 Top rejected candidates:
 - GS: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.60 failed minimum 2.00 after slippage/spread adjustment.
