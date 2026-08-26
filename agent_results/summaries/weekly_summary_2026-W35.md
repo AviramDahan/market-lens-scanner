@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 90
-Tickers scanned: 15163
+Total scans: 91
+Tickers scanned: 15334
 BUY_SIMULATED: 2
-WATCH_READY: 1156
-WATCH_READY unique tickers: 54
-WATCH_READY session split: regular=1, off_hours=1155, unknown=0
-WATCH_READY conversion: 1 converted / 54 staged
-WATCH: 4024
-SKIP: 10861
-NO_TRADE: 9509
+WATCH_READY: 1178
+WATCH_READY unique tickers: 62
+WATCH_READY session split: regular=1, off_hours=1177, unknown=0
+WATCH_READY conversion: 1 converted / 62 staged
+WATCH: 4074
+SKIP: 10979
+NO_TRADE: 9608
 Realized PnL: 31.16
-Unrealized PnL: 195.18
-Portfolio value: 101579.6
+Unrealized PnL: 167.64
+Portfolio value: 101552.06
 Best ticker: APP
 Worst ticker: ESS
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 34
-- RELATIVE_STRENGTH_LEADER: 981
-- TREND_PULLBACK_RECLAIM: 156
-- VWAP_RECLAIM: 66
+- RELATIVE_STRENGTH_LEADER: 988
+- TREND_PULLBACK_RECLAIM: 158
+- VWAP_RECLAIM: 70
 
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
@@ -38,4 +38,5 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
