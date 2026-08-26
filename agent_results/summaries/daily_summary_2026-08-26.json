@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 1,
-  "NO_TRADE_count": 1959,
-  "SKIP_count": 2238,
+  "NO_TRADE_count": 2083,
+  "SKIP_count": 2373,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -89,21 +89,21 @@
   "WATCH_READY_unique_regular_session_count": 1,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_count": 1004,
+  "WATCH_count": 1043,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5457,
-    "RELATIVE_STRENGTH_LEADER": 0.656,
-    "STOP_RECLAIM_REENTRY": 0.4186,
-    "TREND_PULLBACK_RECLAIM": 0.4902,
-    "VWAP_RECLAIM": 0.5485
+    "BREAKOUT_CONTINUATION": 0.545,
+    "RELATIVE_STRENGTH_LEADER": 0.6534,
+    "STOP_RECLAIM_REENTRY": 0.4185,
+    "TREND_PULLBACK_RECLAIM": 0.489,
+    "VWAP_RECLAIM": 0.5468
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.4733,
-  "average_rr_to_target_2": 1.3933,
-  "average_setup_score": 0.1382,
+  "average_rr_to_target_1": 0.4652,
+  "average_rr_to_target_2": 1.3728,
+  "average_setup_score": 0.1363,
   "average_winner": null,
-  "best_sector": "Consumer",
+  "best_sector": "Semiconductors",
   "best_setup_type": "INSUFFICIENT_DATA",
   "best_shadow_strategy": "INSUFFICIENT_OUTCOMES",
   "best_ticker": "APP",
@@ -190,7 +190,7 @@
       "would_buy": true
     }
   ],
-  "daily_return_pct": 1.5961,
+  "daily_return_pct": 1.5966,
   "data_completeness": {
     "closed_event_duration": {
       "coverage_pct": null,
@@ -225,16 +225,16 @@
     "decision_trade_id": {
       "coverage_pct": 0.03,
       "populated": 1,
-      "total": 3300
+      "total": 3477
     }
   },
   "data_quality_issues": [
     {
-      "count": 829,
+      "count": 857,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 390,
+      "count": 406,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -242,7 +242,7 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 230,
+      "count": 242,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -250,11 +250,11 @@
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 189,
+      "count": 199,
       "name": "Earnings blackout active."
     },
     {
-      "count": 122,
+      "count": 129,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -262,11 +262,11 @@
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 103,
+      "count": 108,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 62,
+      "count": 65,
       "name": "WATCH: Neutral sector requires a cleaner setup score."
     }
   ],
@@ -279,15 +279,15 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 1936,
+      "count": 2058,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 581,
+      "count": 607,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 403,
+      "count": 416,
       "name": "WATCH: BULL market requires setup score (0"
     },
     {
@@ -303,29 +303,29 @@
       "name": "SKIP: Semiconductors sector regime is weak (20/100); skip new entry"
     },
     {
-      "count": 34,
+      "count": 35,
       "name": "SKIP: Earnings blackout active"
     },
     {
-      "count": 29,
+      "count": 33,
       "name": "SKIP: Industrials sector regime is weak (31/100); skip new entry"
+    },
+    {
+      "count": 21,
+      "name": "SKIP: Utilities / Real Assets sector regime is weak (23/100); skip new entry"
     },
     {
       "count": 18,
       "name": "Gross R/R is valid, but Net R/R 1"
-    },
-    {
-      "count": 16,
-      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 829,
+      "count": 857,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 390,
+      "count": 406,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -333,7 +333,7 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 230,
+      "count": 242,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -341,11 +341,11 @@
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 189,
+      "count": 199,
       "name": "Earnings blackout active."
     },
     {
-      "count": 122,
+      "count": 129,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -353,11 +353,11 @@
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 103,
+      "count": 108,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 62,
+      "count": 65,
       "name": "WATCH: Neutral sector requires a cleaner setup score."
     }
   ],
@@ -398,7 +398,7 @@
       "positive_rate_1d_pct": null,
       "positive_rate_3d_pct": null,
       "positive_rate_5d_pct": null,
-      "signals": 21
+      "signals": 22
     },
     "TREND_PULLBACK_RECLAIM": {
       "average_return_10d_pct": null,
@@ -461,10 +461,11 @@
       "agent_results/decisions/market_lens_agent_20260826_135100.jsonl",
       "agent_results/decisions/market_lens_agent_20260826_140515.jsonl",
       "agent_results/decisions/market_lens_agent_20260826_143220.jsonl",
-      "agent_results/decisions/market_lens_agent_20260826_150502.jsonl"
+      "agent_results/decisions/market_lens_agent_20260826_150502.jsonl",
+      "agent_results/decisions/market_lens_agent_20260826_160247.jsonl"
     ],
-    "records": 3300,
-    "run_id": "20260826_150502"
+    "records": 3477,
+    "run_id": "20260826_160247"
   },
   "shadow_outcome_metrics_by_strategy": {
     "BREAKOUT_CONTINUATION": {
@@ -495,7 +496,7 @@
       "positive_rate_1d_pct": null,
       "positive_rate_3d_pct": null,
       "positive_rate_5d_pct": null,
-      "signals": 21
+      "signals": 22
     },
     "TREND_PULLBACK_RECLAIM": {
       "average_return_10d_pct": null,
@@ -777,8 +778,8 @@
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
     "BREAKOUT_CONTINUATION": 3,
-    "RELATIVE_STRENGTH_LEADER": 206,
-    "TREND_PULLBACK_RECLAIM": 51,
+    "RELATIVE_STRENGTH_LEADER": 214,
+    "TREND_PULLBACK_RECLAIM": 53,
     "VWAP_RECLAIM": 30
   },
   "summary_type": "daily",
@@ -857,12 +858,12 @@
   "total_BUY_SIMULATED": 1,
   "total_WATCH_READY": 365,
   "total_closed_trades": 0,
-  "total_portfolio_value": 101596.08,
-  "total_result_cards_read": 3300,
-  "total_scans": 19,
-  "total_tickers_scanned": 3300,
+  "total_portfolio_value": 101596.59,
+  "total_result_cards_read": 3477,
+  "total_scans": 20,
+  "total_tickers_scanned": 3477,
   "total_trading_days": null,
-  "unrealized_pnl": 211.66,
+  "unrealized_pnl": 212.17,
   "week_end": null,
   "week_start": null,
   "win_rate": null,

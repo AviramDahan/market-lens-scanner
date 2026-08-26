@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 82
-Tickers scanned: 13760
+Total scans: 83
+Tickers scanned: 13937
 BUY_SIMULATED: 2
 WATCH_READY: 1156
 WATCH_READY unique tickers: 54
 WATCH_READY session split: regular=1, off_hours=1155, unknown=0
 WATCH_READY conversion: 1 converted / 54 staged
-WATCH: 3711
-SKIP: 9795
-NO_TRADE: 8551
+WATCH: 3750
+SKIP: 9930
+NO_TRADE: 8675
 Realized PnL: 31.16
-Unrealized PnL: 211.66
-Portfolio value: 101596.08
+Unrealized PnL: 212.17
+Portfolio value: 101596.59
 Best ticker: APP
 Worst ticker: ESS
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 34
-- RELATIVE_STRENGTH_LEADER: 920
-- TREND_PULLBACK_RECLAIM: 145
+- RELATIVE_STRENGTH_LEADER: 928
+- TREND_PULLBACK_RECLAIM: 147
 - VWAP_RECLAIM: 66
 
 Top rejected candidates:
