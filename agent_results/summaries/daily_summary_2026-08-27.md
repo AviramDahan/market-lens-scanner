@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-27
-Total scans: 30
-Tickers scanned: 4977
+Total scans: 32
+Tickers scanned: 5291
 BUY_SIMULATED: 2
-WATCH_READY: 413
+WATCH_READY: 447
 WATCH_READY unique tickers: 38
-WATCH_READY session split: regular=1, off_hours=412, unknown=0
+WATCH_READY session split: regular=1, off_hours=446, unknown=0
 WATCH_READY conversion: 1 converted / 38 staged
-WATCH: 1354
-SKIP: 3513
-NO_TRADE: 2891
+WATCH: 1430
+SKIP: 3743
+NO_TRADE: 3067
 Realized PnL: -279.4
 Unrealized PnL: 9.5
 Portfolio value: 101114.52
@@ -20,9 +20,9 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 8
-- RELATIVE_STRENGTH_LEADER: 263
-- TREND_PULLBACK_RECLAIM: 64
-- VWAP_RECLAIM: 50
+- RELATIVE_STRENGTH_LEADER: 285
+- TREND_PULLBACK_RECLAIM: 66
+- VWAP_RECLAIM: 54
 
 Top rejected candidates:
 - LRCX: WATCH score=0.61 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
