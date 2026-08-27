@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-08-27
-Total scans: 29
-Tickers scanned: 4820
+Total scans: 30
+Tickers scanned: 4979
 BUY_SIMULATED: 2
-WATCH_READY: 396
-WATCH_READY unique tickers: 37
-WATCH_READY session split: regular=1, off_hours=395, unknown=0
-WATCH_READY conversion: 1 converted / 37 staged
-WATCH: 1316
-SKIP: 3398
-NO_TRADE: 2803
+WATCH_READY: 413
+WATCH_READY unique tickers: 38
+WATCH_READY session split: regular=1, off_hours=412, unknown=0
+WATCH_READY conversion: 1 converted / 38 staged
+WATCH: 1355
+SKIP: 3514
+NO_TRADE: 2892
 Realized PnL: -279.4
-Unrealized PnL: 8.47
-Portfolio value: 101113.49
+Unrealized PnL: 9.5
+Portfolio value: 101114.52
 Best ticker: APP
 Worst ticker: INVH
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 8
-- RELATIVE_STRENGTH_LEADER: 252
-- TREND_PULLBACK_RECLAIM: 63
-- VWAP_RECLAIM: 48
+- RELATIVE_STRENGTH_LEADER: 263
+- TREND_PULLBACK_RECLAIM: 64
+- VWAP_RECLAIM: 50
 
 Top rejected candidates:
 - LRCX: WATCH score=0.61 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
