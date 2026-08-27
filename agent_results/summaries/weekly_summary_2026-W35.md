@@ -3,31 +3,31 @@ Weekly Performance Summary
 Date: 2026-08-24
 Total scans: 111
 Tickers scanned: 18685
-BUY_SIMULATED: 3
+BUY_SIMULATED: 2
 WATCH_READY: 1667
 WATCH_READY unique tickers: 64
 WATCH_READY session split: regular=1, off_hours=1666, unknown=0
-WATCH_READY conversion: 2 converted / 64 staged
-WATCH: 5208
-SKIP: 13135
-NO_TRADE: 11344
+WATCH_READY conversion: 1 converted / 64 staged
+WATCH: 5215
+SKIP: 13129
+NO_TRADE: 11341
 Realized PnL: 31.16
-Unrealized PnL: 107.31
-Portfolio value: 101491.73
+Unrealized PnL: 69.15
+Portfolio value: 101453.57
 Best ticker: APP
 Worst ticker: INVH
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 36
-- RELATIVE_STRENGTH_LEADER: 1155
-- TREND_PULLBACK_RECLAIM: 200
+- RELATIVE_STRENGTH_LEADER: 1157
+- TREND_PULLBACK_RECLAIM: 198
 - VWAP_RECLAIM: 128
 
 Top rejected candidates:
-- LRCX: SKIP score=0.59 reason=SKIP: Semiconductors sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.85.
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
 - MU: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.65.
+- LRCX: SKIP score=0.55 reason=SKIP: Semiconductors sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 5.86.
 - GS: WATCH score=0.54 reason=Gross R/R is valid, but Net R/R 1.60 failed minimum 2.00 after slippage/spread adjustment.
 - CF: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.09.
 - MP: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.18 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.86.
