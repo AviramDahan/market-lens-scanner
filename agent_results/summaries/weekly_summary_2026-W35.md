@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 112
-Tickers scanned: 18858
-BUY_SIMULATED: 3
-WATCH_READY: 1667
+Total scans: 114
+Tickers scanned: 19192
+BUY_SIMULATED: 4
+WATCH_READY: 1668
 WATCH_READY unique tickers: 64
-WATCH_READY session split: regular=1, off_hours=1666, unknown=0
+WATCH_READY session split: regular=2, off_hours=1666, unknown=0
 WATCH_READY conversion: 2 converted / 64 staged
-WATCH: 5251
-SKIP: 13261
-NO_TRADE: 11446
+WATCH: 5320
+SKIP: 13517
+NO_TRADE: 11659
 Realized PnL: 31.16
-Unrealized PnL: -21.61
-Portfolio value: 101362.81
+Unrealized PnL: -16.79
+Portfolio value: 101367.63
 Best ticker: APP
 Worst ticker: INVH
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 38
-- RELATIVE_STRENGTH_LEADER: 1165
-- TREND_PULLBACK_RECLAIM: 201
-- VWAP_RECLAIM: 130
+- BREAKOUT_CONTINUATION: 40
+- RELATIVE_STRENGTH_LEADER: 1184
+- TREND_PULLBACK_RECLAIM: 206
+- VWAP_RECLAIM: 131
 
 Top rejected candidates:
 - LRCX: SKIP score=0.59 reason=SKIP: Semiconductors sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.85.
