@@ -1,16 +1,16 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 107
-Tickers scanned: 18023
+Total scans: 108
+Tickers scanned: 18190
 BUY_SIMULATED: 2
-WATCH_READY: 1586
+WATCH_READY: 1613
 WATCH_READY unique tickers: 64
-WATCH_READY session split: regular=1, off_hours=1585, unknown=0
+WATCH_READY session split: regular=1, off_hours=1612, unknown=0
 WATCH_READY conversion: 1 converted / 64 staged
-WATCH: 5001
-SKIP: 12693
-NO_TRADE: 10987
+WATCH: 5061
+SKIP: 12797
+NO_TRADE: 11071
 Realized PnL: 31.16
 Unrealized PnL: 168.64
 Portfolio value: 101553.06
@@ -20,9 +20,9 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 34
-- RELATIVE_STRENGTH_LEADER: 1122
-- TREND_PULLBACK_RECLAIM: 190
-- VWAP_RECLAIM: 118
+- RELATIVE_STRENGTH_LEADER: 1131
+- TREND_PULLBACK_RECLAIM: 192
+- VWAP_RECLAIM: 121
 
 Top rejected candidates:
 - TSN: WATCH score=0.59 reason=WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.
