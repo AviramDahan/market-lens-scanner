@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-27
-Total scans: 2
-Tickers scanned: 337
+Total scans: 3
+Tickers scanned: 505
 BUY_SIMULATED: 0
-WATCH_READY: 54
+WATCH_READY: 81
 WATCH_READY unique tickers: 27
-WATCH_READY session split: regular=0, off_hours=54, unknown=0
+WATCH_READY session split: regular=0, off_hours=81, unknown=0
 WATCH_READY conversion: 0 converted / 27 staged
-WATCH: 121
-SKIP: 210
-NO_TRADE: 168
+WATCH: 181
+SKIP: 315
+NO_TRADE: 252
 Realized PnL: 0.0
 Unrealized PnL: 168.64
 Portfolio value: 101553.06
@@ -19,9 +19,9 @@ Worst ticker: ECL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 18
-- TREND_PULLBACK_RECLAIM: 4
-- VWAP_RECLAIM: 6
+- RELATIVE_STRENGTH_LEADER: 27
+- TREND_PULLBACK_RECLAIM: 6
+- VWAP_RECLAIM: 9
 
 Top rejected candidates:
 - KMI: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.99.
@@ -31,9 +31,9 @@ Top rejected candidates:
 - CLF: WATCH score=0.42 reason=WATCH: BULL market requires setup score (0.42 < 0.45).
 - ORCL: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.12.
 - CL: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.62 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.12.
+- MOS: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
 - OKE: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.40 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.88.
 - ECL: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.17 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.71.
-- AMCR: WATCH score=0.41 reason=WATCH: BULL market requires setup score (0.41 < 0.45).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
