@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 120
-Tickers scanned: 20192
+Total scans: 121
+Tickers scanned: 20352
 BUY_SIMULATED: 4
 WATCH_READY: 1668
 WATCH_READY unique tickers: 64
 WATCH_READY session split: regular=2, off_hours=1666, unknown=0
 WATCH_READY conversion: 2 converted / 64 staged
-WATCH: 5507
-SKIP: 14303
-NO_TRADE: 12340
+WATCH: 5531
+SKIP: 14435
+NO_TRADE: 12449
 Realized PnL: -248.24
-Unrealized PnL: 161.98
-Portfolio value: 101267.0
+Unrealized PnL: 134.7
+Portfolio value: 101239.72
 Best ticker: APP
 Worst ticker: INVH
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 41
-- RELATIVE_STRENGTH_LEADER: 1226
-- TREND_PULLBACK_RECLAIM: 220
+- BREAKOUT_CONTINUATION: 42
+- RELATIVE_STRENGTH_LEADER: 1232
+- TREND_PULLBACK_RECLAIM: 222
 - VWAP_RECLAIM: 131
 
 Top rejected candidates:
