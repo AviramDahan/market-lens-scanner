@@ -1,27 +1,27 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 114
-Tickers scanned: 19192
+Total scans: 115
+Tickers scanned: 19363
 BUY_SIMULATED: 4
 WATCH_READY: 1668
 WATCH_READY unique tickers: 64
 WATCH_READY session split: regular=2, off_hours=1666, unknown=0
 WATCH_READY conversion: 2 converted / 64 staged
-WATCH: 5320
-SKIP: 13517
-NO_TRADE: 11659
+WATCH: 5351
+SKIP: 13652
+NO_TRADE: 11772
 Realized PnL: 31.16
-Unrealized PnL: -16.79
-Portfolio value: 101367.63
+Unrealized PnL: 30.55
+Portfolio value: 101414.97
 Best ticker: APP
 Worst ticker: INVH
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 40
-- RELATIVE_STRENGTH_LEADER: 1184
-- TREND_PULLBACK_RECLAIM: 206
+- RELATIVE_STRENGTH_LEADER: 1193
+- TREND_PULLBACK_RECLAIM: 207
 - VWAP_RECLAIM: 131
 
 Top rejected candidates:
@@ -33,8 +33,8 @@ Top rejected candidates:
 - MP: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.18 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.86.
 - LLY: WATCH_READY score=0.53 reason=Gross R/R is valid, but Net R/R 1.96 failed minimum 2.00 after slippage/spread adjustment.
 - MTDR: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.30 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.88.
+- ORCL: WATCH score=0.52 reason=WATCH: Valid setup, but price is not inside the buy zone. Market regime BULL; sector STRONG; net R/R 1.74.
 - C: WATCH_READY score=0.51 reason=WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
-- MAA: WATCH score=0.51 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
