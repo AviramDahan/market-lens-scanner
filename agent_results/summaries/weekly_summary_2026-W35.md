@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-08-24
-Total scans: 124
-Tickers scanned: 20834
+Total scans: 125
+Tickers scanned: 20994
 BUY_SIMULATED: 4
-WATCH_READY: 1668
-WATCH_READY unique tickers: 64
-WATCH_READY session split: regular=2, off_hours=1666, unknown=0
-WATCH_READY conversion: 2 converted / 64 staged
-WATCH: 5615
-SKIP: 14821
-NO_TRADE: 12777
+WATCH_READY: 1684
+WATCH_READY unique tickers: 70
+WATCH_READY session split: regular=2, off_hours=1682, unknown=0
+WATCH_READY conversion: 2 converted / 70 staged
+WATCH: 5655
+SKIP: 14937
+NO_TRADE: 12866
 Realized PnL: -248.24
-Unrealized PnL: 64.05
-Portfolio value: 101169.07
+Unrealized PnL: 8.47
+Portfolio value: 101113.49
 Best ticker: APP
 Worst ticker: INVH
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 42
-- RELATIVE_STRENGTH_LEADER: 1263
-- TREND_PULLBACK_RECLAIM: 230
-- VWAP_RECLAIM: 131
+- RELATIVE_STRENGTH_LEADER: 1275
+- TREND_PULLBACK_RECLAIM: 231
+- VWAP_RECLAIM: 133
 
 Top rejected candidates:
 - LRCX: WATCH score=0.61 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -34,8 +34,9 @@ Top rejected candidates:
 - MP: WATCH score=0.54 reason=WATCH: Technical setup detected, but weighted risk/reward 1.18 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.86.
 - AMCR: WATCH score=0.53 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - LLY: WATCH_READY score=0.53 reason=Gross R/R is valid, but Net R/R 1.96 failed minimum 2.00 after slippage/spread adjustment.
-- MTDR: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.30 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.88.
+- CRWD: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
+- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
