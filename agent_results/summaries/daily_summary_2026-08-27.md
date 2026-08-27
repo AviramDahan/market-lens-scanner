@@ -1,39 +1,40 @@
 Daily Performance Summary
 
 Date: 2026-08-27
-Total scans: 14
-Tickers scanned: 2350
-BUY_SIMULATED: 0
+Total scans: 15
+Tickers scanned: 2511
+BUY_SIMULATED: 1
 WATCH_READY: 379
 WATCH_READY unique tickers: 28
 WATCH_READY session split: regular=0, off_hours=379, unknown=0
-WATCH_READY conversion: 0 converted / 28 staged
-WATCH: 842
-SKIP: 1466
-NO_TRADE: 1176
+WATCH_READY conversion: 1 converted / 28 staged
+WATCH: 869
+SKIP: 1596
+NO_TRADE: 1281
 Realized PnL: 0.0
-Unrealized PnL: 168.64
-Portfolio value: 101553.06
+Unrealized PnL: 107.31
+Portfolio value: 101491.73
 Best ticker: APP
-Worst ticker: ECL
+Worst ticker: INVH
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 126
-- TREND_PULLBACK_RECLAIM: 28
-- VWAP_RECLAIM: 42
+- BREAKOUT_CONTINUATION: 2
+- RELATIVE_STRENGTH_LEADER: 132
+- TREND_PULLBACK_RECLAIM: 32
+- VWAP_RECLAIM: 43
 
 Top rejected candidates:
+- LRCX: SKIP score=0.59 reason=SKIP: Semiconductors sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.85.
+- OMC: WATCH score=0.49 reason=WATCH: Target 1 net R/R 0.79 is below minimum 0.80; Target 2 cannot justify the entry alone.
+- NWSA: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.12.
+- SMCI: SKIP score=0.49 reason=SKIP: Semiconductors sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.06.
 - KMI: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.99.
-- OMC: WATCH score=0.46 reason=Gross R/R is valid, but Net R/R 1.43 failed minimum 2.00 after slippage/spread adjustment.
-- NWSA: WATCH score=0.45 reason=WATCH: Technical setup detected, but weighted risk/reward 1.43 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.93.
-- LRCX: SKIP score=0.43 reason=SKIP: Semiconductors sector regime is weak (21/100); skip new entry. Market regime BULL; sector WEAK; net R/R 5.15.
-- CLF: WATCH score=0.42 reason=WATCH: BULL market requires setup score (0.42 < 0.45).
-- ORCL: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.12.
-- CL: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.62 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.12.
-- MOS: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
-- OKE: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.40 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.88.
-- ECL: WATCH score=0.42 reason=WATCH: Technical setup detected, but weighted risk/reward 1.17 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.71.
+- T: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.43 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.95.
+- CL: SKIP score=0.46 reason=SKIP: Consumer sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.01.
+- TDY: WATCH score=0.44 reason=WATCH: BULL market requires setup score (0.44 < 0.45).
+- LLY: WATCH score=0.44 reason=WATCH: Technical setup detected, but weighted risk/reward 1.90 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.51.
+- ECHO: WATCH score=0.43 reason=WATCH: BULL market requires setup score (0.43 < 0.45).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
