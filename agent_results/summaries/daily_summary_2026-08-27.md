@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-27
-Total scans: 12
-Tickers scanned: 2016
+Total scans: 13
+Tickers scanned: 2183
 BUY_SIMULATED: 0
-WATCH_READY: 325
+WATCH_READY: 352
 WATCH_READY unique tickers: 28
-WATCH_READY session split: regular=0, off_hours=325, unknown=0
+WATCH_READY session split: regular=0, off_hours=352, unknown=0
 WATCH_READY conversion: 0 converted / 28 staged
-WATCH: 722
-SKIP: 1258
-NO_TRADE: 1008
+WATCH: 782
+SKIP: 1362
+NO_TRADE: 1092
 Realized PnL: 0.0
 Unrealized PnL: 168.64
 Portfolio value: 101553.06
@@ -19,9 +19,9 @@ Worst ticker: ECL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 108
-- TREND_PULLBACK_RECLAIM: 24
-- VWAP_RECLAIM: 36
+- RELATIVE_STRENGTH_LEADER: 117
+- TREND_PULLBACK_RECLAIM: 26
+- VWAP_RECLAIM: 39
 
 Top rejected candidates:
 - KMI: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.99.
