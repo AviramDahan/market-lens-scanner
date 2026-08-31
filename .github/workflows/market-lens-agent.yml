@@ -203,6 +203,27 @@ jobs:
               print(f"Wrote {diagnostics_output}")
           PY
 
+      - name: Enforce tracker size before persistence
+        if: steps.schedule_time.outputs.should_run == 'true'
+        env:
+          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "80000"
+          MARKET_LENS_WORKBOOK_REWRITE_BYTES: "75000000"
+          MARKET_LENS_WORKBOOK_HARD_LIMIT_BYTES: "90000000"
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from app.workbook_retention import enforce_tracker_size
+
+          result = enforce_tracker_size(
+              Path("agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx")
+          )
+          print(
+              "Tracker size guard: "
+              f"before={result['size_before']} after={result['size_after']} "
+              f"rewritten={result['rewritten']}"
+          )
+          PY
+
       - name: Commit agent results safely
         if: steps.schedule_time.outputs.should_run == 'true'
         shell: bash

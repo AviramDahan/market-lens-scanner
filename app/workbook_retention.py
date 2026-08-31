@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any
 
 
 DEFAULT_WATCHLIST_MAX_ROWS = 80_000
+DEFAULT_TRACKER_REWRITE_BYTES = 75_000_000
+DEFAULT_TRACKER_HARD_LIMIT_BYTES = 90_000_000
 
 
 def compact_setup_watchlist(
@@ -47,6 +50,54 @@ def compact_setup_watchlist(
         "rows_removed": rows_to_remove,
         "max_rows": configured_max,
     }
+
+
+def enforce_tracker_size(
+    tracker_path: Path,
+    *,
+    rewrite_bytes: int | None = None,
+    hard_limit_bytes: int | None = None,
+    max_rows: int | None = None,
+) -> dict[str, Any]:
+    """Rewrite an oversized tracker and fail before GitHub rejects the push."""
+    rewrite_at = rewrite_bytes or _env_int(
+        "MARKET_LENS_WORKBOOK_REWRITE_BYTES",
+        DEFAULT_TRACKER_REWRITE_BYTES,
+    )
+    hard_limit = hard_limit_bytes or _env_int(
+        "MARKET_LENS_WORKBOOK_HARD_LIMIT_BYTES",
+        DEFAULT_TRACKER_HARD_LIMIT_BYTES,
+    )
+    size_before = tracker_path.stat().st_size
+    result: dict[str, Any] = {
+        "path": str(tracker_path),
+        "size_before": size_before,
+        "size_after": size_before,
+        "rewritten": False,
+        "hard_limit": hard_limit,
+    }
+    if size_before < rewrite_at:
+        return result
+
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(tracker_path)
+    try:
+        result["retention"] = compact_setup_watchlist(workbook, max_rows=max_rows)
+        temporary_path = tracker_path.with_suffix(".compacting.xlsx")
+        workbook.save(temporary_path)
+    finally:
+        workbook.close()
+
+    os.replace(temporary_path, tracker_path)
+    size_after = tracker_path.stat().st_size
+    result.update({"size_after": size_after, "rewritten": True})
+    if size_after >= hard_limit:
+        raise RuntimeError(
+            f"Tracker remains too large after compaction: {size_after} bytes "
+            f"(hard limit {hard_limit})."
+        )
+    return result
 
 
 def _env_int(name: str, default: int) -> int:
