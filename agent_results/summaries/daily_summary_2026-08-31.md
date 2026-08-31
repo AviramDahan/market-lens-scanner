@@ -1,16 +1,16 @@
 Daily Performance Summary
 
 Date: 2026-08-31
-Total scans: 6
-Tickers scanned: 959
+Total scans: 7
+Tickers scanned: 1118
 BUY_SIMULATED: 0
-WATCH_READY: 120
+WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_READY session split: regular=0, off_hours=120, unknown=0
+WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 290
-SKIP: 645
-NO_TRADE: 525
+WATCH: 338
+SKIP: 752
+NO_TRADE: 612
 Realized PnL: 0.0
 Unrealized PnL: 419.25
 Portfolio value: 101524.27
@@ -19,9 +19,9 @@ Worst ticker: THC
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 48
-- TREND_PULLBACK_RECLAIM: 12
-- VWAP_RECLAIM: 30
+- RELATIVE_STRENGTH_LEADER: 56
+- TREND_PULLBACK_RECLAIM: 14
+- VWAP_RECLAIM: 35
 
 Top rejected candidates:
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
