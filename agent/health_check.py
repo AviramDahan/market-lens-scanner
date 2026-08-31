@@ -172,7 +172,9 @@ def check_latest_agent_workflow(repo: str, workflow: str) -> HealthCheck:
 
 def check_latest_runtime_metrics(max_runtime_seconds: int) -> HealthCheck:
     runtime_dir = ROOT / "agent_results" / "runtime"
-    files = sorted(runtime_dir.glob("market_lens_agent_*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+    # Checkout gives many tracked files the same mtime, while the timestamped
+    # filename remains a stable chronological key.
+    files = sorted(runtime_dir.glob("market_lens_agent_*.json"), key=lambda path: path.name, reverse=True)
     if not files:
         return HealthCheck("Latest runtime metrics", False, "No runtime metrics file exists yet.")
     latest = files[0]

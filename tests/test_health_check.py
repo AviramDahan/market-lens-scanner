@@ -57,6 +57,25 @@ def test_latest_runtime_metrics_fails_when_scan_runtime_is_too_high(monkeypatch,
     assert "total_seconds=1300.0" in result.detail
 
 
+def test_latest_runtime_metrics_uses_timestamped_filename_order(monkeypatch, tmp_path: Path) -> None:
+    runtime_dir = tmp_path / "agent_results" / "runtime"
+    runtime_dir.mkdir(parents=True)
+    (runtime_dir / "market_lens_agent_20260831_080000.json").write_text(
+        json.dumps({"total_seconds": 500.0, "result_cards_read": 164}),
+        encoding="utf-8",
+    )
+    (runtime_dir / "market_lens_agent_20260827_190000.json").write_text(
+        json.dumps({"total_seconds": 450.0, "result_cards_read": 155}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+
+    result = health_check.check_latest_runtime_metrics(max_runtime_seconds=1260)
+
+    assert "market_lens_agent_20260831_080000.json" in result.detail
+    assert "result_cards=164" in result.detail
+
+
 def test_health_message_marks_failures() -> None:
     message = health_check.format_health_message(
         public_url="https://example.test",
