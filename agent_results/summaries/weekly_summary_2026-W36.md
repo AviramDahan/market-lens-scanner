@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 18
-Tickers scanned: 2871
+Total scans: 19
+Tickers scanned: 3031
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 538
-WATCH_REVIEW unique tickers: 67
+WATCH_REVIEW: 571
+WATCH_REVIEW unique tickers: 68
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 678
-SKIP: 2131
-NO_TRADE: 1818
+WATCH: 711
+SKIP: 2255
+NO_TRADE: 1916
 Realized PnL: -26.97
-Unrealized PnL: 175.36
-Portfolio value: 101253.41
+Unrealized PnL: 160.22
+Portfolio value: 101238.27
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ICE
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 9
-- FIB_STOP_075_ATR: 21
-- FIB_STOP_100_ATR: 1
+- BREAKOUT_CONTINUATION: 10
+- FIB_STOP_075_ATR: 24
+- FIB_STOP_100_ATR: 2
 - FIB_STRUCTURE_STOP: 10
 - RELATIVE_STRENGTH_LEADER: 90
-- TREND_PULLBACK_RECLAIM: 37
+- TREND_PULLBACK_RECLAIM: 39
 - VWAP_RECLAIM: 38
 
 Top rejected candidates:
@@ -38,7 +38,7 @@ Top rejected candidates:
 - MPC: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.18.
 - KMI: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.62 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
 - HAL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
-- WELL: SKIP score=0.48 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.30.
+- WELL: SKIP score=0.48 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.72.
 - STZ: WATCH score=0.47 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - MS: WATCH score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 
