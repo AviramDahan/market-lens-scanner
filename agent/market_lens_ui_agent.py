@@ -34,6 +34,7 @@ from app.telegram_notifications import (
     send_telegram_chart_photo,
     send_telegram_message,
 )
+from app.workbook_retention import compact_setup_watchlist
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1131,6 +1132,13 @@ def update_workbook(
         screenshot_path=screenshot_path,
         decision_path=decision_path,
     )
+    retention = compact_setup_watchlist(wb)
+    if retention["rows_removed"]:
+        print(
+            "Compacted Setup Watchlist: "
+            f"removed {retention['rows_removed']} old rows; "
+            f"kept {retention['rows_after']}."
+        )
     wb.save(settings.excel_path)
     send_new_buy_notifications(
         pending_decisions,

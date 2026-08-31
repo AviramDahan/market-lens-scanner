@@ -24,6 +24,7 @@ from app.telegram_notifications import (
     send_telegram_chart_photo,
     send_telegram_message,
 )
+from app.workbook_retention import compact_setup_watchlist
 
 
 DEFAULT_TRACKER = ROOT / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
@@ -133,6 +134,13 @@ def main() -> None:
             open_positions=len(open_positions),
             summary_path=summary_path,
         )
+        retention = compact_setup_watchlist(wb)
+        if retention["rows_removed"]:
+            print(
+                "Compacted Setup Watchlist: "
+                f"removed {retention['rows_removed']} old rows; "
+                f"kept {retention['rows_after']}."
+            )
         wb.save(settings.excel_path)
         if events:
             send_position_event_notifications(
