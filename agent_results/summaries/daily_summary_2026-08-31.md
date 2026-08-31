@@ -1,32 +1,33 @@
 Daily Performance Summary
 
 Date: 2026-08-31
-Total scans: 17
-Tickers scanned: 2711
+Total scans: 18
+Tickers scanned: 2871
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 503
-WATCH_REVIEW unique tickers: 66
+WATCH_REVIEW: 538
+WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 643
-SKIP: 2009
-NO_TRADE: 1710
+WATCH: 678
+SKIP: 2131
+NO_TRADE: 1818
 Realized PnL: -26.97
-Unrealized PnL: 96.44
-Portfolio value: 101174.49
+Unrealized PnL: 175.36
+Portfolio value: 101253.41
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ICE
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 8
-- FIB_STOP_075_ATR: 18
+- BREAKOUT_CONTINUATION: 9
+- FIB_STOP_075_ATR: 21
+- FIB_STOP_100_ATR: 1
 - FIB_STRUCTURE_STOP: 10
 - RELATIVE_STRENGTH_LEADER: 90
-- TREND_PULLBACK_RECLAIM: 36
+- TREND_PULLBACK_RECLAIM: 37
 - VWAP_RECLAIM: 38
 
 Top rejected candidates:
