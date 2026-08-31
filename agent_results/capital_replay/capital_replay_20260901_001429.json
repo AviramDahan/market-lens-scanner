@@ -1,0 +1,1762 @@
+{
+  "active_trading_logic_changed": false,
+  "capital_blocked_candidate_analysis": {
+    "blocker_categories": {
+      "factor_exposure": 1,
+      "sector_exposure": 1
+    },
+    "bottom_candidates_by_5d_return": [
+      {
+        "blocker_category": "sector_exposure",
+        "date": "2026-06-23",
+        "entry_price": 412.83,
+        "market_regime": "NEUTRAL",
+        "reason": "WATCH: Position cannot be opened because Industrials sector exposure cap leaves no executable size.",
+        "return_after_10_scan_days_pct": -1.3444,
+        "return_after_1_scan_days_pct": -1.6883,
+        "return_after_3_scan_days_pct": -2.4586,
+        "return_after_5_scan_days_pct": 0.1405,
+        "sector": "Industrials",
+        "setup_score": 0.52,
+        "setup_type": "Breakout + Retest",
+        "ticker": "ETN",
+        "timestamp": "2026-06-23T13:49:53"
+      },
+      {
+        "blocker_category": "factor_exposure",
+        "date": "2026-07-15",
+        "entry_price": 1135.89,
+        "market_regime": "BULL",
+        "reason": "WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.",
+        "return_after_10_scan_days_pct": 4.4001,
+        "return_after_1_scan_days_pct": 2.9299,
+        "return_after_3_scan_days_pct": 3.8049,
+        "return_after_5_scan_days_pct": 3.4792,
+        "sector": "Healthcare",
+        "setup_score": 0.51,
+        "setup_type": "Fib 61.8 Confluence Buy Zone",
+        "ticker": "LLY",
+        "timestamp": "2026-07-15T14:05:10"
+      }
+    ],
+    "final_buy_signals": 32,
+    "initial_buy_signals": 19845,
+    "limitations": [
+      "This is a directional opportunity proxy, not an executable portfolio backtest.",
+      "Intraday target/stop order is unknown and repeated scan prices may miss touches.",
+      "Only signals blocked primarily by capital/exposure after active non-capital gates are included."
+    ],
+    "malformed_records": 0,
+    "method": "Deduplicated ticker/setup/day signals; outcomes use later recorded scan prices, not OHLC fills.",
+    "outcomes": {
+      "10_scan_days": {
+        "average_pct": 1.5278,
+        "median_pct": 1.5278,
+        "positive_rate_pct": 50.0,
+        "sample_size": 2
+      },
+      "1_scan_days": {
+        "average_pct": 0.6208,
+        "median_pct": 0.6208,
+        "positive_rate_pct": 50.0,
+        "sample_size": 2
+      },
+      "3_scan_days": {
+        "average_pct": 0.6732,
+        "median_pct": 0.6732,
+        "positive_rate_pct": 50.0,
+        "sample_size": 2
+      },
+      "5_scan_days": {
+        "average_pct": 1.8099,
+        "median_pct": 1.8099,
+        "positive_rate_pct": 100.0,
+        "sample_size": 2
+      }
+    },
+    "top_candidates_by_5d_return": [
+      {
+        "blocker_category": "factor_exposure",
+        "date": "2026-07-15",
+        "entry_price": 1135.89,
+        "market_regime": "BULL",
+        "reason": "WATCH: Position cannot be opened because Defensive factor exposure cap leaves no executable size.",
+        "return_after_10_scan_days_pct": 4.4001,
+        "return_after_1_scan_days_pct": 2.9299,
+        "return_after_3_scan_days_pct": 3.8049,
+        "return_after_5_scan_days_pct": 3.4792,
+        "sector": "Healthcare",
+        "setup_score": 0.51,
+        "setup_type": "Fib 61.8 Confluence Buy Zone",
+        "ticker": "LLY",
+        "timestamp": "2026-07-15T14:05:10"
+      },
+      {
+        "blocker_category": "sector_exposure",
+        "date": "2026-06-23",
+        "entry_price": 412.83,
+        "market_regime": "NEUTRAL",
+        "reason": "WATCH: Position cannot be opened because Industrials sector exposure cap leaves no executable size.",
+        "return_after_10_scan_days_pct": -1.3444,
+        "return_after_1_scan_days_pct": -1.6883,
+        "return_after_3_scan_days_pct": -2.4586,
+        "return_after_5_scan_days_pct": 0.1405,
+        "sector": "Industrials",
+        "setup_score": 0.52,
+        "setup_type": "Breakout + Retest",
+        "ticker": "ETN",
+        "timestamp": "2026-06-23T13:49:53"
+      }
+    ],
+    "total_decision_records": 168895,
+    "unique_capital_blocked_candidates": 2
+  },
+  "decision_dir": "C:\\Users\\User\\Documents\\Codex\\2026-05-29\\adva-mo-project-orion-https-github\\work\\market-lens-excel-retention\\agent_results\\decisions",
+  "generated_at": "2026-08-31T21:14:21.237471+00:00",
+  "methodology": {
+    "cash_yield": "Hypothetical simple annual yield accrued on uninvested cash between trade events.",
+    "counterfactual_limit": "Exact layer cannot prove outcomes for trades the active agent never opened.",
+    "drawdown": "Realized-equity drawdown; intratrade mark-to-market drawdown is not reconstructed.",
+    "exact_layer": "Replays original entries and exits with alternative quantities and portfolio constraints."
+  },
+  "mode": "READ_ONLY_CAPITAL_REPLAY",
+  "sample": {
+    "closed_trades": 28,
+    "first_entry": "2026-06-22T18:33:05",
+    "idle_cash_annual_yield_assumption": 0.05,
+    "last_exit": "2026-08-31T13:40:42",
+    "starting_capital": 100000.0
+  },
+  "scenarios": [
+    {
+      "average_time_weighted_exposure_pct": 11.66,
+      "average_trade_pnl": 35.59,
+      "binding_constraints": {
+        "original_quantity": 28
+      },
+      "completed_trades": 28,
+      "configuration": {
+        "base_risk_pct": 0.005,
+        "bull_exposure_pct": 0.6,
+        "description": "Original quantities and original trade lifecycle; no sizing changes.",
+        "factor_risk_pct": 0.01,
+        "high_quality_risk_pct": 0.0075,
+        "max_exposure_pct": 0.6,
+        "max_position_pct": 0.1,
+        "name": "ACTUAL_BASELINE",
+        "neutral_exposure_pct": 0.45,
+        "preserve_original_size": true,
+        "sector_risk_pct": 0.0075,
+        "total_heat_pct": 0.025
+      },
+      "description": "Original quantities and original trade lifecycle; no sizing changes.",
+      "downsized_trades": 0,
+      "ending_equity": 100996.51,
+      "ending_equity_with_idle_cash_yield": 101844.94,
+      "hypothetical_idle_cash_yield": 848.43,
+      "losses": 16,
+      "max_exposure_pct": 36.86,
+      "max_realized_drawdown": -429.47,
+      "profit_factor": 1.4861,
+      "scenario": "ACTUAL_BASELINE",
+      "skipped_original_trades": 0,
+      "starting_capital": 100000.0,
+      "total_return_with_idle_cash_yield_pct": 1.8449,
+      "trades": [
+        {
+          "original_quantity": 45,
+          "pnl": -178.2,
+          "quantity": 45,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "BA",
+          "trade_id": "20260622_183144-BA"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -78.1,
+          "quantity": 11,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "MA",
+          "trade_id": "20260625_143139-MA"
+        },
+        {
+          "original_quantity": 172,
+          "pnl": 627.8,
+          "quantity": 172,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "BALL",
+          "trade_id": "20260622_183144-BALL"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -113.22,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "NOC",
+          "trade_id": "20260709_133631-NOC"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 408.12,
+          "quantity": 76,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "GILD",
+          "trade_id": "20260714_133728-GILD"
+        },
+        {
+          "original_quantity": 279,
+          "pnl": 119.54,
+          "quantity": 279,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "PPL",
+          "trade_id": "20260709_133631-PPL"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": -128.44,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "LMT",
+          "trade_id": "20260710_133656-LMT"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": 205.39,
+          "quantity": 38,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "GILD",
+          "trade_id": "20260721_150256-GILD"
+        },
+        {
+          "original_quantity": 37,
+          "pnl": -100.64,
+          "quantity": 37,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "GILD",
+          "trade_id": "20260722_150233-GILD"
+        },
+        {
+          "original_quantity": 87,
+          "pnl": -61.77,
+          "quantity": 87,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "OXY",
+          "trade_id": "20260724_153300-OXY"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -232.32,
+          "quantity": 11,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "AMD",
+          "trade_id": "20260721_143228-AMD"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -34.74,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "CINF",
+          "trade_id": "20260803_150133-CINF"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 442.32,
+          "quantity": 76,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "GILD",
+          "trade_id": "20260805_173144-GILD"
+        },
+        {
+          "original_quantity": 68,
+          "pnl": -118.32,
+          "quantity": 68,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "PG",
+          "trade_id": "20260806_153123-PG"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": -139.08,
+          "quantity": 38,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "LNG",
+          "trade_id": "20260807_140150-LNG"
+        },
+        {
+          "original_quantity": 69,
+          "pnl": 73.1,
+          "quantity": 69,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "OTIS",
+          "trade_id": "20260803_150133-OTIS"
+        },
+        {
+          "original_quantity": 64,
+          "pnl": -135.04,
+          "quantity": 64,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "TJX",
+          "trade_id": "20260811_180205-TJX"
+        },
+        {
+          "original_quantity": 51,
+          "pnl": -93.33,
+          "quantity": 51,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "EOG",
+          "trade_id": "20260812_135056-EOG"
+        },
+        {
+          "original_quantity": 5,
+          "pnl": 102.68,
+          "quantity": 5,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "LLY",
+          "trade_id": "20260806_150128-LLY"
+        },
+        {
+          "original_quantity": 36,
+          "pnl": -123.12,
+          "quantity": 36,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "MCD",
+          "trade_id": "20260812_135056-MCD"
+        },
+        {
+          "original_quantity": 236,
+          "pnl": 379.96,
+          "quantity": 236,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "IONQ",
+          "trade_id": "20260807_140150-IONQ"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": 368.7,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "ADBE",
+          "trade_id": "20260804_133625-ADBE"
+        },
+        {
+          "original_quantity": 14,
+          "pnl": 24.99,
+          "quantity": 14,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "SBUX",
+          "trade_id": "20260806_153123-SBUX"
+        },
+        {
+          "original_quantity": 128,
+          "pnl": -207.36,
+          "quantity": 128,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "CYTK",
+          "trade_id": "20260819_191347-CYTK"
+        },
+        {
+          "original_quantity": 169,
+          "pnl": 242.44,
+          "quantity": 169,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "WBD",
+          "trade_id": "20260807_190143-WBD"
+        },
+        {
+          "original_quantity": 185,
+          "pnl": 51.52,
+          "quantity": 185,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "VICI",
+          "trade_id": "20260821_153156-VICI"
+        },
+        {
+          "original_quantity": 20,
+          "pnl": -279.4,
+          "quantity": 20,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "AMD",
+          "trade_id": "20260826_140515-AMD"
+        },
+        {
+          "original_quantity": 29,
+          "pnl": -26.97,
+          "quantity": 29,
+          "sizing": {
+            "binding_constraint": "original_quantity"
+          },
+          "ticker": "FRT",
+          "trade_id": "20260824_143213-FRT"
+        }
+      ],
+      "trading_pnl": 996.51,
+      "trading_return_pct": 0.9965,
+      "upsized_trades": 0,
+      "win_rate_pct": 42.86,
+      "wins": 12
+    },
+    {
+      "average_time_weighted_exposure_pct": 14.49,
+      "average_trade_pnl": 45.68,
+      "binding_constraints": {
+        "market_exposure": 1,
+        "position_cap": 20,
+        "risk_budget": 7
+      },
+      "completed_trades": 28,
+      "configuration": {
+        "base_risk_pct": 0.004,
+        "bull_exposure_pct": 0.5,
+        "description": "30% neutral / 50% bull exposure, 0.40%-0.60% trade risk, 2% heat.",
+        "factor_risk_pct": 0.008,
+        "high_quality_risk_pct": 0.006,
+        "max_exposure_pct": 0.5,
+        "max_position_pct": 0.1,
+        "name": "CONSERVATIVE_DYNAMIC",
+        "neutral_exposure_pct": 0.3,
+        "preserve_original_size": false,
+        "sector_risk_pct": 0.006,
+        "total_heat_pct": 0.02
+      },
+      "description": "30% neutral / 50% bull exposure, 0.40%-0.60% trade risk, 2% heat.",
+      "downsized_trades": 4,
+      "ending_equity": 101278.97,
+      "ending_equity_with_idle_cash_yield": 102100.12,
+      "hypothetical_idle_cash_yield": 821.15,
+      "losses": 16,
+      "max_exposure_pct": 49.9,
+      "max_realized_drawdown": -735.44,
+      "profit_factor": 1.5387,
+      "scenario": "CONSERVATIVE_DYNAMIC",
+      "skipped_original_trades": 0,
+      "starting_capital": 100000.0,
+      "total_return_with_idle_cash_yield_pct": 2.1001,
+      "trades": [
+        {
+          "original_quantity": 45,
+          "pnl": -138.6,
+          "quantity": 35,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.35,
+            "risk_pct": 0.0014
+          },
+          "ticker": "BA",
+          "trade_id": "20260622_183144-BA"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -134.9,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 2.0,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.003
+          },
+          "ticker": "MA",
+          "trade_id": "20260625_143139-MA"
+        },
+        {
+          "original_quantity": 172,
+          "pnl": 627.8,
+          "quantity": 172,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.003
+          },
+          "ticker": "BALL",
+          "trade_id": "20260622_183144-BALL"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -113.22,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.003
+          },
+          "ticker": "NOC",
+          "trade_id": "20260709_133631-NOC"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 414.36,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.5,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.006
+          },
+          "ticker": "GILD",
+          "trade_id": "20260714_133728-GILD"
+        },
+        {
+          "original_quantity": 279,
+          "pnl": 119.54,
+          "quantity": 280,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "PPL",
+          "trade_id": "20260709_133631-PPL"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": -128.44,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "LMT",
+          "trade_id": "20260710_133656-LMT"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": 416.86,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.003
+          },
+          "ticker": "GILD",
+          "trade_id": "20260721_150256-GILD"
+        },
+        {
+          "original_quantity": 37,
+          "pnl": -206.72,
+          "quantity": 76,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.006
+          },
+          "ticker": "GILD",
+          "trade_id": "20260722_150233-GILD"
+        },
+        {
+          "original_quantity": 87,
+          "pnl": -124.96,
+          "quantity": 176,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": -0.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "OXY",
+          "trade_id": "20260724_153300-OXY"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -295.68,
+          "quantity": 14,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.003
+          },
+          "ticker": "AMD",
+          "trade_id": "20260721_143228-AMD"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -108.08,
+          "quantity": 56,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 1.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "CINF",
+          "trade_id": "20260803_150133-CINF"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 449.03,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "GILD",
+          "trade_id": "20260805_173144-GILD"
+        },
+        {
+          "original_quantity": 68,
+          "pnl": -118.32,
+          "quantity": 68,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "PG",
+          "trade_id": "20260806_153123-PG"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": -139.08,
+          "quantity": 38,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "LNG",
+          "trade_id": "20260807_140150-LNG"
+        },
+        {
+          "original_quantity": 69,
+          "pnl": 146.2,
+          "quantity": 138,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 1.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "OTIS",
+          "trade_id": "20260803_150133-OTIS"
+        },
+        {
+          "original_quantity": 64,
+          "pnl": -135.04,
+          "quantity": 64,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "TJX",
+          "trade_id": "20260811_180205-TJX"
+        },
+        {
+          "original_quantity": 51,
+          "pnl": -128.1,
+          "quantity": 70,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.006
+          },
+          "ticker": "EOG",
+          "trade_id": "20260812_135056-EOG"
+        },
+        {
+          "original_quantity": 5,
+          "pnl": 102.68,
+          "quantity": 6,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "LLY",
+          "trade_id": "20260806_150128-LLY"
+        },
+        {
+          "original_quantity": 36,
+          "pnl": -126.54,
+          "quantity": 37,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "MCD",
+          "trade_id": "20260812_135056-MCD"
+        },
+        {
+          "original_quantity": 236,
+          "pnl": 99.82,
+          "quantity": 62,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "IONQ",
+          "trade_id": "20260807_140150-IONQ"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": 521.78,
+          "quantity": 27,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 3.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "ADBE",
+          "trade_id": "20260804_133625-ADBE"
+        },
+        {
+          "original_quantity": 14,
+          "pnl": 107.1,
+          "quantity": 59,
+          "sizing": {
+            "binding_constraint": "market_exposure",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "SBUX",
+          "trade_id": "20260806_153123-SBUX"
+        },
+        {
+          "original_quantity": 128,
+          "pnl": -200.88,
+          "quantity": 124,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 6.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "CYTK",
+          "trade_id": "20260819_191347-CYTK"
+        },
+        {
+          "original_quantity": 169,
+          "pnl": 542.08,
+          "quantity": 378,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "WBD",
+          "trade_id": "20260807_190143-WBD"
+        },
+        {
+          "original_quantity": 185,
+          "pnl": 105.84,
+          "quantity": 381,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 3.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "VICI",
+          "trade_id": "20260821_153156-VICI"
+        },
+        {
+          "original_quantity": 20,
+          "pnl": -195.58,
+          "quantity": 14,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5,
+            "market_risk_points": 4.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "AMD",
+          "trade_id": "20260826_140515-AMD"
+        },
+        {
+          "original_quantity": 29,
+          "pnl": -79.98,
+          "quantity": 86,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": -0.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.002
+          },
+          "ticker": "FRT",
+          "trade_id": "20260824_143213-FRT"
+        }
+      ],
+      "trading_pnl": 1278.97,
+      "trading_return_pct": 1.279,
+      "upsized_trades": 18,
+      "win_rate_pct": 42.86,
+      "wins": 12
+    },
+    {
+      "average_time_weighted_exposure_pct": 15.68,
+      "average_trade_pnl": 51.03,
+      "binding_constraints": {
+        "market_exposure": 1,
+        "position_cap": 21,
+        "risk_budget": 6
+      },
+      "completed_trades": 28,
+      "configuration": {
+        "base_risk_pct": 0.005,
+        "bull_exposure_pct": 0.6,
+        "description": "Continuous regime exposure up to 60%, 0.50%-0.75% risk, 2.5% heat.",
+        "factor_risk_pct": 0.01,
+        "high_quality_risk_pct": 0.0075,
+        "max_exposure_pct": 0.6,
+        "max_position_pct": 0.1,
+        "name": "BALANCED_DYNAMIC",
+        "neutral_exposure_pct": 0.45,
+        "preserve_original_size": false,
+        "sector_risk_pct": 0.0075,
+        "total_heat_pct": 0.025
+      },
+      "description": "Continuous regime exposure up to 60%, 0.50%-0.75% risk, 2.5% heat.",
+      "downsized_trades": 3,
+      "ending_equity": 101428.89,
+      "ending_equity_with_idle_cash_yield": 102238.6,
+      "hypothetical_idle_cash_yield": 809.71,
+      "losses": 16,
+      "max_exposure_pct": 57.82,
+      "max_realized_drawdown": -764.72,
+      "profit_factor": 1.5705,
+      "scenario": "BALANCED_DYNAMIC",
+      "skipped_original_trades": 0,
+      "starting_capital": 100000.0,
+      "total_return_with_idle_cash_yield_pct": 2.2386,
+      "trades": [
+        {
+          "original_quantity": 45,
+          "pnl": -174.24,
+          "quantity": 44,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5437,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.35,
+            "risk_pct": 0.00175
+          },
+          "ticker": "BA",
+          "trade_id": "20260622_183144-BA"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -134.9,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3,
+            "market_risk_points": 2.0,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.00375
+          },
+          "ticker": "MA",
+          "trade_id": "20260625_143139-MA"
+        },
+        {
+          "original_quantity": 172,
+          "pnl": 627.8,
+          "quantity": 172,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5437,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.00375
+          },
+          "ticker": "BALL",
+          "trade_id": "20260622_183144-BALL"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -113.22,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5437,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.00375
+          },
+          "ticker": "NOC",
+          "trade_id": "20260709_133631-NOC"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 414.36,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5625,
+            "market_risk_points": 5.5,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.0075
+          },
+          "ticker": "GILD",
+          "trade_id": "20260714_133728-GILD"
+        },
+        {
+          "original_quantity": 279,
+          "pnl": 119.54,
+          "quantity": 279,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5437,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "PPL",
+          "trade_id": "20260709_133631-PPL"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": -128.44,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5437,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "LMT",
+          "trade_id": "20260710_133656-LMT"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": 416.86,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3937,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.00375
+          },
+          "ticker": "GILD",
+          "trade_id": "20260721_150256-GILD"
+        },
+        {
+          "original_quantity": 37,
+          "pnl": -206.72,
+          "quantity": 76,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.3937,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.0075
+          },
+          "ticker": "GILD",
+          "trade_id": "20260722_150233-GILD"
+        },
+        {
+          "original_quantity": 87,
+          "pnl": -90.88,
+          "quantity": 128,
+          "sizing": {
+            "binding_constraint": "market_exposure",
+            "exposure_limit_pct": 0.1625,
+            "market_risk_points": -0.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "OXY",
+          "trade_id": "20260724_153300-OXY"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -359.04,
+          "quantity": 17,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.3937,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.00375
+          },
+          "ticker": "AMD",
+          "trade_id": "20260721_143228-AMD"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -108.08,
+          "quantity": 56,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.2875,
+            "market_risk_points": 1.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "CINF",
+          "trade_id": "20260803_150133-CINF"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 449.03,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "GILD",
+          "trade_id": "20260805_173144-GILD"
+        },
+        {
+          "original_quantity": 68,
+          "pnl": -118.32,
+          "quantity": 68,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "PG",
+          "trade_id": "20260806_153123-PG"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": -139.08,
+          "quantity": 38,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "LNG",
+          "trade_id": "20260807_140150-LNG"
+        },
+        {
+          "original_quantity": 69,
+          "pnl": 146.2,
+          "quantity": 138,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.2875,
+            "market_risk_points": 1.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "OTIS",
+          "trade_id": "20260803_150133-OTIS"
+        },
+        {
+          "original_quantity": 64,
+          "pnl": -135.04,
+          "quantity": 64,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "TJX",
+          "trade_id": "20260811_180205-TJX"
+        },
+        {
+          "original_quantity": 51,
+          "pnl": -128.1,
+          "quantity": 70,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.0075
+          },
+          "ticker": "EOG",
+          "trade_id": "20260812_135056-EOG"
+        },
+        {
+          "original_quantity": 5,
+          "pnl": 154.02,
+          "quantity": 8,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "LLY",
+          "trade_id": "20260806_150128-LLY"
+        },
+        {
+          "original_quantity": 36,
+          "pnl": -126.54,
+          "quantity": 37,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "MCD",
+          "trade_id": "20260812_135056-MCD"
+        },
+        {
+          "original_quantity": 236,
+          "pnl": 125.58,
+          "quantity": 78,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "IONQ",
+          "trade_id": "20260807_140150-IONQ"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": 660.86,
+          "quantity": 34,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.4313,
+            "market_risk_points": 3.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "ADBE",
+          "trade_id": "20260804_133625-ADBE"
+        },
+        {
+          "original_quantity": 14,
+          "pnl": 171.36,
+          "quantity": 95,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "SBUX",
+          "trade_id": "20260806_153123-SBUX"
+        },
+        {
+          "original_quantity": 128,
+          "pnl": -210.6,
+          "quantity": 130,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.6,
+            "market_risk_points": 6.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "CYTK",
+          "trade_id": "20260819_191347-CYTK"
+        },
+        {
+          "original_quantity": 169,
+          "pnl": 542.08,
+          "quantity": 378,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.5813,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "WBD",
+          "trade_id": "20260807_190143-WBD"
+        },
+        {
+          "original_quantity": 185,
+          "pnl": 105.84,
+          "quantity": 381,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.4313,
+            "market_risk_points": 3.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "VICI",
+          "trade_id": "20260821_153156-VICI"
+        },
+        {
+          "original_quantity": 20,
+          "pnl": -251.46,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.4688,
+            "market_risk_points": 4.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "AMD",
+          "trade_id": "20260826_140515-AMD"
+        },
+        {
+          "original_quantity": 29,
+          "pnl": -79.98,
+          "quantity": 86,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.1875,
+            "market_risk_points": -0.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.0025
+          },
+          "ticker": "FRT",
+          "trade_id": "20260824_143213-FRT"
+        }
+      ],
+      "trading_pnl": 1428.89,
+      "trading_return_pct": 1.4289,
+      "upsized_trades": 18,
+      "win_rate_pct": 42.86,
+      "wins": 12
+    },
+    {
+      "average_time_weighted_exposure_pct": 16.16,
+      "average_trade_pnl": 52.81,
+      "binding_constraints": {
+        "position_cap": 27,
+        "risk_budget": 1
+      },
+      "completed_trades": 28,
+      "configuration": {
+        "base_risk_pct": 0.0065,
+        "bull_exposure_pct": 0.7,
+        "description": "Diagnostic only: up to 70% exposure, 0.65%-0.90% risk, 3% heat.",
+        "factor_risk_pct": 0.0125,
+        "high_quality_risk_pct": 0.009,
+        "max_exposure_pct": 0.7,
+        "max_position_pct": 0.1,
+        "name": "GROWTH_DIAGNOSTIC",
+        "neutral_exposure_pct": 0.55,
+        "preserve_original_size": false,
+        "sector_risk_pct": 0.01,
+        "total_heat_pct": 0.03
+      },
+      "description": "Diagnostic only: up to 70% exposure, 0.65%-0.90% risk, 3% heat.",
+      "downsized_trades": 1,
+      "ending_equity": 101478.58,
+      "ending_equity_with_idle_cash_yield": 102283.56,
+      "hypothetical_idle_cash_yield": 804.98,
+      "losses": 16,
+      "max_exposure_pct": 59.11,
+      "max_realized_drawdown": -819.92,
+      "profit_factor": 1.5705,
+      "scenario": "GROWTH_DIAGNOSTIC",
+      "skipped_original_trades": 0,
+      "starting_capital": 100000.0,
+      "total_return_with_idle_cash_yield_pct": 2.2836,
+      "trades": [
+        {
+          "original_quantity": 45,
+          "pnl": -178.2,
+          "quantity": 45,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.35,
+            "risk_pct": 0.002275
+          },
+          "ticker": "BA",
+          "trade_id": "20260622_183144-BA"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -134.9,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 2.0,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.004875
+          },
+          "ticker": "MA",
+          "trade_id": "20260625_143139-MA"
+        },
+        {
+          "original_quantity": 172,
+          "pnl": 627.8,
+          "quantity": 172,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.004875
+          },
+          "ticker": "BALL",
+          "trade_id": "20260622_183144-BALL"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -113.22,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.004875
+          },
+          "ticker": "NOC",
+          "trade_id": "20260709_133631-NOC"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 414.36,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.5,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.009
+          },
+          "ticker": "GILD",
+          "trade_id": "20260714_133728-GILD"
+        },
+        {
+          "original_quantity": 279,
+          "pnl": 119.54,
+          "quantity": 279,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "PPL",
+          "trade_id": "20260709_133631-PPL"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": -128.44,
+          "quantity": 19,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "LMT",
+          "trade_id": "20260710_133656-LMT"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": 416.86,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.004875
+          },
+          "ticker": "GILD",
+          "trade_id": "20260721_150256-GILD"
+        },
+        {
+          "original_quantity": 37,
+          "pnl": -206.72,
+          "quantity": 76,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.009
+          },
+          "ticker": "GILD",
+          "trade_id": "20260722_150233-GILD"
+        },
+        {
+          "original_quantity": 87,
+          "pnl": -124.96,
+          "quantity": 176,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": -0.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "OXY",
+          "trade_id": "20260724_153300-OXY"
+        },
+        {
+          "original_quantity": 11,
+          "pnl": -380.16,
+          "quantity": 18,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 3.25,
+            "quality_multiplier": 0.75,
+            "risk_pct": 0.004875
+          },
+          "ticker": "AMD",
+          "trade_id": "20260721_143228-AMD"
+        },
+        {
+          "original_quantity": 18,
+          "pnl": -108.08,
+          "quantity": 56,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 1.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "CINF",
+          "trade_id": "20260803_150133-CINF"
+        },
+        {
+          "original_quantity": 76,
+          "pnl": 449.03,
+          "quantity": 77,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "GILD",
+          "trade_id": "20260805_173144-GILD"
+        },
+        {
+          "original_quantity": 68,
+          "pnl": -118.32,
+          "quantity": 68,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "PG",
+          "trade_id": "20260806_153123-PG"
+        },
+        {
+          "original_quantity": 38,
+          "pnl": -139.08,
+          "quantity": 38,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "LNG",
+          "trade_id": "20260807_140150-LNG"
+        },
+        {
+          "original_quantity": 69,
+          "pnl": 146.2,
+          "quantity": 138,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 1.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "OTIS",
+          "trade_id": "20260803_150133-OTIS"
+        },
+        {
+          "original_quantity": 64,
+          "pnl": -135.04,
+          "quantity": 64,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "TJX",
+          "trade_id": "20260811_180205-TJX"
+        },
+        {
+          "original_quantity": 51,
+          "pnl": -128.1,
+          "quantity": 70,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 1.0,
+            "risk_pct": 0.009
+          },
+          "ticker": "EOG",
+          "trade_id": "20260812_135056-EOG"
+        },
+        {
+          "original_quantity": 5,
+          "pnl": 154.02,
+          "quantity": 8,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "LLY",
+          "trade_id": "20260806_150128-LLY"
+        },
+        {
+          "original_quantity": 36,
+          "pnl": -126.54,
+          "quantity": 37,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "MCD",
+          "trade_id": "20260812_135056-MCD"
+        },
+        {
+          "original_quantity": 236,
+          "pnl": 161.0,
+          "quantity": 101,
+          "sizing": {
+            "binding_constraint": "risk_budget",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "IONQ",
+          "trade_id": "20260807_140150-IONQ"
+        },
+        {
+          "original_quantity": 19,
+          "pnl": 761.67,
+          "quantity": 39,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 3.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "ADBE",
+          "trade_id": "20260804_133625-ADBE"
+        },
+        {
+          "original_quantity": 14,
+          "pnl": 171.36,
+          "quantity": 95,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "SBUX",
+          "trade_id": "20260806_153123-SBUX"
+        },
+        {
+          "original_quantity": 128,
+          "pnl": -210.6,
+          "quantity": 130,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 6.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "CYTK",
+          "trade_id": "20260819_191347-CYTK"
+        },
+        {
+          "original_quantity": 169,
+          "pnl": 542.08,
+          "quantity": 378,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 5.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "WBD",
+          "trade_id": "20260807_190143-WBD"
+        },
+        {
+          "original_quantity": 185,
+          "pnl": 106.4,
+          "quantity": 382,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": 3.75,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "VICI",
+          "trade_id": "20260821_153156-VICI"
+        },
+        {
+          "original_quantity": 20,
+          "pnl": -279.4,
+          "quantity": 20,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.7,
+            "market_risk_points": 4.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "AMD",
+          "trade_id": "20260826_140515-AMD"
+        },
+        {
+          "original_quantity": 29,
+          "pnl": -79.98,
+          "quantity": 86,
+          "sizing": {
+            "binding_constraint": "position_cap",
+            "exposure_limit_pct": 0.55,
+            "market_risk_points": -0.25,
+            "quality_multiplier": 0.5,
+            "risk_pct": 0.00325
+          },
+          "ticker": "FRT",
+          "trade_id": "20260824_143213-FRT"
+        }
+      ],
+      "trading_pnl": 1478.58,
+      "trading_return_pct": 1.4786,
+      "upsized_trades": 18,
+      "win_rate_pct": 42.86,
+      "wins": 12
+    }
+  ],
+  "workbook": "C:\\Users\\User\\Documents\\Codex\\2026-05-29\\adva-mo-project-orion-https-github\\work\\market-lens-excel-retention\\agent_tracker\\market_lens_agent_portfolio_budget_100k.xlsx"
+}

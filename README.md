@@ -87,6 +87,20 @@ On Windows:
 
 Chart images are saved under `charts/`.
 
+## Read-Only Capital Replay
+
+Capital-management scenarios can be compared against the completed paper-trade
+history without changing active sizing or portfolio state:
+
+```bash
+python agent/capital_replay.py
+```
+
+Reports are written to `agent_results/capital_replay/`. The exact layer reuses
+recorded entries and exits with alternative quantities; the separate blocked-
+candidate layer is explicitly labeled as a scan-price proxy. See
+`docs/capital_replay_2026-09-01.md` for methodology, results, and limitations.
+
 ## Configuration
 
 Edit `config.yaml` to set a default watchlist and minimum risk/reward:
