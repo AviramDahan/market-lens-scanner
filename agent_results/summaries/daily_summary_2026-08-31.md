@@ -1,26 +1,27 @@
 Daily Performance Summary
 
 Date: 2026-08-31
-Total scans: 7
-Tickers scanned: 1118
+Total scans: 8
+Tickers scanned: 1276
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 338
-SKIP: 752
-NO_TRADE: 612
-Realized PnL: 0.0
-Unrealized PnL: 419.25
-Portfolio value: 101524.27
+WATCH: 359
+SKIP: 885
+NO_TRADE: 728
+Realized PnL: -26.97
+Unrealized PnL: 385.12
+Portfolio value: 101463.17
 Best ticker: APP
 Worst ticker: THC
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- RELATIVE_STRENGTH_LEADER: 56
-- TREND_PULLBACK_RECLAIM: 14
+- BREAKOUT_CONTINUATION: 1
+- RELATIVE_STRENGTH_LEADER: 61
+- TREND_PULLBACK_RECLAIM: 17
 - VWAP_RECLAIM: 35
 
 Top rejected candidates:
@@ -32,10 +33,10 @@ Top rejected candidates:
 - STZ: WATCH score=0.47 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - NOC: SKIP score=0.47 reason=SKIP: Industrials sector regime is weak (29/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.55.
 - KO: WATCH score=0.46 reason=Gross R/R is valid, but Net R/R 1.79 failed minimum 2.00 after slippage/spread adjustment.
+- MSFT: WATCH score=0.46 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - BRK-B: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
-- MSFT: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 1.06.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
-- Do not judge WATCH_READY quality until pending off-hours candidates receive regular-session review.
+- After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
