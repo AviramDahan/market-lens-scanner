@@ -1,40 +1,40 @@
 Daily Performance Summary
 
 Date: 2026-08-31
-Total scans: 9
-Tickers scanned: 1433
+Total scans: 10
+Tickers scanned: 1589
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 398
-SKIP: 1000
-NO_TRADE: 830
+WATCH: 426
+SKIP: 1125
+NO_TRADE: 933
 Realized PnL: -26.97
-Unrealized PnL: 222.48
-Portfolio value: 101300.53
+Unrealized PnL: 168.4
+Portfolio value: 101246.45
 Best ticker: APP
 Worst ticker: ICE
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 3
-- RELATIVE_STRENGTH_LEADER: 67
-- TREND_PULLBACK_RECLAIM: 22
+- RELATIVE_STRENGTH_LEADER: 75
+- TREND_PULLBACK_RECLAIM: 23
 - VWAP_RECLAIM: 36
 
 Top rejected candidates:
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
 - CF: WATCH score=0.51 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
+- KMI: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.62 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
 - HAL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
 - WELL: SKIP score=0.48 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.30.
 - STZ: WATCH score=0.47 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - NOC: SKIP score=0.47 reason=SKIP: Industrials sector regime is weak (29/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.55.
 - KO: WATCH score=0.46 reason=Gross R/R is valid, but Net R/R 1.79 failed minimum 2.00 after slippage/spread adjustment.
 - MSFT: WATCH score=0.46 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- BRK-B: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
