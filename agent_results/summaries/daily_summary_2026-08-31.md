@@ -1,33 +1,33 @@
 Daily Performance Summary
 
 Date: 2026-08-31
-Total scans: 15
-Tickers scanned: 2407
+Total scans: 16
+Tickers scanned: 2556
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 441
-WATCH_REVIEW unique tickers: 64
+WATCH_REVIEW: 470
+WATCH_REVIEW unique tickers: 65
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 581
-SKIP: 1773
-NO_TRADE: 1506
+WATCH: 610
+SKIP: 1890
+NO_TRADE: 1606
 Realized PnL: -26.97
-Unrealized PnL: 235.56
-Portfolio value: 101313.61
+Unrealized PnL: 165.04
+Portfolio value: 101243.09
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ICE
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 6
-- FIB_STOP_075_ATR: 11
-- FIB_STRUCTURE_STOP: 6
+- BREAKOUT_CONTINUATION: 7
+- FIB_STOP_075_ATR: 14
+- FIB_STRUCTURE_STOP: 9
 - RELATIVE_STRENGTH_LEADER: 90
-- TREND_PULLBACK_RECLAIM: 30
-- VWAP_RECLAIM: 37
+- TREND_PULLBACK_RECLAIM: 33
+- VWAP_RECLAIM: 38
 
 Top rejected candidates:
 - MP: WATCH score=0.57 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.33.
