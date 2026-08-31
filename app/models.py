@@ -162,6 +162,7 @@ class ScanResult(BaseModel):
     strategy_action: str | None = None
     strategy_reason: str | None = None
     strategy_decision: dict[str, Any] = Field(default_factory=dict)
+    setup_candidates: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class ScanRequest(BaseModel):

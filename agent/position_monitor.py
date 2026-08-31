@@ -424,10 +424,21 @@ def update_position_excursion(position: dict[str, Any], bars: Any) -> None:
     high = float(bars["High"].max())
     low = float(bars["Low"].min())
     decision = parse_decision_json(position.get("decision_json", ""))
+    initial_quantity = int(decision.get("position_size") or decision.get("original_position_size") or quantity)
+    favorable_per_share = max(0.0, high - entry)
+    adverse_per_share = max(0.0, entry - low)
     existing_mfe = float(decision.get("mfe") or 0)
     existing_mae = float(decision.get("mae") or 0)
-    decision["mfe"] = round(max(existing_mfe, max(0.0, high - entry) * quantity), 2)
-    decision["mae"] = round(max(existing_mae, max(0.0, entry - low) * quantity), 2)
+    decision["mfe"] = round(max(existing_mfe, favorable_per_share * initial_quantity), 2)
+    decision["mae"] = round(max(existing_mae, adverse_per_share * initial_quantity), 2)
+    decision["mfe_per_share"] = round(max(float(decision.get("mfe_per_share") or 0), favorable_per_share), 4)
+    decision["mae_per_share"] = round(max(float(decision.get("mae_per_share") or 0), adverse_per_share), 4)
+    original_stop = float(decision.get("stop_loss") or position.get("stop_loss") or 0)
+    risk_per_share = max(0.0, entry - original_stop)
+    if risk_per_share > 0:
+        decision["mfe_r"] = round(float(decision["mfe_per_share"]) / risk_per_share, 4)
+        decision["mae_r"] = round(float(decision["mae_per_share"]) / risk_per_share, 4)
+    decision["excursion_source"] = "intraday_bars"
     position["decision_json"] = json.dumps(decision, ensure_ascii=False, sort_keys=True, default=str)
 
 

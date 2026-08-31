@@ -405,6 +405,7 @@ def evaluate_agent_candidate(
 
     final_action = initial_action
     final_reason = initial_reason
+    blockers: list[dict[str, str]] = []
     if initial_action == "BUY_SIMULATED":
         base_minimum_net_rr = minimum_net_rr_for(run_context.market_regime, sector_info, config)
         minimum_net_rr = config.neutral_pilot_min_net_rr if neutral_pilot["eligible"] else base_minimum_net_rr
@@ -466,11 +467,14 @@ def evaluate_agent_candidate(
             final_reason = f"HOLD: Existing simulated position remains open. {run_context.market_regime.label} regime recorded."
 
     portfolio_exposure_after = portfolio_exposure_after_if_buy if final_action == "BUY_SIMULATED" else portfolio_exposure_before
-    off_hours_candidate = bool(
+    off_hours_initial_candidate = bool(
         initial_action == "BUY_SIMULATED"
         and not market_session["regular_session_open"]
         and not config.allow_off_hours_buys
     )
+    watch_status = watch_status_for(final_action)
+    off_hours_candidate = bool(off_hours_initial_candidate and watch_status == "WATCH_READY")
+    confirmation_freshness = calculate_confirmation_freshness(confirmation, market_session)
     decision = {
         "timestamp": timestamp,
         "ticker": ticker,
@@ -495,6 +499,7 @@ def evaluate_agent_candidate(
         "market_session_timestamp": market_session["timestamp"],
         "market_session_can_open_new_buy": market_session["can_open_new_buy"],
         "market_session_reason": market_session["reason"],
+        "watch_status": watch_status,
         "off_hours_entry_policy": "STAGE_ONLY" if off_hours_candidate else "REGULAR_SESSION_ONLY",
         "off_hours_candidate": off_hours_candidate,
         "regular_session_confirmation_required": off_hours_candidate,
@@ -503,6 +508,7 @@ def evaluate_agent_candidate(
             if off_hours_candidate
             else ""
         ),
+        "watch_review_reason": final_reason if watch_status == "WATCH_REVIEW" else "",
         "sector": sector,
         "sector_etf": sector_info["etf"],
         "sector_regime": sector_info["regime"],
@@ -541,6 +547,11 @@ def evaluate_agent_candidate(
         "confirmation_candle_timestamp": confirmation["confirmation_candle_timestamp"],
         "confirmation_lookback_candles": config.entry_confirmation_lookback_candles,
         "confirmation_window_used": confirmation.get("confirmation_window_used", 1),
+        "confirmation_freshness_status": confirmation_freshness["status"],
+        "confirmation_age_minutes": confirmation_freshness["age_minutes"],
+        "confirmation_same_session": confirmation_freshness["same_session"],
+        "confirmation_freshness_reason": confirmation_freshness["reason"],
+        "confirmation_freshness_shadow_only": True,
         "entry_mode": neutral_pilot["entry_mode"],
         "neutral_pilot_enabled": config.neutral_pilot_enabled,
         "neutral_pilot_eligible": neutral_pilot["eligible"],
@@ -948,6 +959,64 @@ def target_one_warning_only(*, net_rr_info: dict[str, Any], minimum_net_rr: floa
 
 def near_ready_net_rr(net_rr: float, minimum_net_rr: float) -> bool:
     return net_rr >= max(1.8, minimum_net_rr - 0.30)
+
+
+def watch_status_for(final_action: str) -> str:
+    action = str(final_action or "").upper()
+    if action == "WATCH_READY":
+        return "WATCH_READY"
+    if action == "WATCH":
+        return "WATCH_REVIEW"
+    return ""
+
+
+def calculate_confirmation_freshness(
+    confirmation: dict[str, Any],
+    market_session: dict[str, Any],
+) -> dict[str, Any]:
+    candle_value = str(confirmation.get("confirmation_candle_timestamp") or "").strip()
+    session_value = str(market_session.get("timestamp") or "").strip()
+    if not candle_value or not session_value:
+        return {
+            "status": "UNKNOWN",
+            "age_minutes": None,
+            "same_session": False,
+            "reason": "Confirmation timestamp unavailable; freshness is recorded as unknown.",
+        }
+    try:
+        candle = datetime.fromisoformat(candle_value.replace("Z", "+00:00"))
+        observed = datetime.fromisoformat(session_value.replace("Z", "+00:00"))
+        if candle.tzinfo is None:
+            candle = candle.replace(tzinfo=timezone.utc)
+        if observed.tzinfo is None:
+            observed = observed.replace(tzinfo=NY_TZ)
+    except ValueError:
+        return {
+            "status": "UNKNOWN",
+            "age_minutes": None,
+            "same_session": False,
+            "reason": "Confirmation timestamp could not be parsed; freshness is recorded as unknown.",
+        }
+
+    candle_ny = candle.astimezone(NY_TZ)
+    observed_ny = observed.astimezone(NY_TZ)
+    age_minutes = max(0.0, (observed_ny - candle_ny).total_seconds() / 60.0)
+    same_session = candle_ny.date() == observed_ny.date()
+    if str(market_session.get("phase") or "").upper() != "REGULAR":
+        status = "OFF_HOURS_REFERENCE"
+        reason = "Completed regular-session candle is informational during off-hours staging."
+    elif same_session:
+        status = "FRESH_SAME_SESSION"
+        reason = "Confirmation uses a completed candle from the current regular session."
+    else:
+        status = "STALE_PREVIOUS_SESSION"
+        reason = "Confirmation uses a completed candle from a previous regular session; shadow review required."
+    return {
+        "status": status,
+        "age_minutes": round(age_minutes, 2),
+        "same_session": bool(same_session),
+        "reason": reason,
+    }
 
 
 def downgrade_action_from_blockers(blockers: list[dict[str, str]]) -> str:

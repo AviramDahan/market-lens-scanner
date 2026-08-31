@@ -456,3 +456,63 @@ def test_weekly_shadow_calibration_uses_future_scan_prices(tmp_path: Path) -> No
     assert metrics["matured_1d"] == 1
     assert metrics["average_return_1d_pct"] == 3.0
     assert weekly["best_shadow_strategy"] == "BREAKOUT_CONTINUATION"
+
+
+def test_summary_prefers_completed_trade_lifecycle_metrics_over_exit_events(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "decisions"
+    summary_dir = tmp_path / "summaries"
+    decision_path = decision_dir / "market_lens_agent_20260806_153000.jsonl"
+    write_decisions(decision_path, sample_records())
+    completed = [
+        {
+            "trade_id": "win-1",
+            "ticker": "AAA",
+            "exit_timestamp": "2026-08-06T15:00:00",
+            "pnl_ils": 50,
+            "r_multiple": 1.0,
+            "setup_type": "Breakout + Retest",
+            "market_regime": "BULL",
+            "sector_regime": "STRONG",
+            "setup_score_bucket": "0.50-0.59",
+            "mfe": 100,
+            "mae": 20,
+        },
+        {
+            "trade_id": "loss-1",
+            "ticker": "BBB",
+            "exit_timestamp": "2026-08-06T15:10:00",
+            "pnl_ils": -20,
+            "r_multiple": -0.4,
+            "setup_type": "Fib 61.8 Confluence Buy Zone",
+            "market_regime": "BULL",
+            "sector_regime": "NEUTRAL",
+            "setup_score_bucket": "0.40-0.49",
+            "mfe": 10,
+            "mae": 40,
+        },
+    ]
+    paths = write_performance_summaries(
+        summary_dir=summary_dir,
+        decision_dir=decision_dir,
+        current_decision_path=decision_path,
+        run_id="20260806_153000",
+        timestamp="2026-08-06T15:30:00",
+        portfolio={},
+        trade_events=[
+            {"timestamp": "2026-08-06T14:30:00", "action": "TAKE_PARTIAL_PROFIT", "ticker": "AAA", "pnl_ils": 50, "r_multiple": 1.0},
+            {"timestamp": "2026-08-06T15:00:00", "action": "EXIT_STOP", "ticker": "AAA", "pnl_ils": 0, "r_multiple": 0.0},
+            {"timestamp": "2026-08-06T15:10:00", "action": "EXIT_STOP", "ticker": "BBB", "pnl_ils": -20, "r_multiple": -0.4},
+        ],
+        completed_trades=completed,
+    )
+    daily = json.loads(paths["daily_summary_json"].read_text(encoding="utf-8"))
+
+    assert daily["trade_metric_source"] == "COMPLETED_TRADE_LIFECYCLE"
+    assert daily["total_closed_trades"] == 2
+    assert daily["win_rate"] == 50
+    assert daily["average_R"] == 0.3
+    assert daily["profit_factor"] == 2.5
+    assert daily["max_drawdown"] == -20
+    assert daily["exit_event_metrics"]["closed_events"] == 2
+    assert daily["performance_by_setup_type"]["Breakout + Retest"]["realized_pnl"] == 50
+    assert daily["data_completeness"]["completed_trade_trade_id"]["coverage_pct"] == 100

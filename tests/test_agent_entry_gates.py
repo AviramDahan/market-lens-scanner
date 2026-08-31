@@ -406,6 +406,7 @@ def test_off_hours_candidate_is_staged_and_requires_regular_confirmation(monkeyp
     assert decision["off_hours_entry_policy"] == "STAGE_ONLY"
     assert decision["off_hours_candidate"] is True
     assert decision["regular_session_confirmation_required"] is True
+    assert decision["watch_status"] == "WATCH_READY"
     assert "blocked until a regular-session confirmation scan" in decision["off_hours_staging_reason"]
 
 
@@ -453,7 +454,83 @@ def test_skip_reason_matches_skip_blocker_when_off_hours_also_staged(monkeypatch
 
     assert decision["final_action"] == "SKIP"
     assert decision["reason"].startswith("SKIP: Earnings blackout active")
+    assert decision["watch_status"] == ""
+    assert decision["off_hours_candidate"] is False
+    assert decision["regular_session_confirmation_required"] is False
     assert any("WATCH_READY" in warning for warning in decision["warnings"])
+
+
+def test_regular_watch_is_labeled_review_not_ready(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=1.0, confirmation_passed=True)
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test strong sector"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T10:30:00",
+        result=result(score=0.60),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=100_000,
+        portfolio_exposure_before=0,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+    )
+
+    assert decision["final_action"] == "WATCH"
+    assert decision["watch_status"] == "WATCH_REVIEW"
+    assert decision["off_hours_candidate"] is False
+    assert decision["watch_review_reason"] == decision["reason"]
+
+
+def test_confirmation_freshness_is_measurement_only(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.5, confirmation_passed=True)
+    monkeypatch.setattr(
+        "app.agent_risk.calculate_entry_confirmation",
+        lambda result, snapshot, config: {
+            "confirmation_status": "PASSED",
+            "confirmation_reason": "previous-day completed confirmation",
+            "trigger_level": 100.0,
+            "close_above_trigger": True,
+            "vwap_reclaimed": False,
+            "retest_held": True,
+            "entry_confirmation_passed": True,
+            "confirmation_timeframe": "30m_completed",
+            "confirmation_candle_timestamp": "2026-07-07T15:30:00-04:00",
+            "confirmation_window_used": 1,
+            "warnings": [],
+        },
+    )
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test strong sector"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T10:30:00",
+        result=result(score=0.60),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=100_000,
+        portfolio_exposure_before=0,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+    )
+
+    assert decision["final_action"] == "BUY_SIMULATED"
+    assert decision["confirmation_freshness_status"] == "STALE_PREVIOUS_SESSION"
+    assert decision["confirmation_freshness_shadow_only"] is True
 
 
 def test_stop_loss_cooldown_blocks_reentry() -> None:

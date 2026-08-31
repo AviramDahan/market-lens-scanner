@@ -655,7 +655,7 @@ function renderCard(result, chartUrl, analysisPeriod) {
     : "";
 
   return `
-    <article class="result-card" data-testid="result-card" data-ticker="${escapeHtml(result.ticker)}">
+    <article class="result-card" data-testid="result-card" data-ticker="${escapeHtml(result.ticker)}" data-setup-candidates="${escapeHtml(encodeURIComponent(JSON.stringify(result.setup_candidates || [])))}">
       <header class="result-head">
         <div class="ticker">
           <strong data-testid="result-ticker">${escapeHtml(result.ticker)}</strong>

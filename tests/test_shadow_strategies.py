@@ -27,11 +27,13 @@ def base_decision() -> dict:
         "setup_type": "Breakout + Retest",
         "setup_score": 0.62,
         "market_regime": "BULL",
+        "market_session_phase": "REGULAR",
         "sector_regime": "STRONG",
         "sector_score": 80,
         "normalized_quality_score": 82,
         "normalized_momentum_score": 78,
         "entry_confirmation_passed": True,
+        "confirmation_freshness_status": "FRESH_SAME_SESSION",
         "vwap_reclaimed": True,
         "close_above_trigger": True,
         "earnings_blackout": False,
@@ -41,6 +43,8 @@ def base_decision() -> dict:
         "target_2": 112,
         "net_rr_1": 1.5,
         "net_rr_2": 3.0,
+        "net_rr": 2.5,
+        "minimum_net_rr_required": 2.0,
         "target_1_atr_distance": 1.2,
         "target_feasibility_status": "OK",
     }
@@ -51,7 +55,7 @@ def test_shadow_strategies_return_stable_schema() -> None:
 
     assert [record["name"] for record in records] == list(STRATEGY_NAMES)
     for record in records:
-        assert record["version"] == "shadow_v1"
+        assert record["version"] == "shadow_v2"
         assert isinstance(record["would_buy"], bool)
         assert 0 <= record["confidence"] <= 1
         assert "reason" in record
@@ -97,4 +101,44 @@ def test_neutral_sector_shadow_sizing_is_only_a_suggestion() -> None:
 
     assert would_buy
     assert all(item["position_size_multiplier"] == 0.5 for item in would_buy)
+    assert decision["final_action"] == original_action
+
+
+def test_stale_confirmation_blocks_shadow_without_changing_active_action() -> None:
+    decision = base_decision()
+    decision["confirmation_freshness_status"] = "STALE_PREVIOUS_SESSION"
+    original_action = decision["final_action"]
+
+    records = evaluate_shadow_strategies(base_result(), decision)
+
+    assert all(record["would_buy"] is False for record in records)
+    assert decision["final_action"] == original_action
+    assert any("same session" in warning for record in records for warning in record["warnings"])
+
+
+def test_fib_stop_variants_are_shadow_only_and_resize_for_equal_risk() -> None:
+    result = base_result()
+    result.setup_type = "Fib 61.8 Confluence Buy Zone"
+    decision = base_decision()
+    decision.update(
+        {
+            "setup_type": result.setup_type,
+            "buy_zone_low": 98.0,
+            "stop_loss": 96.0,
+            "target_1": 106.0,
+            "target_2": 112.0,
+            "target_1_atr_distance": 1.2,
+        }
+    )
+    original_action = decision["final_action"]
+
+    records = evaluate_shadow_strategies(result, decision)
+    stop_075 = next(item for item in records if item["name"] == "FIB_STOP_075_ATR")
+    stop_100 = next(item for item in records if item["name"] == "FIB_STOP_100_ATR")
+    structure = next(item for item in records if item["name"] == "FIB_STRUCTURE_STOP")
+
+    assert stop_075["stop_loss"] < decision["executable_entry"]
+    assert stop_100["stop_loss"] < stop_075["stop_loss"]
+    assert 0 < stop_100["position_size_multiplier"] <= stop_075["position_size_multiplier"] <= 1
+    assert structure["experiment_type"] == "STOP_DISTANCE_ONLY"
     assert decision["final_action"] == original_action

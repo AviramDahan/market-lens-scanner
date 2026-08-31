@@ -1909,6 +1909,7 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
             entry_price = to_float(trade.get("entry_price_usd"), trade.get("price_usd"))
             usd_ils = to_float(trade.get("usd_ils"), 1.0)
             stop = to_float(trade.get("stop_loss"))
+            decision = trade.get("decision_json") if isinstance(trade.get("decision_json"), dict) else {}
             risk_per_share = max(0.0, entry_price - stop) * usd_ils
             lot = {
                 "trade_id": trade_identity(trade),
@@ -1924,9 +1925,21 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
                 "realized_pnl_ils": 0.0,
                 "cash_in_ils": 0.0,
                 "exit_events": [],
-                "setup_type": trade.get("setup_type") or (trade.get("decision_json") or {}).get("setup_type", ""),
-                "setup_score_bucket": trade.get("setup_score_bucket", ""),
-                "sector": trade.get("sector", ""),
+                "setup_type": trade.get("setup_type") or decision.get("setup_type", ""),
+                "setup_score_bucket": trade.get("setup_score_bucket") or decision.get("setup_score_bucket", ""),
+                "setup_score": decision.get("setup_score"),
+                "market_regime": decision.get("market_regime", ""),
+                "sector_regime": decision.get("sector_regime", ""),
+                "sector": trade.get("sector") or decision.get("sector", ""),
+                "net_rr_1": decision.get("net_rr_1"),
+                "net_rr_2": decision.get("net_rr_2"),
+                "weighted_net_rr": decision.get("weighted_net_rr") or decision.get("net_rr"),
+                "entry_confirmation_status": decision.get("entry_confirmation_status")
+                or decision.get("confirmation_status"),
+                "mfe": decision.get("mfe"),
+                "mae": decision.get("mae"),
+                "mfe_r": decision.get("mfe_r"),
+                "mae_r": decision.get("mae_r"),
             }
             lots[ticker].append(lot)
             continue
@@ -1960,6 +1973,10 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
                     "pnl_ils": pnl,
                 }
             )
+            exit_decision = trade.get("decision_json") if isinstance(trade.get("decision_json"), dict) else {}
+            for metric in ("mfe", "mae", "mfe_r", "mae_r"):
+                if exit_decision.get(metric) not in (None, ""):
+                    lot[metric] = exit_decision.get(metric)
             remaining -= used
 
             if to_int(lot.get("remaining_quantity")) <= 0:
@@ -2023,8 +2040,19 @@ def completed_full_trade(lot: dict[str, Any], exit_timestamp: Any) -> dict[str, 
         "exit_actions": [str(event.get("action") or "") for event in exit_events],
         "exit_events": exit_events,
         "setup_type": lot.get("setup_type", ""),
+        "setup_score": lot.get("setup_score"),
         "setup_score_bucket": lot.get("setup_score_bucket", ""),
         "sector": lot.get("sector", ""),
+        "market_regime": lot.get("market_regime", ""),
+        "sector_regime": lot.get("sector_regime", ""),
+        "net_rr_1": lot.get("net_rr_1"),
+        "net_rr_2": lot.get("net_rr_2"),
+        "weighted_net_rr": lot.get("weighted_net_rr"),
+        "entry_confirmation_status": lot.get("entry_confirmation_status"),
+        "mfe": lot.get("mfe"),
+        "mae": lot.get("mae"),
+        "mfe_r": lot.get("mfe_r"),
+        "mae_r": lot.get("mae_r"),
     }
 
 

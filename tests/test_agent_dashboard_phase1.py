@@ -14,6 +14,7 @@ from app.agent_dashboard import (
     with_position_calculations,
     write_diagnostic_snapshot,
 )
+from agent.market_lens_ui_agent import merge_position_decision_json
 
 
 def test_compute_realized_pnl_annotates_exit_trade_with_entry_and_r() -> None:
@@ -182,6 +183,97 @@ def test_full_trade_winrate_ignores_still_open_partial_position() -> None:
     assert full_trades["open_count"] == 1
     assert full_trades["wins"] == 0
     assert full_trades["losses"] == 0
+
+
+def test_full_trade_preserves_entry_strategy_fields_across_partial_exit() -> None:
+    entry_decision = {
+        "trade_id": "AAA-1",
+        "setup_type": "Fib 61.8 Confluence Buy Zone",
+        "setup_score": 0.58,
+        "setup_score_bucket": "0.50-0.59",
+        "market_regime": "BULL",
+        "sector_regime": "STRONG",
+        "net_rr_1": 1.2,
+        "net_rr_2": 3.1,
+        "weighted_net_rr": 1.58,
+        "entry_confirmation_status": "PASSED",
+    }
+    trades = [
+        {
+            "timestamp": "2026-08-05T14:00:00",
+            "action": "BUY_SIMULATED",
+            "ticker": "AAA",
+            "entry_price_usd": 100,
+            "price_usd": 100,
+            "quantity": 10,
+            "cash_out_ils": 1000,
+            "buy_value_ils": 1000,
+            "cash_in_ils": 0,
+            "stop_loss": 95,
+            "trade_id": "AAA-1",
+            "decision_json": entry_decision,
+        },
+        {
+            "timestamp": "2026-08-05T15:00:00",
+            "action": "TAKE_PARTIAL_PROFIT",
+            "ticker": "AAA",
+            "exit_price_usd": 110,
+            "price_usd": 110,
+            "quantity": 5,
+            "cash_in_ils": 550,
+            "stop_loss": 95,
+            "trade_id": "AAA-1",
+            "decision_json": {"mfe": 100, "mae": 20, "mfe_r": 2.0, "mae_r": 0.4},
+        },
+        {
+            "timestamp": "2026-08-06T15:00:00",
+            "action": "EXIT_STOP",
+            "ticker": "AAA",
+            "exit_price_usd": 100,
+            "price_usd": 100,
+            "quantity": 5,
+            "cash_in_ils": 500,
+            "stop_loss": 100,
+            "trade_id": "AAA-1",
+            "decision_json": {"mfe": 120, "mae": 25, "mfe_r": 2.4, "mae_r": 0.5},
+        },
+    ]
+
+    closed = compute_full_trade_performance(trades)["closed"][0]
+
+    assert closed["trade_id"] == "AAA-1"
+    assert closed["setup_type"] == entry_decision["setup_type"]
+    assert closed["setup_score_bucket"] == "0.50-0.59"
+    assert closed["market_regime"] == "BULL"
+    assert closed["mfe_r"] == 2.4
+    assert closed["pnl_ils"] == 50
+
+
+def test_hold_refresh_preserves_immutable_entry_decision() -> None:
+    original = {
+        "trade_id": "AAA-1",
+        "setup_type": "Breakout + Retest",
+        "entry_timestamp": "2026-08-05T14:00:00",
+        "mfe": 40,
+        "warnings": ["entry warning"],
+    }
+    latest = {
+        "timestamp": "2026-08-06T14:00:00",
+        "final_action": "HOLD",
+        "setup_type": "VWAP Reclaim",
+        "price": 105,
+        "mfe": 65,
+        "warnings": ["latest warning"],
+    }
+
+    merged = merge_position_decision_json(original, latest)
+
+    assert merged["trade_id"] == "AAA-1"
+    assert merged["setup_type"] == "Breakout + Retest"
+    assert merged["entry_timestamp"] == "2026-08-05T14:00:00"
+    assert merged["mfe"] == 65
+    assert merged["latest_position_observation"]["final_action"] == "HOLD"
+    assert merged["warnings"] == ["entry warning", "latest warning"]
 
 
 def test_compact_dashboard_payload_trims_heavy_collections_and_keeps_totals() -> None:

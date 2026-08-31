@@ -18,6 +18,7 @@ from openpyxl import load_workbook
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 from app.charts import write_scan_chart
+from app.agent_dashboard import compute_full_trade_performance as dashboard_compute_full_trade_performance
 from app.agent_dashboard import compute_realized_pnl as dashboard_compute_realized_pnl
 from app.agent_dashboard import read_trades as dashboard_read_trades
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
@@ -34,6 +35,7 @@ from app.telegram_notifications import (
     send_telegram_chart_photo,
     send_telegram_message,
 )
+from app.trade_outcomes import backfill_trade_outcomes
 from app.workbook_retention import compact_setup_watchlist
 
 
@@ -78,6 +80,7 @@ class SetupResult:
     raw_text: str
     chart_url: str = ""
     selection_context: str = ""
+    setup_candidates: list[dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True)
@@ -694,6 +697,12 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
                 .find(node => node.getAttribute('data-stat-label') === label);
               return el?.querySelector('strong')?.textContent?.trim() || '';
             };
+            let setupCandidates = [];
+            try {
+              setupCandidates = JSON.parse(decodeURIComponent(card.dataset.setupCandidates || '%5B%5D'));
+            } catch (_error) {
+              setupCandidates = [];
+            }
             return {
               ticker: card.querySelector('[data-testid="result-ticker"]')?.textContent?.trim() || '',
               setup_type: card.querySelector('[data-testid="result-setup-type"]')?.textContent?.trim() || '',
@@ -707,6 +716,7 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
               chart_url: (card.querySelector('img.chart-preview')?.getAttribute('data-chart')
                 || card.querySelector('img.chart-preview')?.getAttribute('src')
                 || '').split('?')[0],
+              setup_candidates: setupCandidates,
               raw_text: card.innerText,
             };
           })"""
@@ -943,6 +953,7 @@ def parse_result(item: dict[str, Any]) -> SetupResult:
         reason=item.get("reason", ""),
         raw_text=item.get("raw_text", ""),
         chart_url=str(item.get("chart_url", "")),
+        setup_candidates=item.get("setup_candidates") if isinstance(item.get("setup_candidates"), list) else [],
     )
 
 
@@ -990,6 +1001,7 @@ def update_workbook(
     pending_decisions: list[tuple[SetupResult, Decision]] = []
     new_buy_tickers: set[str] = set()
     timestamp = datetime.now().isoformat(timespec="seconds")
+    setup_score_percentiles = calculate_setup_score_percentiles(results)
 
     for result in results:
         decision = decide(
@@ -1022,6 +1034,22 @@ def update_workbook(
             neutral_pilot_trades_today=neutral_pilot_buys_today,
         )
         decision_json["scan_source"] = scan_source_text(settings)
+        decision_json["setup_candidates"] = list(result.setup_candidates or [])
+        decision_json["active_setup_selection_policy"] = "FIRST_MATCH_LEGACY"
+        decision_json["setup_score_run_percentile"] = setup_score_percentiles.get(result.ticker)
+        active_candidate = next(
+            (
+                candidate
+                for candidate in result.setup_candidates or []
+                if str(candidate.get("setup_type") or "") == result.setup_type
+            ),
+            None,
+        )
+        decision_json["setup_score_setup_normalized"] = (
+            active_candidate.get("shadow_setup_normalized_score")
+            if isinstance(active_candidate, dict)
+            else None
+        )
         final_action = str(decision_json.get("final_action") or decision.action)
         final_reason = str(decision_json.get("reason") or decision.feedback)
         if final_action == "BUY_SIMULATED":
@@ -1077,15 +1105,36 @@ def update_workbook(
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
             append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
 
+    try:
+        outcome_backfill_limit = max(0, int(os.getenv("MARKET_LENS_TRADE_OUTCOME_BACKFILL_LIMIT", "8") or "0"))
+    except ValueError:
+        outcome_backfill_limit = 0
+        log("Trade outcome backfill disabled: MARKET_LENS_TRADE_OUTCOME_BACKFILL_LIMIT is invalid.")
+    if outcome_backfill_limit:
+        try:
+            backfill = backfill_trade_outcomes(wb, max_tickers=outcome_backfill_limit)
+            log(
+                "Trade outcome backfill: "
+                f"updated_rows={backfill['updated_rows']} fetched_tickers={len(backfill['fetched_tickers'])} "
+                f"pending_trades={backfill['pending_trades']}"
+            )
+            for issue in backfill["errors"]:
+                log(f"Trade outcome backfill warning: {issue}")
+        except Exception as exc:
+            log(f"Trade outcome backfill skipped safely: {exc}")
+
     write_open_positions(wb, open_positions)
     write_decision_jsonl(decision_path, decision_records)
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
     trade_events: list[dict[str, Any]] = []
+    completed_trades: list[dict[str, Any]] = []
     realized_pnl = None
     try:
-        trade_analytics = dashboard_compute_realized_pnl(dashboard_read_trades(wb))
+        workbook_trades = dashboard_read_trades(wb)
+        trade_analytics = dashboard_compute_realized_pnl(workbook_trades)
+        completed_trades = dashboard_compute_full_trade_performance(workbook_trades).get("closed", [])
         trade_events = trade_analytics.get("trades", [])
         realized_pnl = round(float(trade_analytics.get("total") or 0), 2)
     except Exception as exc:
@@ -1114,6 +1163,7 @@ def update_workbook(
                 else None,
             },
             trade_events=trade_events,
+            completed_trades=completed_trades,
         )
     except Exception as exc:
         errors.append(f"PERFORMANCE_SUMMARY_FAILED: {exc}")
@@ -1602,6 +1652,9 @@ def is_watch_ready_payload(action: str, payload: dict[str, Any], fallback_text: 
     action = str(action or "").upper()
     if action == "SKIP":
         return False
+    watch_status = str(payload.get("watch_status") or "").upper()
+    if watch_status:
+        return watch_status == "WATCH_READY"
     if action == "WATCH_READY":
         return True
     if payload.get("off_hours_candidate") or payload.get("regular_session_confirmation_required"):
@@ -1811,8 +1864,49 @@ def refresh_open_position(
     if result.selection_context:
         pos["selection_context"] = result.selection_context
     if decision and decision.decision_json:
-        # Preserve the latest structured explanation for dashboard drill-down.
-        pos["decision_json"] = decision_json_text(decision)
+        pos["decision_json"] = json.dumps(
+            merge_position_decision_json(pos.get("decision_json"), decision.decision_json),
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        )
+
+
+def merge_position_decision_json(existing_value: Any, latest: dict[str, Any]) -> dict[str, Any]:
+    """Keep immutable entry analytics while recording the latest HOLD context."""
+    existing = dict(existing_value) if isinstance(existing_value, dict) else parse_json_cell(existing_value)
+    if not existing:
+        return dict(latest or {})
+
+    merged = dict(existing)
+    merged["latest_position_observation"] = {
+        "timestamp": latest.get("timestamp"),
+        "price": latest.get("price"),
+        "final_action": latest.get("final_action"),
+        "reason": latest.get("reason"),
+        "market_regime": latest.get("market_regime"),
+        "sector_regime": latest.get("sector_regime"),
+        "confirmation_status": latest.get("confirmation_status"),
+    }
+    merged["warnings"] = unique_text_values(existing.get("warnings"), latest.get("warnings"))
+    for key in ("mfe", "mae", "mfe_per_share", "mae_per_share", "mfe_r", "mae_r"):
+        old_value = parse_optional_float(existing.get(key))
+        new_value = parse_optional_float(latest.get(key))
+        values = [value for value in (old_value, new_value) if value is not None]
+        if values:
+            merged[key] = max(values)
+    return merged
+
+
+def unique_text_values(*values: Any) -> list[str]:
+    output: list[str] = []
+    for value in values:
+        items = value if isinstance(value, list) else []
+        for item in items:
+            text = str(item)
+            if text and text not in output:
+                output.append(text)
+    return output
 
 
 def write_open_positions(wb: Any, positions: dict[str, dict[str, Any]]) -> None:
@@ -1851,6 +1945,7 @@ def enrich_decision_analytics(
     setup_score = float(decision_json.get("setup_score") or result.score or 0)
     if final_action == "BUY_SIMULATED":
         decision_json.setdefault("trade_id", f"{run_id}-{result.ticker}")
+        decision_json.setdefault("entry_timestamp", decision_json.get("timestamp"))
     else:
         decision_json.setdefault("trade_id", "")
     decision_json["setup_score_bucket"] = setup_score_bucket(setup_score)
@@ -1877,6 +1972,26 @@ def setup_score_bucket(score: float) -> str:
     if score < 0.70:
         return "0.60-0.69"
     return "0.70+"
+
+
+def calculate_setup_score_percentiles(results: list[SetupResult]) -> dict[str, float | None]:
+    groups: dict[str, list[float]] = {}
+    for result in results:
+        setup_type = str(result.setup_type or "")
+        if not setup_type or setup_type == "No Trade":
+            continue
+        groups.setdefault(setup_type, []).append(float(result.score or 0.0))
+
+    percentiles: dict[str, float | None] = {}
+    for result in results:
+        values = groups.get(str(result.setup_type or ""), [])
+        if not values:
+            percentiles[result.ticker] = None
+            continue
+        score = float(result.score or 0.0)
+        rank = sum(1 for value in values if value <= score)
+        percentiles[result.ticker] = round(rank / len(values) * 100.0, 2)
+    return percentiles
 
 
 def write_decision_jsonl(path: Path, records: list[dict[str, Any]]) -> None:

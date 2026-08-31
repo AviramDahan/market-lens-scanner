@@ -62,6 +62,17 @@ _MAX_SCORE = (
     + _W_SWEEP_DAILY_BONUS + _W_BREAKOUT_VOL
 )  # = 248
 
+# The legacy denominator includes mutually exclusive bonuses. These per-setup
+# ceilings are recorded for shadow calibration only; active gates still use the
+# unchanged legacy score.
+_SETUP_ATTAINABLE_MAX = {
+    SETUP_FIB_CONFLUENCE: 176.0,
+    SETUP_BREAKOUT_RETEST: 166.0,
+    SETUP_SWING_VOLUME: 156.0,
+    SETUP_LIQUIDITY_TRAP: 183.0,
+    SETUP_VWAP_RECLAIM: 168.0,
+}
+
 
 def detect_setup(
     ticker: str,
@@ -82,6 +93,53 @@ def detect_setup(
     relative_strength: float = 1.0,
     daily: "pd.DataFrame | None" = None,
 ) -> ScanResult:
+    candidates = detect_setup_candidates(
+        ticker=ticker,
+        current_price=current_price,
+        atr=atr,
+        vwap=vwap,
+        volume_profile=volume_profile,
+        fib_info=fib_info,
+        hourly_closes=hourly_closes,
+        hourly_lows=hourly_lows,
+        hourly_volume=hourly_volume,
+        ema_20=ema_20,
+        vsl=vsl,
+        min_rr=min_rr,
+        price_above_ma200=price_above_ma200,
+        market_structure=market_structure,
+        vp_scenario=vp_scenario,
+        relative_strength=relative_strength,
+        daily=daily,
+    )
+    if candidates:
+        active = candidates[0]
+        return active.model_copy(
+            update={"setup_candidates": [setup_candidate_payload(candidate) for candidate in candidates]}
+        )
+    return _no_trade(ticker, current_price, fib_info, vsl)
+
+
+def detect_setup_candidates(
+    ticker: str,
+    current_price: float,
+    atr: float,
+    vwap: float,
+    volume_profile: VolumeProfile,
+    fib_info: FibonacciInfo | None,
+    hourly_closes: "pd.Series",
+    hourly_lows: "pd.Series",
+    hourly_volume: "pd.Series",
+    ema_20: float,
+    vsl: VolumeSupportedSwingLow | None,
+    min_rr: float = 2.0,
+    price_above_ma200: bool = True,
+    market_structure: str = "ranging",
+    vp_scenario: str = "price_down_vol_up",
+    relative_strength: float = 1.0,
+    daily: "pd.DataFrame | None" = None,
+) -> list[ScanResult]:
+    """Evaluate every detector while preserving the legacy first-match winner."""
     vp = volume_profile
     in_value_area = vp.val < current_price < vp.vah
     price_above_ema = current_price > ema_20
@@ -92,9 +150,11 @@ def detect_setup(
     )
     sweep_at_val = sweep_at_val_hourly or sweep_at_val_daily
     anchored_vwap = _anchored_vwap_from_swing(daily)
+    candidates: list[ScanResult] = []
 
     if fib_info is not None:
-        result = _try_fib_confluence(
+        result = _safe_setup_detector(
+            _try_fib_confluence,
             ticker, current_price, atr, vwap, vp, fib_info,
             in_value_area, price_above_ema, sweep_at_val, vsl, min_rr,
             hourly_lows, hourly_closes, price_above_ma200, market_structure,
@@ -102,43 +162,79 @@ def detect_setup(
             daily=daily,
         )
         if result:
-            return result
+            candidates.append(result)
 
-    result = _try_breakout_retest(
+    result = _safe_setup_detector(
+        _try_breakout_retest,
         ticker, current_price, atr, vwap, vp, fib_info, daily,
         in_value_area, price_above_ema, price_above_ma200,
         market_structure, vp_scenario, relative_strength, vsl, min_rr,
     )
     if result:
-        return result
+        candidates.append(result)
 
-    result = _try_swing_volume(
+    result = _safe_setup_detector(
+        _try_swing_volume,
         ticker, current_price, atr, vwap, vp, fib_info,
         in_value_area, price_above_ema, vsl, min_rr, price_above_ma200,
         market_structure, vp_scenario, relative_strength, sweep_at_val_daily,
     )
     if result:
-        return result
+        candidates.append(result)
 
-    result = _try_liquidity_trap(
+    result = _safe_setup_detector(
+        _try_liquidity_trap,
         ticker, current_price, atr, vwap, vp, fib_info,
         hourly_closes, hourly_volume, in_value_area, price_above_ema, sweep_at_val,
         vsl, min_rr, price_above_ma200, market_structure, vp_scenario,
         relative_strength, sweep_at_val_daily,
     )
     if result:
-        return result
+        candidates.append(result)
 
-    result = _try_vwap_reclaim(
+    result = _safe_setup_detector(
+        _try_vwap_reclaim,
         ticker, current_price, atr, vwap, vp, fib_info,
         hourly_closes, hourly_volume, anchored_vwap,
         in_value_area, price_above_ema, sweep_at_val, min_rr, price_above_ma200,
         market_structure, vp_scenario, relative_strength, sweep_at_val_daily,
     )
     if result:
-        return result
+        candidates.append(result)
 
-    return _no_trade(ticker, current_price, fib_info, vsl)
+    return candidates
+
+
+def _safe_setup_detector(detector, *args, **kwargs) -> ScanResult | None:
+    """Keep one optional detector failure from discarding valid candidates."""
+    try:
+        return detector(*args, **kwargs)
+    except Exception:
+        return None
+
+
+def setup_candidate_payload(result: ScanResult) -> dict[str, object]:
+    legacy_score = float(result.score or 0.0)
+    legacy_raw_points = legacy_score * _MAX_SCORE
+    attainable_max = _SETUP_ATTAINABLE_MAX.get(result.setup_type, float(_MAX_SCORE))
+    return {
+        "setup_type": result.setup_type,
+        "legacy_score": round(legacy_score, 4),
+        "legacy_raw_points": round(legacy_raw_points, 2),
+        "shadow_attainable_max_points": round(attainable_max, 2),
+        "shadow_setup_normalized_score": round(min(1.0, legacy_raw_points / attainable_max), 4)
+        if attainable_max
+        else legacy_score,
+        "buy_zone_low": round(float(result.buy_zone[0]), 4),
+        "buy_zone_high": round(float(result.buy_zone[1]), 4),
+        "stop_loss": round(float(result.stop_loss or 0.0), 4),
+        "target_1": round(float(result.target_1 or 0.0), 4),
+        "target_2": round(float(result.target_2 or 0.0), 4),
+        "risk_reward": round(float(result.risk_reward or 0.0), 4),
+        "risk_reward_primary": round(float(result.risk_reward_primary or 0.0), 4),
+        "risk_reward_stretch": round(float(result.risk_reward_stretch or 0.0), 4),
+        "reason": result.reason,
+    }
 
 
 # ---------------------------------------------------------------------------

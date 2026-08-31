@@ -160,6 +160,7 @@ analysis, entry rules, portfolio rules, and monitor behavior, see:
 
 - [`docs/market_lens_agent_rules_en.md`](docs/market_lens_agent_rules_en.md)
 - [`docs/market_lens_agent_rules_he.md`](docs/market_lens_agent_rules_he.md)
+- [`docs/strategy_measurement_upgrade_2026-08-31.md`](docs/strategy_measurement_upgrade_2026-08-31.md)
 
 Market Lens uses one shared strategy engine for manual user scans and for the
 paper-trading agent. The user scan and the agent scan both run through the same
