@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 90,
-  "SKIP_count": 110,
+  "NO_TRADE_count": 177,
+  "SKIP_count": 217,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -39,12 +39,12 @@
     "source_unique_count": 20
   },
   "WATCH_READY_conversion_rate": 0.0,
-  "WATCH_READY_count": 20,
-  "WATCH_READY_off_hours_count": 20,
+  "WATCH_READY_count": 40,
+  "WATCH_READY_off_hours_count": 40,
   "WATCH_READY_regular_session_count": 0,
   "WATCH_READY_session_breakdown": {
     "off_hours": {
-      "records": 20,
+      "records": 40,
       "tickers": [
         "ALB",
         "ALK",
@@ -85,19 +85,19 @@
   "WATCH_READY_unique_regular_session_count": 0,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_count": 50,
+  "WATCH_count": 98,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.5559,
-    "RELATIVE_STRENGTH_LEADER": 0.6687,
-    "STOP_RECLAIM_REENTRY": 0.4216,
-    "TREND_PULLBACK_RECLAIM": 0.5131,
-    "VWAP_RECLAIM": 0.5579
+    "BREAKOUT_CONTINUATION": 0.5568,
+    "RELATIVE_STRENGTH_LEADER": 0.6708,
+    "STOP_RECLAIM_REENTRY": 0.4219,
+    "TREND_PULLBACK_RECLAIM": 0.5139,
+    "VWAP_RECLAIM": 0.5593
   },
   "average_loser": null,
-  "average_rr_to_target_1": 0.4968,
-  "average_rr_to_target_2": 1.5187,
-  "average_setup_score": 0.1663,
+  "average_rr_to_target_1": 0.5009,
+  "average_rr_to_target_2": 1.5306,
+  "average_setup_score": 0.1667,
   "average_winner": null,
   "best_sector": "Utilities / Real Assets",
   "best_setup_type": "INSUFFICIENT_DATA",
@@ -221,48 +221,48 @@
     "decision_trade_id": {
       "coverage_pct": 0.0,
       "populated": 0,
-      "total": 164
+      "total": 323
     }
   },
   "data_quality_issues": [
     {
-      "count": 38,
+      "count": 75,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 20,
+      "count": 40,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 18,
+      "count": 35,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 11,
+      "count": 22,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 9,
+      "count": 18,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 3,
+      "count": 6,
       "name": "Earnings blackout active."
     },
     {
-      "count": 3,
+      "count": 6,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 1,
+      "count": 2,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     }
   ],
@@ -275,81 +275,81 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 88,
+      "count": 173,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 30,
+      "count": 58,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 15,
+      "count": 30,
       "name": "WATCH: BULL market requires setup score (0"
     },
     {
-      "count": 12,
+      "count": 24,
       "name": "SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry"
     },
     {
-      "count": 8,
+      "count": 16,
       "name": "SKIP: Industrials sector regime is weak (29/100); skip new entry"
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "Gross R/R is valid, but Net R/R 1"
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "SKIP: Semiconductors sector regime is weak (17/100); skip new entry"
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle"
     },
     {
-      "count": 1,
+      "count": 2,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     }
   ],
   "most_common_warnings": [
     {
-      "count": 38,
+      "count": 75,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 20,
+      "count": 40,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 18,
+      "count": 35,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 11,
+      "count": 22,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 9,
+      "count": 18,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 3,
+      "count": 6,
       "name": "Earnings blackout active."
     },
     {
-      "count": 3,
+      "count": 6,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 2,
+      "count": 4,
       "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 1,
+      "count": 2,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     }
   ],
@@ -421,10 +421,11 @@
   ],
   "runtime_metrics": {
     "decision_files": [
-      "agent_results/decisions/market_lens_agent_20260831_080506.jsonl"
+      "agent_results/decisions/market_lens_agent_20260831_080506.jsonl",
+      "agent_results/decisions/market_lens_agent_20260831_083212.jsonl"
     ],
-    "records": 164,
-    "run_id": "20260831_080506"
+    "records": 323,
+    "run_id": "20260831_083212"
   },
   "shadow_outcome_metrics_by_strategy": {
     "RELATIVE_STRENGTH_LEADER": {
@@ -721,9 +722,9 @@
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "RELATIVE_STRENGTH_LEADER": 8,
-    "TREND_PULLBACK_RECLAIM": 2,
-    "VWAP_RECLAIM": 5
+    "RELATIVE_STRENGTH_LEADER": 16,
+    "TREND_PULLBACK_RECLAIM": 4,
+    "VWAP_RECLAIM": 10
   },
   "summary_type": "weekly",
   "top_rejected_candidates": [
@@ -799,18 +800,18 @@
     }
   ],
   "total_BUY_SIMULATED": 0,
-  "total_WATCH_READY": 20,
+  "total_WATCH_READY": 40,
   "total_closed_trades": 0,
   "total_portfolio_value": 101524.27,
-  "total_result_cards_read": 164,
-  "total_scans": 1,
-  "total_tickers_scanned": 164,
+  "total_result_cards_read": 323,
+  "total_scans": 2,
+  "total_tickers_scanned": 323,
   "total_trading_days": 1,
   "unrealized_pnl": 419.25,
   "week_end": "2026-09-06",
   "week_start": "2026-08-31",
   "win_rate": null,
-  "worst_sector": "Real Estate",
+  "worst_sector": "Semiconductors",
   "worst_setup_type": "INSUFFICIENT_DATA",
   "worst_shadow_strategy": "INSUFFICIENT_OUTCOMES",
   "worst_ticker": "THC"
