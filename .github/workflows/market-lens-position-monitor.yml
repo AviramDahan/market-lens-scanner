@@ -250,3 +250,50 @@ jobs:
             git commit -m "Update Market Lens position monitor [skip render]"
             git push origin HEAD:main
           fi
+
+      - name: Prepare monitor recovery bundle on failure
+        if: failure() && steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
+        shell: bash
+        run: |
+          set +e
+          BUNDLE="$RUNNER_TEMP/market-lens-monitor-recovery"
+          FALLBACK="/tmp/market_lens_monitor_generated"
+          rm -rf "$BUNDLE"
+          mkdir -p "$BUNDLE/agent_tracker" "$BUNDLE/agent_results"
+
+          copy_first_file() {
+            local relative="$1"
+            local destination="$BUNDLE/$relative"
+            for root in "$GITHUB_WORKSPACE" "$FALLBACK"; do
+              if [ -f "$root/$relative" ]; then
+                mkdir -p "$(dirname "$destination")"
+                cp "$root/$relative" "$destination"
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          copy_first_file "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx" || true
+          copy_first_file "agent_results/dashboard_snapshot.json" || true
+          copy_first_file "agent_results/telegram_notifications.jsonl" || true
+
+          monitor_name="$(
+            for root in "$GITHUB_WORKSPACE" "$FALLBACK"; do
+              find "$root/agent_results/position_monitor" -maxdepth 1 -type f -name 'position_monitor_*.md' -printf '%f\n' 2>/dev/null
+            done | sort | tail -1
+          )"
+          if [ -n "$monitor_name" ]; then
+            copy_first_file "agent_results/position_monitor/$monitor_name" || true
+          fi
+
+          find "$BUNDLE" -type f -printf '%P (%s bytes)\n'
+
+      - name: Upload monitor recovery bundle
+        if: failure() && steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-lens-monitor-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/market-lens-monitor-recovery
+          retention-days: 14
+          if-no-files-found: warn

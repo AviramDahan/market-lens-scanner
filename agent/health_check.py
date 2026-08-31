@@ -35,10 +35,12 @@ def main() -> None:
     max_scan_age_minutes = env_int("MARKET_LENS_HEALTH_MAX_SCAN_AGE_MINUTES", 240)
     min_result_cards = env_int("MARKET_LENS_HEALTH_MIN_RESULT_CARDS", 120)
     max_runtime_seconds = env_int("MARKET_LENS_HEALTH_MAX_RUNTIME_SECONDS", 1260)
+    max_tracker_bytes = env_int("MARKET_LENS_HEALTH_MAX_TRACKER_BYTES", 75_000_000)
 
     checks.extend(check_render_endpoints(public_url, max_scan_age_minutes, min_result_cards))
     checks.append(check_latest_agent_workflow(repo, workflow))
     checks.append(check_latest_runtime_metrics(max_runtime_seconds))
+    checks.append(check_tracker_size(max_tracker_bytes))
 
     failed = [check for check in checks if not check.ok]
     should_notify_telegram = health_telegram_enabled()
@@ -188,6 +190,18 @@ def check_latest_runtime_metrics(max_runtime_seconds: int) -> HealthCheck:
         "Latest runtime metrics",
         total_seconds <= max_runtime_seconds and result_cards > 0,
         f"{latest.name}; total_seconds={total_seconds:.1f}; result_cards={result_cards}",
+    )
+
+
+def check_tracker_size(max_bytes: int) -> HealthCheck:
+    tracker_path = ROOT / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
+    if not tracker_path.exists():
+        return HealthCheck("Tracker repository size", False, f"Missing tracker: {tracker_path.name}.")
+    size_bytes = tracker_path.stat().st_size
+    return HealthCheck(
+        "Tracker repository size",
+        size_bytes < max_bytes,
+        f"bytes={size_bytes}; maximum={max_bytes}",
     )
 
 

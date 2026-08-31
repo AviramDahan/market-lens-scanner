@@ -11,7 +11,7 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  actions: write
 
 jobs:
   health-check:
@@ -30,6 +30,8 @@ jobs:
           python-version: "3.12"
 
       - name: Check production health after scan-size upgrade
+        id: production_health
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
           MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
@@ -37,6 +39,37 @@ jobs:
           MARKET_LENS_HEALTH_MAX_SCAN_AGE_MINUTES: "240"
           MARKET_LENS_HEALTH_MIN_RESULT_CARDS: "120"
           MARKET_LENS_HEALTH_MAX_RUNTIME_SECONDS: "1260"
+          MARKET_LENS_HEALTH_MAX_TRACKER_BYTES: "75000000"
           MARKET_LENS_HEALTH_TELEGRAM_ENABLED: "false"
           MARKET_LENS_HEALTH_NOTIFY_SUCCESS: "false"
         run: python agent/health_check.py
+
+      - name: Dispatch cloud recovery scan
+        if: steps.production_health.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SCAN_WORKFLOW: market-lens-agent.yml
+        shell: bash
+        run: |
+          active_runs="$(
+            gh run list \
+              --repo "$GH_REPO" \
+              --workflow "$SCAN_WORKFLOW" \
+              --limit 10 \
+              --json status \
+              --jq '[.[] | select(.status == "queued" or .status == "in_progress")] | length'
+          )"
+          if [ "${active_runs:-0}" -gt 0 ]; then
+            echo "A scan is already queued or running; recovery dispatch is not needed."
+            exit 0
+          fi
+
+          gh workflow run "$SCAN_WORKFLOW" --repo "$GH_REPO" --ref main -f force=true
+          echo "Dispatched a forced cloud recovery scan."
+
+      - name: Report health failure after recovery dispatch
+        if: steps.production_health.outcome == 'failure'
+        run: |
+          echo "Production health failed. Recovery was dispatched or an active scan was already running."
+          exit 1

@@ -76,6 +76,30 @@ def test_latest_runtime_metrics_uses_timestamped_filename_order(monkeypatch, tmp
     assert "result_cards=164" in result.detail
 
 
+def test_tracker_size_passes_below_limit(monkeypatch, tmp_path: Path) -> None:
+    tracker = tmp_path / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
+    tracker.parent.mkdir(parents=True)
+    tracker.write_bytes(b"x" * 99)
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+
+    result = health_check.check_tracker_size(max_bytes=100)
+
+    assert result.ok is True
+    assert "bytes=99" in result.detail
+
+
+def test_tracker_size_fails_at_limit(monkeypatch, tmp_path: Path) -> None:
+    tracker = tmp_path / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
+    tracker.parent.mkdir(parents=True)
+    tracker.write_bytes(b"x" * 100)
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+
+    result = health_check.check_tracker_size(max_bytes=100)
+
+    assert result.ok is False
+    assert "maximum=100" in result.detail
+
+
 def test_health_message_marks_failures() -> None:
     message = health_check.format_health_message(
         public_url="https://example.test",

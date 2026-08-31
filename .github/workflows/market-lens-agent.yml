@@ -304,3 +304,55 @@ jobs:
             git commit -m "Update Market Lens paper agent results [skip render]"
             git push origin HEAD:main
           fi
+
+      - name: Prepare scanner recovery bundle on failure
+        if: failure() && steps.schedule_time.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set +e
+          BUNDLE="$RUNNER_TEMP/market-lens-scanner-recovery"
+          FALLBACK="/tmp/market_lens_agent_generated"
+          rm -rf "$BUNDLE"
+          mkdir -p "$BUNDLE/agent_tracker" "$BUNDLE/agent_results"
+
+          copy_first_file() {
+            local relative="$1"
+            local destination="$BUNDLE/$relative"
+            for root in "$GITHUB_WORKSPACE" "$FALLBACK"; do
+              if [ -f "$root/$relative" ]; then
+                mkdir -p "$(dirname "$destination")"
+                cp "$root/$relative" "$destination"
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          copy_first_file "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx" || true
+          copy_first_file "agent_results/dashboard_snapshot.json" || true
+
+          run_id="$(
+            for root in "$GITHUB_WORKSPACE" "$FALLBACK"; do
+              find "$root/agent_results/runtime" -maxdepth 1 -type f -name 'market_lens_agent_*.json' -printf '%f\n' 2>/dev/null
+            done | sort | tail -1 | sed -e 's/^market_lens_agent_//' -e 's/\.json$//'
+          )"
+          if [ -n "$run_id" ]; then
+            for relative in \
+              "agent_results/runtime/market_lens_agent_${run_id}.json" \
+              "agent_results/decisions/market_lens_agent_${run_id}.jsonl" \
+              "agent_results/summaries/market_lens_agent_${run_id}.md" \
+              "agent_results/screenshots/market_lens_agent_${run_id}.png"; do
+              copy_first_file "$relative" || true
+            done
+          fi
+
+          find "$BUNDLE" -type f -printf '%P (%s bytes)\n'
+
+      - name: Upload scanner recovery bundle
+        if: failure() && steps.schedule_time.outputs.should_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-lens-scanner-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/market-lens-scanner-recovery
+          retention-days: 14
+          if-no-files-found: warn
