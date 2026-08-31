@@ -2,7 +2,7 @@ Weekly Performance Summary
 
 Date: 2026-08-31
 Total scans: 24
-Tickers scanned: 3798
+Tickers scanned: 3802
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
@@ -11,11 +11,11 @@ WATCH_REVIEW unique tickers: 71
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
 WATCH: 849
-SKIP: 2869
-NO_TRADE: 2405
+SKIP: 2873
+NO_TRADE: 2411
 Realized PnL: -26.97
-Unrealized PnL: 262.34
-Portfolio value: 101340.39
+Unrealized PnL: 263.08
+Portfolio value: 101341.13
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ICE
@@ -31,14 +31,14 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 38
 
 Top rejected candidates:
-- MP: WATCH score=0.57 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.33.
+- MP: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.12.
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
-- KMI: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.98.
-- NVDA: WATCH score=0.54 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- KMI: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
 - CF: WATCH score=0.51 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - MPC: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.18.
 - HAL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
+- NVDA: WATCH score=0.49 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - WELL: SKIP score=0.48 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.72.
 - SBUX: SKIP score=0.48 reason=SKIP: Consumer sector regime is weak (25/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.02.
 
