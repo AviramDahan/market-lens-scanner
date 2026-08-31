@@ -33,9 +33,10 @@ change is considered.
    enough later daily data exists. This is intended to show whether stops and
    exits were too early; it does not alter past decisions.
 6. Historical backfill is capped by
-   `MARKET_LENS_TRADE_OUTCOME_BACKFILL_LIMIT` per scan run. The default is 8
-   unique tickers, which avoids turning a normal scan into an unbounded data
-   job.
+   `MARKET_LENS_TRADE_OUTCOME_BACKFILL_LIMIT` per New York day. The default is 8
+   trades per New York trading day. An incomplete trade is checked at most once
+   per day, which avoids repeating the same 1/3/5/10-day data request on every
+   intraday scan.
 
 ## WATCH Status Semantics
 

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Callable
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -14,6 +15,7 @@ def backfill_trade_outcomes(
     *,
     max_tickers: int = 8,
     frame_fetcher: Callable[..., pd.DataFrame] = fetch_daily_frame,
+    as_of_date: date | None = None,
 ) -> dict[str, Any]:
     """Backfill lifecycle analytics incrementally without changing trade actions."""
     if "Trade Log" not in wb.sheetnames:
@@ -21,16 +23,25 @@ def backfill_trade_outcomes(
 
     ws = wb["Trade Log"]
     closed = reconstruct_closed_trades(ws)
-    pending = [trade for trade in closed if trade_needs_backfill(ws, trade)]
+    current_date = as_of_date or datetime.now(ZoneInfo("America/New_York")).date()
+    checked_date = current_date.isoformat()
+    daily_limit = max(0, int(max_tickers or 0))
+    checked_today = sum(1 for trade in closed if trade_checked_on(ws, trade, checked_date))
+    remaining_daily_capacity = max(0, daily_limit - checked_today)
+    pending = [trade for trade in closed if trade_needs_backfill(ws, trade, checked_date)]
+    selected_pending = pending[:remaining_daily_capacity]
     ticker_limit = max(0, int(max_tickers or 0))
     tickers: list[str] = []
     if ticker_limit:
-        for trade in pending:
+        for trade in selected_pending:
             ticker = trade["ticker"]
             if ticker not in tickers:
                 tickers.append(ticker)
             if len(tickers) >= ticker_limit:
                 break
+    selected_trade_ids = {
+        trade["trade_id"] for trade in selected_pending if trade["ticker"] in tickers
+    }
 
     frames: dict[str, pd.DataFrame] = {}
     errors: list[str] = []
@@ -42,15 +53,21 @@ def backfill_trade_outcomes(
 
     updated_rows = 0
     for trade in closed:
-        frame = frames.get(trade["ticker"])
-        analytics = calculate_trade_outcomes(trade, frame)
         if write_trade_identity(ws, trade):
             updated_rows += 1
+        if trade["trade_id"] not in selected_trade_ids:
+            continue
+        frame = frames.get(trade["ticker"])
+        analytics = calculate_trade_outcomes(trade, frame)
+        if frame is not None:
+            analytics["outcome_backfill_checked_date"] = checked_date
         if analytics and write_trade_analytics(ws, trade, analytics):
             updated_rows += 1
     return {
         "updated_rows": updated_rows,
         "pending_trades": len(pending),
+        "checked_today": checked_today + len(selected_trade_ids),
+        "daily_limit": daily_limit,
         "fetched_tickers": sorted(frames),
         "errors": errors,
     }
@@ -110,8 +127,15 @@ def reconstruct_closed_trades(ws: Any) -> list[dict[str, Any]]:
     return closed
 
 
-def trade_needs_backfill(ws: Any, trade: dict[str, Any]) -> bool:
+def trade_checked_on(ws: Any, trade: dict[str, Any], checked_date: str) -> bool:
+    decision = parse_json(ws.cell(int(trade["exit_row"]), 20).value)
+    return str(decision.get("outcome_backfill_checked_date") or "") == checked_date
+
+
+def trade_needs_backfill(ws: Any, trade: dict[str, Any], checked_date: str = "") -> bool:
     row = int(trade["exit_row"])
+    if checked_date and trade_checked_on(ws, trade, checked_date):
+        return False
     # Setup bucket and confirmation can legitimately be absent on historical
     # trades. They must not keep an otherwise complete trade pending forever.
     analytics_columns = (21, 24, 25, 26, 27, 28, 29, 30, 31, 32)

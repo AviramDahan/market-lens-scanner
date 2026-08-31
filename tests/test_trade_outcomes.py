@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import pandas as pd
 from openpyxl import Workbook
@@ -133,12 +134,18 @@ def test_backfill_reconstructs_full_trade_and_future_outcomes() -> None:
         calls.append(f"{ticker}:{period}")
         return daily_frame()
 
-    result = backfill_trade_outcomes(workbook, max_tickers=1, frame_fetcher=fetcher)
+    result = backfill_trade_outcomes(
+        workbook,
+        max_tickers=1,
+        frame_fetcher=fetcher,
+        as_of_date=date(2026, 8, 31),
+    )
     sheet = workbook["Trade Log"]
     exit_decision = json.loads(sheet.cell(4, 20).value)
 
     assert calls == ["AAA:6mo"]
     assert result["errors"] == []
+    assert result["checked_today"] == 1
     assert [sheet.cell(row, 21).value for row in (2, 3, 4)] == ["AAA-1", "AAA-1", "AAA-1"]
     assert sheet.cell(4, 24).value == 120
     assert sheet.cell(4, 25).value == 30
@@ -159,7 +166,12 @@ def test_backfill_does_not_overwrite_live_excursion_metrics() -> None:
     sheet.cell(4, 24, 125)
     sheet.cell(4, 25, 35)
 
-    backfill_trade_outcomes(workbook, max_tickers=1, frame_fetcher=lambda *_args, **_kwargs: daily_frame())
+    backfill_trade_outcomes(
+        workbook,
+        max_tickers=1,
+        frame_fetcher=lambda *_args, **_kwargs: daily_frame(),
+        as_of_date=date(2026, 8, 31),
+    )
     updated = json.loads(sheet.cell(4, 20).value)
 
     assert sheet.cell(4, 24).value == 125
@@ -180,8 +192,39 @@ def test_zero_ticker_limit_skips_network_but_backfills_trade_identity() -> None:
         workbook,
         max_tickers=0,
         frame_fetcher=lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("must not fetch")),
+        as_of_date=date(2026, 8, 31),
     )
 
     assert result["fetched_tickers"] == []
     assert sheet.cell(3, 21).value == "AAA-1"
     assert sheet.cell(4, 21).value == "AAA-1"
+
+
+def test_backfill_checks_incomplete_trade_at_most_once_per_day() -> None:
+    workbook = trade_workbook()
+    short_frame = daily_frame().iloc[:4]
+    calls = 0
+
+    def fetcher(*_args, **_kwargs):
+        nonlocal calls
+        calls += 1
+        return short_frame
+
+    first = backfill_trade_outcomes(
+        workbook,
+        max_tickers=8,
+        frame_fetcher=fetcher,
+        as_of_date=date(2026, 8, 31),
+    )
+    second = backfill_trade_outcomes(
+        workbook,
+        max_tickers=8,
+        frame_fetcher=fetcher,
+        as_of_date=date(2026, 8, 31),
+    )
+
+    assert calls == 1
+    assert first["checked_today"] == 1
+    assert second["checked_today"] == 1
+    assert second["fetched_tickers"] == []
+    assert second["pending_trades"] == 0
