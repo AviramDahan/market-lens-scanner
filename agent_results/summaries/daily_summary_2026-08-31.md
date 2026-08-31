@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-08-31
-Total scans: 27
-Tickers scanned: 4230
+Total scans: 28
+Tickers scanned: 4370
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 794
+WATCH_REVIEW: 821
 WATCH_REVIEW unique tickers: 71
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 934
-SKIP: 3207
-NO_TRADE: 2654
+WATCH: 961
+SKIP: 3317
+NO_TRADE: 2731
 Realized PnL: -26.97
 Unrealized PnL: 263.08
 Portfolio value: 101341.13
@@ -34,7 +34,7 @@ Top rejected candidates:
 - MP: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.12.
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.98.
-- NVDA: WATCH score=0.54 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
 - CF: WATCH score=0.51 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - MPC: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.18.
