@@ -1,26 +1,26 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 10
-Tickers scanned: 1589
+Total scans: 11
+Tickers scanned: 1756
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 426
-SKIP: 1125
-NO_TRADE: 933
+WATCH: 457
+SKIP: 1258
+NO_TRADE: 1052
 Realized PnL: -26.97
-Unrealized PnL: 168.4
-Portfolio value: 101246.45
+Unrealized PnL: 180.58
+Portfolio value: 101258.63
 Best ticker: APP
 Worst ticker: ICE
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 3
-- RELATIVE_STRENGTH_LEADER: 75
+- RELATIVE_STRENGTH_LEADER: 83
 - TREND_PULLBACK_RECLAIM: 23
 - VWAP_RECLAIM: 36
 
