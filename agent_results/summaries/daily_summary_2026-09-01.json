@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 156,
-  "SKIP_count": 220,
+  "NO_TRADE_count": 244,
+  "SKIP_count": 337,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -43,41 +43,41 @@
   "WATCH_READY_unique_regular_session_count": 0,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_REVIEW_count": 66,
-  "WATCH_REVIEW_unique_count": 34,
-  "WATCH_count": 66,
+  "WATCH_REVIEW_count": 105,
+  "WATCH_REVIEW_unique_count": 41,
+  "WATCH_count": 105,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.3968,
-    "FIB_STOP_075_ATR": 0.4323,
+    "BREAKOUT_CONTINUATION": 0.3969,
+    "FIB_STOP_075_ATR": 0.4336,
     "FIB_STOP_100_ATR": 0.4129,
-    "FIB_STRUCTURE_STOP": 0.403,
-    "RELATIVE_STRENGTH_LEADER": 0.3517,
-    "STOP_RECLAIM_REENTRY": 0.2797,
-    "TREND_PULLBACK_RECLAIM": 0.3813,
-    "VWAP_RECLAIM": 0.3968
+    "FIB_STRUCTURE_STOP": 0.4033,
+    "RELATIVE_STRENGTH_LEADER": 0.3632,
+    "STOP_RECLAIM_REENTRY": 0.2912,
+    "TREND_PULLBACK_RECLAIM": 0.3804,
+    "VWAP_RECLAIM": 0.3969
   },
   "average_confidence_by_shadow_strategy_version": {
-    "BREAKOUT_CONTINUATION@shadow_v2": 0.3968,
-    "FIB_STOP_075_ATR@shadow_v2": 0.4323,
+    "BREAKOUT_CONTINUATION@shadow_v2": 0.3969,
+    "FIB_STOP_075_ATR@shadow_v2": 0.4336,
     "FIB_STOP_100_ATR@shadow_v2": 0.4129,
-    "FIB_STRUCTURE_STOP@shadow_v2": 0.403,
-    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3517,
-    "STOP_RECLAIM_REENTRY@shadow_v2": 0.2797,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.3813,
-    "VWAP_RECLAIM@shadow_v2": 0.3968
+    "FIB_STRUCTURE_STOP@shadow_v2": 0.4033,
+    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3632,
+    "STOP_RECLAIM_REENTRY@shadow_v2": 0.2912,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.3804,
+    "VWAP_RECLAIM@shadow_v2": 0.3969
   },
   "average_loser": null,
   "average_loser_R": null,
-  "average_rr_to_target_1": 0.4424,
-  "average_rr_to_target_2": 1.6589,
-  "average_setup_score": 0.1658,
+  "average_rr_to_target_1": 0.4546,
+  "average_rr_to_target_2": 1.6528,
+  "average_setup_score": 0.1635,
   "average_winner": null,
   "average_winner_R": null,
   "best_sector": "Consumer Defensive",
   "best_setup_type": "INSUFFICIENT_DATA",
   "best_shadow_strategy": "INSUFFICIENT_OUTCOMES",
-  "best_ticker": "CCI",
+  "best_ticker": "APP",
   "common_false_positives": [],
   "common_missed_opportunities": [],
   "daily_return_pct": 1.3411,
@@ -135,49 +135,49 @@
     "decision_trade_id": {
       "coverage_pct": 0.0,
       "populated": 0,
-      "total": 292
+      "total": 451
     }
   },
   "data_quality_issues": [
     {
-      "count": 82,
+      "count": 128,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 34,
+      "count": 52,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "WATCH: Market regime exposure limit would be exceeded (22655.92 > 20000.00)."
     },
     {
-      "count": 24,
+      "count": 38,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 24,
+      "count": 38,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 15,
-      "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
-    },
-    {
-      "count": 13,
+      "count": 21,
       "name": "Sector exposure limit would be exceeded."
     },
     {
-      "count": 13,
+      "count": 21,
       "name": "Factor/theme exposure limit would be exceeded."
+    },
+    {
+      "count": 21,
+      "name": "WATCH: Sector exposure limit would be exceeded by this trade."
     }
   ],
   "date": "2026-09-01",
@@ -194,82 +194,86 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 152,
+      "count": 238,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 35,
+      "count": 56,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size"
+    },
+    {
+      "count": 32,
+      "name": "SKIP: Consumer sector regime is weak (25/100); skip new entry"
     },
     {
       "count": 22,
       "name": "SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry"
     },
     {
-      "count": 22,
-      "name": "SKIP: Consumer sector regime is weak (25/100); skip new entry"
-    },
-    {
       "count": 12,
       "name": "SKIP: Industrials sector regime is weak (26/100); skip new entry"
     },
     {
-      "count": 6,
-      "name": "SKIP: Semiconductors sector regime is weak (14/100); skip new entry"
-    },
-    {
-      "count": 6,
+      "count": 9,
       "name": "SKIP: Consumer Defensive sector regime is weak (31/100); skip new entry"
     },
     {
-      "count": 2,
-      "name": "WATCH: Technical setup detected, but weighted risk/reward 0"
+      "count": 8,
+      "name": "SKIP: Utilities / Real Assets sector regime is weak (23/100); skip new entry"
+    },
+    {
+      "count": 7,
+      "name": "SKIP: Industrials sector regime is weak (27/100); skip new entry"
+    },
+    {
+      "count": 6,
+      "name": "SKIP: Semiconductors sector regime is weak (14/100); skip new entry"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 82,
+      "count": 128,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 34,
+      "count": 52,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "Position cannot be opened because market regime exposure cap leaves no executable size."
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 29,
+      "count": 47,
       "name": "WATCH: Market regime exposure limit would be exceeded (22655.92 > 20000.00)."
     },
     {
-      "count": 24,
+      "count": 38,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 24,
+      "count": 38,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 15,
-      "name": "Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup sco"
-    },
-    {
-      "count": 13,
+      "count": 21,
       "name": "Sector exposure limit would be exceeded."
     },
     {
-      "count": 13,
+      "count": 21,
       "name": "Factor/theme exposure limit would be exceeded."
+    },
+    {
+      "count": 21,
+      "name": "WATCH: Sector exposure limit would be exceeded by this trade."
     }
   ],
   "most_frequent_actionable_setup": "Fib 61.8 Confluence Buy Zone",
@@ -293,23 +297,24 @@
   "runtime_metrics": {
     "decision_files": [
       "agent_results/decisions/market_lens_agent_20260901_001817.jsonl",
-      "agent_results/decisions/market_lens_agent_20260901_013257.jsonl"
+      "agent_results/decisions/market_lens_agent_20260901_013257.jsonl",
+      "agent_results/decisions/market_lens_agent_20260901_023258.jsonl"
     ],
-    "records": 292,
-    "run_id": "20260901_013257"
+    "records": 451,
+    "run_id": "20260901_023258"
   },
   "setup_candidate_metrics": {
     "active_policy": "FIRST_MATCH_LEGACY",
-    "alternative_ranked_first_count": 13,
+    "alternative_ranked_first_count": 21,
     "candidate_count_by_setup_type": {
-      "Breakout + Retest": 46,
-      "Fib 61.8 Confluence Buy Zone": 41,
-      "Liquidity Trap Buy Zone": 13,
-      "Swing Low + Volume Support Buy Zone": 27,
-      "VWAP Reclaim Setup": 56
+      "Breakout + Retest": 72,
+      "Fib 61.8 Confluence Buy Zone": 62,
+      "Liquidity Trap Buy Zone": 21,
+      "Swing Low + Volume Support Buy Zone": 36,
+      "VWAP Reclaim Setup": 88
     },
-    "records_with_candidates": 136,
-    "records_with_multiple_candidates": 39,
+    "records_with_candidates": 207,
+    "records_with_multiple_candidates": 60,
     "shadow_only": true
   },
   "shadow_outcome_metrics_by_strategy": {},
@@ -514,7 +519,21 @@
     },
     {
       "final_action": "WATCH",
-      "net_rr": 1.6395,
+      "net_rr": 0.9962,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.40 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.",
+      "setup_score": 0.49,
+      "ticker": "CF"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.732,
+      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "setup_score": 0.47,
+      "ticker": "MS"
+    },
+    {
+      "final_action": "WATCH",
+      "net_rr": 1.6584,
       "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
       "setup_score": 0.47,
       "ticker": "FOXA"
@@ -528,40 +547,26 @@
     },
     {
       "final_action": "WATCH",
-      "net_rr": 0.9957,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.40 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.00.",
-      "setup_score": 0.47,
-      "ticker": "CF"
-    },
-    {
-      "final_action": "WATCH",
-      "net_rr": 1.7008,
-      "reason": "WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.",
+      "net_rr": 0.9464,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.32 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.95.",
       "setup_score": 0.46,
-      "ticker": "MS"
+      "ticker": "JPM"
     },
     {
       "final_action": "WATCH",
-      "net_rr": 0.9275,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.93.",
+      "net_rr": 0.9276,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.93.",
       "setup_score": 0.46,
       "ticker": "CRWD"
-    },
-    {
-      "final_action": "SKIP",
-      "net_rr": 1.9042,
-      "reason": "SKIP: Consumer sector regime is weak (25/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.90.",
-      "setup_score": 0.45,
-      "ticker": "PG"
     }
   ],
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 101341.13,
-  "total_result_cards_read": 292,
-  "total_scans": 2,
-  "total_tickers_scanned": 292,
+  "total_result_cards_read": 451,
+  "total_scans": 3,
+  "total_tickers_scanned": 451,
   "total_trading_days": null,
   "trade_metric_source": "COMPLETED_TRADE_LIFECYCLE",
   "unrealized_pnl": 263.08,
