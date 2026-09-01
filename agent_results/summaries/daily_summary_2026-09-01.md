@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-01
-Total scans: 28
-Tickers scanned: 4332
+Total scans: 29
+Tickers scanned: 4472
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 750
-WATCH_REVIEW unique tickers: 77
+WATCH_REVIEW: 772
+WATCH_REVIEW unique tickers: 78
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 750
-SKIP: 3510
-NO_TRADE: 2659
+WATCH: 772
+SKIP: 3626
+NO_TRADE: 2730
 Realized PnL: -293.04
-Unrealized PnL: 238.66
-Portfolio value: 101023.67
+Unrealized PnL: 243.06
+Portfolio value: 101028.07
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
