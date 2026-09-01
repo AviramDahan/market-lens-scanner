@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-01
-Total scans: 13
-Tickers scanned: 1991
+Total scans: 14
+Tickers scanned: 2139
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 467
-WATCH_REVIEW unique tickers: 41
+WATCH_REVIEW: 478
+WATCH_REVIEW unique tickers: 46
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 467
-SKIP: 1485
-NO_TRADE: 1084
+WATCH: 478
+SKIP: 1619
+NO_TRADE: 1185
 Realized PnL: 0.0
-Unrealized PnL: 263.08
-Portfolio value: 101341.13
+Unrealized PnL: 160.14
+Portfolio value: 101238.19
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -32,8 +32,8 @@ Top rejected candidates:
 - MS: WATCH score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - FOXA: WATCH score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - MSFT: WATCH score=0.47 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
-- JPM: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.32 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.95.
-- CRWD: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.93.
+- GS: SKIP score=0.46 reason=SKIP: Bear market regime blocks new simulated buys.
+- CTVA: SKIP score=0.46 reason=SKIP: Bear market regime blocks new simulated buys.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
