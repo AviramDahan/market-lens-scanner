@@ -50,3 +50,9 @@ def test_watch_ready_preview_is_compact_and_does_not_eager_load_charts() -> None
     assert "items.slice(0, 4)" in render_source
     assert "candidate-status" in render_source
     assert "<img" not in render_source
+
+
+def test_portfolio_heat_has_legacy_snapshot_fallback() -> None:
+    assert "summary.starting_capital_ils || 100000" in JS
+    assert "risk.portfolio_heat_cap || startingCapital * 0.025" in JS
+    assert "Math.max(0, heatCap - openRisk)" in JS

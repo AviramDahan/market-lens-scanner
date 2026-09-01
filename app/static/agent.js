@@ -815,7 +815,8 @@ function renderRiskDashboard(risk, summary) {
   const remainingCapacity = Number(risk.remaining_exposure_capacity ?? Math.max(0, maxExposure - totalExposure));
   const newTradeBudget = Number(risk.remaining_new_trade_budget ?? Math.min(Number(summary.cash_ils || 0), remainingCapacity));
   const factorRows = (risk.factor_exposure || []).slice(0, 5);
-  const heatCap = Number(risk.portfolio_heat_cap || 0);
+  const startingCapital = Number(summary.starting_capital_ils || 100000);
+  const heatCap = Number(risk.portfolio_heat_cap || startingCapital * 0.025);
   const openRisk = Number(risk.open_risk ?? summary.open_risk_ils ?? 0);
   const heatRemaining = Math.max(0, heatCap - openRisk);
 
