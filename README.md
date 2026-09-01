@@ -330,12 +330,15 @@ The market regime uses:
 
 Regime rules:
 
-- `BULL`: max total exposure `$40,000`, minimum net R/R `2.0`, minimum setup
-  score `0.45`
-- `NEUTRAL`: max total exposure `$20,000`, minimum net R/R `2.5`, minimum setup
-  score `0.55`
+- `BULL`: minimum net R/R `2.0`, minimum setup score `0.45`
+- `NEUTRAL`: minimum net R/R `2.5`, minimum setup score `0.55`
 - `NEUTRAL` plus strong sector: minimum net R/R can be relaxed to `2.2`
 - `BEAR`: no new `BUY_SIMULATED`
+
+Exposure is continuous rather than a hard `$20,000`/`$40,000` regime jump.
+Market risk points map to an exposure ceiling of `0%` to `60%`: `-2` gives
+`0%`, `0` gives `20%`, `2` gives `30%`, `4` gives `45%`, and `6` gives
+`60%`, with interpolation between points. The default cash floor is `40%`.
 
 Sector regime is calculated from representative ETFs such as XLK, SMH, XLF,
 XLV, XLI, XLE, XLY, XLC, XLU, XLRE, and XLB. It looks at ETF trend,
@@ -452,9 +455,12 @@ The agent manages a simulated `$100,000` paper portfolio.
 Default risk limits:
 
 - maximum position allocation: `10%` of portfolio, up to `$10,000`
-- maximum risk per trade: `1%` of portfolio, up to `$1,000`
-- maximum total exposure in `BULL`: `$40,000`
-- maximum total exposure in `NEUTRAL`: `$20,000`
+- base risk budget per trade: `0.50%` of portfolio, `$500`
+- high-quality confirmed setup risk budget: up to `0.75%`, `$750`
+- pilot/low-tier setup risk budget: `0.25%`, `$250`
+- maximum total open portfolio heat: `2.50%`, `$2,500`
+- continuous market exposure ceiling: `0%` to `60%` based on risk points
+- minimum cash reserve: `40%`
 - no new buys in `BEAR`
 - sector exposure cap in `BULL`: `40%` of invested capital
 - sector exposure cap in `NEUTRAL`: `30%` of invested capital
@@ -465,12 +471,20 @@ If a candidate is valid but too large for a sector/factor cap, the agent first
 tries to reduce share count. It downgrades to `WATCH` only if a safe reduced
 position cannot fit the limits.
 
+Candidates are allocated in quality order after existing positions are handled.
+A candidate that passes every entry gate but cannot fit the remaining cash,
+exposure, concentration, trade-risk, or portfolio-heat capacity is recorded as
+`QUALIFIED_CAPITAL_BLOCKED`. Candidates that also fail technical entry gates
+remain `ENTRY_GATES_BLOCKED`, so capital limits do not hide the real rejection
+reason.
+
 Position size is based on the smaller of:
 
 - available cash
 - max allocation per ticker
 - max portfolio exposure allowed by the current market regime
 - max risk per trade based on entry minus stop
+- remaining total portfolio heat
 - sector/factor exposure caps
 
 ### Trade Lifecycle

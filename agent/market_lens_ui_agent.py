@@ -995,6 +995,7 @@ def update_workbook(
     open_positions = read_open_positions(wb)
     cash = compute_cash(wb, starting_capital)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
+    open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
     initial_open_position_tickers = set(open_positions)
     decisions: dict[str, Decision] = {}
     decision_records: list[dict[str, Any]] = []
@@ -1002,8 +1003,9 @@ def update_workbook(
     new_buy_tickers: set[str] = set()
     timestamp = datetime.now().isoformat(timespec="seconds")
     setup_score_percentiles = calculate_setup_score_percentiles(results)
+    allocation_order = rank_results_for_allocation(results, open_positions)
 
-    for result in results:
+    for result in allocation_order:
         decision = decide(
             result,
             open_positions=open_positions,
@@ -1030,6 +1032,7 @@ def update_workbook(
             open_positions=open_positions,
             sector_map=sector_map,
             run_context=run_context,
+            portfolio_open_risk_before=open_risk,
             recent_stop_events=recent_stop_events,
             neutral_pilot_trades_today=neutral_pilot_buys_today,
         )
@@ -1087,6 +1090,7 @@ def update_workbook(
             apply_exit_decision(open_positions, result, decision, currency_rate)
         elif result.ticker in open_positions:
             refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
+        open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
 
     apply_chart_retention_policy(
         pending_decisions,
@@ -1335,6 +1339,28 @@ def decide(
         sector_map=sector_map,
         sector_health=sector_health,
     )
+
+
+def rank_results_for_allocation(
+    results: list[SetupResult],
+    open_positions: dict[str, dict[str, Any]],
+) -> list[SetupResult]:
+    """Process existing positions first, then allocate capital to stronger candidates."""
+    indexed = list(enumerate(results))
+
+    def priority(item: tuple[int, SetupResult]) -> tuple[Any, ...]:
+        index, candidate = item
+        is_open = str(candidate.ticker).upper() in open_positions
+        has_setup = str(candidate.setup_type or "").lower() != "no trade"
+        return (
+            0 if is_open else 1,
+            0 if has_setup else 1,
+            -float(candidate.score or 0.0),
+            -float(candidate.risk_reward or 0.0),
+            index,
+        )
+
+    return [candidate for _, candidate in sorted(indexed, key=priority)]
 
 
 def build_selection_context(

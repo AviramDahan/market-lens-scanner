@@ -815,12 +815,15 @@ function renderRiskDashboard(risk, summary) {
   const remainingCapacity = Number(risk.remaining_exposure_capacity ?? Math.max(0, maxExposure - totalExposure));
   const newTradeBudget = Number(risk.remaining_new_trade_budget ?? Math.min(Number(summary.cash_ils || 0), remainingCapacity));
   const factorRows = (risk.factor_exposure || []).slice(0, 5);
+  const heatCap = Number(risk.portfolio_heat_cap || 0);
+  const openRisk = Number(risk.open_risk ?? summary.open_risk_ils ?? 0);
+  const heatRemaining = Math.max(0, heatCap - openRisk);
 
   meta.textContent = `${displayText(risk.market_regime || "UNKNOWN")} regime - ${money.format(remainingCapacity)} exposure capacity`;
   grid.innerHTML = [
     riskMetricCard("Market", risk.market_regime || "UNKNOWN", `Max exposure ${money.format(maxExposure)}`, "neutral"),
     riskMetricCard("New Trade Capacity", money.format(newTradeBudget), `Cash ${money.format(Number(risk.cash ?? summary.cash_ils ?? 0))}`, newTradeBudget > 0 ? "good" : "warn"),
-    riskMetricCard("Open Risk", money.format(Number(risk.open_risk ?? summary.open_risk_ils ?? 0)), `${Number(risk.open_risk_pct || 0).toFixed(2)}% of portfolio`, Number(risk.open_risk || 0) > 0 ? "warn" : "neutral"),
+    riskMetricCard("Portfolio Heat", money.format(openRisk), `${money.format(heatRemaining)} remaining / ${money.format(heatCap)} cap`, openRisk > 0 ? "warn" : "neutral"),
     exposureListCard("Factor Exposure", factorRows, totalExposure),
   ].join("");
 }
@@ -926,6 +929,7 @@ function renderDiagnostics(diagnostics, dailySummary, weeklySummary) {
     { key: "SCORE_BLOCKED", label: "Score Blocked", value: blockers["Setup score below gate"] || 0, detail: "Below regime threshold" },
     { key: "CONFIRM_BLOCKED", label: "Confirm/Session", value: blockers["Entry confirmation missing"] || 0, detail: "Needs entry or regular-session confirmation" },
     { key: "WEAK_EARNINGS", label: "Weak/Earnings", value: (blockers["Weak sector"] || 0) + (blockers["Earnings blackout"] || 0), detail: "Sector or earnings risk" },
+    { key: "CAPITAL_BLOCKED", label: "Capital Blocked", value: blockers["Qualified but capital blocked"] || 0, detail: "Passed every entry gate; no safe capacity" },
   ];
 
   grid.innerHTML = cards

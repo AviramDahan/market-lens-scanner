@@ -13,6 +13,7 @@ from agent.market_lens_ui_agent import (
     is_auth_failure,
     limited_carry_forward_tickers,
     parse_result,
+    rank_results_for_allocation,
     select_chart_tickers,
 )
 from app.agent_risk import (
@@ -20,9 +21,12 @@ from app.agent_risk import (
     AgentRunRiskContext,
     CandidateMarketSnapshot,
     MarketRegime,
+    adjust_candidate_position_size,
     buy_blockers,
     calculate_entry_confirmation,
+    candidate_capital_risk_budget,
     cooldown_check,
+    dynamic_exposure_pct,
     evaluate_agent_candidate,
     market_session_status,
     validate_targets,
@@ -1107,3 +1111,131 @@ def test_agent_and_user_strategy_decision_share_same_helper() -> None:
     assert agent_decision.action == shared_decision.action
     assert agent_decision.feedback == shared_decision.feedback
     assert agent_decision.quantity == shared_decision.quantity
+
+
+def test_dynamic_exposure_uses_continuous_regime_curve() -> None:
+    assert dynamic_exposure_pct(-2.0) == 0.0
+    assert dynamic_exposure_pct(0.0) == 0.20
+    assert dynamic_exposure_pct(2.0) == 0.30
+    assert dynamic_exposure_pct(3.75) == 0.4313
+    assert dynamic_exposure_pct(4.0) == 0.45
+    assert dynamic_exposure_pct(6.0) == 0.60
+
+
+def test_dynamic_exposure_respects_cash_floor_ceiling() -> None:
+    assert dynamic_exposure_pct(6.0, max_exposure_pct=0.45) == 0.45
+
+
+def test_high_quality_candidate_receives_075_percent_risk_budget() -> None:
+    budget = candidate_capital_risk_budget(
+        result=result(score=0.60),
+        sector_info={"regime": "STRONG"},
+        confirmation={"entry_confirmation_passed": True},
+        entry_mode="standard",
+        config=config(),
+    )
+
+    assert budget["tier"] == "HIGH_QUALITY"
+    assert budget["risk_pct"] == 0.0075
+    assert budget["risk_budget"] == 750.0
+
+
+def test_position_size_is_reduced_to_remaining_portfolio_heat() -> None:
+    run_context = context("BULL")
+    sizing = adjust_candidate_position_size(
+        ticker="TEST",
+        sector="Technology",
+        factor_tags=[],
+        initial_action="BUY_SIMULATED",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=80_000,
+        portfolio_exposure_before=10_000,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        portfolio_open_risk_before=2_450,
+        allowed_trade_risk=750,
+    )
+
+    assert sizing["blocked"] is False
+    assert sizing["quantity"] == 10
+    assert sizing["risk_amount"] == 50.0
+    assert "portfolio heat" in sizing["reason"]
+
+
+def test_capital_only_block_is_reported_separately(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.50, confirmation_passed=True)
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "strong"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-09-01T10:30:00",
+        result=result(score=0.60),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=60_000,
+        portfolio_exposure_before=40_000,
+        portfolio_open_risk_before=1_000,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+    )
+
+    assert decision["final_action"] == "WATCH"
+    assert decision["entry_eligibility_status"] == "QUALIFIED_CAPITAL_BLOCKED"
+    assert decision["capital_blocked_only"] is True
+    assert decision["entry_gate_blockers"] == []
+    assert decision["capital_blockers"]
+    assert decision["reason"].startswith("QUALIFIED_CAPITAL_BLOCKED:")
+
+
+def test_entry_gate_reason_wins_when_capital_and_quality_both_fail(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.50, confirmation_passed=True)
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "strong"}
+    }
+
+    decision = evaluate_agent_candidate(
+        timestamp="2026-09-01T10:30:00",
+        result=result(score=0.20),
+        initial_action="BUY_SIMULATED",
+        initial_reason="base buy",
+        quantity=100,
+        cash_out=10_000,
+        risk_amount=500,
+        cash_available=60_000,
+        portfolio_exposure_before=40_000,
+        portfolio_open_risk_before=1_000,
+        open_positions={},
+        sector_map={"TEST": "Technology"},
+        run_context=run_context,
+        recent_stop_events={},
+    )
+
+    assert decision["final_action"] == "WATCH"
+    assert decision["entry_eligibility_status"] == "ENTRY_GATES_BLOCKED"
+    assert decision["capital_blocked_only"] is False
+    assert "requires setup score" in decision["reason"]
+
+
+def test_allocation_ranking_prioritizes_open_positions_then_stronger_setups() -> None:
+    weak = SetupResult("WEAK", "VWAP Reclaim", 0.40, 100, 98, 100, 95, 105, 115, 2.0, "", "")
+    strong = SetupResult("STRONG", "Breakout + Retest", 0.70, 100, 98, 100, 95, 105, 115, 2.5, "", "")
+    no_trade = SetupResult("NONE", "No Trade", 0.0, 100, None, None, None, None, None, 0.0, "", "")
+    opened = SetupResult("OPEN", "No Trade", 0.0, 100, None, None, None, None, None, 0.0, "", "")
+
+    ordered = rank_results_for_allocation(
+        [weak, no_trade, strong, opened],
+        {"OPEN": {"ticker": "OPEN"}},
+    )
+
+    assert [item.ticker for item in ordered] == ["OPEN", "STRONG", "WEAK", "NONE"]

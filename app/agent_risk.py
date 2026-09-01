@@ -35,6 +35,8 @@ class MarketRegime:
     reason: str
     indicators: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    risk_points: float = 0.0
+    exposure_limit_pct: float = 0.0
 
 
 @dataclass
@@ -80,6 +82,12 @@ class AgentRiskConfig:
     block_unknown_earnings: bool = False
     fees_per_share: float = 0.0
     allow_off_hours_buys: bool = False
+    dynamic_exposure_enabled: bool = True
+    dynamic_exposure_max_pct: float = 0.60
+    cash_floor_pct: float = 0.40
+    base_trade_risk_pct: float = 0.005
+    high_quality_trade_risk_pct: float = 0.0075
+    portfolio_heat_limit_pct: float = 0.025
 
     def __post_init__(self) -> None:
         if self.bull_max_exposure is None:
@@ -93,6 +101,13 @@ class AgentRiskConfig:
         self.entry_confirmation_lookback_candles = max(1, int(self.entry_confirmation_lookback_candles or 1))
         self.neutral_pilot_position_pct = min(max(float(self.neutral_pilot_position_pct or 0.0), 0.0), 1.0)
         self.neutral_pilot_max_trades_per_day = max(0, int(self.neutral_pilot_max_trades_per_day or 0))
+        self.dynamic_exposure_max_pct = min(max(float(self.dynamic_exposure_max_pct), 0.0), 1.0)
+        self.cash_floor_pct = min(max(float(self.cash_floor_pct), 0.0), 1.0)
+        self.base_trade_risk_pct = min(max(float(self.base_trade_risk_pct), 0.0), 0.05)
+        self.high_quality_trade_risk_pct = min(
+            max(float(self.high_quality_trade_risk_pct), self.base_trade_risk_pct), 0.05
+        )
+        self.portfolio_heat_limit_pct = min(max(float(self.portfolio_heat_limit_pct), 0.0), 0.10)
 
 
 @dataclass
@@ -171,6 +186,15 @@ def build_agent_run_context(
         fees_per_share=float(os.getenv("MARKET_LENS_AGENT_FEES_PER_SHARE", "0")),
         allow_off_hours_buys=os.getenv("MARKET_LENS_ALLOW_BUY_OUTSIDE_REGULAR_HOURS", "false").lower()
         in {"1", "true", "yes"},
+        dynamic_exposure_enabled=os.getenv("MARKET_LENS_DYNAMIC_EXPOSURE_ENABLED", "true").lower()
+        in {"1", "true", "yes"},
+        dynamic_exposure_max_pct=float(os.getenv("MARKET_LENS_DYNAMIC_EXPOSURE_MAX_PCT", "0.60")),
+        cash_floor_pct=float(os.getenv("MARKET_LENS_CASH_FLOOR_PCT", "0.40")),
+        base_trade_risk_pct=float(os.getenv("MARKET_LENS_BASE_TRADE_RISK_PCT", "0.005")),
+        high_quality_trade_risk_pct=float(
+            os.getenv("MARKET_LENS_HIGH_QUALITY_TRADE_RISK_PCT", "0.0075")
+        ),
+        portfolio_heat_limit_pct=float(os.getenv("MARKET_LENS_PORTFOLIO_HEAT_LIMIT_PCT", "0.025")),
     )
     market_regime = assess_agent_market_regime(config)
     try:
@@ -229,6 +253,14 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
         min_rr = config.neutral_min_net_rr
         min_setup_score = config.neutral_min_setup_score
 
+    exposure_pct = max_exposure / config.starting_capital if config.starting_capital else 0.0
+    if config.dynamic_exposure_enabled:
+        exposure_pct = dynamic_exposure_pct(
+            risk_points,
+            max_exposure_pct=min(config.dynamic_exposure_max_pct, 1.0 - config.cash_floor_pct),
+        )
+        max_exposure = config.starting_capital * exposure_pct
+
     return MarketRegime(
         label=label,
         score=score,
@@ -238,7 +270,26 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
         reason=reason,
         indicators=indicators,
         warnings=warnings,
+        risk_points=round(risk_points, 2),
+        exposure_limit_pct=round(exposure_pct, 4),
     )
+
+
+def dynamic_exposure_pct(risk_points: float, *, max_exposure_pct: float = 0.60) -> float:
+    """Map regime evidence continuously to exposure and avoid BULL/NEUTRAL cliffs."""
+    ceiling = min(max(float(max_exposure_pct), 0.0), 0.60)
+    points = float(risk_points)
+    if points <= -2.0:
+        return 0.0
+    if points <= 0.0:
+        value = 0.10 + ((points + 2.0) / 2.0) * 0.10
+    elif points <= 2.0:
+        value = 0.20 + (points / 2.0) * 0.10
+    elif points <= 4.0:
+        value = 0.30 + ((points - 2.0) / 2.0) * 0.15
+    else:
+        value = 0.45 + ((min(points, 6.0) - 4.0) / 2.0) * 0.15
+    return round(min(value, ceiling), 4)
 
 
 def benchmark_state(frame: pd.DataFrame, *, is_vix: bool = False) -> dict[str, Any]:
@@ -277,6 +328,7 @@ def evaluate_agent_candidate(
     open_positions: dict[str, dict[str, Any]],
     sector_map: dict[str, str],
     run_context: AgentRunRiskContext,
+    portfolio_open_risk_before: float = 0.0,
     recent_stop_events: dict[str, dict[str, Any]] | None = None,
     neutral_pilot_trades_today: int = 0,
 ) -> dict[str, Any]:
@@ -337,6 +389,13 @@ def evaluate_agent_candidate(
         sizing_quantity = pilot_sizing["quantity"]
         sizing_cash_out = pilot_sizing["cash_out"]
         sizing_risk_amount = pilot_sizing["risk_amount"]
+    capital_risk_budget = candidate_capital_risk_budget(
+        result=result,
+        sector_info=sector_info,
+        confirmation=confirmation,
+        entry_mode=neutral_pilot["entry_mode"],
+        config=config,
+    )
     sizing = adjust_candidate_position_size(
         ticker=ticker,
         sector=sector,
@@ -350,6 +409,8 @@ def evaluate_agent_candidate(
         open_positions=open_positions,
         sector_map=sector_map,
         run_context=run_context,
+        portfolio_open_risk_before=portfolio_open_risk_before,
+        allowed_trade_risk=capital_risk_budget["risk_budget"],
     )
     effective_quantity = sizing["quantity"]
     effective_cash_out = sizing["cash_out"]
@@ -406,6 +467,9 @@ def evaluate_agent_candidate(
     final_action = initial_action
     final_reason = initial_reason
     blockers: list[dict[str, str]] = []
+    capital_blockers: list[dict[str, str]] = []
+    entry_gate_blockers: list[dict[str, str]] = []
+    entry_qualified_before_capital = False
     if initial_action == "BUY_SIMULATED":
         base_minimum_net_rr = minimum_net_rr_for(run_context.market_regime, sector_info, config)
         minimum_net_rr = config.neutral_pilot_min_net_rr if neutral_pilot["eligible"] else base_minimum_net_rr
@@ -435,10 +499,22 @@ def evaluate_agent_candidate(
             market_session=market_session,
         )
         if blockers:
+            capital_blockers = [blocker for blocker in blockers if is_capital_blocker(blocker)]
+            entry_gate_blockers = [blocker for blocker in blockers if not is_capital_blocker(blocker)]
+            entry_qualified_before_capital = not entry_gate_blockers and bool(capital_blockers)
             final_action = downgrade_action_from_blockers(blockers)
-            final_reason = blocker_reason_for_action(blockers, final_action)
+            if entry_qualified_before_capital:
+                final_action = "WATCH"
+                final_reason = (
+                    "QUALIFIED_CAPITAL_BLOCKED: All active entry-quality gates passed, but "
+                    + capital_blockers[0]["reason"].removeprefix("WATCH: ")
+                )
+            else:
+                preferred_blockers = entry_gate_blockers or blockers
+                final_reason = blocker_reason_for_action(preferred_blockers, final_action)
             warnings.extend(blocker["reason"] for blocker in blockers if blocker["reason"] != final_reason)
         else:
+            entry_qualified_before_capital = True
             if neutral_pilot["eligible"]:
                 final_reason = (
                     f"BUY_SIMULATED: NEUTRAL_PILOT entry, STRONG sector, confirmation passed, "
@@ -472,7 +548,11 @@ def evaluate_agent_candidate(
         and not market_session["regular_session_open"]
         and not config.allow_off_hours_buys
     )
-    watch_status = watch_status_for(final_action)
+    watch_status = (
+        "QUALIFIED_CAPITAL_BLOCKED"
+        if entry_qualified_before_capital and final_action != "BUY_SIMULATED"
+        else watch_status_for(final_action)
+    )
     off_hours_candidate = bool(off_hours_initial_candidate and watch_status == "WATCH_READY")
     confirmation_freshness = calculate_confirmation_freshness(confirmation, market_session)
     decision = {
@@ -482,7 +562,12 @@ def evaluate_agent_candidate(
         "price": round(float(result.current_price or 0), 4),
         "market_regime": run_context.market_regime.label,
         "market_regime_score": run_context.market_regime.score,
+        "market_regime_risk_points": run_context.market_regime.risk_points,
         "market_regime_reason": run_context.market_regime.reason,
+        "dynamic_exposure_enabled": config.dynamic_exposure_enabled,
+        "dynamic_exposure_limit_pct": run_context.market_regime.exposure_limit_pct,
+        "dynamic_exposure_limit": round(run_context.market_regime.max_total_exposure, 2),
+        "cash_floor_pct": config.cash_floor_pct,
         "minimum_net_rr_required": (
             config.neutral_pilot_min_net_rr
             if neutral_pilot["eligible"]
@@ -509,6 +594,19 @@ def evaluate_agent_candidate(
             else ""
         ),
         "watch_review_reason": final_reason if watch_status == "WATCH_REVIEW" else "",
+        "entry_eligibility_status": (
+            "BUY_SIMULATED"
+            if final_action == "BUY_SIMULATED"
+            else "QUALIFIED_CAPITAL_BLOCKED"
+            if entry_qualified_before_capital
+            else "ENTRY_GATES_BLOCKED"
+            if initial_action == "BUY_SIMULATED"
+            else "TECHNICAL_CANDIDATE"
+        ),
+        "entry_qualified_before_capital": entry_qualified_before_capital,
+        "capital_blocked_only": bool(entry_qualified_before_capital and capital_blockers),
+        "entry_gate_blockers": [blocker["reason"] for blocker in entry_gate_blockers],
+        "capital_blockers": [blocker["reason"] for blocker in capital_blockers],
         "sector": sector,
         "sector_etf": sector_info["etf"],
         "sector_regime": sector_info["regime"],
@@ -608,6 +706,23 @@ def evaluate_agent_candidate(
         "cooldown_reason": cooldown["cooldown_reason"],
         "position_size": effective_quantity if final_action == "BUY_SIMULATED" else 0,
         "risk_amount": round(effective_risk_amount if final_action == "BUY_SIMULATED" else 0.0, 2),
+        "capital_quality_tier": capital_risk_budget["tier"],
+        "capital_quality_multiplier": capital_risk_budget["multiplier"],
+        "trade_risk_budget_pct": capital_risk_budget["risk_pct"],
+        "trade_risk_budget": round(capital_risk_budget["risk_budget"], 2),
+        "portfolio_heat_before": round(portfolio_open_risk_before, 2),
+        "portfolio_heat_after": round(
+            portfolio_open_risk_before
+            + (effective_risk_amount if final_action == "BUY_SIMULATED" else 0.0),
+            2,
+        ),
+        "portfolio_heat_cap": round(config.starting_capital * config.portfolio_heat_limit_pct, 2),
+        "portfolio_heat_pct": round(
+            portfolio_open_risk_before / config.starting_capital * 100
+            if config.starting_capital
+            else 0.0,
+            4,
+        ),
         "cash_available": round(cash_available, 2),
         "portfolio_exposure_before": round(portfolio_exposure_before, 2),
         "portfolio_exposure_after": round(portfolio_exposure_after, 2),
@@ -1027,6 +1142,23 @@ def downgrade_action_from_blockers(blockers: list[dict[str, str]]) -> str:
     return "WATCH"
 
 
+def is_capital_blocker(blocker: dict[str, str]) -> bool:
+    reason = str(blocker.get("reason") or "").lower()
+    return any(
+        marker in reason
+        for marker in (
+            "position cannot be opened because",
+            "market regime exposure limit",
+            "sector exposure limit",
+            "factor/theme exposure limit",
+            "portfolio heat",
+            "trade risk budget",
+            "cash available",
+            "max position allocation",
+        )
+    )
+
+
 def blocker_reason_for_action(blockers: list[dict[str, str]], final_action: str) -> str:
     for blocker in blockers:
         if blocker["action"] == final_action:
@@ -1110,6 +1242,8 @@ def adjust_candidate_position_size(
     open_positions: dict[str, dict[str, Any]],
     sector_map: dict[str, str],
     run_context: AgentRunRiskContext,
+    portfolio_open_risk_before: float = 0.0,
+    allowed_trade_risk: float | None = None,
 ) -> dict[str, Any]:
     original = {
         "quantity": quantity,
@@ -1128,23 +1262,49 @@ def adjust_candidate_position_size(
     per_share_cash = cash_out / quantity
     per_share_risk = risk_amount / quantity if quantity else 0.0
     caps = [
-        ("candidate size", cash_out),
-        ("max position allocation", run_context.config.max_position),
-        ("cash available", cash_available),
-        ("market regime exposure", max(0.0, run_context.market_regime.max_total_exposure - portfolio_exposure_before)),
+        ("candidate size", float(quantity)),
+        ("max position allocation", run_context.config.max_position / per_share_cash),
+        ("cash available", max(0.0, cash_available) / per_share_cash),
+        (
+            "market regime exposure",
+            max(0.0, run_context.market_regime.max_total_exposure - portfolio_exposure_before)
+            / per_share_cash,
+        ),
     ]
 
     sector_before = current_sector_exposure(ticker, sector, open_positions, sector_map)
     sector_cap = sector_exposure_cap(run_context)
-    caps.append((f"{sector} sector exposure", max(0.0, sector_cap - sector_before)))
+    caps.append(
+        (f"{sector} sector exposure", max(0.0, sector_cap - sector_before) / per_share_cash)
+    )
 
     factor_before = current_factor_exposure(ticker, open_positions, sector_map)
     factor_cap = factor_exposure_cap(run_context)
     for tag in factor_tags:
-        caps.append((f"{tag} factor exposure", max(0.0, factor_cap - factor_before.get(tag, 0.0))))
+        caps.append(
+            (
+                f"{tag} factor exposure",
+                max(0.0, factor_cap - factor_before.get(tag, 0.0)) / per_share_cash,
+            )
+        )
 
-    limiting_name, limiting_cash = min(caps, key=lambda item: item[1])
-    adjusted_quantity = math.floor(max(0.0, limiting_cash) / per_share_cash) if per_share_cash > 0 else 0
+    portfolio_heat_cap = run_context.config.starting_capital * run_context.config.portfolio_heat_limit_pct
+    if per_share_risk > 0:
+        trade_risk_cap = (
+            float(allowed_trade_risk)
+            if allowed_trade_risk is not None
+            else run_context.config.starting_capital * run_context.config.base_trade_risk_pct
+        )
+        caps.append(("trade risk budget", max(0.0, trade_risk_cap) / per_share_risk))
+        caps.append(
+            (
+                "portfolio heat",
+                max(0.0, portfolio_heat_cap - portfolio_open_risk_before) / per_share_risk,
+            )
+        )
+
+    limiting_name, limiting_quantity = min(caps, key=lambda item: item[1])
+    adjusted_quantity = math.floor(max(0.0, limiting_quantity))
     if adjusted_quantity <= 0:
         return {
             **original,
@@ -1171,6 +1331,37 @@ def adjust_candidate_position_size(
             f"Position size reduced by {limiting_name} cap "
             f"({quantity} -> {adjusted_quantity} shares)."
         ),
+    }
+
+
+def candidate_capital_risk_budget(
+    *,
+    result: Any,
+    sector_info: dict[str, Any],
+    confirmation: dict[str, Any],
+    entry_mode: str,
+    config: AgentRiskConfig,
+) -> dict[str, Any]:
+    score = float(getattr(result, "score", 0.0) or 0.0)
+    confirmed = bool(confirmation.get("entry_confirmation_passed"))
+    strong_sector = str(sector_info.get("regime") or "").upper() == "STRONG"
+    if score >= 0.55 and confirmed and strong_sector and entry_mode != "neutral_pilot":
+        tier = "HIGH_QUALITY"
+        multiplier = 1.0
+        risk_pct = config.high_quality_trade_risk_pct
+    elif score >= 0.50 and confirmed and entry_mode != "neutral_pilot":
+        tier = "STANDARD_75"
+        multiplier = 0.75
+        risk_pct = config.base_trade_risk_pct * multiplier
+    else:
+        tier = "PILOT_50"
+        multiplier = 0.50
+        risk_pct = config.base_trade_risk_pct * multiplier
+    return {
+        "tier": tier,
+        "multiplier": multiplier,
+        "risk_pct": round(risk_pct, 6),
+        "risk_budget": round(config.starting_capital * risk_pct, 2),
     }
 
 

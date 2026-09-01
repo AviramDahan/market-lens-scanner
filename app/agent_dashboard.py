@@ -587,6 +587,11 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             str(warning).upper().startswith("WATCH_READY:") for warning in decision.get("warnings") or []
         ):
             drilldowns["WATCH_READY"].append(drilldown_item)
+        if bool(decision.get("capital_blocked_only")) or str(
+            decision.get("entry_eligibility_status") or ""
+        ).upper() == "QUALIFIED_CAPITAL_BLOCKED":
+            blockers["Qualified but capital blocked"] += 1
+            drilldowns["CAPITAL_BLOCKED"].append(drilldown_item)
 
         if setup_type.lower() == "no trade" or "no trade result" in text:
             blockers["No Trade"] += 1
@@ -751,6 +756,15 @@ def entry_missing_conditions(
         conditions.append(blocker_condition("sector_exposure", "Sector exposure cap", "The trade would exceed sector exposure limits.", "fail"))
     if bool(decision.get("factor_exposure_limit_exceeded")):
         conditions.append(blocker_condition("factor_exposure", "Factor exposure cap", "The trade would exceed factor/theme exposure limits.", "fail"))
+    if bool(decision.get("capital_blocked_only")):
+        conditions.append(
+            blocker_condition(
+                "capital_capacity",
+                "Qualified, capital blocked",
+                "All entry-quality gates passed, but exposure, heat, or concentration left no executable size.",
+                "need",
+            )
+        )
     if bool(decision.get("cooldown_active")) or "stop-loss cooldown" in text:
         conditions.append(blocker_condition("cooldown", "Stop cooldown", "Recent stop-loss cooldown blocks re-entry.", "warn"))
     if bool(decision.get("correlation_warning")):
@@ -1588,8 +1602,16 @@ def build_risk_dashboard(
     starting_capital = to_float(summary.get("starting_capital_ils"), 100_000.0)
     latest_decision = latest_decisions[0] if latest_decisions else {}
     market_regime = str(latest_decision.get("market_regime") or "UNKNOWN").upper()
-    max_total_exposure = market_exposure_limit(market_regime)
+    max_total_exposure = (
+        to_float(latest_decision.get("dynamic_exposure_limit"))
+        if "dynamic_exposure_limit" in latest_decision
+        else market_exposure_limit(market_regime)
+    )
     remaining_capacity = max(0.0, max_total_exposure - exposure)
+    portfolio_heat_cap = to_float(
+        latest_decision.get("portfolio_heat_cap"), starting_capital * 0.025
+    )
+    remaining_heat_capacity = max(0.0, portfolio_heat_cap - open_risk)
 
     sector_totals: dict[str, dict[str, Any]] = defaultdict(lambda: {"name": "", "exposure": 0.0, "count": 0})
     factor_totals: dict[str, dict[str, Any]] = defaultdict(lambda: {"name": "", "exposure": 0.0, "count": 0})
@@ -1615,6 +1637,10 @@ def build_risk_dashboard(
         "remaining_new_trade_budget": round(max(0.0, min(cash, remaining_capacity)), 2),
         "open_risk": round(open_risk, 2),
         "open_risk_pct": round(open_risk / starting_capital * 100, 2) if starting_capital else 0.0,
+        "portfolio_heat_cap": round(portfolio_heat_cap, 2),
+        "remaining_heat_capacity": round(remaining_heat_capacity, 2),
+        "dynamic_exposure_enabled": bool(latest_decision.get("dynamic_exposure_enabled")),
+        "market_regime_risk_points": latest_decision.get("market_regime_risk_points"),
         "sector_exposure": exposure_rows(sector_totals, exposure),
         "factor_exposure": exposure_rows(factor_totals, exposure),
     }
