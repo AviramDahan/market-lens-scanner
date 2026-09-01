@@ -2,20 +2,20 @@ Weekly Performance Summary
 
 Date: 2026-08-31
 Total scans: 57
-Tickers scanned: 8842
+Tickers scanned: 8841
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 1593
+WATCH_REVIEW: 1592
 WATCH_REVIEW unique tickers: 104
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 1733
+WATCH: 1732
 SKIP: 6943
 NO_TRADE: 5461
 Realized PnL: -320.01
-Unrealized PnL: 243.06
-Portfolio value: 101028.07
+Unrealized PnL: 242.32
+Portfolio value: 101027.33
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -33,7 +33,7 @@ Shadow would-buy counts:
 Top rejected candidates:
 - MP: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.12.
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
-- KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.98.
+- KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.99.
 - NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ETN: SKIP score=0.53 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.70.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
