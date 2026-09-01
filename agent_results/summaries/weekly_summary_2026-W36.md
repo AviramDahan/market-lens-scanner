@@ -1,21 +1,21 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 42
-Tickers scanned: 6509
+Total scans: 43
+Tickers scanned: 6668
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 1299
-WATCH_REVIEW unique tickers: 79
+WATCH_REVIEW: 1316
+WATCH_REVIEW unique tickers: 82
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 1439
-SKIP: 4936
-NO_TRADE: 3916
+WATCH: 1456
+SKIP: 5075
+NO_TRADE: 4016
 Realized PnL: -26.97
-Unrealized PnL: 160.14
-Portfolio value: 101238.19
+Unrealized PnL: 108.06
+Portfolio value: 101186.11
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -40,7 +40,7 @@ Top rejected candidates:
 - MPC: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.18.
 - SBUX: SKIP score=0.51 reason=SKIP: Consumer sector regime is weak (25/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.03.
 - HAL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
-- WELL: SKIP score=0.48 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.72.
+- MS: SKIP score=0.49 reason=SKIP: Bear market regime blocks new simulated buys.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
