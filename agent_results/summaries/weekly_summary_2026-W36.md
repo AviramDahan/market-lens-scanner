@@ -1,26 +1,26 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 28
-Tickers scanned: 4370
+Total scans: 29
+Tickers scanned: 4517
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 821
-WATCH_REVIEW unique tickers: 71
+WATCH_REVIEW: 855
+WATCH_REVIEW unique tickers: 75
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 961
-SKIP: 3317
-NO_TRADE: 2731
+WATCH: 995
+SKIP: 3427
+NO_TRADE: 2809
 Realized PnL: -26.97
 Unrealized PnL: 263.08
 Portfolio value: 101341.13
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
-Worst ticker: ICE
-Best shadow strategy: INSUFFICIENT_OUTCOMES
-Worst shadow strategy: INSUFFICIENT_OUTCOMES
+Worst ticker: ALB
+Best shadow strategy: BREAKOUT_CONTINUATION
+Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 11
 - FIB_STOP_075_ATR: 37
