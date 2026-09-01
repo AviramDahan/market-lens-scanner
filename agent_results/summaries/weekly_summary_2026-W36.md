@@ -1,21 +1,21 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 47
-Tickers scanned: 7356
+Total scans: 48
+Tickers scanned: 7522
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 1400
-WATCH_REVIEW unique tickers: 96
+WATCH_REVIEW: 1428
+WATCH_REVIEW unique tickers: 98
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 1540
-SKIP: 5670
-NO_TRADE: 4477
+WATCH: 1568
+SKIP: 5806
+NO_TRADE: 4592
 Realized PnL: -320.01
-Unrealized PnL: 257.5
-Portfolio value: 101042.51
+Unrealized PnL: 276.04
+Portfolio value: 101061.05
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -25,7 +25,7 @@ Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 12
 - FIB_STOP_075_ATR: 38
 - FIB_STOP_100_ATR: 4
-- FIB_STRUCTURE_STOP: 15
+- FIB_STRUCTURE_STOP: 16
 - RELATIVE_STRENGTH_LEADER: 90
 - TREND_PULLBACK_RECLAIM: 49
 - VWAP_RECLAIM: 38
@@ -35,12 +35,12 @@ Top rejected candidates:
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.98.
 - NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
+- ETN: SKIP score=0.53 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.70.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
 - CF: WATCH score=0.51 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
 - MPC: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.18.
 - SBUX: SKIP score=0.51 reason=SKIP: Consumer sector regime is weak (25/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.03.
 - HAL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.94 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.31.
-- MS: SKIP score=0.49 reason=SKIP: Bear market regime blocks new simulated buys.
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
