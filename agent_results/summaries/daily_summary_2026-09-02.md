@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-09-02
-Total scans: 4
-Tickers scanned: 564
+Total scans: 5
+Tickers scanned: 705
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 98
+WATCH_REVIEW: 123
 WATCH_REVIEW unique tickers: 27
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 98
-SKIP: 458
-NO_TRADE: 278
+WATCH: 123
+SKIP: 572
+NO_TRADE: 348
 Realized PnL: 0.0
 Unrealized PnL: 242.32
 Portfolio value: 101027.33
@@ -24,7 +24,7 @@ Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 
 Top rejected candidates:
-- KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.99.
+- KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.00.
 - SBUX: SKIP score=0.49 reason=SKIP: Consumer sector regime is weak (23/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.07.
 - WFC: WATCH score=0.48 reason=WATCH: Technical setup detected, but weighted risk/reward 1.20 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 0.89.
 - MS: SKIP score=0.47 reason=SKIP: Bear market regime blocks new simulated buys.
