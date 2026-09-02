@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-02
-Total scans: 21
-Tickers scanned: 3172
+Total scans: 22
+Tickers scanned: 3345
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 554
-WATCH_REVIEW unique tickers: 66
+WATCH_REVIEW: 589
+WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 554
-SKIP: 2576
-NO_TRADE: 1770
+WATCH: 589
+SKIP: 2712
+NO_TRADE: 1885
 Realized PnL: 0.0
-Unrealized PnL: 270.0
-Portfolio value: 101055.01
+Unrealized PnL: 237.0
+Portfolio value: 101022.01
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: EGP
@@ -23,10 +23,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 12
-- FIB_STOP_100_ATR: 2
-- FIB_STRUCTURE_STOP: 5
-- TREND_PULLBACK_RECLAIM: 16
+- FIB_STOP_075_ATR: 15
+- FIB_STOP_100_ATR: 3
+- FIB_STRUCTURE_STOP: 8
+- TREND_PULLBACK_RECLAIM: 20
 
 Top rejected candidates:
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.00.
