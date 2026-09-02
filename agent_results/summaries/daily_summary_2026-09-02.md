@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-02
-Total scans: 25
-Tickers scanned: 3859
+Total scans: 26
+Tickers scanned: 4030
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 684
+WATCH_REVIEW: 717
 WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 684
-SKIP: 3125
-NO_TRADE: 2218
+WATCH: 717
+SKIP: 3261
+NO_TRADE: 2332
 Realized PnL: 0.0
-Unrealized PnL: 253.26
-Portfolio value: 101038.27
+Unrealized PnL: 255.94
+Portfolio value: 101040.95
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: EGP
@@ -23,10 +23,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 17
-- FIB_STOP_100_ATR: 4
+- FIB_STOP_075_ATR: 22
+- FIB_STOP_100_ATR: 5
 - FIB_STRUCTURE_STOP: 8
-- TREND_PULLBACK_RECLAIM: 23
+- TREND_PULLBACK_RECLAIM: 27
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
