@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-02
-Total scans: 26
-Tickers scanned: 4030
+Total scans: 27
+Tickers scanned: 4198
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 717
+WATCH_REVIEW: 735
 WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 717
-SKIP: 3261
-NO_TRADE: 2332
+WATCH: 735
+SKIP: 3409
+NO_TRADE: 2446
 Realized PnL: 0.0
-Unrealized PnL: 255.94
-Portfolio value: 101040.95
+Unrealized PnL: 266.4
+Portfolio value: 101051.41
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: EGP
@@ -36,7 +36,7 @@ Top rejected candidates:
 - ETN: SKIP score=0.5 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 4.64.
 - MS: SKIP score=0.49 reason=SKIP: Bear market regime blocks new simulated buys.
 - ICE: SKIP score=0.49 reason=SKIP: Bear market regime blocks new simulated buys.
-- META: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.96 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
+- META: SKIP score=0.49 reason=SKIP: Bear market regime blocks new simulated buys.
 - AMCR: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.91 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.30.
 - SBUX: SKIP score=0.49 reason=SKIP: Consumer sector regime is weak (23/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.07.
 - GS: WATCH score=0.48 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
