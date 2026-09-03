@@ -1,38 +1,38 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 111
-Tickers scanned: 17072
+Total scans: 112
+Tickers scanned: 17226
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 3110
-WATCH_REVIEW unique tickers: 126
+WATCH_REVIEW: 3139
+WATCH_REVIEW unique tickers: 128
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 3250
-SKIP: 13548
-NO_TRADE: 10189
+WATCH: 3280
+SKIP: 13670
+NO_TRADE: 10289
 Realized PnL: -320.01
-Unrealized PnL: 485.92
-Portfolio value: 101270.93
+Unrealized PnL: 451.36
+Portfolio value: 101236.37
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
 Best shadow strategy: FIB_STRUCTURE_STOP
 Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 14
-- FIB_STOP_075_ATR: 62
+- BREAKOUT_CONTINUATION: 15
+- FIB_STOP_075_ATR: 63
 - FIB_STOP_100_ATR: 9
 - FIB_STRUCTURE_STOP: 26
 - RELATIVE_STRENGTH_LEADER: 90
 - TREND_PULLBACK_RECLAIM: 81
-- VWAP_RECLAIM: 39
+- VWAP_RECLAIM: 40
 
 Top rejected candidates:
 - MP: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.12.
-- GS: WATCH score=0.56 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- GS: WATCH score=0.56 reason=QUALIFIED_CAPITAL_BLOCKED: All active entry-quality gates passed, but Position cannot be opened because Financials sector exposure cap leaves no executable size.
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.00.
 - NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
