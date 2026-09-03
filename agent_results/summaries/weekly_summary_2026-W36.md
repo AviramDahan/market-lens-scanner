@@ -1,21 +1,21 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 117
-Tickers scanned: 18043
+Total scans: 118
+Tickers scanned: 18212
 BUY_SIMULATED: 1
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 3295
-WATCH_REVIEW unique tickers: 133
+WATCH_REVIEW: 3325
+WATCH_REVIEW unique tickers: 135
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 3436
-SKIP: 14320
-NO_TRADE: 10831
+WATCH: 3466
+SKIP: 14456
+NO_TRADE: 10948
 Realized PnL: -320.01
-Unrealized PnL: 597.48
-Portfolio value: 101382.49
+Unrealized PnL: 593.46
+Portfolio value: 101378.47
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -23,15 +23,16 @@ Best shadow strategy: TREND_PULLBACK_RECLAIM
 Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 22
-- FIB_STOP_075_ATR: 77
+- FIB_STOP_075_ATR: 79
 - FIB_STOP_100_ATR: 9
-- FIB_STRUCTURE_STOP: 30
-- RELATIVE_STRENGTH_LEADER: 91
-- TREND_PULLBACK_RECLAIM: 86
+- FIB_STRUCTURE_STOP: 31
+- RELATIVE_STRENGTH_LEADER: 92
+- TREND_PULLBACK_RECLAIM: 88
 - VWAP_RECLAIM: 40
 
 Top rejected candidates:
 - MP: WATCH score=0.58 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.12.
+- MO: WATCH score=0.57 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - GS: WATCH score=0.56 reason=QUALIFIED_CAPITAL_BLOCKED: All active entry-quality gates passed, but Position cannot be opened because Financials sector exposure cap leaves no executable size.
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.00.
@@ -40,7 +41,6 @@ Top rejected candidates:
 - GH: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - HAL: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
-- ECHO: WATCH score=0.51 reason=WATCH: Normalized quality score is too low for a new entry (34.44/100).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
