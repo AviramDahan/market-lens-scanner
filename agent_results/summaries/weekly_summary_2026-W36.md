@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 114
-Tickers scanned: 17544
+Total scans: 115
+Tickers scanned: 17712
 BUY_SIMULATED: 0
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 3196
-WATCH_REVIEW unique tickers: 131
+WATCH_REVIEW: 3230
+WATCH_REVIEW unique tickers: 132
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 3337
-SKIP: 13927
-NO_TRADE: 10497
+WATCH: 3371
+SKIP: 14059
+NO_TRADE: 10610
 Realized PnL: -320.01
-Unrealized PnL: 515.34
-Portfolio value: 101300.35
+Unrealized PnL: 572.26
+Portfolio value: 101357.27
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
 Best shadow strategy: TREND_PULLBACK_RECLAIM
 Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 17
-- FIB_STOP_075_ATR: 71
+- BREAKOUT_CONTINUATION: 18
+- FIB_STOP_075_ATR: 74
 - FIB_STOP_100_ATR: 9
-- FIB_STRUCTURE_STOP: 27
+- FIB_STRUCTURE_STOP: 28
 - RELATIVE_STRENGTH_LEADER: 90
-- TREND_PULLBACK_RECLAIM: 82
+- TREND_PULLBACK_RECLAIM: 83
 - VWAP_RECLAIM: 40
 
 Top rejected candidates:
@@ -37,7 +37,7 @@ Top rejected candidates:
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.00.
 - NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ETN: SKIP score=0.53 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.70.
-- HAL: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.89 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.27.
+- HAL: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.28 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 0.90.
 - ECHO: WATCH score=0.51 reason=WATCH: Normalized quality score is too low for a new entry (34.44/100).
 - CF: WATCH score=0.51 reason=WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.
