@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-09-04
-Total scans: 30
-Tickers scanned: 4570
+Total scans: 32
+Tickers scanned: 4861
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 951
+WATCH_REVIEW: 1016
 WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 953
-SKIP: 3483
-NO_TRADE: 2728
+WATCH: 1018
+SKIP: 3697
+NO_TRADE: 2870
 Realized PnL: -113.62
 Unrealized PnL: 889.03
 Portfolio value: 101560.42
@@ -38,8 +38,8 @@ Top rejected candidates:
 - MSFT: WATCH score=0.53 reason=Gross R/R is valid, but Net R/R 1.61 failed minimum 2.00 after slippage/spread adjustment.
 - PH: SKIP score=0.52 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.76.
 - EQIX: SKIP score=0.52 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.47.
+- BRK-B: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.10.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.07.
-- BRK-B: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.10.
 - KMI: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 
 Recommendations:
