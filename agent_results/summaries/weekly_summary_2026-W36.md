@@ -1,21 +1,21 @@
 Weekly Performance Summary
 
 Date: 2026-08-31
-Total scans: 131
-Tickers scanned: 20220
+Total scans: 132
+Tickers scanned: 20371
 BUY_SIMULATED: 2
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 3753
-WATCH_REVIEW unique tickers: 143
+WATCH_REVIEW: 3792
+WATCH_REVIEW unique tickers: 145
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
 WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 3894
-SKIP: 15988
-NO_TRADE: 12160
+WATCH: 3933
+SKIP: 16097
+NO_TRADE: 12238
 Realized PnL: -433.63
-Unrealized PnL: 209.68
-Portfolio value: 100881.07
+Unrealized PnL: 617.92
+Portfolio value: 101289.31
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -40,7 +40,7 @@ Top rejected candidates:
 - WMB: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.78.
 - NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
 - ETN: SKIP score=0.53 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.70.
-- HAL: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
+- ANET: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
