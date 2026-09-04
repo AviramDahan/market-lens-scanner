@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-04
-Total scans: 6
-Tickers scanned: 924
+Total scans: 7
+Tickers scanned: 1080
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 218
+WATCH_REVIEW: 252
 WATCH_REVIEW unique tickers: 46
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 218
-SKIP: 687
-NO_TRADE: 522
+WATCH: 252
+SKIP: 806
+NO_TRADE: 617
 Realized PnL: -113.62
-Unrealized PnL: 617.92
-Portfolio value: 101289.31
+Unrealized PnL: 209.68
+Portfolio value: 100881.07
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: ZBH
