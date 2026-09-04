@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-04
-Total scans: 26
-Tickers scanned: 3975
+Total scans: 27
+Tickers scanned: 4126
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 836
+WATCH_REVIEW: 860
 WATCH_REVIEW unique tickers: 65
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 838
-SKIP: 3027
-NO_TRADE: 2386
+WATCH: 862
+SKIP: 3148
+NO_TRADE: 2487
 Realized PnL: -113.62
-Unrealized PnL: 880.76
-Portfolio value: 101552.15
+Unrealized PnL: 806.12
+Portfolio value: 101477.51
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AEP
@@ -23,11 +23,11 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 35
-- FIB_STOP_100_ATR: 15
-- FIB_STRUCTURE_STOP: 16
+- FIB_STOP_075_ATR: 40
+- FIB_STOP_100_ATR: 17
+- FIB_STRUCTURE_STOP: 18
 - RELATIVE_STRENGTH_LEADER: 6
-- TREND_PULLBACK_RECLAIM: 21
+- TREND_PULLBACK_RECLAIM: 24
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
