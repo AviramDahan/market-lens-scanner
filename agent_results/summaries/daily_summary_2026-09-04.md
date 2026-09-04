@@ -1,32 +1,32 @@
 Daily Performance Summary
 
 Date: 2026-09-04
-Total scans: 18
-Tickers scanned: 2758
+Total scans: 19
+Tickers scanned: 2915
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 640
+WATCH_REVIEW: 664
 WATCH_REVIEW unique tickers: 63
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 642
-SKIP: 2054
-NO_TRADE: 1570
+WATCH: 666
+SKIP: 2181
+NO_TRADE: 1674
 Realized PnL: -113.62
-Unrealized PnL: 658.8
-Portfolio value: 101330.19
+Unrealized PnL: 668.92
+Portfolio value: 101340.31
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 6
-- FIB_STOP_100_ATR: 4
-- FIB_STRUCTURE_STOP: 3
-- TREND_PULLBACK_RECLAIM: 5
+- BREAKOUT_CONTINUATION: 2
+- FIB_STOP_075_ATR: 10
+- FIB_STOP_100_ATR: 6
+- FIB_STRUCTURE_STOP: 6
+- TREND_PULLBACK_RECLAIM: 8
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
@@ -35,11 +35,11 @@ Top rejected candidates:
 - ANET: WATCH score=0.53 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - MSFT: WATCH score=0.52 reason=Gross R/R is valid, but Net R/R 1.56 failed minimum 2.00 after slippage/spread adjustment.
 - KMI: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
+- KLAC: SKIP score=0.5 reason=SKIP: Semiconductors sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.98.
+- EQIX: SKIP score=0.5 reason=SKIP: Utilities / Real Assets sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.43.
 - SM: WATCH score=0.49 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
 - BRK-B: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.14.
 - NVDA: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.48 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.10.
-- KLAC: SKIP score=0.48 reason=SKIP: Semiconductors sector regime is weak (17/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.40.
-- LIN: WATCH score=0.48 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
