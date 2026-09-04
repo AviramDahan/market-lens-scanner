@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-04
-Total scans: 29
-Tickers scanned: 4425
+Total scans: 30
+Tickers scanned: 4571
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 919
+WATCH_REVIEW: 952
 WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 921
-SKIP: 3376
-NO_TRADE: 2657
+WATCH: 954
+SKIP: 3483
+NO_TRADE: 2728
 Realized PnL: -113.62
-Unrealized PnL: 891.01
-Portfolio value: 101562.4
+Unrealized PnL: 889.03
+Portfolio value: 101560.42
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AEP
@@ -39,8 +39,8 @@ Top rejected candidates:
 - PH: SKIP score=0.52 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.76.
 - EQIX: SKIP score=0.52 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime BULL; sector WEAK; net R/R 1.47.
 - WMB: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.07.
+- BRK-B: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.10.
 - KMI: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
-- AMD: WATCH score=0.49 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
