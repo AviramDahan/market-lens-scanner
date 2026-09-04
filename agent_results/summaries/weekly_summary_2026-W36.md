@@ -2,20 +2,20 @@ Weekly Performance Summary
 
 Date: 2026-08-31
 Total scans: 144
-Tickers scanned: 22192
-BUY_SIMULATED: 2
+Tickers scanned: 22198
+BUY_SIMULATED: 3
 WATCH_READY: 140
 WATCH_READY unique tickers: 20
-WATCH_REVIEW: 4236
+WATCH_REVIEW: 4232
 WATCH_REVIEW unique tickers: 145
 WATCH_READY session split: regular=0, off_hours=140, unknown=0
-WATCH_READY conversion: 0 converted / 20 staged
-WATCH: 4378
-SKIP: 17437
-NO_TRADE: 13237
+WATCH_READY conversion: 1 converted / 20 staged
+WATCH: 4374
+SKIP: 17446
+NO_TRADE: 13244
 Realized PnL: -433.63
-Unrealized PnL: 629.66
-Portfolio value: 101301.05
+Unrealized PnL: 658.9
+Portfolio value: 101330.29
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ALB
@@ -36,7 +36,7 @@ Top rejected candidates:
 - MO: WATCH score=0.57 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - GS: WATCH score=0.56 reason=QUALIFIED_CAPITAL_BLOCKED: All active entry-quality gates passed, but Position cannot be opened because Financials sector exposure cap leaves no executable size.
 - LLY: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.77 failed minimum 2.00 after slippage/spread adjustment.
-- CB: WATCH score=0.56 reason=Gross R/R is valid, but Net R/R 1.53 failed minimum 2.20 after slippage/spread adjustment.
+- CB: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.92 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.40.
 - KMI: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.00.
 - WMB: WATCH score=0.56 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.78.
 - NVDA: WATCH score=0.55 reason=WATCH: Position cannot be opened because market regime exposure cap leaves no executable size.
@@ -44,5 +44,4 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
-- After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
