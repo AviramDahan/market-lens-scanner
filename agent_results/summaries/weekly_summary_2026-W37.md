@@ -1,32 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 49
-Tickers scanned: 6906
+Total scans: 50
+Tickers scanned: 7039
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1573
+WATCH_REVIEW: 1598
 WATCH_REVIEW unique tickers: 58
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1573
-SKIP: 5044
-NO_TRADE: 3301
+WATCH: 1598
+SKIP: 5146
+NO_TRADE: 3390
 Realized PnL: -24.1
-Unrealized PnL: 762.75
-Portfolio value: 101410.04
+Unrealized PnL: 893.68
+Portfolio value: 101540.97
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 2
-- FIB_STOP_100_ATR: 1
-- FIB_STRUCTURE_STOP: 1
+- BREAKOUT_CONTINUATION: 1
+- FIB_STOP_075_ATR: 4
+- FIB_STOP_100_ATR: 2
+- FIB_STRUCTURE_STOP: 3
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 3
+- TREND_PULLBACK_RECLAIM: 5
 
 Top rejected candidates:
 - KLAC: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (41/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.13.
@@ -37,8 +38,8 @@ Top rejected candidates:
 - GS: WATCH score=0.51 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - D: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.96.
 - AMD: WATCH score=0.5 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- KMI: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.63 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.19.
 - ECL: WATCH score=0.5 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime BULL; sector NEUTRAL; net R/R 0.90.
-- PH: SKIP score=0.49 reason=SKIP: Industrials sector regime is weak (23/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.75.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
