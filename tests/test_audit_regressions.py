@@ -46,7 +46,6 @@ def test_weekend_negative_control():
     assert market_session_status(now)["can_open_new_buy"] is False
 
 
-@pytest.mark.xfail(strict=True, reason="AUDIT-EXIT-01: scan targets replace position targets")
 def test_existing_position_uses_its_own_targets():
     candidate = StrategyCandidate("TEST", "Fib", 0.6, 111, 99, 112, 95, 105, 110, 2.4)
     position = {"quantity": 10, "entry_price": 100, "stop_loss": 95,
@@ -68,7 +67,6 @@ def test_larger_loss_is_not_stronger_than_smaller_loss():
     assert compute_relative_strength(leader, benchmark) > compute_relative_strength(loser, benchmark)
 
 
-@pytest.mark.xfail(strict=True, reason="AUDIT-METRIC-01: excursion includes bars after the stop exit")
 def test_excursion_excludes_prices_after_exit(monkeypatch, tmp_path):
     frame = pd.DataFrame(
         {"Open": [100, 94, 109], "High": [101, 100, 150],
@@ -78,6 +76,7 @@ def test_excursion_excludes_prices_after_exit(monkeypatch, tmp_path):
     )
     monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *args, **kwargs: frame)
     position = dict(ticker="TEST", entry_price=100, quantity=10, stop_loss=95,
+                    entry_date="2026-09-04T14:00:30Z",
                     target_1=110, target_2=120, partial_taken=False)
     settings = MonitorSettings(excel_path=Path(tmp_path / "unused.xlsx"), run_dir=tmp_path,
                                period="5d", interval="1m", save_noop=False, dashboard_url="")

@@ -172,8 +172,10 @@ def decide_strategy_candidate(
                 cash_in_ils=round(quantity * exit_price * currency_rate, 2),
                 execution_price=exit_price,
             )
-        if result.target_2 and result.current_price >= result.target_2:
-            exit_price = float(result.target_2)
+        target_1 = float(existing.get("target_1") or 0)
+        target_2 = float(existing.get("target_2") or 0)
+        if target_2 > 0 and result.current_price >= target_2:
+            exit_price = target_2
             return StrategyDecision(
                 "TAKE_PROFIT",
                 "Target 2 reached; close remaining simulated position.",
@@ -181,9 +183,9 @@ def decide_strategy_candidate(
                 cash_in_ils=round(quantity * exit_price * currency_rate, 2),
                 execution_price=exit_price,
             )
-        if result.target_1 and result.current_price >= result.target_1 and not existing.get("partial_taken"):
+        if target_1 > 0 and result.current_price >= target_1 and not existing.get("partial_taken"):
             partial_qty = max(1, quantity // 2)
-            exit_price = float(result.target_1)
+            exit_price = target_1
             return StrategyDecision(
                 "TAKE_PARTIAL_PROFIT",
                 "Target 1 reached; take partial simulated profit and move stop to breakeven.",

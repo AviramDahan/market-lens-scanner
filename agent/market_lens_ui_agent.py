@@ -1060,6 +1060,8 @@ def update_workbook(
             decision.feedback = final_reason
             decision.decision_json = decision_json
         enrich_decision_analytics(decision_json, run_id=run_id, result=result, final_action=final_action)
+        if final_action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            capture_position_exit_plan(decision_json, open_positions[result.ticker])
         decision_json["active_strategy"] = "CURRENT_AGENT_GATES"
         decision_json["shadow_strategies"] = evaluate_shadow_strategies(result, decision_json)
         result.selection_context = build_selection_context(
@@ -1759,6 +1761,17 @@ def append_watchlist_row(wb: Any, timestamp: str, result: SetupResult, decision:
     ws.cell(row, 18, decision_json_text(decision))
 
 
+def capture_position_exit_plan(payload: dict[str, Any], position: dict[str, Any]) -> None:
+    # Capture before a full exit removes the position or a partial advances its stop.
+    stored = position.get("decision_json") or {}
+    if not isinstance(stored, dict):
+        stored = parse_json_cell(stored)
+    payload["trade_id"] = position.get("trade_id") or stored.get("trade_id") or ""
+    payload["position_exit_plan"] = {
+        key: position.get(key) for key in ("entry_date", "entry_price", "stop_loss", "target_1", "target_2")
+    }
+
+
 def append_trade_log_row(
     wb: Any,
     timestamp: str,
@@ -1780,9 +1793,11 @@ def append_trade_log_row(
     ws.cell(row, 9, decision.cash_in_ils)
     ws.cell(row, 10, decision.cash_out_ils)
     ws.cell(row, 11, decision.cash_in_ils)
-    ws.cell(row, 12, result.stop_loss)
-    ws.cell(row, 13, result.target_1)
-    ws.cell(row, 14, result.target_2)
+    exit_plan = decision.decision_json.get("position_exit_plan", {})
+    is_exit = decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}
+    ws.cell(row, 12, exit_plan.get("stop_loss") if is_exit else result.stop_loss)
+    ws.cell(row, 13, exit_plan.get("target_1") if is_exit else result.target_1)
+    ws.cell(row, 14, exit_plan.get("target_2") if is_exit else result.target_2)
     ws.cell(row, 15, decision.risk_ils)
     ws.cell(row, 16, decision.feedback)
     ws.cell(row, 17, str(screenshot_path))

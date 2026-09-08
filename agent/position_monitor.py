@@ -54,6 +54,7 @@ class PositionEvent:
     quantity: int
     cash_in: float
     note: str
+    trade_id: str = ""
 
 
 @dataclass
@@ -84,12 +85,12 @@ def main() -> None:
     )
 
     open_positions = read_open_positions(wb)
-    last_event_times = read_last_event_times(wb)
+    last_event_times = read_last_event_times(wb, open_positions)
     results: list[MonitorResult] = []
     event_notifications: list[tuple[dict[str, Any], PositionEvent]] = []
 
     for ticker, position in list(open_positions.items()):
-        since = last_event_times.get(ticker) or parse_timestamp(position.get("entry_date"))
+        since = last_event_times.get(ticker)
         result = monitor_position(position, settings=settings, since=since, currency_rate=currency_rate)
         results.append(result)
         if result.event:
@@ -264,6 +265,10 @@ def monitor_position(
     currency_rate: float,
 ) -> MonitorResult:
     ticker = str(position.get("ticker") or "").upper()
+    entry_time = parse_timestamp(position.get("entry_date"))
+    if entry_time is None:
+        return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0,
+                             error="Entry timestamp missing; cannot safely replay price events.")
     try:
         frame = fetch_intraday_frame(ticker, period=settings.period, interval=settings.interval)
     except Exception as exc:
@@ -273,10 +278,14 @@ def monitor_position(
         return MonitorResult(ticker=ticker, status="NO_DATA", current_price=0.0)
 
     latest_close = float(frame["Close"].iloc[-1])
-    bars = frame
-    if since:
+    if not frame.index.is_monotonic_increasing or not frame.index.is_unique or frame.index.tz is None:
+        return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0,
+                             error="Price bars require ordered, unique, timezone-aware timestamps.")
+    # Exclude bars which began before entry, including the ambiguous entry minute.
+    bars = frame[frame.index >= entry_time]
+    if since and ensure_utc(since) >= entry_time:
         cutoff = ensure_utc(since)
-        bars = frame[frame.index > cutoff]
+        bars = bars[bars.index > cutoff]
     if bars.empty:
         return MonitorResult(ticker=ticker, status="NO_NEW_BARS", current_price=latest_close)
 
@@ -285,15 +294,17 @@ def monitor_position(
     target_2 = float(position.get("target_2") or 0)
     partial_taken = bool(position.get("partial_taken"))
     quantity = int(position.get("quantity") or 0)
-    update_position_excursion(position, bars)
-
-    for index, row in bars.iterrows():
+    for offset, (index, row) in enumerate(bars.iterrows()):
         high = float(row["High"])
         low = float(row["Low"])
         close = float(row["Close"])
         hit_stop = stop > 0 and low <= stop
         hit_target_2 = target_2 > 0 and high >= target_2
         hit_target_1 = target_1 > 0 and high >= target_1 and not partial_taken
+
+        if hit_stop or hit_target_2 or hit_target_1:
+            # The event bar is the finest available resolution; never include later bars.
+            update_position_excursion(position, bars.iloc[:offset + 1])
 
         if hit_stop:
             note = "Stop loss touched by intraday low."
@@ -344,6 +355,7 @@ def monitor_position(
             )
             return MonitorResult(ticker=ticker, status="EVENT", current_price=close, event=event)
 
+    update_position_excursion(position, bars)
     return MonitorResult(ticker=ticker, status="HOLD", current_price=latest_close)
 
 
@@ -371,6 +383,7 @@ def build_event(
         quantity=quantity,
         cash_in=round(quantity * trigger_price * currency_rate, 2),
         note=note,
+        trade_id=position_trade_id(position),
     )
 
 
@@ -383,6 +396,14 @@ def apply_event(
     run_id: str,
     currency_rate: float,
 ) -> None:
+    entry_time = parse_timestamp(position.get("entry_date"))
+    triggered_at = parse_timestamp(event.triggered_at)
+    if (entry_time is None or triggered_at is None or triggered_at < entry_time
+            or event.trade_id != position_trade_id(position)
+            or event.ticker != position.get("ticker")
+            or open_positions.get(event.ticker) is not position
+            or not 0 < event.quantity <= int(position.get("quantity") or 0)):
+        raise ValueError("Position event does not belong to the current trade; no ledger changes made.")
     append_position_event(wb, timestamp, run_id, position, event)
     append_trade_log_row(wb, timestamp, position, event, currency_rate)
 
@@ -395,6 +416,7 @@ def apply_event(
         position["quantity"] = remaining_qty
         position["current_price"] = event.trigger_price
         position["stop_loss"] = float(position.get("entry_price") or event.trigger_price)
+        position["partial_taken"] = True
         position["notes"] = "Partial profit taken; stop moved to breakeven."
         refresh_position(position, event.trigger_price, currency_rate)
         return
@@ -600,6 +622,7 @@ def ensure_agent_columns(wb: Any) -> None:
 
 def ensure_position_events_sheet(wb: Any) -> None:
     if EVENT_SHEET in wb.sheetnames:
+        wb[EVENT_SHEET].cell(1, 16, "Trade ID")
         return
     ws = wb.create_sheet(EVENT_SHEET)
     headers = [
@@ -618,12 +641,22 @@ def ensure_position_events_sheet(wb: Any) -> None:
         "Target 1 USD",
         "Target 2 USD",
         "Notes",
+        "Trade ID",
     ]
     for col_idx, header in enumerate(headers, start=1):
         ws.cell(1, col_idx, header)
 
 
-def read_last_event_times(wb: Any) -> dict[str, datetime]:
+def position_trade_id(position: dict[str, Any]) -> str:
+    decision = parse_decision_json(position.get("decision_json", ""))
+    identity = str(position.get("trade_id") or decision.get("trade_id") or "")
+    if identity:
+        return identity
+    entry = parse_timestamp(position.get("entry_date"))
+    return f"{position.get('ticker')}:{entry.isoformat()}" if entry else ""
+
+
+def read_last_event_times(wb: Any, positions: dict[str, dict[str, Any]]) -> dict[str, datetime]:
     if EVENT_SHEET not in wb.sheetnames:
         return {}
     latest: dict[str, datetime] = {}
@@ -631,6 +664,16 @@ def read_last_event_times(wb: Any) -> dict[str, datetime]:
     for row in ws.iter_rows(min_row=2, values_only=True):
         ticker = str(row[2] or "").upper()
         triggered_at = parse_timestamp(row[4])
+        position = positions.get(ticker)
+        if not position or str(row[3] or "").startswith("VOID"):
+            continue
+        entry = parse_timestamp(position.get("entry_date"))
+        recorded = parse_timestamp(row[0])
+        trade_id = str(row[15] or "") if len(row) > 15 else ""
+        if (entry is None or triggered_at is None or triggered_at < entry
+                or recorded is None or recorded < entry
+                or (trade_id and trade_id != position_trade_id(position))):
+            continue
         if ticker and triggered_at and triggered_at > latest.get(ticker, datetime.min.replace(tzinfo=timezone.utc)):
             latest[ticker] = triggered_at
     return latest
@@ -661,6 +704,7 @@ def append_position_event(
         position.get("target_1"),
         position.get("target_2"),
         event.note,
+        event.trade_id,
     ]
     for col_idx, value in enumerate(values, start=1):
         ws.cell(row, col_idx, value)
