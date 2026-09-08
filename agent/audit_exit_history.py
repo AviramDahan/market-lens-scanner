@@ -1,0 +1,91 @@
+"""Read-only audit of recorded monitor evidence; never repairs cash or trades."""
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+from openpyxl import load_workbook
+
+from agent.position_monitor import parse_timestamp
+
+
+def audit_workbook(wb):
+    findings = []
+    trades = list(wb["Trade Log"].iter_rows(min_row=2, values_only=True))
+    buys = {}
+    exits = {}
+    for row in trades:
+        row = tuple(row) + (None,) * max(0, 21 - len(row))
+        identity = str(row[20] or "")
+        if row[1] == "BUY_SIMULATED" and identity:
+            buys.setdefault(identity, []).append(row)
+        elif row[1] in {"EXIT_STOP", "TAKE_PROFIT", "TAKE_PARTIAL_PROFIT"}:
+            key = (str(row[2]), str(row[1]), parse_timestamp(row[0]))
+            exits.setdefault(key, []).append(row)
+    events = list(wb["Position Events"].iter_rows(min_row=2, values_only=True)) if "Position Events" in wb.sheetnames else []
+    checked = 0
+    for number, raw in enumerate(events, 2):
+        row = tuple(raw) + (None,) * max(0, 16 - len(raw))
+        if not row[2] or str(row[3] or "").startswith("VOID"):
+            continue
+        checked += 1
+        recorded, triggered = parse_timestamp(row[0]), parse_timestamp(row[4])
+        matches = exits.get((str(row[2]), str(row[3]), recorded), [])
+        item = {"event_row": number, "ticker": row[2], "action": row[3],
+                "recorded_at": str(row[0]), "triggered_at": str(row[4])}
+        if len(matches) != 1:
+            findings.append({**item, "status": "UNRESOLVED_EXIT_IDENTITY"})
+            continue
+        trade = matches[0]
+        identity = str(trade[20] or "")
+        item["trade_id"] = identity
+        entries = buys.get(identity, [])
+        if len(entries) != 1 or str(entries[0][2]) != str(row[2]):
+            findings.append({**item, "status": "UNRESOLVED_ENTRY_IDENTITY"})
+            continue
+        entry = parse_timestamp(entries[0][0])
+        item["entry_at"] = str(entries[0][0])
+        if row[15] and str(row[15]) != identity:
+            status = "TRADE_ID_MISMATCH"
+        elif entry is None or recorded is None or triggered is None:
+            status = "MISSING_TIMESTAMP"
+        elif triggered < entry:
+            status = "PRE_ENTRY_EVENT"
+        elif triggered > recorded:
+            status = "FUTURE_EVENT"
+        else:
+            continue
+        findings.append({**item, "status": status})
+    return {"audit_version": "exit_identity_v1", "read_only": True,
+            "events_checked": checked, "findings": findings,
+            "affected_trade_ids": sorted({f["trade_id"] for f in findings if f.get("trade_id")}),
+            "limitations": ["Absence of findings does not validate fills, prices, or data completeness.",
+                            "Only recorded monitor events are audited; scanner exits without events are not covered.",
+                            "No corrected PnL is inferred from invalid execution evidence."]}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("workbook", type=Path)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    if args.output.resolve() == args.workbook.resolve():
+        parser.error("Output must not overwrite the input workbook")
+    digest = hashlib.sha256(args.workbook.read_bytes()).hexdigest()
+    wb = load_workbook(args.workbook, read_only=True, data_only=True)
+    try:
+        report = audit_workbook(wb)
+    finally:
+        wb.close()
+    report["workbook_sha256"] = digest
+    if hashlib.sha256(args.workbook.read_bytes()).hexdigest() != digest:
+        raise RuntimeError("Workbook changed during audit; discard this result and retry")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")
+    print(json.dumps({"events_checked": report["events_checked"], "findings": len(report["findings"]),
+                      "output": str(args.output)}))
+
+
+if __name__ == "__main__":
+    main()
