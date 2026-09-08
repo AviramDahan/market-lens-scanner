@@ -11,6 +11,7 @@ import pandas as pd
 
 from app.data import fetch_daily_frame, fetch_intraday_frame, fetch_next_earnings_date
 from app.indicators import compute_atr
+from app.trading_clock import INTERVAL_MINUTES, bar_close_time, completed_frame, session_status
 from app.smart_universe import SECTOR_ETFS, build_sector_health, company_name_for
 
 
@@ -343,6 +344,21 @@ def evaluate_agent_candidate(
     target_info = validate_targets(result, snapshot, config)
     confirmation = calculate_entry_confirmation(result, snapshot, config)
     market_session = market_session_status(allow_off_hours_buys=config.allow_off_hours_buys)
+    confirmation_freshness = calculate_confirmation_freshness(
+        confirmation, market_session, lookback_candles=config.entry_confirmation_lookback_candles
+    )
+    technical_confirmation_passed = confirmation["entry_confirmation_passed"]
+    if (
+        config.require_entry_confirmation
+        and market_session["can_open_new_buy"]
+        and confirmation_freshness["status"] != "FRESH_SAME_SESSION"
+    ):
+        confirmation = {
+            **confirmation,
+            "entry_confirmation_passed": False,
+            "confirmation_status": "TIMING_INVALID",
+            "confirmation_reason": confirmation_freshness["reason"],
+        }
     cooldown = cooldown_check(
         ticker=ticker,
         result=result,
@@ -554,7 +570,6 @@ def evaluate_agent_candidate(
         else watch_status_for(final_action)
     )
     off_hours_candidate = bool(off_hours_initial_candidate and watch_status == "WATCH_READY")
-    confirmation_freshness = calculate_confirmation_freshness(confirmation, market_session)
     decision = {
         "timestamp": timestamp,
         "ticker": ticker,
@@ -641,15 +656,19 @@ def evaluate_agent_candidate(
         "vwap_reclaimed": confirmation["vwap_reclaimed"],
         "retest_held": confirmation["retest_held"],
         "entry_confirmation_passed": confirmation["entry_confirmation_passed"],
+        "technical_confirmation_passed": technical_confirmation_passed,
+        "confirmation_timing_valid": confirmation_freshness["status"] == "FRESH_SAME_SESSION",
         "confirmation_timeframe": confirmation["confirmation_timeframe"],
         "confirmation_candle_timestamp": confirmation["confirmation_candle_timestamp"],
         "confirmation_lookback_candles": config.entry_confirmation_lookback_candles,
         "confirmation_window_used": confirmation.get("confirmation_window_used", 1),
         "confirmation_freshness_status": confirmation_freshness["status"],
         "confirmation_age_minutes": confirmation_freshness["age_minutes"],
+        "confirmation_closed_age_minutes": confirmation_freshness.get("closed_age_minutes"),
         "confirmation_same_session": confirmation_freshness["same_session"],
         "confirmation_freshness_reason": confirmation_freshness["reason"],
-        "confirmation_freshness_shadow_only": True,
+        "confirmation_freshness_shadow_only": False,
+        "confirmation_candle_close_timestamp": confirmation_freshness.get("close_timestamp"),
         "entry_mode": neutral_pilot["entry_mode"],
         "neutral_pilot_enabled": config.neutral_pilot_enabled,
         "neutral_pilot_eligible": neutral_pilot["eligible"],
@@ -890,9 +909,26 @@ def buy_blockers(
     session = market_session or market_session_status(
         allow_off_hours_buys=run_context.config.allow_off_hours_buys
     )
+    freshness = calculate_confirmation_freshness(
+        confirmation, session,
+        lookback_candles=run_context.config.entry_confirmation_lookback_candles,
+    )
+    if (
+        run_context.config.require_entry_confirmation
+        and session["can_open_new_buy"]
+        and freshness["status"] != "FRESH_SAME_SESSION"
+    ):
+        blockers.append({
+            "action": "WATCH",
+            "reason": f"WATCH: Entry confirmation timing invalid: {freshness['reason']}",
+        })
     if sizing["blocked"]:
         blockers.append({"action": "WATCH", "reason": f"WATCH: {sizing['reason']}"})
-    if not session["can_open_new_buy"]:
+    if session.get("phase") == "UNKNOWN":
+        blockers.append({
+            "action": "WATCH", "reason": f"WATCH: Session timing unavailable: {session['reason']}"
+        })
+    elif not session["can_open_new_buy"]:
         blockers.append(
             {
                 "action": "WATCH_READY",
@@ -1017,42 +1053,7 @@ def market_session_status(
     *,
     allow_off_hours_buys: bool = False,
 ) -> dict[str, Any]:
-    current = now.astimezone(NY_TZ) if now else datetime.now(NY_TZ)
-    minutes = current.hour * 60 + current.minute
-    if current.weekday() >= 5:
-        phase = "WEEKEND"
-        is_regular = False
-    elif minutes < 4 * 60:
-        phase = "CLOSED"
-        is_regular = False
-    elif minutes < 9 * 60 + 30:
-        phase = "PRE_MARKET"
-        is_regular = False
-    elif minutes <= 16 * 60:
-        phase = "REGULAR"
-        is_regular = True
-    elif minutes <= 20 * 60:
-        phase = "AFTER_HOURS"
-        is_regular = False
-    else:
-        phase = "CLOSED"
-        is_regular = False
-
-    can_open = is_regular or allow_off_hours_buys
-    reason = (
-        "Regular market session is open."
-        if is_regular
-        else "Outside regular market hours; new simulated buys are staged for the next regular-session confirmation."
-    )
-    if allow_off_hours_buys and not is_regular:
-        reason = "Off-hours buys are enabled by config."
-    return {
-        "phase": phase,
-        "timestamp": current.isoformat(timespec="minutes"),
-        "can_open_new_buy": bool(can_open),
-        "regular_session_open": bool(is_regular),
-        "reason": reason,
-    }
+    return session_status(now, allow_off_hours_buys=allow_off_hours_buys)
 
 
 def minimum_net_rr_for(
@@ -1088,6 +1089,8 @@ def watch_status_for(final_action: str) -> str:
 def calculate_confirmation_freshness(
     confirmation: dict[str, Any],
     market_session: dict[str, Any],
+    *,
+    lookback_candles: int = 3,
 ) -> dict[str, Any]:
     candle_value = str(confirmation.get("confirmation_candle_timestamp") or "").strip()
     session_value = str(market_session.get("timestamp") or "").strip()
@@ -1101,11 +1104,12 @@ def calculate_confirmation_freshness(
     try:
         candle = datetime.fromisoformat(candle_value.replace("Z", "+00:00"))
         observed = datetime.fromisoformat(session_value.replace("Z", "+00:00"))
-        if candle.tzinfo is None:
-            candle = candle.replace(tzinfo=timezone.utc)
         if observed.tzinfo is None:
-            observed = observed.replace(tzinfo=NY_TZ)
-    except ValueError:
+            raise ValueError("Observation timezone unavailable")
+        close_time = bar_close_time(candle, str(confirmation.get("confirmation_timeframe") or ""))
+        if candle.tzinfo is None:
+            candle = candle.replace(tzinfo=NY_TZ)
+    except Exception:
         return {
             "status": "UNKNOWN",
             "age_minutes": None,
@@ -1115,22 +1119,32 @@ def calculate_confirmation_freshness(
 
     candle_ny = candle.astimezone(NY_TZ)
     observed_ny = observed.astimezone(NY_TZ)
-    age_minutes = max(0.0, (observed_ny - candle_ny).total_seconds() / 60.0)
+    age_minutes = (observed - close_time).total_seconds() / 60.0
     same_session = candle_ny.date() == observed_ny.date()
-    if str(market_session.get("phase") or "").upper() != "REGULAR":
+    if age_minutes < 0:
+        status = "INCOMPLETE_OR_FUTURE"
+        reason = "Confirmation candle has not closed at the observation time."
+    elif str(market_session.get("phase") or "").upper() != "REGULAR":
         status = "OFF_HOURS_REFERENCE"
         reason = "Completed regular-session candle is informational during off-hours staging."
     elif same_session:
         status = "FRESH_SAME_SESSION"
         reason = "Confirmation uses a completed candle from the current regular session."
+        interval = str(confirmation.get("confirmation_timeframe") or "").removesuffix("_completed")
+        minutes = INTERVAL_MINUTES.get(interval)
+        if minutes and age_minutes >= minutes * max(1, lookback_candles):
+            status = "STALE_INTRADAY"
+            reason = "Confirmation is older than the configured completed-candle lookback window."
     else:
         status = "STALE_PREVIOUS_SESSION"
-        reason = "Confirmation uses a completed candle from a previous regular session; shadow review required."
+        reason = "Confirmation uses a previous regular session; wait for a new completed confirmation."
     return {
         "status": status,
-        "age_minutes": round(age_minutes, 2),
+        "age_minutes": round((observed - candle).total_seconds() / 60.0, 2),
+        "closed_age_minutes": round(age_minutes, 2),
         "same_session": bool(same_session),
         "reason": reason,
+        "close_timestamp": close_time.isoformat(),
     }
 
 
@@ -1595,7 +1609,10 @@ def calculate_entry_confirmation(
     result: Any,
     snapshot: CandidateMarketSnapshot,
     config: AgentRiskConfig,
+    *,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
+    observed = now if now is not None else datetime.now(timezone.utc)
     if not config.require_entry_confirmation:
         return {
             "confirmation_status": "DISABLED",
@@ -1637,6 +1654,7 @@ def calculate_entry_confirmation(
             timeframe=f"{config.entry_confirmation_intraday_interval}_completed",
             drop_last=True,
             lookback_candles=config.entry_confirmation_lookback_candles,
+            now=observed,
         )
         if intraday_confirmation["confirmation_status"] != "UNKNOWN":
             return intraday_confirmation
@@ -1656,6 +1674,7 @@ def calculate_entry_confirmation(
         timeframe="1d_completed",
         drop_last=True,
         lookback_candles=config.entry_confirmation_lookback_candles,
+        now=observed,
     )
     if daily_confirmation.get("warnings") and base["warnings"]:
         daily_confirmation["warnings"] = [*base["warnings"], *daily_confirmation["warnings"]]
@@ -1671,6 +1690,7 @@ def calculate_entry_confirmation_from_frame(
     timeframe: str,
     drop_last: bool,
     lookback_candles: int = 1,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     base = {
         "confirmation_status": "UNKNOWN",
@@ -1685,11 +1705,19 @@ def calculate_entry_confirmation_from_frame(
         "confirmation_window_used": 1,
         "warnings": [],
     }
-    if frame is None or frame.empty or len(frame) < 3:
+    if frame is None or frame.empty or len(frame) < 2:
         base["warnings"] = [f"Not enough {timeframe} candles for entry confirmation."]
         return base
 
-    completed = frame.iloc[:-1] if drop_last else frame
+    # Keep the legacy argument for caller compatibility, but never trust row position
+    # (or drop_last=False) as evidence that a provider bar has actually closed.
+    try:
+        completed = completed_frame(
+            frame, timeframe, now if now is not None else datetime.now(timezone.utc)
+        )
+    except Exception:
+        base["warnings"] = ["Candle timing/calendar unavailable; blocking auto-buy."]
+        return base
     if len(completed) < 2:
         base["warnings"] = [f"Not enough completed {timeframe} candles for entry confirmation."]
         return base

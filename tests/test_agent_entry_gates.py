@@ -2,6 +2,7 @@ import json
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from agent.market_lens_ui_agent import (
     ChartRetentionSettings,
@@ -263,6 +264,8 @@ def blockers_for(
     confirmation = {
         "entry_confirmation_passed": confirmation_passed,
         "confirmation_reason": "test confirmation",
+        "confirmation_timeframe": "30m_completed",
+        "confirmation_candle_timestamp": "2026-06-18T10:00:00-04:00",
     }
     cooldown = {
         "cooldown_active": cooldown_active,
@@ -493,7 +496,7 @@ def test_regular_watch_is_labeled_review_not_ready(monkeypatch) -> None:
     assert decision["watch_review_reason"] == decision["reason"]
 
 
-def test_confirmation_freshness_is_measurement_only(monkeypatch) -> None:
+def test_confirmation_freshness_blocks_active_buy_and_records_reason(monkeypatch) -> None:
     _patch_risk_dependencies(monkeypatch, net_rr=2.5, confirmation_passed=True)
     monkeypatch.setattr(
         "app.agent_risk.calculate_entry_confirmation",
@@ -532,9 +535,136 @@ def test_confirmation_freshness_is_measurement_only(monkeypatch) -> None:
         recent_stop_events={},
     )
 
-    assert decision["final_action"] == "BUY_SIMULATED"
+    assert decision["final_action"] == "WATCH"
     assert decision["confirmation_freshness_status"] == "STALE_PREVIOUS_SESSION"
-    assert decision["confirmation_freshness_shadow_only"] is True
+    assert decision["confirmation_freshness_shadow_only"] is False
+    assert any("timing invalid" in reason for reason in decision["entry_gate_blockers"])
+
+
+def test_audit_prior_session_confirmation_cannot_buy(monkeypatch) -> None:
+    _patch_risk_dependencies(monkeypatch, net_rr=2.5, confirmation_passed=True)
+    monkeypatch.setattr(
+        "app.agent_risk.calculate_entry_confirmation",
+        lambda result, snapshot, config: {
+            "confirmation_status": "PASSED",
+            "confirmation_reason": "Previous-session completed candle",
+            "trigger_level": 100.0,
+            "close_above_trigger": True,
+            "vwap_reclaimed": False,
+            "retest_held": True,
+            "entry_confirmation_passed": True,
+            "confirmation_timeframe": "30m_completed",
+            "confirmation_candle_timestamp": "2026-07-07T15:30:00-04:00",
+            "confirmation_window_used": 1,
+            "warnings": [],
+        },
+    )
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "test"}
+    }
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T10:30:00", result=result(score=0.60),
+        initial_action="BUY_SIMULATED", initial_reason="base buy", quantity=100,
+        cash_out=10_000, risk_amount=500, cash_available=100_000,
+        portfolio_exposure_before=0, open_positions={}, sector_map={"TEST": "Technology"},
+        run_context=run_context, recent_stop_events={},
+    )
+    assert decision["confirmation_freshness_status"] == "STALE_PREVIOUS_SESSION"
+    assert decision["final_action"] != "BUY_SIMULATED"
+
+
+@pytest.mark.parametrize("regime", ["BULL", "NEUTRAL"])
+@pytest.mark.parametrize("candle,expected", [
+    ("2026-07-08T10:00:00-04:00", "BUY_SIMULATED"),
+    ("2026-07-07T15:30:00-04:00", "WATCH"),
+    ("2026-07-08T10:30:00-04:00", "WATCH"),
+    ("2026-07-08T12:00:00-04:00", "WATCH"),
+    ("2026-07-08T10:00:00", "WATCH"),
+    ("", "WATCH"),
+])
+def test_active_candidate_timing_gate(monkeypatch, regime, candle, expected):
+    import app.agent_risk as risk
+    _patch_risk_dependencies(monkeypatch, net_rr=3.0)
+    technical = risk.calculate_entry_confirmation(None, None, None)
+    technical["confirmation_candle_timestamp"] = candle
+    monkeypatch.setattr(risk, "calculate_entry_confirmation", lambda *args: dict(technical))
+    run_context = context(regime)
+    run_context.sector_health = {"Technology": {"label": "Strong", "score": 80, "etf": "XLK"}}
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T14:30:00Z", result=result(score=0.70),
+        initial_action="BUY_SIMULATED", initial_reason="base buy", quantity=100,
+        cash_out=10_000, risk_amount=500, cash_available=100_000,
+        portfolio_exposure_before=0, open_positions={}, sector_map={"TEST": "Technology"},
+        run_context=run_context,
+    )
+    assert decision["final_action"] == expected
+    assert decision["technical_confirmation_passed"] is True
+    assert decision["confirmation_timing_valid"] is (expected == "BUY_SIMULATED")
+    assert decision["entry_confirmation_passed"] is (expected == "BUY_SIMULATED")
+    if expected == "WATCH":
+        assert decision["position_size"] == 0
+        assert decision["entry_eligibility_status"] == "ENTRY_GATES_BLOCKED"
+        assert not decision["capital_blocked_only"]
+    json.dumps(decision, allow_nan=False)
+
+
+@pytest.mark.parametrize("action", ["HOLD", "EXIT_STOP", "TAKE_PARTIAL_PROFIT", "TAKE_PROFIT"])
+def test_entry_timing_does_not_block_existing_position_actions(monkeypatch, action):
+    import app.agent_risk as risk
+    _patch_risk_dependencies(monkeypatch, net_rr=3.0)
+    technical = risk.calculate_entry_confirmation(None, None, None)
+    technical["confirmation_candle_timestamp"] = ""
+    monkeypatch.setattr(risk, "calculate_entry_confirmation", lambda *args: dict(technical))
+    decision = evaluate_agent_candidate(
+        timestamp="2026-07-08T14:30:00Z", result=result(), initial_action=action,
+        initial_reason="existing position", quantity=10, cash_out=0, risk_amount=0,
+        cash_available=99_000, portfolio_exposure_before=1_000,
+        open_positions={"TEST": {"quantity": 10, "stop_loss": 95, "exposure_ils": 1_000}},
+        sector_map={"TEST": "Technology"}, run_context=context(),
+    )
+    assert decision["final_action"] == action
+
+
+@pytest.mark.parametrize("endpoint", ["/scan", "/ui/scan"])
+@pytest.mark.parametrize("day,expected", [("2026-07-08", "BUY_SIMULATED"), ("2026-07-07", "WATCH")])
+def test_scan_http_routes_apply_completed_candle_gate(monkeypatch, endpoint, day, expected):
+    from fastapi.testclient import TestClient
+    import app.main as main
+    import app.strategy as strategy
+    import app.agent_risk as risk
+
+    real_confirmation = risk.calculate_entry_confirmation
+    _patch_risk_dependencies(monkeypatch, net_rr=3.0)
+    monkeypatch.setenv("MARKET_LENS_AUTH_MODE", "open")
+    run_context = context()
+    run_context.sector_health = {"Technology": {"label": "Strong", "score": 80, "etf": "XLK"}}
+    monkeypatch.setattr(strategy, "build_agent_run_context", lambda **kwargs: run_context)
+    monkeypatch.setattr(strategy, "base_universe", lambda: {"TEST": "Technology"})
+    frame = pd.DataFrame([
+        {"Open": 97, "High": 99, "Low": 96, "Close": 98, "Volume": 1000},
+        {"Open": 99, "High": 104, "Low": 99, "Close": 102, "Volume": 1200},
+        {"Open": 99, "High": 104, "Low": 99, "Close": 102, "Volume": 1200},
+    ], index=pd.date_range(f"{day}T09:30:00-04:00", periods=3, freq="30min"))
+    monkeypatch.setattr(risk, "calculate_entry_confirmation", lambda candidate, snapshot, cfg: real_confirmation(
+        candidate, CandidateMarketSnapshot(ticker="TEST", intraday=frame), cfg,
+        now=pd.Timestamp("2026-07-08T10:30:00-04:00").to_pydatetime(),
+    ))
+    payload = ScanResult(ticker="TEST", setup_type="Breakout + Retest", score=0.70,
+                         current_price=100, buy_zone=(98, 100), stop_loss=95,
+                         target_1=110, target_2=120, risk_reward=3, reason="controlled fixture")
+    monkeypatch.setattr(main, "scan_tickers", lambda *args, **kwargs: ([payload], {}, []))
+    # No chart detail or persistence is part of this isolated route integration test.
+    response = TestClient(main.app).post(endpoint, json={"tickers": ["TEST"], "include_charts": False})
+    assert response.status_code == 200
+    returned = response.json()["results"][0]
+    assert returned["strategy_action"] == expected
+    decision = returned["strategy_decision"]
+    assert decision["final_action"] == expected
+    assert decision["confirmation_timing_valid"] is (expected == "BUY_SIMULATED")
+    assert decision["confirmation_candle_close_timestamp"]
+    assert decision["confirmation_freshness_shadow_only"] is False
+    json.dumps(decision, allow_nan=False)
 
 
 def test_stop_loss_cooldown_blocks_reentry() -> None:
@@ -621,7 +751,7 @@ def _patch_risk_dependencies(monkeypatch, *, net_rr: float = 2.05, confirmation_
             "retest_held": confirmation_passed,
             "entry_confirmation_passed": confirmation_passed,
             "confirmation_timeframe": "30m_completed",
-            "confirmation_candle_timestamp": "2026-07-08T10:30:00-04:00",
+            "confirmation_candle_timestamp": "2026-07-08T10:00:00-04:00",
             "confirmation_window_used": 1,
             "warnings": [] if confirmation_passed else ["test confirmation failed"],
         },
@@ -767,12 +897,13 @@ def test_entry_confirmation_uses_completed_candle_not_live_candle() -> None:
             {"Open": 98, "High": 103, "Low": 98, "Close": 102, "Volume": 1000},
             {"Open": 90, "High": 91, "Low": 89, "Close": 89, "Volume": 1000},
         ],
-        index=pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-03"]),
+        index=pd.to_datetime(["2025-12-31", "2026-01-02", "2026-01-05"]),
     )
     confirmation = calculate_entry_confirmation(
         result(),
         CandidateMarketSnapshot(ticker="TEST", daily=daily),
         config(),
+        now=pd.Timestamp("2026-01-05T11:00:00-05:00").to_pydatetime(),
     )
     assert confirmation["entry_confirmation_passed"] is True
     assert confirmation["confirmation_candle_timestamp"].startswith("2026-01-02")
@@ -787,9 +918,9 @@ def test_entry_confirmation_prefers_completed_intraday_candle_not_live_candle() 
         ],
         index=pd.to_datetime(
             [
-                "2026-01-03 10:00:00-05:00",
-                "2026-01-03 10:30:00-05:00",
-                "2026-01-03 11:00:00-05:00",
+                "2026-01-05 10:00:00-05:00",
+                "2026-01-05 10:30:00-05:00",
+                "2026-01-05 11:00:00-05:00",
             ]
         ),
     )
@@ -798,6 +929,7 @@ def test_entry_confirmation_prefers_completed_intraday_candle_not_live_candle() 
         result(),
         CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
         config(),
+        now=pd.Timestamp("2026-01-05T11:00:00-05:00").to_pydatetime(),
     )
 
     assert confirmation["entry_confirmation_passed"] is True
@@ -812,13 +944,14 @@ def test_entry_confirmation_falls_back_to_daily_when_intraday_unavailable() -> N
             {"Open": 98, "High": 103, "Low": 98, "Close": 102, "Volume": 1000},
             {"Open": 90, "High": 91, "Low": 89, "Close": 89, "Volume": 1000},
         ],
-        index=pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-03"]),
+        index=pd.to_datetime(["2025-12-31", "2026-01-02", "2026-01-05"]),
     )
 
     confirmation = calculate_entry_confirmation(
         result(),
         CandidateMarketSnapshot(ticker="TEST", daily=daily),
         config(),
+        now=pd.Timestamp("2026-01-05T11:00:00-05:00").to_pydatetime(),
     )
 
     assert confirmation["entry_confirmation_passed"] is True
@@ -834,9 +967,9 @@ def test_fib_entry_confirmation_blocks_weak_inside_zone_candle() -> None:
         ],
         index=pd.to_datetime(
             [
-                "2026-01-03 10:00:00-05:00",
-                "2026-01-03 10:30:00-05:00",
-                "2026-01-03 11:00:00-05:00",
+                "2026-01-05 10:00:00-05:00",
+                "2026-01-05 10:30:00-05:00",
+                "2026-01-05 11:00:00-05:00",
             ]
         ),
     )
@@ -845,6 +978,7 @@ def test_fib_entry_confirmation_blocks_weak_inside_zone_candle() -> None:
         result(setup_type="Fib 61.8 Confluence Buy Zone"),
         CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
         config(),
+        now=pd.Timestamp("2026-01-05T11:00:00-05:00").to_pydatetime(),
     )
 
     assert confirmation["entry_confirmation_passed"] is False
@@ -860,9 +994,9 @@ def test_fib_entry_confirmation_accepts_clear_zone_reclaim() -> None:
         ],
         index=pd.to_datetime(
             [
-                "2026-01-03 10:00:00-05:00",
-                "2026-01-03 10:30:00-05:00",
-                "2026-01-03 11:00:00-05:00",
+                "2026-01-05 10:00:00-05:00",
+                "2026-01-05 10:30:00-05:00",
+                "2026-01-05 11:00:00-05:00",
             ]
         ),
     )
@@ -871,6 +1005,7 @@ def test_fib_entry_confirmation_accepts_clear_zone_reclaim() -> None:
         result(setup_type="Fib 61.8 Confluence Buy Zone"),
         CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
         config(),
+        now=pd.Timestamp("2026-01-05T11:00:00-05:00").to_pydatetime(),
     )
 
     assert confirmation["entry_confirmation_passed"] is True
@@ -887,10 +1022,10 @@ def test_entry_confirmation_uses_recent_completed_window_when_latest_stays_relev
         ],
         index=pd.to_datetime(
             [
-                "2026-01-03 10:00:00-05:00",
-                "2026-01-03 10:30:00-05:00",
-                "2026-01-03 11:00:00-05:00",
-                "2026-01-03 11:30:00-05:00",
+                "2026-01-05 10:00:00-05:00",
+                "2026-01-05 10:30:00-05:00",
+                "2026-01-05 11:00:00-05:00",
+                "2026-01-05 11:30:00-05:00",
             ]
         ),
     )
@@ -899,6 +1034,7 @@ def test_entry_confirmation_uses_recent_completed_window_when_latest_stays_relev
         result(setup_type="Fib 61.8 Confluence Buy Zone"),
         CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
         config(),
+        now=pd.Timestamp("2026-01-05T11:30:00-05:00").to_pydatetime(),
     )
 
     assert confirmation["entry_confirmation_passed"] is True
@@ -916,10 +1052,10 @@ def test_entry_confirmation_window_rejects_stale_confirmation_after_zone_break()
         ],
         index=pd.to_datetime(
             [
-                "2026-01-03 10:00:00-05:00",
-                "2026-01-03 10:30:00-05:00",
-                "2026-01-03 11:00:00-05:00",
-                "2026-01-03 11:30:00-05:00",
+                "2026-01-05 10:00:00-05:00",
+                "2026-01-05 10:30:00-05:00",
+                "2026-01-05 11:00:00-05:00",
+                "2026-01-05 11:30:00-05:00",
             ]
         ),
     )
@@ -928,6 +1064,7 @@ def test_entry_confirmation_window_rejects_stale_confirmation_after_zone_break()
         result(setup_type="Fib 61.8 Confluence Buy Zone"),
         CandidateMarketSnapshot(ticker="TEST", intraday=intraday),
         config(),
+        now=pd.Timestamp("2026-01-05T11:30:00-05:00").to_pydatetime(),
     )
 
     assert confirmation["entry_confirmation_passed"] is False

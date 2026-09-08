@@ -22,6 +22,7 @@ from app.agent_dashboard import compute_full_trade_performance as dashboard_comp
 from app.agent_dashboard import compute_realized_pnl as dashboard_compute_realized_pnl
 from app.agent_dashboard import read_trades as dashboard_read_trades
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
+from app.trading_clock import session_status
 from app.performance_summary import write_performance_summaries
 from app.scanner import scan_ticker_detail
 from app.shadow_strategies import evaluate_shadow_strategies
@@ -580,17 +581,11 @@ def agent_target_count() -> int:
 
 
 def agent_market_session(now: datetime | None = None) -> str:
-    current = (now or datetime.now(tz=NEW_YORK_TZ)).astimezone(NEW_YORK_TZ)
-    if current.isoweekday() > 5:
-        return "weekend"
-    current_time = current.time()
-    if datetime_time(9, 30) <= current_time <= datetime_time(16, 0):
-        return "regular"
-    if datetime_time(4, 0) <= current_time < datetime_time(9, 30):
-        return "pre_market"
-    if datetime_time(16, 0) < current_time <= datetime_time(20, 0):
-        return "after_market"
-    return "overnight"
+    phase = session_status(now)["phase"]
+    return {
+        "REGULAR": "regular", "PRE_MARKET": "pre_market", "AFTER_HOURS": "after_market",
+        "WEEKEND": "weekend", "HOLIDAY": "weekend",
+    }.get(phase, "overnight")
 
 
 def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:

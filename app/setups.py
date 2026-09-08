@@ -1,9 +1,9 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 
 from app.fibonacci import find_pivot_highs
+from app.trading_clock import session_status
 from app.models import BreakoutRetestInfo, FibonacciInfo, ScanResult, VolumeProfile, VolumeSupportedSwingLow
 
 SETUP_FIB_CONFLUENCE = "Fib 61.8 Confluence Buy Zone"
@@ -23,11 +23,7 @@ _STRETCH_RR_WEIGHT = 0.35
 
 
 def _regular_market_is_open(now: datetime | None = None) -> bool:
-    current = now or datetime.now(ZoneInfo("America/New_York"))
-    if current.weekday() >= 5:
-        return False
-    minutes = current.hour * 60 + current.minute
-    return (9 * 60 + 30) <= minutes <= (16 * 60)
+    return session_status(now)["regular_session_open"]
 
 # Signal weights (tiered by predictive strength)
 _W_SWEEP      = 30   # tier 1: sweep-and-reclaim anywhere
