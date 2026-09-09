@@ -99,6 +99,14 @@ def main() -> None:
         elif result.current_price > 0 and settings.save_noop:
             refresh_position(position, result.current_price, currency_rate)
 
+    health = classify_monitor_results(results)
+    print(json.dumps(health, sort_keys=True))
+    if health["status"] == "MONITOR_FAILED":
+        # Nothing was evaluated successfully; do not persist a healthy-looking run.
+        wb.close()
+        raise SystemExit(1)
+    if health["status"] == "MONITOR_DEGRADED":
+        print("::warning::Some positions could not be evaluated; valid events will still be saved.")
     events = [result.event for result in results if result.event]
     errors = [f"{result.ticker}: {result.error}" for result in results if result.error]
     should_save = bool(events) or settings.save_noop
@@ -159,6 +167,17 @@ def main() -> None:
         print("Position monitor completed with no portfolio events.")
     if summary_path:
         print(f"Summary: {summary_path}")
+
+
+def classify_monitor_results(results: list[MonitorResult]) -> dict[str, Any]:
+    failures = [result for result in results if result.error or result.status in {"ERROR", "DATA_ERROR", "NO_DATA"}]
+    return {
+        "status": ("MONITOR_FAILED" if results and len(failures) == len(results)
+                   else "MONITOR_DEGRADED" if failures else "MONITOR_OK"),
+        "positions_checked": len(results),
+        "positions_failed": len(failures),
+        "failed_positions": [{"ticker": result.ticker, "status": result.status} for result in failures],
+    }
 
 
 def load_settings() -> MonitorSettings:
