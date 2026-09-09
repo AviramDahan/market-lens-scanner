@@ -6,16 +6,16 @@ Tickers scanned: 10996
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2566
-WATCH_REVIEW unique tickers: 71
+WATCH_REVIEW: 2564
+WATCH_REVIEW unique tickers: 69
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2566
-SKIP: 7955
-NO_TRADE: 5473
+WATCH: 2564
+SKIP: 7957
+NO_TRADE: 5474
 Realized PnL: -24.1
-Unrealized PnL: 767.38
-Portfolio value: 101414.67
+Unrealized PnL: 875.3
+Portfolio value: 101522.59
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -38,8 +38,8 @@ Top rejected candidates:
 - GS: WATCH score=0.52 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - BRK-B: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.10.
 - D: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime BULL; sector WEAK; net R/R 2.47.
+- EQIX: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.51.
 - AMD: WATCH score=0.5 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
-- HAL: WATCH score=0.5 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
