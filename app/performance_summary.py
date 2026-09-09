@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+import math
 from collections import Counter, defaultdict
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from statistics import mean, median
 from typing import Any
@@ -21,6 +22,7 @@ def write_performance_summaries(
 ) -> dict[str, Path]:
     summary_dir.mkdir(parents=True, exist_ok=True)
     run_date = parse_date(timestamp)
+    portfolio = {**portfolio, **daily_return_metrics(summary_dir, run_date, portfolio)}
     daily = build_period_summary(
         period="daily",
         target_date=run_date,
@@ -57,6 +59,47 @@ def write_performance_summaries(
         "weekly_summary_json": weekly_json,
         "weekly_summary_md": weekly_md,
     }
+
+
+def daily_return_metrics(summary_dir: Path, run_date: date, portfolio: dict[str, Any]) -> dict[str, Any]:
+    """Compare recorded equity snapshots; never call lifetime return a daily return."""
+    previous_date = run_date - timedelta(days=1)
+    metrics = {
+        "daily_return_pct": None,
+        "daily_return_status": "MISSING_PRIOR_DAY_EQUITY",
+        "daily_return_basis": "recorded_equity_calendar_day_v1",
+        "daily_return_reference_date": previous_date.isoformat(),
+        "daily_return_reference_equity": None,
+        "cumulative_return_pct": None,
+    }
+
+    def number(value):
+        try:
+            result = float(value)
+            return result if math.isfinite(result) and result >= 0 else None
+        except (TypeError, ValueError):
+            return None
+
+    equity = number(portfolio.get("total_portfolio_value"))
+    capital = number(portfolio.get("starting_capital"))
+    if equity is None:
+        metrics["daily_return_status"] = "INVALID_CURRENT_EQUITY"
+        return metrics
+    if capital is not None and capital > 0:
+        metrics["cumulative_return_pct"] = round((equity / capital - 1) * 100, 4)
+    previous_path = summary_dir / f"daily_summary_{previous_date.isoformat()}.json"
+    try:
+        previous = json.loads(previous_path.read_text(encoding="utf-8"))
+        reference = number(previous.get("total_portfolio_value")) if isinstance(previous, dict) else None
+        if isinstance(previous, dict) and previous.get("date", previous_date.isoformat()) != previous_date.isoformat():
+            reference = None
+    except (OSError, ValueError):
+        reference = None
+    if reference is not None and reference > 0:
+        metrics.update(daily_return_pct=round((equity / reference - 1) * 100, 4),
+                       daily_return_status="RECORDED_EQUITY_CHANGE",
+                       daily_return_reference_equity=reference)
+    return metrics
 
 
 def build_period_summary(
@@ -198,6 +241,11 @@ def build_period_summary(
         "unrealized_pnl": portfolio.get("unrealized_pnl"),
         "total_portfolio_value": portfolio.get("total_portfolio_value"),
         "daily_return_pct": portfolio.get("daily_return_pct") if period == "daily" else None,
+        "daily_return_status": portfolio.get("daily_return_status") if period == "daily" else None,
+        "daily_return_basis": portfolio.get("daily_return_basis") if period == "daily" else None,
+        "daily_return_reference_date": portfolio.get("daily_return_reference_date") if period == "daily" else None,
+        "daily_return_reference_equity": portfolio.get("daily_return_reference_equity") if period == "daily" else None,
+        "cumulative_return_pct": portfolio.get("cumulative_return_pct"),
         "max_intraday_drawdown": None,
         "best_ticker": best_record(records),
         "worst_ticker": worst_record(records),
@@ -675,6 +723,10 @@ def write_markdown(path: Path, title: str, payload: dict[str, Any]) -> None:
         f"Realized PnL: {payload.get('realized_pnl')}",
         f"Unrealized PnL: {payload.get('unrealized_pnl')}",
         f"Portfolio value: {payload.get('total_portfolio_value')}",
+        f"Daily recorded-equity change (%): {payload.get('daily_return_pct')}",
+        f"Daily return status: {payload.get('daily_return_status')}",
+        f"Daily reference date: {payload.get('daily_return_reference_date')}",
+        f"Cumulative recorded-equity change (%): {payload.get('cumulative_return_pct')}",
         f"Trade metric source: {payload.get('trade_metric_source')}",
         f"Best ticker: {payload.get('best_ticker')}",
         f"Worst ticker: {payload.get('worst_ticker')}",
