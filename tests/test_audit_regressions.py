@@ -58,7 +58,6 @@ def test_existing_position_uses_its_own_targets():
     assert decision.action == "HOLD"
 
 
-@pytest.mark.xfail(strict=True, reason="AUDIT-SIGNAL-01: negative benchmark reverses RS ordering")
 def test_larger_loss_is_not_stronger_than_smaller_loss():
     index = pd.date_range("2026-01-01", periods=21, tz="UTC")
     benchmark = pd.Series([100.0] * 20 + [95.0], index=index).pct_change().dropna()

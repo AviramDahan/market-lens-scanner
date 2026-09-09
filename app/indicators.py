@@ -138,17 +138,28 @@ def compute_relative_strength(
     spy_returns: "pd.Series",
     n_days: int = 20,
 ) -> float:
-    """Returns ticker 20-day return / SPY 20-day return. >1.0 = outperforming."""
-    if len(ticker_daily) < n_days or len(spy_returns) == 0:
+    """Benchmark-move-normalized excess return, centered on parity at 1.
+
+    For a positive benchmark this equals the legacy return ratio. Using the
+    absolute benchmark move preserves ordering when the benchmark falls.
+    Incomplete/flat benchmark windows produce no RS scoring adjustment.
+    """
+    if n_days < 1 or len(ticker_daily) < n_days + 1 or len(spy_returns) == 0:
         return 1.0
-    ticker_ret = float(ticker_daily["Close"].iloc[-1] / ticker_daily["Close"].iloc[-n_days] - 1)
-    common = spy_returns.index.intersection(ticker_daily.index[-n_days:])
-    if len(common) == 0:
+    window = ticker_daily["Close"].iloc[-(n_days + 1):]
+    if (not window.index.is_unique or not window.index.is_monotonic_increasing
+            or not spy_returns.index.is_unique or not np.isfinite(window).all()
+            or (window <= 0).any()):
         return 1.0
-    spy_ret = float((1 + spy_returns.loc[common]).prod() - 1)
-    if spy_ret == 0:
+    # Both legs cover precisely the same n daily return intervals.
+    benchmark = spy_returns.reindex(window.index[1:])
+    if not np.isfinite(benchmark).all() or (benchmark <= -1).any():
         return 1.0
-    return ticker_ret / spy_ret
+    ticker_ret = float(window.iloc[-1] / window.iloc[0] - 1)
+    spy_ret = float((1 + benchmark).prod() - 1)
+    if not np.isfinite(spy_ret) or abs(spy_ret) < 1e-12:
+        return 1.0
+    return 1.0 + (ticker_ret - spy_ret) / abs(spy_ret)
 
 
 def compute_ma200_weekly(weekly: pd.DataFrame) -> float:
