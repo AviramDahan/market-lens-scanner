@@ -93,7 +93,7 @@ def apply_strategy_decisions(
     enriched = []
     running_cash = cash
     running_exposure = exposure
-    simulated_positions = dict(open_positions)
+    simulated_positions = {ticker: dict(position) for ticker, position in open_positions.items()}
     for result in results:
         candidate = normalize_strategy_candidate(result)
         decision = decide_strategy_candidate(
@@ -138,6 +138,7 @@ def apply_strategy_decisions(
             running_exposure += float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0)
             simulated_positions[candidate.ticker] = {
                 "ticker": candidate.ticker,
+                "entry_price": candidate.current_price,
                 "quantity": int(decision_json.get("position_size") or decision.quantity or 0),
                 "stop_loss": candidate.stop_loss or 0,
                 "target_1": candidate.target_1 or 0,
@@ -145,7 +146,49 @@ def apply_strategy_decisions(
                 "exposure_ils": float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0),
                 "risk_ils": float(decision_json.get("adjusted_risk_amount") or decision.risk_ils or 0),
             }
+        elif final_action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
+            cash_delta, exposure_delta = apply_strategy_exit(
+                simulated_positions, candidate, decision, currency_rate
+            )
+            running_cash += cash_delta
+            running_exposure += exposure_delta
     return enriched
+
+
+def apply_strategy_exit(
+    positions: dict[str, dict[str, Any]],
+    result: Any,
+    decision: StrategyDecision,
+    currency_rate: float,
+) -> tuple[float, float]:
+    """Apply one exit to in-memory holdings and return cash/exposure deltas."""
+    pos = positions.get(result.ticker)
+    partial = decision.action == "TAKE_PARTIAL_PROFIT"
+    if (not pos or decision.action not in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}
+            or not 0 < decision.quantity <= int(pos.get("quantity") or 0)
+            or (partial and pos.get("partial_taken"))):
+        raise ValueError("Exit does not match an open position; no portfolio change applied")
+    remaining = int(pos["quantity"]) - decision.quantity
+    if not partial and remaining:
+        raise ValueError("Full exit must close the remaining quantity")
+    old_exposure = float(pos.get("exposure_ils") or 0)
+    entry = float(pos.get("entry_price") or 0)
+    price = float(result.current_price)
+    if (not all(math.isfinite(value) for value in (old_exposure, entry, price, currency_rate, decision.cash_in_ils))
+            or old_exposure < 0 or price <= 0 or currency_rate <= 0 or decision.cash_in_ils <= 0
+            or (remaining and entry <= 0)):
+        raise ValueError("Invalid exit accounting inputs; no portfolio change applied")
+    if remaining == 0:
+        del positions[result.ticker]
+        return decision.cash_in_ils, -old_exposure
+    pos["quantity"] = remaining
+    pos["partial_taken"] = True
+    pos["stop_loss"] = entry
+    pos["current_price"] = result.current_price
+    pos["notes"] = "Partial profit taken; stop moved to breakeven."
+    pos["exposure_ils"] = round(remaining * result.current_price * currency_rate, 2)
+    pos["risk_ils"] = round(max(0.0, result.current_price - pos["stop_loss"]) * remaining * currency_rate, 2)
+    return decision.cash_in_ils, pos["exposure_ils"] - old_exposure
 
 
 def decide_strategy_candidate(

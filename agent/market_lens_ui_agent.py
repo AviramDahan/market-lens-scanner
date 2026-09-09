@@ -28,7 +28,7 @@ from app.scanner import scan_ticker_detail
 from app.shadow_strategies import evaluate_shadow_strategies
 from app.smart_universe import base_universe, build_sector_health, build_smart_universe, curated_universe
 from app.strategy import StrategyDecision as Decision
-from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
+from app.strategy import apply_strategy_exit, decide_strategy_candidate, normalize_strategy_candidate
 from app.telegram_notifications import (
     build_telegram_dedupe_key,
     dashboard_url_from_env,
@@ -1086,7 +1086,9 @@ def update_workbook(
             cash -= decision.cash_out_ils
             exposure += decision.cash_out_ils
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
-            apply_exit_decision(open_positions, result, decision, currency_rate)
+            cash_delta, exposure_delta = apply_exit_decision(open_positions, result, decision, currency_rate)
+            cash += cash_delta
+            exposure += exposure_delta
         elif result.ticker in open_positions:
             refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
         open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
@@ -1864,22 +1866,12 @@ def apply_exit_decision(
     result: SetupResult,
     decision: Decision,
     usd_ils: float,
-) -> None:
+) -> tuple[float, float]:
+    deltas = apply_strategy_exit(open_positions, result, decision, usd_ils)
     pos = open_positions.get(result.ticker)
-    if not pos:
-        return
-    if decision.action == "TAKE_PARTIAL_PROFIT":
-        closed_qty = min(int(pos["quantity"]), max(1, decision.quantity))
-        remaining_qty = int(pos["quantity"]) - closed_qty
-        if remaining_qty <= 0:
-            open_positions.pop(result.ticker, None)
-            return
-        pos["quantity"] = remaining_qty
-        pos["stop_loss"] = pos["entry_price"]
-        pos["notes"] = "Partial profit taken; stop moved to breakeven."
+    if pos:
         refresh_open_position(pos, result, usd_ils, decision)
-        return
-    open_positions.pop(result.ticker, None)
+    return deltas
 
 
 def refresh_open_position(
