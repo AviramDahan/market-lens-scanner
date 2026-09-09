@@ -820,12 +820,14 @@ def write_summary(
     summary_dir.mkdir(parents=True, exist_ok=True)
     summary_path = summary_dir / f"position_monitor_{run_id}.md"
     events = [result.event for result in results if result.event]
-    errors = [result for result in results if result.error]
+    health = classify_monitor_results(results)
+    errors = [result for result in results if result.error or result.status in {"ERROR", "DATA_ERROR", "NO_DATA"}]
     lines = [
         "Market Lens Position Monitor Update",
         "",
         f"Date: {timestamp}",
         f"Run status: {'OK' if not errors else 'ISSUES'}",
+        f"Evaluation status: {health['status']}",
         f"Open positions checked: {len(results)}",
         f"Events found: {len(events)}",
         f"Actions taken: {', '.join(f'{event.ticker}:{event.action}' for event in events) or 'None'}",
@@ -833,7 +835,7 @@ def write_summary(
         f"Current exposure: {exposure:.2f} {currency}",
         f"Total open risk: {open_risk:.2f} {currency}",
         f"Excel updated: {settings.excel_path}",
-        f"Errors: {'; '.join(f'{result.ticker}: {result.error}' for result in errors) if errors else 'None'}",
+        f"Errors: {'; '.join(f'{result.ticker}: {result.error or result.status}' for result in errors) if errors else 'None'}",
         "Agent feedback:",
     ]
     for result in results:

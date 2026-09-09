@@ -49,3 +49,17 @@ def test_main_exits_nonzero_without_saving_when_all_prices_fail(monkeypatch):
     assert error.value.code == 1
     wb.save.assert_not_called()
     wb.close.assert_called_once()
+
+
+def test_saved_summary_reports_missing_data_even_without_exception(tmp_path):
+    from agent.position_monitor import write_summary
+
+    rows = [MonitorResult(ticker="A", status="HOLD", current_price=100),
+            MonitorResult(ticker="B", status="NO_DATA", current_price=0)]
+    path = write_summary(settings=SimpleNamespace(run_dir=tmp_path, excel_path="fixture.xlsx"),
+                         run_id="fixture", timestamp="2026-09-09T14:00:00Z", results=rows,
+                         cash=1000, exposure=100, open_risk=5, currency="USD")
+    content = path.read_text(encoding="utf-8")
+    assert "Run status: ISSUES" in content
+    assert "Evaluation status: MONITOR_DEGRADED" in content
+    assert "B: NO_DATA" in content

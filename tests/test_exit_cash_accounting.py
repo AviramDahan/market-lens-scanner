@@ -2,6 +2,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
+from openpyxl import Workbook
 
 from app import strategy
 from agent import market_lens_ui_agent as agent
@@ -66,6 +67,25 @@ def test_stop_proceeds_and_exposure_use_portfolio_currency():
     decision = strategy.StrategyDecision("EXIT_STOP", "stop", quantity=10,
                                          cash_in_ils=3515., execution_price=95.)
     assert strategy.apply_strategy_exit(positions, candidate(price=95.), decision, 3.7) == (3515., -3700.)
+
+
+def test_in_memory_proceeds_match_ledger_without_double_credit(tmp_path):
+    wb = Workbook()
+    wb.active.title = "Trade Log"
+    wb.active.append(["header"] * 32)
+    buy = strategy.StrategyDecision("BUY_SIMULATED", "entry", quantity=10, cash_out_ils=1000.)
+    agent.append_trade_log_row(wb, "2026-09-08T14:00:00Z", candidate(price=100.), buy, 1., tmp_path / "unused.png")
+    cash = agent.compute_cash(wb, 100_000.)
+    assert cash == 99_000.
+    holdings = {"OLD": position()}
+    exit_decision = strategy.StrategyDecision("TAKE_PROFIT", "TP2", quantity=10,
+                                              cash_in_ils=1200., execution_price=120.)
+    agent.capture_position_exit_plan(exit_decision.decision_json, holdings["OLD"])
+    cash_delta, _ = agent.apply_exit_decision(holdings, candidate(), exit_decision, 1.)
+    assert wb["Trade Log"].max_row == 2
+    agent.append_trade_log_row(wb, "2026-09-09T14:00:00Z", candidate(), exit_decision, 1., tmp_path / "unused.png")
+    assert agent.compute_cash(wb, 100_000.) == cash + cash_delta == 100_200.
+    assert wb["Trade Log"].max_row == 3
 
 
 def context():
