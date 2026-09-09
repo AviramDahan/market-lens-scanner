@@ -85,6 +85,8 @@ def apply_strategy_decisions(
         max_position=max_position,
     )
     sector_health = run_context.sector_health or build_sector_health(analysis_period)
+    # Preliminary sizing must use the same exposure ceiling as the final risk gate.
+    max_total_exposure = run_context.market_regime.max_total_exposure
     timestamp = datetime.now().isoformat(timespec="seconds")
     neutral_pilot_trades_today = 0
 

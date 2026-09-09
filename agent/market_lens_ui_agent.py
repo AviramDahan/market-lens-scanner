@@ -984,6 +984,8 @@ def update_workbook(
         max_position=max_position,
     )
     sector_health = run_context.sector_health or build_sector_health(settings.analysis_period)
+    # Do not apply the legacy workbook ceiling before the dynamic risk ceiling.
+    max_total_exposure = run_context.market_regime.max_total_exposure
     recent_stop_events = read_recent_stop_events(wb, run_context.config.stop_cooldown_days)
     neutral_pilot_buys_today = count_neutral_pilot_buys_today(wb)
 
