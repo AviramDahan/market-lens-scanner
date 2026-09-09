@@ -1,21 +1,21 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 82
-Tickers scanned: 11252
+Total scans: 83
+Tickers scanned: 11387
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2609
+WATCH_REVIEW: 2626
 WATCH_REVIEW unique tickers: 75
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2609
-SKIP: 8156
-NO_TRADE: 5630
+WATCH: 2626
+SKIP: 8268
+NO_TRADE: 5717
 Realized PnL: -24.1
-Unrealized PnL: 963.4
-Portfolio value: 101610.69
+Unrealized PnL: 1048.27
+Portfolio value: 101695.56
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -27,7 +27,7 @@ Shadow would-buy counts:
 - FIB_STOP_100_ATR: 9
 - FIB_STRUCTURE_STOP: 13
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 18
+- TREND_PULLBACK_RECLAIM: 20
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.

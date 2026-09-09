@@ -1,27 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-09-09
-Total scans: 17
-Tickers scanned: 2195
+Total scans: 18
+Tickers scanned: 2330
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 559
-WATCH_REVIEW unique tickers: 54
+WATCH_REVIEW: 576
+WATCH_REVIEW unique tickers: 55
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 559
-SKIP: 1534
-NO_TRADE: 1083
+WATCH: 576
+SKIP: 1646
+NO_TRADE: 1170
 Realized PnL: 0.0
-Unrealized PnL: 963.4
-Portfolio value: 101610.69
+Unrealized PnL: 1048.27
+Portfolio value: 101695.56
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
+- TREND_PULLBACK_RECLAIM: 2
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -33,7 +34,7 @@ Top rejected candidates:
 - V: SKIP score=0.51 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.90.
 - EQIX: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.51.
 - MSFT: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.75 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
-- HAL: WATCH score=0.5 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
+- AEP: SKIP score=0.5 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.11.
 
 Recommendations:
-- Keep collecting shadow data; no strategy changes are recommended from this sample alone.
+- Review shadow would-buy candidates that active gates skipped before changing thresholds.
