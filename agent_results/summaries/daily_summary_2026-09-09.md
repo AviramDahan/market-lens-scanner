@@ -1,21 +1,21 @@
 Daily Performance Summary
 
 Date: 2026-09-09
-Total scans: 23
-Tickers scanned: 3004
+Total scans: 24
+Tickers scanned: 3135
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 670
+WATCH_REVIEW: 688
 WATCH_REVIEW unique tickers: 60
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 670
-SKIP: 2196
-NO_TRADE: 1581
+WATCH: 688
+SKIP: 2303
+NO_TRADE: 1665
 Realized PnL: 0.0
-Unrealized PnL: 1011.55
-Portfolio value: 101658.84
+Unrealized PnL: 983.81
+Portfolio value: 101631.1
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -23,9 +23,9 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
-- FIB_STOP_075_ATR: 10
-- FIB_STRUCTURE_STOP: 10
-- TREND_PULLBACK_RECLAIM: 21
+- FIB_STOP_075_ATR: 11
+- FIB_STRUCTURE_STOP: 11
+- TREND_PULLBACK_RECLAIM: 24
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
@@ -34,7 +34,7 @@ Top rejected candidates:
 - NVDA: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector STRONG; net R/R 1.51.
 - GS: WATCH score=0.52 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - BRK-B: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.10.
-- V: SKIP score=0.51 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.90.
+- V: SKIP score=0.51 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.08.
 - EQIX: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.51.
 - MSFT: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.75 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - AEP: SKIP score=0.5 reason=SKIP: Utilities / Real Assets sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.11.
