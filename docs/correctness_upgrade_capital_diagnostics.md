@@ -25,3 +25,15 @@ temporary Git repositories verifying state conflicts versus source-only edits.
 Outstanding: media retention deletions are lost by the reset/overlay pattern.
 No bulk deletion was enabled. Preserve/archive historical assets before repairing
 deletion persistence. Historical accounting reconciliation is also unfinished.
+
+## Rejection summary measurement
+
+Daily/weekly summaries previously cut reasons at the first period, including
+decimal points: 1.20 and 1.95 became the same fragment. Full reasons are now
+counted unchanged. The additive rejection_diagnostics object counts recorded
+entry and capital blockers independently and labels counts as decision
+observations, not independent opportunities. Duplicate reasons in one decision
+count once; repeated scans remain distinct observations. Missing/empty legacy
+blockers are reported as missing evidence, never as proof that gates passed.
+Existing decisions and historical reports are not rewritten. No UI schema field
+was removed. Full suite: 342 passed.

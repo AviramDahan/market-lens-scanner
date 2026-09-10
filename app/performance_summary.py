@@ -253,6 +253,7 @@ def build_period_summary(
         "worst_sector": worst_group(sectors),
         "top_rejected_candidates": top_rejected(records),
         "most_common_rejection_reasons": counter_items(reason_counter(records)),
+        "rejection_diagnostics": rejection_diagnostics(records),
         "most_common_warnings": counter_items(warning_counter(records)),
         "average_setup_score": rounded_mean(setup_scores),
         "setup_candidate_metrics": setup_candidate_summary,
@@ -838,8 +839,35 @@ def reason_counter(records: list[dict[str, Any]]) -> Counter[str]:
         if action not in {"SKIP", "WATCH", "WATCH_READY"}:
             continue
         reason = str(record.get("reason") or "Unknown")
-        counter[reason.split(".")[0][:140]] += 1
+        counter[reason] += 1
     return counter
+
+
+def rejection_diagnostics(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Count recorded blockers without treating missing legacy diagnostics as passes."""
+    rejected = [r for r in records if r.get("final_action") in {"SKIP", "WATCH", "WATCH_READY"}]
+    entry: Counter[str] = Counter()
+    capital: Counter[str] = Counter()
+    missing = 0
+    for record in rejected:
+        observed = False
+        for key, counter in (("entry_gate_blockers", entry), ("capital_blockers", capital)):
+            values = record.get(key)
+            if isinstance(values, list):
+                reasons = {v.strip() for v in values if isinstance(v, str) and v.strip()}
+                counter.update(reasons)
+                observed = observed or bool(reasons)
+        if not observed:
+            missing += 1
+    return {
+        "count_basis": "decision_observations_not_unique_opportunities",
+        "rejected_observations": len(rejected),
+        "unique_rejected_tickers": len({r["ticker"] for r in rejected if r.get("ticker")}),
+        "observations_without_recorded_blockers": missing,
+        "entry_gate_blockers": counter_items(entry),
+        "capital_blockers": counter_items(capital),
+        "note": "Blockers can overlap; empty lists do not prove eligibility. Full reasons are retained.",
+    }
 
 
 def warning_counter(records: list[dict[str, Any]]) -> Counter[str]:
