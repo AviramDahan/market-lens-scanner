@@ -212,7 +212,8 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
 
     for label, symbol in MARKET_REGIME_SYMBOLS.items():
         try:
-            frame = fetch_daily_frame(symbol, period=config.analysis_period)
+            # Regime EMA200 needs its own warm-up, independent of chart range.
+            frame = fetch_daily_frame(symbol, period="2y")
             indicators[label] = benchmark_state(frame, is_vix=label == "VIX")
         except Exception as exc:
             warnings.append(f"{label} data unavailable: {exc}")
@@ -227,7 +228,7 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
     risk_points = 0.0
     risk_points += 2 if trend_is_bullish(spy) else -2 if trend_is_bearish(spy) else 0
     risk_points += 2 if trend_is_bullish(qqq) else -2 if trend_is_bearish(qqq) else 0
-    risk_points += 1 if not trend_is_bearish(iwm) else -1
+    risk_points += (1 if not trend_is_bearish(iwm) else -1) if iwm else 0
     risk_points += 1 if vix_is_calm(vix) else -2 if vix_is_stressed(vix) else 0
     risk_points += -0.5 if trend_is_bullish(us10y) else 0.25 if trend_is_bearish(us10y) else 0
     risk_points += -0.25 if trend_is_bullish(dxy) else 0.25 if trend_is_bearish(dxy) else 0
@@ -295,10 +296,12 @@ def dynamic_exposure_pct(risk_points: float, *, max_exposure_pct: float = 0.60) 
 
 def benchmark_state(frame: pd.DataFrame, *, is_vix: bool = False) -> dict[str, Any]:
     close = frame["Close"]
+    if len(close) < 200 or not all(math.isfinite(float(value)) and float(value) > 0 for value in close):
+        raise ValueError("EMA200 requires at least 200 valid positive daily closes")
     price = float(close.iloc[-1])
-    ema20 = float(close.ewm(span=min(20, len(close)), adjust=False).mean().iloc[-1])
-    ema50 = float(close.ewm(span=min(50, len(close)), adjust=False).mean().iloc[-1])
-    ema200 = float(close.ewm(span=min(200, len(close)), adjust=False).mean().iloc[-1])
+    ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
+    ema50 = float(close.ewm(span=50, adjust=False).mean().iloc[-1])
+    ema200 = float(close.ewm(span=200, adjust=False).mean().iloc[-1])
     ret_1m = pct_return(close, 21)
     ret_3m = pct_return(close, 63)
     trend = "bullish" if price > ema20 > ema50 and price > ema200 else "bearish" if price < ema50 else "mixed"
@@ -312,6 +315,8 @@ def benchmark_state(frame: pd.DataFrame, *, is_vix: bool = False) -> dict[str, A
         "return_1m": round(ret_1m * 100, 2),
         "return_3m": round(ret_3m * 100, 2),
         "trend": trend,
+        "history_rows": len(close),
+        "ema200_span": 200,
     }
 
 
