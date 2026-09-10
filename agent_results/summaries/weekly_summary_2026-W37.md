@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 98
-Tickers scanned: 13356
+Total scans: 99
+Tickers scanned: 13490
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2944
-WATCH_REVIEW unique tickers: 80
+WATCH_REVIEW: 2971
+WATCH_REVIEW unique tickers: 81
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2944
-SKIP: 9829
-NO_TRADE: 6810
+WATCH: 2971
+SKIP: 9930
+NO_TRADE: 6882
 Realized PnL: -24.1
-Unrealized PnL: 944.65
-Portfolio value: 101591.94
+Unrealized PnL: 939.24
+Portfolio value: 101586.53
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.5919
+Cumulative recorded-equity change (%): 1.5865
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -35,15 +35,15 @@ Shadow would-buy counts:
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- KMI: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 - MDT: SKIP score=0.6 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.16.
-- KMI: WATCH score=0.6 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 - KLAC: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (41/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.13.
+- GS: SKIP score=0.56 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.15.
 - LRCX: WATCH score=0.55 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - EQT: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
 - MSFT: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - NVDA: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector STRONG; net R/R 1.51.
-- GS: WATCH score=0.52 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- BRK-B: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime BULL; sector STRONG; net R/R 1.10.
+- MA: SKIP score=0.52 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.09.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
