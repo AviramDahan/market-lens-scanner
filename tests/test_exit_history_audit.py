@@ -50,3 +50,24 @@ def test_no_events_is_supported():
     wb = workbook()
     del wb["Position Events"]
     assert audit_workbook(wb)["events_checked"] == 0
+
+
+def test_provenance_quarantines_identity_issue_without_correcting_finances():
+    p = audit_workbook(workbook())["measurement_provenance"]
+    assert p["trades"][0]["status"] == "NEEDS_RECONCILIATION"
+    assert p["cash_or_pnl_corrected"] is False
+    assert p["downstream_capital_effects_replayed"] is False
+
+
+def test_passing_identity_is_not_claimed_as_validated_execution():
+    p = audit_workbook(workbook("2026-09-08T13:00:00Z"))["measurement_provenance"]
+    assert p["trades"][0]["status"] == "IDENTITY_CHECK_ONLY"
+    assert p["trades"][0]["fill_prices_validated"] is False
+
+
+def test_unmatched_findings_and_no_event_trades_are_explicit():
+    wb = workbook()
+    wb["Trade Log"].append(list(wb["Trade Log"].values)[-1])
+    p = audit_workbook(wb)["measurement_provenance"]
+    assert p["unattributed_findings"] == 1
+    assert p["trades"][0]["status"] == "NO_MATCHED_MONITOR_EVIDENCE"

@@ -25,6 +25,7 @@ def audit_workbook(wb):
             exits.setdefault(key, []).append(row)
     events = list(wb["Position Events"].iter_rows(min_row=2, values_only=True)) if "Position Events" in wb.sheetnames else []
     checked = 0
+    matched_events = {}
     for number, raw in enumerate(events, 2):
         row = tuple(raw) + (None,) * max(0, 16 - len(raw))
         if not row[2] or str(row[3] or "").startswith("VOID"):
@@ -40,6 +41,8 @@ def audit_workbook(wb):
         trade = matches[0]
         identity = str(trade[20] or "")
         item["trade_id"] = identity
+        if identity:
+            matched_events[identity] = matched_events.get(identity, 0) + 1
         entries = buys.get(identity, [])
         if len(entries) != 1 or str(entries[0][2]) != str(row[2]):
             findings.append({**item, "status": "UNRESOLVED_ENTRY_IDENTITY"})
@@ -59,10 +62,36 @@ def audit_workbook(wb):
         findings.append({**item, "status": status})
     return {"audit_version": "exit_identity_v1", "read_only": True,
             "events_checked": checked, "findings": findings,
+            "measurement_provenance": measurement_provenance(buys, matched_events, findings),
             "affected_trade_ids": sorted({f["trade_id"] for f in findings if f.get("trade_id")}),
             "limitations": ["Absence of findings does not validate fills, prices, or data completeness.",
                             "Only recorded monitor events are audited; scanner exits without events are not covered.",
                             "No corrected PnL is inferred from invalid execution evidence."]}
+
+
+def measurement_provenance(buys, matched_events, findings):
+    """Annotate evidence quality, without presenting a filtered portfolio as a backtest."""
+    trades = []
+    for identity in sorted(set(buys) | set(matched_events)):
+        issues = [f for f in findings if f.get("trade_id") == identity]
+        count = matched_events.get(identity, 0)
+        trades.append({
+            "trade_id": identity,
+            "status": "NEEDS_RECONCILIATION" if issues else (
+                "IDENTITY_CHECK_ONLY" if count else "NO_MATCHED_MONITOR_EVIDENCE"
+            ),
+            "matched_monitor_events": count,
+            "finding_statuses": sorted({f["status"] for f in issues}),
+            "fill_prices_validated": False,
+        })
+    return {
+        "version": "historical_evidence_v1",
+        "trades": trades,
+        "unattributed_findings": sum(not f.get("trade_id") for f in findings),
+        "cash_or_pnl_corrected": False,
+        "downstream_capital_effects_replayed": False,
+        "usage": "Do not treat no finding as a verified fill or exclude trades to claim improved returns.",
+    }
 
 
 def main():
