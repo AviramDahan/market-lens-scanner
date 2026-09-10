@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 114
-Tickers scanned: 15409
+Total scans: 115
+Tickers scanned: 15541
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3281
+WATCH_REVIEW: 3296
 WATCH_REVIEW unique tickers: 83
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3281
-SKIP: 11457
-NO_TRADE: 7878
+WATCH: 3296
+SKIP: 11570
+NO_TRADE: 7962
 Realized PnL: -364.98
-Unrealized PnL: 925.62
-Portfolio value: 101232.03
+Unrealized PnL: 926.15
+Portfolio value: 101232.56
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.232
+Cumulative recorded-equity change (%): 1.2326
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -29,14 +29,14 @@ Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 7
 - FIB_STOP_075_ATR: 33
 - FIB_STOP_100_ATR: 10
-- FIB_STRUCTURE_STOP: 30
+- FIB_STRUCTURE_STOP: 31
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 62
+- TREND_PULLBACK_RECLAIM: 65
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - KMI: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
-- MDT: SKIP score=0.61 reason=SKIP: Healthcare sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.43.
+- MDT: SKIP score=0.61 reason=SKIP: Position size blocked by cash, exposure, or risk limits.
 - KLAC: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (41/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.13.
 - GS: SKIP score=0.56 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.15.
 - LRCX: WATCH score=0.55 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
