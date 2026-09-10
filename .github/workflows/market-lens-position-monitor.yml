@@ -178,6 +178,7 @@ jobs:
 
           git config user.name "market-lens-agent"
           git config user.email "market-lens-agent@users.noreply.github.com"
+          BASE_REV="$(git rev-parse HEAD)"
 
           EXCEL_FILE="agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
           RESULTS_DIR="agent_results"
@@ -199,6 +200,7 @@ jobs:
 
           echo "Moving local repo to latest origin/main..."
           git fetch origin main
+          python -m agent.persistence_guard "$BASE_REV" origin/main
           git reset --hard origin/main
           git clean -fd
 
@@ -227,6 +229,7 @@ jobs:
             echo "Push rejected because main changed. Retrying once on top of latest main..."
 
             git fetch origin main
+            python -m agent.persistence_guard "$BASE_REV" origin/main
             git reset --hard origin/main
             git clean -fd
 

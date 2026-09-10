@@ -1364,6 +1364,34 @@ def test_entry_gate_reason_wins_when_capital_and_quality_both_fail(monkeypatch) 
     assert "requires setup score" in decision["reason"]
 
 
+@pytest.mark.parametrize("score", [0.20, 0.60])
+def test_preliminary_zero_size_records_blockers_without_promoting_buy(monkeypatch, score):
+    _patch_risk_dependencies(monkeypatch, net_rr=2.50, confirmation_passed=True)
+    run_context = context("BULL")
+    run_context.sector_health = {
+        "Technology": {"label": "Strong", "score": 80, "etf": "XLK", "reason": "strong"}
+    }
+    decision = evaluate_agent_candidate(
+        timestamp="2026-09-01T10:30:00", result=result(score=score),
+        initial_action="SKIP",
+        initial_reason="Position size blocked by cash, exposure, or risk limits.",
+        quantity=0, cash_out=0, risk_amount=0, cash_available=71660.94,
+        portfolio_exposure_before=41000, portfolio_open_risk_before=1000,
+        open_positions={}, sector_map={"TEST": "Technology"},
+        run_context=run_context, recent_stop_events={},
+    )
+    assert decision["final_action"] == "SKIP"
+    assert decision["position_size"] == 0
+    assert decision["capital_blockers"]
+    assert decision["entry_qualified_before_capital"] is False
+    assert decision["portfolio_exposure_after"] == 41000
+    if score == 0.20:
+        assert any("requires setup score" in b for b in decision["entry_gate_blockers"])
+        assert decision["entry_eligibility_status"] == "ENTRY_GATES_BLOCKED"
+    else:
+        assert decision["entry_eligibility_status"] == "CAPITAL_BLOCKED_UNASSESSED"
+
+
 def test_allocation_ranking_prioritizes_open_positions_then_stronger_setups() -> None:
     weak = SetupResult("WEAK", "VWAP Reclaim", 0.40, 100, 98, 100, 95, 105, 115, 2.0, "", "")
     strong = SetupResult("STRONG", "Breakout + Retest", 0.70, 100, 98, 100, 95, 105, 115, 2.5, "", "")

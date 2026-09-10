@@ -486,7 +486,11 @@ def evaluate_agent_candidate(
     capital_blockers: list[dict[str, str]] = []
     entry_gate_blockers: list[dict[str, str]] = []
     entry_qualified_before_capital = False
-    if initial_action == "BUY_SIMULATED":
+    preliminary_capital_block = (
+        initial_action == "SKIP"
+        and initial_reason == "Position size blocked by cash, exposure, or risk limits."
+    )
+    if initial_action == "BUY_SIMULATED" or preliminary_capital_block:
         base_minimum_net_rr = minimum_net_rr_for(run_context.market_regime, sector_info, config)
         minimum_net_rr = config.neutral_pilot_min_net_rr if neutral_pilot["eligible"] else base_minimum_net_rr
         minimum_setup_score = (
@@ -558,6 +562,17 @@ def evaluate_agent_candidate(
         else:
             final_reason = f"HOLD: Existing simulated position remains open. {run_context.market_regime.label} regime recorded."
 
+    if preliminary_capital_block:
+        # Zero-sized candidates never become buys through diagnostic evaluation.
+        # Sector/factor sizing was not evaluated at an executable quantity, so
+        # do not claim that every gate passed even if observed quality passed.
+        capital_blockers.append({"action": "SKIP", "reason": initial_reason})
+        entry_qualified_before_capital = False
+        final_action = "SKIP"
+        final_reason = "SKIP: " + (
+            entry_gate_blockers[0]["reason"] + " Also: " if entry_gate_blockers else ""
+        ) + initial_reason
+
     portfolio_exposure_after = portfolio_exposure_after_if_buy if final_action == "BUY_SIMULATED" else portfolio_exposure_before
     off_hours_initial_candidate = bool(
         initial_action == "BUY_SIMULATED"
@@ -615,7 +630,9 @@ def evaluate_agent_candidate(
             else "QUALIFIED_CAPITAL_BLOCKED"
             if entry_qualified_before_capital
             else "ENTRY_GATES_BLOCKED"
-            if initial_action == "BUY_SIMULATED"
+            if initial_action == "BUY_SIMULATED" or (preliminary_capital_block and entry_gate_blockers)
+            else "CAPITAL_BLOCKED_UNASSESSED"
+            if preliminary_capital_block
             else "TECHNICAL_CANDIDATE"
         ),
         "entry_qualified_before_capital": entry_qualified_before_capital,
