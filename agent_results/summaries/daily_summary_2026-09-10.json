@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 260,
-  "SKIP_count": 394,
+  "NO_TRADE_count": 318,
+  "SKIP_count": 490,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -43,35 +43,35 @@
   "WATCH_READY_unique_regular_session_count": 0,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_REVIEW_count": 99,
+  "WATCH_REVIEW_count": 123,
   "WATCH_REVIEW_unique_count": 35,
-  "WATCH_count": 99,
+  "WATCH_count": 123,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.3968,
-    "FIB_STOP_075_ATR": 0.444,
-    "FIB_STOP_100_ATR": 0.4245,
-    "FIB_STRUCTURE_STOP": 0.4116,
-    "RELATIVE_STRENGTH_LEADER": 0.3542,
-    "STOP_RECLAIM_REENTRY": 0.2787,
-    "TREND_PULLBACK_RECLAIM": 0.392,
-    "VWAP_RECLAIM": 0.3929
+    "BREAKOUT_CONTINUATION": 0.3964,
+    "FIB_STOP_075_ATR": 0.4465,
+    "FIB_STOP_100_ATR": 0.4266,
+    "FIB_STRUCTURE_STOP": 0.4135,
+    "RELATIVE_STRENGTH_LEADER": 0.3554,
+    "STOP_RECLAIM_REENTRY": 0.2796,
+    "TREND_PULLBACK_RECLAIM": 0.3926,
+    "VWAP_RECLAIM": 0.3948
   },
   "average_confidence_by_shadow_strategy_version": {
-    "BREAKOUT_CONTINUATION@shadow_v2": 0.3968,
-    "FIB_STOP_075_ATR@shadow_v2": 0.444,
-    "FIB_STOP_100_ATR@shadow_v2": 0.4245,
-    "FIB_STRUCTURE_STOP@shadow_v2": 0.4116,
-    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3542,
-    "STOP_RECLAIM_REENTRY@shadow_v2": 0.2787,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.392,
-    "VWAP_RECLAIM@shadow_v2": 0.3929
+    "BREAKOUT_CONTINUATION@shadow_v2": 0.3964,
+    "FIB_STOP_075_ATR@shadow_v2": 0.4465,
+    "FIB_STOP_100_ATR@shadow_v2": 0.4266,
+    "FIB_STRUCTURE_STOP@shadow_v2": 0.4135,
+    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3554,
+    "STOP_RECLAIM_REENTRY@shadow_v2": 0.2796,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.3926,
+    "VWAP_RECLAIM@shadow_v2": 0.3948
   },
   "average_loser": null,
   "average_loser_R": null,
-  "average_rr_to_target_1": 0.5176,
-  "average_rr_to_target_2": 1.7912,
-  "average_setup_score": 0.1842,
+  "average_rr_to_target_1": 0.5269,
+  "average_rr_to_target_2": 1.8394,
+  "average_setup_score": 0.1857,
   "average_winner": null,
   "average_winner_R": null,
   "best_sector": "Semiconductors",
@@ -140,36 +140,36 @@
     "decision_trade_id": {
       "coverage_pct": 0.0,
       "populated": 0,
-      "total": 517
+      "total": 643
     }
   },
   "data_quality_issues": [
     {
-      "count": 202,
+      "count": 254,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 111,
+      "count": 137,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 51,
+      "count": 60,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 40,
+      "count": 57,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 8,
+      "count": 10,
       "name": "Earnings blackout active."
     },
     {
-      "count": 4,
+      "count": 5,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 4,
+      "count": 5,
       "name": "Stop-loss cooldown active after 2026-09-08T13:35:38; 1 trading days remaining."
     }
   ],
@@ -187,32 +187,32 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 242,
+      "count": 295,
       "name": "SKIP: No Trade result"
     },
     {
-      "count": 95,
+      "count": 118,
       "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
     },
     {
-      "count": 53,
+      "count": 66,
       "name": "SKIP: Position size blocked by cash, exposure, or risk limits"
     },
     {
-      "count": 22,
+      "count": 33,
       "name": "SKIP: Consumer sector regime is weak (20/100); skip new entry"
     },
     {
-      "count": 20,
+      "count": 30,
       "name": "SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry"
+    },
+    {
+      "count": 24,
+      "name": "SKIP: Industrials sector regime is weak (22/100); skip new entry"
     },
     {
       "count": 16,
       "name": "SKIP: Consumer sector regime is weak (21/100); skip new entry"
-    },
-    {
-      "count": 16,
-      "name": "SKIP: Industrials sector regime is weak (22/100); skip new entry"
     },
     {
       "count": 14,
@@ -223,37 +223,37 @@
       "name": "SKIP: Industrials sector regime is weak (21/100); skip new entry"
     },
     {
-      "count": 4,
+      "count": 5,
       "name": "WATCH: Valid setup, but price is not inside the buy zone"
     }
   ],
   "most_common_warnings": [
     {
-      "count": 202,
+      "count": 254,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 111,
+      "count": 137,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 51,
+      "count": 60,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 40,
+      "count": 57,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 8,
+      "count": 10,
       "name": "Earnings blackout active."
     },
     {
-      "count": 4,
+      "count": 5,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 4,
+      "count": 5,
       "name": "Stop-loss cooldown active after 2026-09-08T13:35:38; 1 trading days remaining."
     }
   ],
@@ -280,23 +280,24 @@
       "agent_results/decisions/market_lens_agent_20260910_001747.jsonl",
       "agent_results/decisions/market_lens_agent_20260910_013255.jsonl",
       "agent_results/decisions/market_lens_agent_20260910_023255.jsonl",
-      "agent_results/decisions/market_lens_agent_20260910_033252.jsonl"
+      "agent_results/decisions/market_lens_agent_20260910_033252.jsonl",
+      "agent_results/decisions/market_lens_agent_20260910_043251.jsonl"
     ],
-    "records": 517,
-    "run_id": "20260910_033252"
+    "records": 643,
+    "run_id": "20260910_043251"
   },
   "setup_candidate_metrics": {
     "active_policy": "FIRST_MATCH_LEGACY",
-    "alternative_ranked_first_count": 41,
+    "alternative_ranked_first_count": 52,
     "candidate_count_by_setup_type": {
-      "Breakout + Retest": 85,
-      "Fib 61.8 Confluence Buy Zone": 73,
-      "Liquidity Trap Buy Zone": 35,
-      "Swing Low + Volume Support Buy Zone": 60,
-      "VWAP Reclaim Setup": 108
+      "Breakout + Retest": 101,
+      "Fib 61.8 Confluence Buy Zone": 93,
+      "Liquidity Trap Buy Zone": 45,
+      "Swing Low + Volume Support Buy Zone": 75,
+      "VWAP Reclaim Setup": 146
     },
-    "records_with_candidates": 257,
-    "records_with_multiple_candidates": 82,
+    "records_with_candidates": 325,
+    "records_with_multiple_candidates": 104,
     "shadow_only": true
   },
   "shadow_outcome_metrics_by_strategy": {},
@@ -546,9 +547,9 @@
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 101591.94,
-  "total_result_cards_read": 517,
-  "total_scans": 4,
-  "total_tickers_scanned": 517,
+  "total_result_cards_read": 643,
+  "total_scans": 5,
+  "total_tickers_scanned": 643,
   "total_trading_days": null,
   "trade_metric_source": "COMPLETED_TRADE_LIFECYCLE",
   "unrealized_pnl": 944.65,
