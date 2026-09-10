@@ -91,13 +91,12 @@ def main() -> None:
 
     for ticker, position in list(open_positions.items()):
         since = last_event_times.get(ticker)
-        result = monitor_position(position, settings=settings, since=since, currency_rate=currency_rate)
-        results.append(result)
-        if result.event:
-            event_notifications.append((dict(position), result.event))
-            apply_event(wb, open_positions, position, result.event, timestamp, run_id, currency_rate)
-        elif result.current_price > 0 and settings.save_noop:
-            refresh_position(position, result.current_price, currency_rate)
+        position_results, notifications = process_position_window(
+            wb, open_positions, position, settings=settings, since=since,
+            currency_rate=currency_rate, timestamp=timestamp, run_id=run_id,
+        )
+        results.extend(position_results)
+        event_notifications.extend(notifications)
 
     health = classify_monitor_results(results)
     print(json.dumps(health, sort_keys=True))
@@ -174,8 +173,8 @@ def classify_monitor_results(results: list[MonitorResult]) -> dict[str, Any]:
     return {
         "status": ("MONITOR_FAILED" if results and len(failures) == len(results)
                    else "MONITOR_DEGRADED" if failures else "MONITOR_OK"),
-        "positions_checked": len(results),
-        "positions_failed": len(failures),
+        "positions_checked": len({result.ticker for result in results}),
+        "positions_failed": len({result.ticker for result in failures}),
         "failed_positions": [{"ticker": result.ticker, "status": result.status} for result in failures],
     }
 
@@ -276,12 +275,40 @@ def should_notify_stop_moved_to_entry(position: dict[str, Any], event: PositionE
     return entry > 0 and remaining_quantity > 0 and previous_stop < entry - 0.005
 
 
+def process_position_window(
+    wb: Any, open_positions: dict[str, dict[str, Any]], position: dict[str, Any],
+    *, settings: MonitorSettings, since: datetime | None, currency_rate: float,
+    timestamp: str, run_id: str,
+) -> tuple[list[MonitorResult], list[tuple[dict[str, Any], PositionEvent]]]:
+    results = []
+    notifications = []
+    frame_cache: dict[str, Any] = {}
+    # At most one partial and one terminal exit; a final pass may refresh a hold.
+    for _ in range(3):
+        result = monitor_position(position, settings=settings, since=since,
+                                  currency_rate=currency_rate, frame_cache=frame_cache)
+        if not result.event:
+            if not results or result.error or result.status in {"ERROR", "DATA_ERROR", "NO_DATA"}:
+                results.append(result)
+            if result.current_price > 0 and (settings.save_noop or notifications):
+                refresh_position(position, result.current_price, currency_rate)
+            return results, notifications
+        results.append(result)
+        notifications.append((dict(position), result.event))
+        apply_event(wb, open_positions, position, result.event, timestamp, run_id, currency_rate)
+        if result.ticker not in open_positions:
+            return results, notifications
+        since = parse_timestamp(result.event.triggered_at)
+    raise RuntimeError("Position monitor exceeded bounded lifecycle event count")
+
+
 def monitor_position(
     position: dict[str, Any],
     *,
     settings: MonitorSettings,
     since: datetime | None,
     currency_rate: float,
+    frame_cache: dict[str, Any] | None = None,
 ) -> MonitorResult:
     ticker = str(position.get("ticker") or "").upper()
     entry_time = parse_timestamp(position.get("entry_date"))
@@ -289,7 +316,12 @@ def monitor_position(
         return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0,
                              error="Entry timestamp missing; cannot safely replay price events.")
     try:
-        frame = fetch_intraday_frame(ticker, period=settings.period, interval=settings.interval)
+        if frame_cache is not None and ticker in frame_cache:
+            frame = frame_cache[ticker]
+        else:
+            frame = fetch_intraday_frame(ticker, period=settings.period, interval=settings.interval)
+            if frame_cache is not None:
+                frame_cache[ticker] = frame
     except Exception as exc:
         return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0, error=str(exc))
 
