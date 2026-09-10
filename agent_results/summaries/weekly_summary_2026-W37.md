@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 113
-Tickers scanned: 15278
+Total scans: 114
+Tickers scanned: 15409
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3271
-WATCH_REVIEW unique tickers: 82
+WATCH_REVIEW: 3281
+WATCH_REVIEW unique tickers: 83
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3271
-SKIP: 11340
-NO_TRADE: 7793
+WATCH: 3281
+SKIP: 11457
+NO_TRADE: 7878
 Realized PnL: -364.98
-Unrealized PnL: 915.57
-Portfolio value: 101221.98
+Unrealized PnL: 925.62
+Portfolio value: 101232.03
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.222
+Cumulative recorded-equity change (%): 1.232
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -27,16 +27,16 @@ Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 7
-- FIB_STOP_075_ATR: 32
+- FIB_STOP_075_ATR: 33
 - FIB_STOP_100_ATR: 10
-- FIB_STRUCTURE_STOP: 29
+- FIB_STRUCTURE_STOP: 30
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 59
+- TREND_PULLBACK_RECLAIM: 62
 
 Top rejected candidates:
 - ASML: WATCH score=0.63 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - KMI: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
-- MDT: SKIP score=0.6 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.16.
+- MDT: SKIP score=0.61 reason=SKIP: Healthcare sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.43.
 - KLAC: SKIP score=0.56 reason=SKIP: Semiconductors sector regime is weak (41/100); skip new entry. Market regime BULL; sector WEAK; net R/R 3.13.
 - GS: SKIP score=0.56 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.15.
 - LRCX: WATCH score=0.55 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.

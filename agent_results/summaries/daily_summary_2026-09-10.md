@@ -1,40 +1,40 @@
 Daily Performance Summary
 
 Date: 2026-09-10
-Total scans: 15
-Tickers scanned: 1922
+Total scans: 16
+Tickers scanned: 2053
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 327
-WATCH_REVIEW unique tickers: 40
+WATCH_REVIEW: 337
+WATCH_REVIEW unique tickers: 42
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 327
-SKIP: 1511
-NO_TRADE: 983
+WATCH: 337
+SKIP: 1628
+NO_TRADE: 1068
 Realized PnL: -340.88
-Unrealized PnL: 915.57
-Portfolio value: 101221.98
-Daily recorded-equity change (%): -0.3642
+Unrealized PnL: 925.62
+Portfolio value: 101232.03
+Daily recorded-equity change (%): -0.3543
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-09
-Cumulative recorded-equity change (%): 1.222
+Cumulative recorded-equity change (%): 1.232
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 2
+- FIB_STOP_075_ATR: 3
 - FIB_STOP_100_ATR: 1
-- FIB_STRUCTURE_STOP: 2
-- TREND_PULLBACK_RECLAIM: 4
+- FIB_STRUCTURE_STOP: 3
+- TREND_PULLBACK_RECLAIM: 7
 
 Top rejected candidates:
 - ASML: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.72.
 - KMI: WATCH score=0.62 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
-- MDT: SKIP score=0.58 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.36.
+- MDT: SKIP score=0.61 reason=SKIP: Healthcare sector regime is weak (33/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.43.
 - GS: SKIP score=0.56 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.15.
 - EQT: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
 - JNJ: SKIP score=0.53 reason=SKIP: WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation. Also: Position size blocked by cash, exposure, or risk limits.
