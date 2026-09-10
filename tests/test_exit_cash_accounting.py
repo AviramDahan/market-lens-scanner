@@ -94,7 +94,42 @@ def context():
                            market_regime=SimpleNamespace(max_total_exposure=40_000.))
 
 
-@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 1200., 0., 12), (110., 550., 550., 5)])
+def test_hold_mark_delta_is_idempotent_and_uses_portfolio_currency():
+    p = position()
+    p["exposure_ils"] = 3700.
+    assert strategy.refresh_strategy_position(p, 105., 3.7) == 185.
+    assert p["risk_ils"] == 370.
+    assert p["unrealized_ils"] == 185.
+    assert strategy.refresh_strategy_position(p, 105., 3.7) == 0.
+
+
+@pytest.mark.parametrize("price", [0., float("nan"), float("inf")])
+def test_invalid_hold_price_does_not_mutate_position(price):
+    p = position()
+    before = deepcopy(p)
+    with pytest.raises(ValueError):
+        strategy.refresh_strategy_position(p, price, 1.)
+    assert p == before
+
+
+def test_user_processes_existing_first_but_preserves_display_order(monkeypatch):
+    monkeypatch.setattr(strategy, "build_agent_run_context", lambda **_: context())
+    monkeypatch.setattr(strategy, "base_universe", lambda: {})
+    observed = []
+    def final(**kwargs):
+        observed.append(kwargs["result"].ticker)
+        if kwargs["result"].ticker == "NEW":
+            assert kwargs["cash_available"] == 1200.
+        return {"final_action": kwargs["initial_action"], "reason": "fixture"}
+    monkeypatch.setattr(strategy, "evaluate_agent_candidate", final)
+    rows = [candidate("NEW", 100.), candidate("OLD", 120.)]
+    output = strategy.apply_strategy_decisions(rows, analysis_period="6mo", min_rr=2,
+                                               open_positions={"OLD": position()}, cash=0., exposure=1000.)
+    assert observed == ["OLD", "NEW"]
+    assert [r.ticker for r in output] == ["NEW", "OLD"]
+
+
+@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 1200., 0., 12), (110., 550., 550., 5), (105., 0., 1050., 0)])
 def test_user_next_candidate_sees_exit_proceeds_without_mutating_input(monkeypatch, price, cash, exposure, quantity):
     original = {"OLD": position()}
     before = deepcopy(original)
@@ -104,6 +139,8 @@ def test_user_next_candidate_sees_exit_proceeds_without_mutating_input(monkeypat
 
     def final(**kwargs):
         if kwargs["result"].ticker == "NEW":
+            if price == 105:
+                assert kwargs["portfolio_open_risk_before"] == 100.
             observed.append((kwargs["cash_available"], kwargs["portfolio_exposure_before"], kwargs["quantity"]))
             return {"final_action": "WATCH", "reason": "Final gate remains authoritative"}
         return {"final_action": kwargs["initial_action"], "reason": "Exit"}
@@ -116,7 +153,7 @@ def test_user_next_candidate_sees_exit_proceeds_without_mutating_input(monkeypat
     assert original == before
 
 
-@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 1200., 0., 12), (110., 550., 550., 5)])
+@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 1200., 0., 12), (110., 550., 550., 5), (105., 0., 1050., 0)])
 def test_agent_next_candidate_sees_exit_proceeds(monkeypatch, tmp_path, price, cash, exposure, quantity):
     settings = SimpleNamespace(excel_path=tmp_path / "unused.xlsx", min_rr=2,
                                analysis_period="6mo", universe="smart", tickers=[])
@@ -140,6 +177,8 @@ def test_agent_next_candidate_sees_exit_proceeds(monkeypatch, tmp_path, price, c
 
     def final(**kwargs):
         if kwargs["result"].ticker == "NEW":
+            if price == 105:
+                assert kwargs["portfolio_open_risk_before"] == 100.
             observed.append((kwargs["cash_available"], kwargs["portfolio_exposure_before"], kwargs["quantity"]))
             raise EndOfCheck
         return {"final_action": kwargs["initial_action"], "reason": "Exit"}

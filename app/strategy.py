@@ -90,11 +90,12 @@ def apply_strategy_decisions(
     timestamp = datetime.now().isoformat(timespec="seconds")
     neutral_pilot_trades_today = 0
 
-    enriched = []
+    enriched = [None] * len(results)
     running_cash = cash
     running_exposure = exposure
     simulated_positions = {ticker: dict(position) for ticker, position in open_positions.items()}
-    for result in results:
+    for result_index in allocation_order_indices(results, simulated_positions):
+        result = results[result_index]
         candidate = normalize_strategy_candidate(result)
         decision = decide_strategy_candidate(
             candidate,
@@ -119,6 +120,7 @@ def apply_strategy_decisions(
             risk_amount=decision.risk_ils,
             cash_available=running_cash,
             portfolio_exposure_before=running_exposure,
+            portfolio_open_risk_before=sum(float(p.get("risk_ils") or 0) for p in simulated_positions.values()),
             open_positions=simulated_positions,
             sector_map=sector_map,
             run_context=run_context,
@@ -130,7 +132,7 @@ def apply_strategy_decisions(
         decision.decision_json = decision_json
         decision.action = final_action
         decision.feedback = final_reason
-        enriched.append(enrich_result_with_strategy(result, final_action, final_reason, decision_json))
+        enriched[result_index] = enrich_result_with_strategy(result, final_action, final_reason, decision_json)
         if final_action == "BUY_SIMULATED":
             if decision_json.get("entry_mode") == "neutral_pilot":
                 neutral_pilot_trades_today += 1
@@ -152,7 +154,42 @@ def apply_strategy_decisions(
             )
             running_cash += cash_delta
             running_exposure += exposure_delta
+        elif candidate.ticker in simulated_positions:
+            running_exposure += refresh_strategy_position(
+                simulated_positions[candidate.ticker], candidate.current_price, currency_rate
+            )
     return enriched
+
+
+def allocation_order_indices(results: list[Any], open_positions: dict[str, Any]) -> list[int]:
+    """Existing agent ordering, shared without changing the caller's display order."""
+    def priority(index: int) -> tuple[Any, ...]:
+        candidate = results[index]
+        return (
+            0 if str(candidate.ticker).upper() in open_positions else 1,
+            0 if str(candidate.setup_type or "").lower() != "no trade" else 1,
+            -float(candidate.score or 0.0),
+            -float(candidate.risk_reward or 0.0),
+            index,
+        )
+    return sorted(range(len(results)), key=priority)
+
+
+def refresh_strategy_position(position: dict[str, Any], price: float, currency_rate: float) -> float:
+    """Mark holdings consistently and return the delta to the caller's exposure total."""
+    old_exposure = float(position.get("exposure_ils") or 0)
+    quantity = int(position.get("quantity") or 0)
+    entry = float(position.get("entry_price") or 0)
+    stop = float(position.get("stop_loss") or 0)
+    if (not all(math.isfinite(v) for v in (price, currency_rate, old_exposure, entry, stop))
+            or price <= 0 or currency_rate <= 0 or quantity <= 0 or old_exposure < 0):
+        raise ValueError("Cannot mark position from invalid price, quantity, or accounting values")
+    exposure = round(price * quantity * currency_rate, 2)
+    position.update(current_price=price, exposure_ils=exposure,
+                    unrealized_usd=round((price - entry) * quantity, 2),
+                    unrealized_ils=round((price - entry) * quantity * currency_rate, 2),
+                    risk_ils=round(max(0.0, price - stop) * quantity * currency_rate, 2))
+    return exposure - old_exposure
 
 
 def apply_strategy_exit(

@@ -28,7 +28,10 @@ from app.scanner import scan_ticker_detail
 from app.shadow_strategies import evaluate_shadow_strategies
 from app.smart_universe import base_universe, build_sector_health, build_smart_universe, curated_universe
 from app.strategy import StrategyDecision as Decision
-from app.strategy import apply_strategy_exit, decide_strategy_candidate, normalize_strategy_candidate
+from app.strategy import (
+    allocation_order_indices, apply_strategy_exit, decide_strategy_candidate,
+    normalize_strategy_candidate, refresh_strategy_position,
+)
 from app.telegram_notifications import (
     build_telegram_dedupe_key,
     dashboard_url_from_env,
@@ -1090,7 +1093,7 @@ def update_workbook(
             cash += cash_delta
             exposure += exposure_delta
         elif result.ticker in open_positions:
-            refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
+            exposure += refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
         open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
 
     apply_chart_retention_policy(
@@ -1347,21 +1350,7 @@ def rank_results_for_allocation(
     open_positions: dict[str, dict[str, Any]],
 ) -> list[SetupResult]:
     """Process existing positions first, then allocate capital to stronger candidates."""
-    indexed = list(enumerate(results))
-
-    def priority(item: tuple[int, SetupResult]) -> tuple[Any, ...]:
-        index, candidate = item
-        is_open = str(candidate.ticker).upper() in open_positions
-        has_setup = str(candidate.setup_type or "").lower() != "no trade"
-        return (
-            0 if is_open else 1,
-            0 if has_setup else 1,
-            -float(candidate.score or 0.0),
-            -float(candidate.risk_reward or 0.0),
-            index,
-        )
-
-    return [candidate for _, candidate in sorted(indexed, key=priority)]
+    return [results[index] for index in allocation_order_indices(results, open_positions)]
 
 
 def build_selection_context(
@@ -1879,16 +1868,8 @@ def refresh_open_position(
     result: SetupResult,
     usd_ils: float,
     decision: Decision | None = None,
-) -> None:
-    qty = int(pos.get("quantity") or 0)
-    entry = float(pos.get("entry_price") or 0)
-    current = result.current_price
-    stop = float(pos.get("stop_loss") or 0)
-    pos["current_price"] = current
-    pos["unrealized_usd"] = round((current - entry) * qty, 2)
-    pos["unrealized_ils"] = round((current - entry) * qty * usd_ils, 2)
-    pos["exposure_ils"] = round(current * qty * usd_ils, 2)
-    pos["risk_ils"] = round(max(0.0, current - stop) * qty * usd_ils, 2)
+) -> float:
+    exposure_delta = refresh_strategy_position(pos, result.current_price, usd_ils)
     if result.chart_url:
         pos["chart_url"] = result.chart_url
     if result.selection_context:
@@ -1900,6 +1881,7 @@ def refresh_open_position(
             sort_keys=True,
             default=str,
         )
+    return exposure_delta
 
 
 def merge_position_decision_json(existing_value: Any, latest: dict[str, Any]) -> dict[str, Any]:
