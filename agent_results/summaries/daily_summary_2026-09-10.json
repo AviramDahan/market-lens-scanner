@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 608,
-  "SKIP_count": 970,
+  "NO_TRADE_count": 666,
+  "SKIP_count": 1066,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -43,35 +43,35 @@
   "WATCH_READY_unique_regular_session_count": 0,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_REVIEW_count": 243,
+  "WATCH_REVIEW_count": 267,
   "WATCH_REVIEW_unique_count": 35,
-  "WATCH_count": 243,
+  "WATCH_count": 267,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
     "BREAKOUT_CONTINUATION": 0.3956,
-    "FIB_STOP_075_ATR": 0.4516,
-    "FIB_STOP_100_ATR": 0.4311,
-    "FIB_STRUCTURE_STOP": 0.4175,
-    "RELATIVE_STRENGTH_LEADER": 0.3578,
-    "STOP_RECLAIM_REENTRY": 0.2813,
-    "TREND_PULLBACK_RECLAIM": 0.3938,
-    "VWAP_RECLAIM": 0.3988
+    "FIB_STOP_075_ATR": 0.4521,
+    "FIB_STOP_100_ATR": 0.4315,
+    "FIB_STRUCTURE_STOP": 0.4178,
+    "RELATIVE_STRENGTH_LEADER": 0.358,
+    "STOP_RECLAIM_REENTRY": 0.2814,
+    "TREND_PULLBACK_RECLAIM": 0.3939,
+    "VWAP_RECLAIM": 0.3991
   },
   "average_confidence_by_shadow_strategy_version": {
     "BREAKOUT_CONTINUATION@shadow_v2": 0.3956,
-    "FIB_STOP_075_ATR@shadow_v2": 0.4516,
-    "FIB_STOP_100_ATR@shadow_v2": 0.4311,
-    "FIB_STRUCTURE_STOP@shadow_v2": 0.4175,
-    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3578,
-    "STOP_RECLAIM_REENTRY@shadow_v2": 0.2813,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.3938,
-    "VWAP_RECLAIM@shadow_v2": 0.3988
+    "FIB_STOP_075_ATR@shadow_v2": 0.4521,
+    "FIB_STOP_100_ATR@shadow_v2": 0.4315,
+    "FIB_STRUCTURE_STOP@shadow_v2": 0.4178,
+    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.358,
+    "STOP_RECLAIM_REENTRY@shadow_v2": 0.2814,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.3939,
+    "VWAP_RECLAIM@shadow_v2": 0.3991
   },
   "average_loser": null,
   "average_loser_R": null,
-  "average_rr_to_target_1": 0.5456,
-  "average_rr_to_target_2": 1.9374,
-  "average_setup_score": 0.1887,
+  "average_rr_to_target_1": 0.5473,
+  "average_rr_to_target_2": 1.9464,
+  "average_setup_score": 0.189,
   "average_winner": null,
   "average_winner_R": null,
   "best_sector": "Materials",
@@ -140,37 +140,49 @@
     "decision_trade_id": {
       "coverage_pct": 0.0,
       "populated": 0,
-      "total": 1273
+      "total": 1399
     }
   },
   "data_quality_issues": [
     {
-      "count": 514,
+      "count": 566,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 267,
+      "count": 293,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 142,
+      "count": 159,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 105,
+      "count": 114,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 20,
+      "count": 22,
       "name": "Earnings blackout active."
     },
     {
-      "count": 10,
+      "count": 13,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 13,
+      "name": "WATCH: Market regime exposure limit would be exceeded (29931.00 > 28750.00)."
+    },
+    {
+      "count": 11,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 10,
+      "count": 11,
       "name": "Stop-loss cooldown active after 2026-09-08T13:35:38; 1 trading days remaining."
+    },
+    {
+      "count": 5,
+      "name": "WATCH: Neutral sector requires a cleaner setup score."
     }
   ],
   "date": "2026-09-10",
@@ -187,74 +199,86 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 560,
-      "name": "SKIP: No Trade result"
+      "count": 247,
+      "name": "SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00."
     },
     {
-      "count": 233,
-      "name": "WATCH: Technical setup detected, but weighted risk/reward 1"
+      "count": 187,
+      "name": "SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00."
     },
     {
-      "count": 131,
-      "name": "SKIP: Position size blocked by cash, exposure, or risk limits"
+      "count": 179,
+      "name": "SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00."
     },
     {
-      "count": 88,
-      "name": "SKIP: Consumer sector regime is weak (20/100); skip new entry"
+      "count": 18,
+      "name": "SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.34."
     },
     {
-      "count": 80,
-      "name": "SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry"
-    },
-    {
-      "count": 64,
-      "name": "SKIP: Industrials sector regime is weak (22/100); skip new entry"
+      "count": 18,
+      "name": "SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.49."
     },
     {
       "count": 16,
-      "name": "SKIP: Consumer sector regime is weak (21/100); skip new entry"
+      "name": "SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.62."
     },
     {
-      "count": 14,
-      "name": "SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry"
+      "count": 13,
+      "name": "SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits."
     },
     {
       "count": 10,
-      "name": "WATCH: Valid setup, but price is not inside the buy zone"
+      "name": "SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.63."
     },
     {
-      "count": 8,
-      "name": "SKIP: Industrials sector regime is weak (21/100); skip new entry"
+      "count": 10,
+      "name": "SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector STRONG; net R/R 1.87."
+    },
+    {
+      "count": 9,
+      "name": "SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.54."
     }
   ],
   "most_common_warnings": [
     {
-      "count": 514,
+      "count": 566,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 267,
+      "count": 293,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 142,
+      "count": 159,
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 105,
+      "count": 114,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 20,
+      "count": 22,
       "name": "Earnings blackout active."
     },
     {
-      "count": 10,
+      "count": 13,
+      "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+    },
+    {
+      "count": 13,
+      "name": "WATCH: Market regime exposure limit would be exceeded (29931.00 > 28750.00)."
+    },
+    {
+      "count": 11,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 10,
+      "count": 11,
       "name": "Stop-loss cooldown active after 2026-09-08T13:35:38; 1 trading days remaining."
+    },
+    {
+      "count": 5,
+      "name": "WATCH: Neutral sector requires a cleaner setup score."
     }
   ],
   "most_frequent_actionable_setup": "Fib 61.8 Confluence Buy Zone",
@@ -275,6 +299,65 @@
   "recommendations_for_next_week": [
     "Keep collecting shadow data; no strategy changes are recommended from this sample alone."
   ],
+  "rejection_diagnostics": {
+    "capital_blockers": [
+      {
+        "count": 13,
+        "name": "Position size blocked by cash, exposure, or risk limits."
+      },
+      {
+        "count": 13,
+        "name": "WATCH: Market regime exposure limit would be exceeded (29931.00 > 28750.00)."
+      }
+    ],
+    "count_basis": "decision_observations_not_unique_opportunities",
+    "entry_gate_blockers": [
+      {
+        "count": 13,
+        "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
+      },
+      {
+        "count": 5,
+        "name": "WATCH: Neutral sector requires a cleaner setup score."
+      },
+      {
+        "count": 4,
+        "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked."
+      },
+      {
+        "count": 4,
+        "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
+      },
+      {
+        "count": 2,
+        "name": "Gross R/R is valid, but Net R/R 1.62 failed minimum 2.50 after slippage/spread adjustment."
+      },
+      {
+        "count": 1,
+        "name": "Gross R/R is valid, but Net R/R 2.36 failed minimum 2.50 after slippage/spread adjustment."
+      },
+      {
+        "count": 1,
+        "name": "WATCH: NEUTRAL market requires setup score (0.50 < 0.55)."
+      },
+      {
+        "count": 1,
+        "name": "Gross R/R is valid, but Net R/R 1.96 failed minimum 2.50 after slippage/spread adjustment."
+      },
+      {
+        "count": 1,
+        "name": "WATCH: NEUTRAL market requires setup score (0.48 < 0.55)."
+      },
+      {
+        "count": 1,
+        "name": "Gross R/R is valid, but Net R/R 1.80 failed minimum 2.20 after slippage/spread adjustment."
+      }
+    ],
+    "note": "Blockers can overlap; empty lists do not prove eligibility. Full reasons are retained.",
+    "observations_without_recorded_blockers": 1320,
+    "rejected_observations": 1333,
+    "unique_rejected_tickers": 128
+  },
   "runtime_metrics": {
     "decision_files": [
       "agent_results/decisions/market_lens_agent_20260910_001747.jsonl",
@@ -286,23 +369,24 @@
       "agent_results/decisions/market_lens_agent_20260910_063312.jsonl",
       "agent_results/decisions/market_lens_agent_20260910_073254.jsonl",
       "agent_results/decisions/market_lens_agent_20260910_083304.jsonl",
-      "agent_results/decisions/market_lens_agent_20260910_093310.jsonl"
+      "agent_results/decisions/market_lens_agent_20260910_093310.jsonl",
+      "agent_results/decisions/market_lens_agent_20260910_103257.jsonl"
     ],
-    "records": 1273,
-    "run_id": "20260910_093310"
+    "records": 1399,
+    "run_id": "20260910_103257"
   },
   "setup_candidate_metrics": {
     "active_policy": "FIRST_MATCH_LEGACY",
-    "alternative_ranked_first_count": 107,
+    "alternative_ranked_first_count": 118,
     "candidate_count_by_setup_type": {
-      "Breakout + Retest": 181,
-      "Fib 61.8 Confluence Buy Zone": 193,
-      "Liquidity Trap Buy Zone": 95,
-      "Swing Low + Volume Support Buy Zone": 150,
-      "VWAP Reclaim Setup": 336
+      "Breakout + Retest": 197,
+      "Fib 61.8 Confluence Buy Zone": 213,
+      "Liquidity Trap Buy Zone": 105,
+      "Swing Low + Volume Support Buy Zone": 165,
+      "VWAP Reclaim Setup": 374
     },
-    "records_with_candidates": 665,
-    "records_with_multiple_candidates": 214,
+    "records_with_candidates": 733,
+    "records_with_multiple_candidates": 236,
     "shadow_only": true
   },
   "shadow_outcome_metrics_by_strategy": {},
@@ -552,9 +636,9 @@
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
   "total_portfolio_value": 101591.94,
-  "total_result_cards_read": 1273,
-  "total_scans": 10,
-  "total_tickers_scanned": 1273,
+  "total_result_cards_read": 1399,
+  "total_scans": 11,
+  "total_tickers_scanned": 1399,
   "total_trading_days": null,
   "trade_metric_source": "COMPLETED_TRADE_LIFECYCLE",
   "unrealized_pnl": 944.65,
