@@ -6,7 +6,10 @@ from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from statistics import mean, median
+from functools import lru_cache
 from typing import Any
+
+from app.trading_clock import session_bounds
 
 
 def write_performance_summaries(
@@ -264,6 +267,11 @@ def build_period_summary(
         "shadow_outcome_metrics_by_strategy": shadow_outcomes["by_strategy"],
         "shadow_outcome_metrics_by_strategy_version": shadow_outcomes["by_strategy_version"],
         "shadow_outcome_source": shadow_outcomes["source"],
+        "shadow_outcome_measurement": {
+            "version": "exact_session_observation_v1",
+            "ranking_horizon_sessions": shadow_outcomes["ranking_horizon_sessions"],
+            "limitations": shadow_outcomes["limitations"],
+        },
         "shadow_strategies_would_buy_count_by_strategy": shadow["would_buy_count_by_strategy"],
         "shadow_strategies_would_buy_count_by_strategy_version": shadow["would_buy_count_by_strategy_version"],
         "shadow_strategies_top_candidates": shadow["top_candidates"],
@@ -550,6 +558,24 @@ def shadow_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+@lru_cache(maxsize=512)
+def shadow_horizon_dates(signal_date: date) -> dict[int, date]:
+    dates = {}
+    sessions = 0
+    try:
+        for offset in range(1, 31):
+            day = signal_date + timedelta(days=offset)
+            if session_bounds(day) is not None:
+                sessions += 1
+                if sessions in {1, 3, 5, 10}:
+                    dates[sessions] = day
+                if sessions == 10:
+                    break
+    except Exception:
+        return {}  # No calendar evidence means no labelled horizon outcome.
+    return dates
+
+
 def shadow_outcome_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     """Calibrate shadow signals against later observed scan prices.
 
@@ -602,11 +628,11 @@ def shadow_outcome_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
         version_key = signal["strategy_version"]
         signal_counts[name] += 1
         version_signal_counts[version_key] += 1
-        later_dates = sorted(day for day in prices.get(signal["ticker"], {}) if day > signal["date"])
+        target_dates = shadow_horizon_dates(signal["date"])
         for horizon in horizons:
-            if len(later_dates) < horizon:
+            future_price = prices.get(signal["ticker"], {}).get(target_dates.get(horizon))
+            if future_price is None:
                 continue
-            future_price = prices[signal["ticker"]][later_dates[horizon - 1]]
             outcome = (future_price / signal["entry"] - 1) * 100
             returns[name][horizon].append(round(outcome, 4))
             version_returns[version_key][horizon].append(round(outcome, 4))
@@ -616,13 +642,13 @@ def shadow_outcome_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
 
     ranked: list[tuple[str, float]] = []
     for name, item in by_strategy.items():
-        for horizon in (5, 3, 1):
-            value = item.get(f"average_return_{horizon}d_pct")
-            if value is not None and item.get(f"matured_{horizon}d", 0) >= 1:
-                ranked.append((name, float(value)))
-                break
+        value = item.get("average_return_1d_pct")
+        if value is not None and item.get("matured_1d", 0) >= 1:
+            ranked.append((name, float(value)))
     return {
-        "source": "deduplicated future scan-price observations",
+        "source": "deduplicated scan-price observations on exact exchange-session horizon dates",
+        "ranking_horizon_sessions": 1,
+        "limitations": "Rescan-dependent observations, not session-close fills; absent target-date prices remain missing. Period boundaries may censor outcomes.",
         "by_strategy": by_strategy,
         "by_strategy_version": by_strategy_version,
         "best_strategy": max(ranked, key=lambda item: item[1])[0] if ranked else "INSUFFICIENT_OUTCOMES",
