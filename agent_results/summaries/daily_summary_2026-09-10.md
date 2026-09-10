@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-10
-Total scans: 13
-Tickers scanned: 1651
+Total scans: 14
+Tickers scanned: 1781
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 303
+WATCH_REVIEW: 315
 WATCH_REVIEW unique tickers: 39
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 303
-SKIP: 1272
-NO_TRADE: 802
+WATCH: 315
+SKIP: 1386
+NO_TRADE: 887
 Realized PnL: -340.88
-Unrealized PnL: 822.32
-Portfolio value: 101128.73
-Daily recorded-equity change (%): -0.456
+Unrealized PnL: 827.59
+Portfolio value: 101134.0
+Daily recorded-equity change (%): -0.4508
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-09
-Cumulative recorded-equity change (%): 1.1287
+Cumulative recorded-equity change (%): 1.134
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
