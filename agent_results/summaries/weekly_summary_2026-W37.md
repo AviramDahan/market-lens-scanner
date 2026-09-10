@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 110
-Tickers scanned: 14881
+Total scans: 111
+Tickers scanned: 15007
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3235
+WATCH_REVIEW: 3247
 WATCH_REVIEW unique tickers: 82
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3235
-SKIP: 10991
-NO_TRADE: 7534
-Realized PnL: -24.1
-Unrealized PnL: 944.65
-Portfolio value: 101591.94
+WATCH: 3247
+SKIP: 11101
+NO_TRADE: 7612
+Realized PnL: -364.98
+Unrealized PnL: 822.32
+Portfolio value: 101128.73
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.5919
+Cumulative recorded-equity change (%): 1.1287
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
@@ -43,7 +43,7 @@ Top rejected candidates:
 - EQT: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
 - MSFT: WATCH score=0.54 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - NVDA: SKIP score=0.54 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector STRONG; net R/R 1.51.
-- MA: SKIP score=0.52 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.09.
+- JNJ: SKIP score=0.53 reason=SKIP: WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
