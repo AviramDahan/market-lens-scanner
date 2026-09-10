@@ -1,31 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-10
-Total scans: 14
-Tickers scanned: 1781
+Total scans: 15
+Tickers scanned: 1922
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 315
-WATCH_REVIEW unique tickers: 39
+WATCH_REVIEW: 327
+WATCH_REVIEW unique tickers: 40
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 315
-SKIP: 1386
-NO_TRADE: 887
+WATCH: 327
+SKIP: 1511
+NO_TRADE: 983
 Realized PnL: -340.88
-Unrealized PnL: 827.59
-Portfolio value: 101134.0
-Daily recorded-equity change (%): -0.4508
+Unrealized PnL: 915.57
+Portfolio value: 101221.98
+Daily recorded-equity change (%): -0.3642
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-09
-Cumulative recorded-equity change (%): 1.134
+Cumulative recorded-equity change (%): 1.222
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
+- FIB_STOP_075_ATR: 2
+- FIB_STOP_100_ATR: 1
+- FIB_STRUCTURE_STOP: 2
+- TREND_PULLBACK_RECLAIM: 4
 
 Top rejected candidates:
 - ASML: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.72.
@@ -34,10 +38,10 @@ Top rejected candidates:
 - GS: SKIP score=0.56 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.15.
 - EQT: WATCH score=0.55 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
 - JNJ: SKIP score=0.53 reason=SKIP: WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation. Also: Position size blocked by cash, exposure, or risk limits.
+- KO: SKIP score=0.53 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.19.
 - MA: SKIP score=0.52 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.09.
 - EQIX: SKIP score=0.52 reason=SKIP: Utilities / Real Assets sector regime is weak (24/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.54.
 - AEP: SKIP score=0.51 reason=SKIP: Utilities / Real Assets sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.54.
-- NVDA: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.81 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.27.
 
 Recommendations:
-- Keep collecting shadow data; no strategy changes are recommended from this sample alone.
+- Review shadow would-buy candidates that active gates skipped before changing thresholds.
