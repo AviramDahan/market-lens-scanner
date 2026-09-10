@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-10
-Total scans: 19
-Tickers scanned: 2447
+Total scans: 20
+Tickers scanned: 2578
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 376
-WATCH_REVIEW unique tickers: 43
+WATCH_REVIEW: 388
+WATCH_REVIEW unique tickers: 44
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 376
-SKIP: 1971
-NO_TRADE: 1320
+WATCH: 388
+SKIP: 2086
+NO_TRADE: 1409
 Realized PnL: -340.88
-Unrealized PnL: 815.36
-Portfolio value: 101121.77
-Daily recorded-equity change (%): -0.4628
+Unrealized PnL: 840.85
+Portfolio value: 101147.26
+Daily recorded-equity change (%): -0.4377
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-09
-Cumulative recorded-equity change (%): 1.1218
+Cumulative recorded-equity change (%): 1.1473
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 3
+- FIB_STOP_075_ATR: 4
 - FIB_STOP_100_ATR: 1
-- FIB_STRUCTURE_STOP: 4
-- TREND_PULLBACK_RECLAIM: 10
+- FIB_STRUCTURE_STOP: 5
+- TREND_PULLBACK_RECLAIM: 12
 
 Top rejected candidates:
 - ASML: SKIP score=0.62 reason=SKIP: Position size blocked by cash, exposure, or risk limits. Market regime NEUTRAL; sector NEUTRAL; net R/R 2.72.
