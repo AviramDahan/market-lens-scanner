@@ -132,6 +132,22 @@ def test_missing_entry_is_not_replaced_with_old_event_cursor(tmp_path):
     assert result.status == "DATA_ERROR"
 
 
+@pytest.mark.parametrize("high,low,close", [
+    (float("nan"), 150, 151), (152, 150, float("inf")),
+    (149, 151, 150), (152, 150, 153), (152, 0, 151),
+])
+def test_bad_price_bar_is_data_error_not_hold_or_exit(monkeypatch, tmp_path, high, low, close):
+    frame = pd.DataFrame({"High": [high], "Low": [low], "Close": [close]},
+                         index=pd.to_datetime(["2026-09-08T14:11:00Z"]))
+    monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
+    p = position()
+    before = dict(p)
+    result = monitor_position(p, settings=settings(tmp_path), since=None, currency_rate=1)
+    assert result.status == "DATA_ERROR"
+    assert result.event is None
+    assert p == before
+
+
 def test_cursor_ignores_other_trades_and_pre_entry_legacy_events():
     wb = book()
     ws = wb["Position Events"]

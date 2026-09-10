@@ -20,3 +20,11 @@ fills. Historical transactions are not rewritten.
 Regression coverage uses real in-memory workbooks: TP1 then stop, TP1 then TP2,
 TP1 then hold and repeated polling without duplicate credit, one shared fetch,
 correct remaining quantity, breakeven stop, cash, event identity and health count.
+
+Price frames are additionally rejected as DATA_ERROR before state mutation if
+High/Low/Close is missing, non-finite, nonpositive or internally inconsistent.
+This prevents NaN comparisons from silently becoming a successful HOLD.
+
+Real workflow validation: 34465395802 completed successfully, six positions
+checked, no provider failures or events, and persistence conflict check passed.
+The chronological two-event cases are tested fixtures, not claimed live events.

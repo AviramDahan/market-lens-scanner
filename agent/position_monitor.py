@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 import json
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -328,7 +329,17 @@ def monitor_position(
     if frame.empty:
         return MonitorResult(ticker=ticker, status="NO_DATA", current_price=0.0)
 
-    latest_close = float(frame["Close"].iloc[-1])
+    try:
+        prices = frame[["High", "Low", "Close"]].astype(float)
+        if (not all(math.isfinite(value) and value > 0 for value in prices.to_numpy().flat)
+                or (prices["Low"] > prices["High"]).any()
+                or (prices["Close"] < prices["Low"]).any()
+                or (prices["Close"] > prices["High"]).any()):
+            raise ValueError("Invalid price range")
+    except (KeyError, TypeError, ValueError):
+        return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0,
+                             error="Price bars require finite positive High/Low/Close and consistent ranges.")
+    latest_close = float(prices["Close"].iloc[-1])
     if not frame.index.is_monotonic_increasing or not frame.index.is_unique or frame.index.tz is None:
         return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0,
                              error="Price bars require ordered, unique, timezone-aware timestamps.")
