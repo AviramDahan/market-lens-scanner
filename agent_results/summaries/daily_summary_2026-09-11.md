@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-11
-Total scans: 27
-Tickers scanned: 3604
+Total scans: 28
+Tickers scanned: 3741
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 513
+WATCH_REVIEW: 530
 WATCH_REVIEW unique tickers: 63
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 513
-SKIP: 2974
-NO_TRADE: 2025
+WATCH: 530
+SKIP: 3089
+NO_TRADE: 2117
 Realized PnL: 0.0
-Unrealized PnL: 1089.12
-Portfolio value: 101395.53
-Daily recorded-equity change (%): 0.216
+Unrealized PnL: 1097.61
+Portfolio value: 101404.02
+Daily recorded-equity change (%): 0.2244
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-10
-Cumulative recorded-equity change (%): 1.3955
+Cumulative recorded-equity change (%): 1.404
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: MRVL
@@ -27,11 +27,11 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
-- FIB_STOP_075_ATR: 22
+- FIB_STOP_075_ATR: 23
 - FIB_STOP_100_ATR: 2
-- FIB_STRUCTURE_STOP: 8
+- FIB_STRUCTURE_STOP: 9
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 25
+- TREND_PULLBACK_RECLAIM: 26
 
 Top rejected candidates:
 - LRCX: WATCH score=0.58 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
