@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-07
-Total scans: 130
-Tickers scanned: 17476
+Total scans: 131
+Tickers scanned: 17602
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3518
+WATCH_REVIEW: 3529
 WATCH_REVIEW unique tickers: 84
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3518
-SKIP: 13223
-NO_TRADE: 9087
+WATCH: 3529
+SKIP: 13334
+NO_TRADE: 9147
 Realized PnL: -364.98
-Unrealized PnL: 1101.49
-Portfolio value: 101407.9
+Unrealized PnL: 870.57
+Portfolio value: 101176.98
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.4079
+Cumulative recorded-equity change (%): 1.177
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AEP
