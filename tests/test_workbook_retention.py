@@ -1,6 +1,16 @@
 from openpyxl import Workbook, load_workbook
 
-from app.workbook_retention import compact_setup_watchlist, enforce_tracker_size
+from app.workbook_retention import (
+    DEFAULT_TRACKER_REWRITE_BYTES,
+    DEFAULT_WATCHLIST_MAX_ROWS,
+    compact_setup_watchlist,
+    enforce_tracker_size,
+)
+
+
+def test_workbook_retention_defaults_keep_operational_tracker_below_github_warning() -> None:
+    assert DEFAULT_WATCHLIST_MAX_ROWS == 20_000
+    assert DEFAULT_TRACKER_REWRITE_BYTES == 50_000_000
 
 
 def test_compact_setup_watchlist_keeps_header_and_latest_rows() -> None:

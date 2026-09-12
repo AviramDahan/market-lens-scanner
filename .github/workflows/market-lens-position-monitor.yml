@@ -109,7 +109,7 @@ jobs:
         if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         env:
           MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
-          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "80000"
+          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "20000"
           MARKET_LENS_RUN_DIR: agent_results
           MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
           MARKET_LENS_MONITOR_PERIOD: 5d
@@ -148,8 +148,8 @@ jobs:
       - name: Enforce tracker size before persistence
         if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         env:
-          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "80000"
-          MARKET_LENS_WORKBOOK_REWRITE_BYTES: "75000000"
+          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "20000"
+          MARKET_LENS_WORKBOOK_REWRITE_BYTES: "50000000"
           MARKET_LENS_WORKBOOK_HARD_LIMIT_BYTES: "90000000"
         run: |
           python - <<'PY'
@@ -186,8 +186,8 @@ jobs:
         shell: bash
         env:
           MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
-          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "80000"
-          MARKET_LENS_WORKBOOK_REWRITE_BYTES: "75000000"
+          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "20000"
+          MARKET_LENS_WORKBOOK_REWRITE_BYTES: "50000000"
           MARKET_LENS_WORKBOOK_HARD_LIMIT_BYTES: "90000000"
           MARKET_LENS_RUN_DIR: agent_results
           MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com

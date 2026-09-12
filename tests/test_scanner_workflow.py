@@ -43,3 +43,12 @@ def test_scanner_persists_generated_state_with_manifest_bundle() -> None:
     assert "python -m agent.generated_state_bundle apply" in block
     assert "python -m agent.generated_state_bundle stage" in block
     assert 'git add "$EXCEL_FILE" "$RESULTS_DIR"' not in block
+
+
+def test_scanner_compacts_large_workbook_before_github_warning_size() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "20000"' in text
+    assert 'MARKET_LENS_WORKBOOK_REWRITE_BYTES: "50000000"' in text
+    assert 'MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "80000"' not in text
+    assert 'MARKET_LENS_WORKBOOK_REWRITE_BYTES: "75000000"' not in text
