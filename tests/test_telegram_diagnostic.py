@@ -33,5 +33,6 @@ def test_diagnostic_rejects_unsafe_chart_object() -> None:
 
 def test_diagnostic_accepts_expected_historical_chart_object() -> None:
     assert diagnostic.GIT_OBJECT_RE.fullmatch(
-        "5815f71c^:agent_results/charts/market_lens_agent_20260903_140255_gs.png"
+        "cd20dfd5d89af2652515219bab0ea996efea7bc2:"
+        "agent_results/charts/market_lens_agent_20260903_140255_gs.png"
     )

@@ -13,7 +13,7 @@ from app.telegram_notifications import (
 )
 
 
-GIT_OBJECT_RE = re.compile(r"^[0-9a-fA-F^~]+:[A-Za-z0-9_.\-/]+$")
+GIT_OBJECT_RE = re.compile(r"^[0-9a-fA-F]{40}:[A-Za-z0-9_.\-/]+$")
 
 
 def main() -> None:
@@ -41,6 +41,19 @@ def main() -> None:
 def send_chart_from_git(chart_object: str, *, ticker: str, dedupe_key: str) -> None:
     if not GIT_OBJECT_RE.fullmatch(chart_object):
         raise SystemExit("Diagnostic chart object is invalid.")
+    revision = chart_object.split(":", 1)[0]
+    if subprocess.run(
+        ["git", "cat-file", "-e", f"{revision}^{{commit}}"],
+        check=False,
+        capture_output=True,
+    ).returncode != 0:
+        fetched = subprocess.run(
+            ["git", "fetch", "--no-tags", "--depth=1", "origin", revision],
+            check=False,
+            capture_output=True,
+        )
+        if fetched.returncode != 0:
+            raise SystemExit("Diagnostic chart revision could not be fetched.")
     completed = subprocess.run(
         ["git", "show", chart_object],
         check=False,
