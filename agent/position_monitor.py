@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import os
-import sys
 import json
 import math
-from dataclasses import dataclass
+import os
+import sys
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -71,6 +71,7 @@ def main() -> None:
     settings = load_settings()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    clear_notification_outbox()
 
     wb = load_workbook(settings.excel_path)
     ensure_agent_columns(wb)
@@ -152,12 +153,21 @@ def main() -> None:
             )
         wb.save(settings.excel_path)
         if events:
-            send_position_event_notifications(
-                event_notifications,
-                settings=settings,
-                run_id=run_id,
-                timestamp=timestamp,
-            )
+            if notification_outbox_path() is not None:
+                outbox = write_notification_outbox(
+                    event_notifications,
+                    settings=settings,
+                    run_id=run_id,
+                    timestamp=timestamp,
+                )
+                print(f"Notification outbox: {outbox}")
+            else:
+                send_position_event_notifications(
+                    event_notifications,
+                    settings=settings,
+                    run_id=run_id,
+                    timestamp=timestamp,
+                )
 
     if events:
         print(f"Position monitor completed with {len(events)} event(s).")
@@ -192,13 +202,95 @@ def load_settings() -> MonitorSettings:
     )
 
 
+def notification_outbox_path() -> Path | None:
+    raw_path = os.getenv("MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX", "").strip()
+    return Path(raw_path) if raw_path else None
+
+
+def clear_notification_outbox() -> None:
+    path = notification_outbox_path()
+    if path is None:
+        return
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as exc:
+        raise RuntimeError(f"Could not clear stale monitor notification outbox: {path}") from exc
+
+
+def write_notification_outbox(
+    event_notifications: list[tuple[dict[str, Any], PositionEvent]],
+    *,
+    settings: MonitorSettings,
+    run_id: str,
+    timestamp: str,
+) -> Path:
+    path = notification_outbox_path()
+    if path is None:
+        raise RuntimeError("Monitor notification outbox path is not configured.")
+    payload = {
+        "schema_version": 1,
+        "run_id": run_id,
+        "timestamp": timestamp,
+        "dashboard_url": settings.dashboard_url,
+        "events": [
+            {"position": json_safe(position), "event": asdict(event)}
+            for position, event in event_notifications
+        ],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+    temporary.replace(path)
+    return path
+
+
+def send_notification_outbox(path: Path) -> list[Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != 1 or not isinstance(payload.get("events"), list):
+        raise ValueError("Unsupported monitor notification outbox schema.")
+    settings = MonitorSettings(
+        excel_path=Path("."),
+        run_dir=Path("."),
+        period="",
+        interval="",
+        save_noop=False,
+        dashboard_url=str(payload.get("dashboard_url") or ""),
+    )
+    notifications = []
+    for item in payload["events"]:
+        position = item.get("position")
+        event_payload = item.get("event")
+        if not isinstance(position, dict) or not isinstance(event_payload, dict):
+            raise ValueError("Malformed monitor notification outbox event.")
+        notifications.append((position, PositionEvent(**event_payload)))
+    return send_position_event_notifications(
+        notifications,
+        settings=settings,
+        run_id=str(payload.get("run_id") or ""),
+        timestamp=str(payload.get("timestamp") or ""),
+    )
+
+
+def json_safe(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {str(key): json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    return str(value)
+
+
 def send_position_event_notifications(
     event_notifications: list[tuple[dict[str, Any], PositionEvent]],
     *,
     settings: MonitorSettings,
     run_id: str,
     timestamp: str,
-) -> None:
+) -> list[Any]:
+    outcomes = []
     for position, event in event_notifications:
         message = format_position_event_message(
             position=position,
@@ -209,6 +301,7 @@ def send_position_event_notifications(
         )
         dedupe_key = position_event_dedupe_key(position, event)
         outcome = send_telegram_message(message, dedupe_key=dedupe_key)
+        outcomes.append(outcome)
         if outcome.sent:
             print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
             chart_outcome = send_telegram_chart_photo(
@@ -217,6 +310,7 @@ def send_position_event_notifications(
                 dashboard_url=settings.dashboard_url,
                 dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
             )
+            outcomes.append(chart_outcome)
             if chart_outcome.sent:
                 print(f"Telegram position-event chart sent for {event.ticker}:{event.action}.")
             elif chart_outcome.status == "duplicate":
@@ -239,12 +333,14 @@ def send_position_event_notifications(
                 stop_message,
                 dedupe_key=build_telegram_dedupe_key(dedupe_key, "STOP_TO_ENTRY"),
             )
+            outcomes.append(stop_outcome)
             if stop_outcome.sent:
                 print(f"Telegram stop-to-entry notification sent for {event.ticker}.")
             elif stop_outcome.status == "duplicate":
                 print(f"Telegram stop-to-entry duplicate skipped for {event.ticker}.")
             elif stop_outcome.status != "not_configured":
                 print(f"Telegram stop-to-entry notification skipped for {event.ticker}: {stop_outcome.reason}")
+    return outcomes
 
 
 def position_event_dedupe_key(position: dict[str, Any], event: PositionEvent) -> str:

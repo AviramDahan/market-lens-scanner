@@ -64,8 +64,8 @@ def test_retry_compares_original_baseline_not_local_result_commit(repo):
         assert_state_unchanged(base, "HEAD", cwd=root)
 
 
-@pytest.mark.parametrize("name", ["market-lens-agent.yml", "market-lens-position-monitor.yml"])
-def test_every_workflow_reset_has_guard(name):
+def test_scanner_generated_state_overlay_requires_guard():
+    name = "market-lens-agent.yml"
     path = Path(__file__).resolve().parents[1] / ".github/workflows" / name
     lines = path.read_text().splitlines()
     assert sum('BASE_REV="$(git rev-parse HEAD)"' in line for line in lines) == 1
@@ -73,3 +73,15 @@ def test_every_workflow_reset_has_guard(name):
     assert len(resets) == 2
     for index in resets:
         assert 'python -m agent.persistence_guard "$BASE_REV" origin/main' in lines[index - 1]
+
+
+def test_monitor_resets_either_guard_overlay_or_recalculate_from_latest():
+    path = Path(__file__).resolve().parents[1] / ".github/workflows/market-lens-position-monitor.yml"
+    text = path.read_text()
+
+    assert "Refresh portfolio baseline" in text
+    assert 'if python -m agent.persistence_guard "$BASE_REV" origin/main; then' in text
+    assert "Restoring Monitor-generated files on top of latest main" in text
+    assert "Portfolio changed during monitor run; recalculating once from latest main." in text
+    assert "Push rejected because main changed. Recalculating once on top of latest main." in text
+    assert text.count("run_monitor_pipeline") >= 3

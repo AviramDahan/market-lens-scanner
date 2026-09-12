@@ -97,6 +97,7 @@ class ChartRetentionSettings:
 def main() -> None:
     settings = load_settings()
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    clear_buy_notification_outbox()
     log(f"Agent run started: {run_id}")
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
     SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
@@ -1198,13 +1199,24 @@ def update_workbook(
             f"kept {retention['rows_after']}."
         )
     wb.save(settings.excel_path)
-    send_new_buy_notifications(
-        pending_decisions,
-        open_positions=open_positions,
-        settings=settings,
-        run_id=run_id,
-        timestamp=timestamp,
-    )
+    outbox_path = buy_notification_outbox_path()
+    if outbox_path is not None:
+        write_buy_notification_outbox(
+            outbox_path,
+            pending_decisions,
+            open_positions=open_positions,
+            settings=settings,
+            run_id=run_id,
+            timestamp=timestamp,
+        )
+    else:
+        send_new_buy_notifications(
+            pending_decisions,
+            open_positions=open_positions,
+            settings=settings,
+            run_id=run_id,
+            timestamp=timestamp,
+        )
     return {
         "decisions": decisions,
         "cash": cash,
@@ -1232,7 +1244,27 @@ def send_new_buy_notifications(
     run_id: str,
     timestamp: str,
 ) -> None:
+    send_buy_notification_records(
+        build_buy_notification_records(
+            pending_decisions,
+            open_positions=open_positions,
+            settings=settings,
+            run_id=run_id,
+            timestamp=timestamp,
+        )
+    )
+
+
+def build_buy_notification_records(
+    pending_decisions: list[tuple[SetupResult, Decision]],
+    *,
+    open_positions: dict[str, dict[str, Any]],
+    settings: Settings,
+    run_id: str,
+    timestamp: str,
+) -> list[dict[str, str]]:
     dashboard_url = dashboard_url_from_env(settings.url)
+    records = []
     for result, decision in pending_decisions:
         if decision.action != "BUY_SIMULATED":
             continue
@@ -1257,25 +1289,95 @@ def send_new_buy_notifications(
             position.get("target_1"),
             position.get("target_2"),
         )
-        outcome = send_telegram_message(message, dedupe_key=dedupe_key)
+        records.append(
+            {
+                "ticker": result.ticker,
+                "message": message,
+                "dedupe_key": dedupe_key,
+                "chart_ref": str(position.get("chart_url") or result.chart_url or ""),
+                "dashboard_url": dashboard_url,
+            }
+        )
+    return records
+
+
+def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
+    outcomes = []
+    for record in records:
+        ticker = record["ticker"]
+        dedupe_key = record["dedupe_key"]
+        outcome = send_telegram_message(record["message"], dedupe_key=dedupe_key)
+        outcomes.append(outcome)
         if outcome.sent:
-            log(f"Telegram position-open notification sent for {result.ticker}.")
+            log(f"Telegram position-open notification sent for {ticker}.")
             chart_outcome = send_telegram_chart_photo(
-                position.get("chart_url") or result.chart_url,
-                ticker=result.ticker,
-                dashboard_url=dashboard_url,
+                record.get("chart_ref"),
+                ticker=ticker,
+                dashboard_url=record.get("dashboard_url", ""),
                 dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
             )
+            outcomes.append(chart_outcome)
             if chart_outcome.sent:
-                log(f"Telegram position-open chart sent for {result.ticker}.")
+                log(f"Telegram position-open chart sent for {ticker}.")
             elif chart_outcome.status == "duplicate":
-                log(f"Telegram position-open chart duplicate skipped for {result.ticker}.")
+                log(f"Telegram position-open chart duplicate skipped for {ticker}.")
             elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
-                log(f"Telegram position-open chart skipped for {result.ticker}: {chart_outcome.reason}")
+                log(f"Telegram position-open chart skipped for {ticker}: {chart_outcome.reason}")
         elif outcome.status == "duplicate":
-            log(f"Telegram position-open duplicate skipped for {result.ticker}.")
+            log(f"Telegram position-open duplicate skipped for {ticker}.")
         elif outcome.status != "not_configured":
-            log(f"Telegram position-open notification skipped for {result.ticker}: {outcome.reason}")
+            log(f"Telegram position-open notification skipped for {ticker}: {outcome.reason}")
+    return outcomes
+
+
+def buy_notification_outbox_path() -> Path | None:
+    raw_path = os.getenv("MARKET_LENS_AGENT_NOTIFICATION_OUTBOX", "").strip()
+    return Path(raw_path) if raw_path else None
+
+
+def clear_buy_notification_outbox() -> None:
+    path = buy_notification_outbox_path()
+    if path is not None:
+        path.unlink(missing_ok=True)
+
+
+def write_buy_notification_outbox(
+    path: Path,
+    pending_decisions: list[tuple[SetupResult, Decision]],
+    *,
+    open_positions: dict[str, dict[str, Any]],
+    settings: Settings,
+    run_id: str,
+    timestamp: str,
+) -> Path | None:
+    records = build_buy_notification_records(
+        pending_decisions,
+        open_positions=open_positions,
+        settings=settings,
+        run_id=run_id,
+        timestamp=timestamp,
+    )
+    if not records:
+        return None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps({"schema_version": 1, "records": records}, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+    log(f"Buy notification outbox: {path}")
+    return path
+
+
+def send_buy_notification_outbox(path: Path) -> list[Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    records = payload.get("records")
+    if payload.get("schema_version") != 1 or not isinstance(records, list):
+        raise ValueError("Unsupported buy notification outbox schema.")
+    if not all(isinstance(record, dict) for record in records):
+        raise ValueError("Malformed buy notification outbox record.")
+    return send_buy_notification_records(records)
 
 
 def workbook_snapshot(*, settings: Settings, run_status: str) -> dict[str, Any]:

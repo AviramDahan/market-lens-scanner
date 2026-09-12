@@ -1,6 +1,9 @@
 name: Market Lens Position Monitor
 
 on:
+  schedule:
+    # Low-frequency fallback. The New York guard below narrows this to 09:45-16:00.
+    - cron: "*/15 13-21 * * 1-5"
   workflow_dispatch:
     inputs:
       force:
@@ -30,7 +33,7 @@ concurrency:
 jobs:
   monitor-positions:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Check New York market-hours schedule
@@ -61,6 +64,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Refresh portfolio baseline
+        if: steps.schedule_time.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
 
       - name: Show trigger context
         if: steps.schedule_time.outputs.should_run == 'true'
@@ -104,8 +115,7 @@ jobs:
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
           MARKET_LENS_MONITOR_SAVE_NOOP: "false"
-          MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
-          MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
+          MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
         run: python agent/position_monitor.py
 
       - name: Apply Agent media retention
@@ -171,8 +181,27 @@ jobs:
           fi
 
       - name: Commit monitor results safely
+        id: persist
         if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true' && steps.monitor_changes.outputs.changed == 'true'
         shell: bash
+        env:
+          MARKET_LENS_EXCEL_PATH: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+          MARKET_LENS_WORKBOOK_WATCHLIST_MAX_ROWS: "80000"
+          MARKET_LENS_WORKBOOK_REWRITE_BYTES: "75000000"
+          MARKET_LENS_WORKBOOK_HARD_LIMIT_BYTES: "90000000"
+          MARKET_LENS_RUN_DIR: agent_results
+          MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
+          MARKET_LENS_MONITOR_PERIOD: 5d
+          MARKET_LENS_MONITOR_INTERVAL: 1m
+          MARKET_LENS_MONITOR_SAVE_NOOP: "false"
+          MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
+          MARKET_LENS_AGENT_MEDIA_RETENTION_ENABLED: "true"
+          MARKET_LENS_AGENT_CHART_RETENTION_MAX_FILES: "180"
+          MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_FILES: "60"
+          MARKET_LENS_AGENT_CHART_RETENTION_MAX_MB: "120"
+          MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_MB: "60"
+          MARKET_LENS_AGENT_CHART_RETENTION_MAX_AGE_DAYS: "21"
+          MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_AGE_DAYS: "14"
         run: |
           set -e
 
@@ -183,6 +212,31 @@ jobs:
           EXCEL_FILE="agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
           RESULTS_DIR="agent_results"
           TEMP_DIR="/tmp/market_lens_monitor_generated"
+
+          run_monitor_pipeline() {
+            rm -f "$MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX"
+            python agent/position_monitor.py
+            python agent/cleanup_agent_results.py
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          from app.agent_dashboard import build_agent_dashboard
+
+          output = Path("agent_results/dashboard_snapshot.json")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(
+              json.dumps(build_agent_dashboard(Path(".")), default=str, separators=(",", ":")),
+              encoding="utf-8",
+          )
+          PY
+            python - <<'PY'
+          from pathlib import Path
+          from app.workbook_retention import enforce_tracker_size
+
+          result = enforce_tracker_size(Path("agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"))
+          print(f"Tracker size guard after monitor rerun: {result}")
+          PY
+          }
 
           echo "Saving Monitor-generated files aside..."
           rm -rf "$TEMP_DIR"
@@ -200,39 +254,11 @@ jobs:
 
           echo "Moving local repo to latest origin/main..."
           git fetch origin main
-          python -m agent.persistence_guard "$BASE_REV" origin/main
-          git reset --hard origin/main
-          git clean -fd
-
-          echo "Restoring Monitor-generated files on top of latest main..."
-          if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
-            mkdir -p "$(dirname "$EXCEL_FILE")"
-            cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
-          fi
-
-          if [ -d "$TEMP_DIR/$RESULTS_DIR" ]; then
-            mkdir -p "$RESULTS_DIR"
-            cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
-          fi
-
-          git add "$EXCEL_FILE" "$RESULTS_DIR"
-
-          if git diff --cached --quiet; then
-            echo "No position monitor changes to commit."
-            exit 0
-          fi
-
-          git commit -m "Update Market Lens position monitor [skip render]"
-
-          echo "Pushing changes..."
-          if ! git push origin HEAD:main; then
-            echo "Push rejected because main changed. Retrying once on top of latest main..."
-
-            git fetch origin main
-            python -m agent.persistence_guard "$BASE_REV" origin/main
+          if python -m agent.persistence_guard "$BASE_REV" origin/main; then
             git reset --hard origin/main
             git clean -fd
 
+            echo "Restoring Monitor-generated files on top of latest main..."
             if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
               mkdir -p "$(dirname "$EXCEL_FILE")"
               cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
@@ -242,17 +268,53 @@ jobs:
               mkdir -p "$RESULTS_DIR"
               cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
             fi
+          else
+            echo "Portfolio changed during monitor run; recalculating once from latest main."
+            git reset --hard origin/main
+            git clean -fd
+            run_monitor_pipeline
+          fi
+
+          git add "$EXCEL_FILE" "$RESULTS_DIR"
+
+          if git diff --cached --quiet; then
+            echo "No position monitor changes to commit after synchronization."
+            rm -f "$MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX"
+            echo "persisted=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "Update Market Lens position monitor [skip render]"
+
+          echo "Pushing changes..."
+          if ! git push origin HEAD:main; then
+            echo "Push rejected because main changed. Recalculating once on top of latest main..."
+
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+            run_monitor_pipeline
 
             git add "$EXCEL_FILE" "$RESULTS_DIR"
 
             if git diff --cached --quiet; then
-              echo "No position monitor changes to commit after retry."
+              echo "No position monitor changes to commit after recalculation."
+              rm -f "$MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX"
+              echo "persisted=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
             git commit -m "Update Market Lens position monitor [skip render]"
             git push origin HEAD:main
           fi
+          echo "persisted=true" >> "$GITHUB_OUTPUT"
+
+      - name: Send persisted position notifications
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true' && steps.monitor_changes.outputs.changed == 'true' && steps.persist.outputs.persisted == 'true'
+        env:
+          MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
+          MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
+        run: python agent/send_monitor_notifications.py "${{ runner.temp }}/market-lens-monitor-notifications.json"
 
       - name: Prepare monitor recovery bundle on failure
         if: failure() && steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'

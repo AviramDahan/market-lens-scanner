@@ -1,6 +1,8 @@
 import json
 from types import SimpleNamespace
 
+import pytest
+
 import agent.market_lens_ui_agent as ui_agent
 import agent.position_monitor as position_monitor
 from agent.market_lens_ui_agent import Settings, SetupResult, send_new_buy_notifications
@@ -346,6 +348,72 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
     assert sent_charts == [("agent_results/charts/buy.png", "BUY", "https://market-lens-scanner-fb63.onrender.com/agent")]
 
 
+def test_agent_buy_outbox_defers_notification_until_explicit_delivery(monkeypatch, tmp_path) -> None:
+    sent_messages = []
+
+    def fake_send(message: str, **_kwargs):
+        sent_messages.append(message)
+        return TelegramSendResult(True, "sent")
+
+    monkeypatch.setattr(ui_agent, "send_telegram_message", fake_send)
+    monkeypatch.setattr(
+        ui_agent,
+        "send_telegram_chart_photo",
+        lambda *_args, **_kwargs: TelegramSendResult(False, "no_photo"),
+    )
+    settings = Settings(
+        url="https://market-lens-scanner-fb63.onrender.com/?v=latest",
+        email="test@example.com",
+        password="hidden",
+        excel_path=tmp_path / "tracker.xlsx",
+        universe="smart-universe",
+        tickers=[],
+        analysis_period="6mo",
+        min_rr=2.0,
+        headless=True,
+        timeout_seconds=60,
+    )
+    result = SetupResult(
+        ticker="BUY",
+        setup_type="Breakout + Retest",
+        score=0.62,
+        current_price=100,
+        buy_zone_low=99,
+        buy_zone_high=101,
+        stop_loss=95,
+        target_1=110,
+        target_2=120,
+        risk_reward=2.5,
+        reason="valid",
+        raw_text="",
+    )
+    decision = ui_agent.Decision("BUY_SIMULATED", "opened", quantity=10, decision_json={"net_rr": 2.4})
+    outbox = tmp_path / "buy-notifications.json"
+
+    ui_agent.write_buy_notification_outbox(
+        outbox,
+        [(result, decision)],
+        open_positions={
+            "BUY": {
+                "entry_price": 100,
+                "quantity": 10,
+                "stop_loss": 95,
+                "target_1": 110,
+                "target_2": 120,
+            }
+        },
+        settings=settings,
+        run_id="run-1",
+        timestamp="2026-09-10T14:32:00+00:00",
+    )
+
+    assert outbox.exists()
+    assert sent_messages == []
+    outcomes = ui_agent.send_buy_notification_outbox(outbox)
+    assert [outcome.status for outcome in outcomes] == ["sent", "no_photo"]
+    assert len(sent_messages) == 1
+
+
 def test_position_event_message_contains_exit_details() -> None:
     position = {
         "ticker": "BA",
@@ -555,6 +623,66 @@ def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch
     assert "STOP TO ENTRY" in sent_messages[1]
     assert "Old SL: $95.00 (-5.00%)" in sent_messages[1]
     assert "New SL: $100.00 (0.00%)" in sent_messages[1]
+
+
+def test_monitor_notification_outbox_defers_sending_until_explicit_delivery(monkeypatch, tmp_path) -> None:
+    outbox = tmp_path / "monitor-notifications.json"
+    monkeypatch.setenv("MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX", str(outbox))
+    sent_messages = []
+
+    def fake_send(message: str, **_kwargs):
+        sent_messages.append(message)
+        return TelegramSendResult(True, "sent")
+
+    monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
+    monkeypatch.setattr(
+        position_monitor,
+        "send_telegram_chart_photo",
+        lambda *_args, **_kwargs: TelegramSendResult(False, "no_photo"),
+    )
+    settings = position_monitor.MonitorSettings(
+        excel_path=tmp_path / "tracker.xlsx",
+        run_dir=tmp_path / "agent_results",
+        period="5d",
+        interval="1m",
+        save_noop=False,
+        dashboard_url="https://example.com/agent",
+    )
+    event = position_monitor.PositionEvent(
+        ticker="MSFT",
+        action="EXIT_STOP",
+        triggered_at="2026-09-10T14:31:00+00:00",
+        trigger_price=95,
+        high=101,
+        low=94,
+        close=96,
+        quantity=3,
+        cash_in=285,
+        note="Stop loss touched by intraday low.",
+        trade_id="trade-1",
+    )
+
+    position_monitor.write_notification_outbox(
+        [({"ticker": "MSFT", "entry_price": 100, "quantity": 3}, event)],
+        settings=settings,
+        run_id="monitor-1",
+        timestamp="2026-09-10T14:32:00+00:00",
+    )
+
+    assert outbox.exists()
+    assert sent_messages == []
+    outcomes = position_monitor.send_notification_outbox(outbox)
+    assert [outcome.status for outcome in outcomes] == ["sent", "no_photo"]
+    assert len(sent_messages) == 1
+    assert "STOP | POSITION CLOSED" in sent_messages[0]
+
+
+def test_monitor_notification_outbox_rejects_malformed_payload(monkeypatch, tmp_path) -> None:
+    outbox = tmp_path / "monitor-notifications.json"
+    outbox.write_text('{"schema_version":999,"events":[]}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="schema"):
+        position_monitor.send_notification_outbox(outbox)
 
 
 def test_position_attention_message_is_read_only_and_includes_distance() -> None:
