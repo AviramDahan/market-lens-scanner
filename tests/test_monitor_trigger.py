@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import types
 from datetime import datetime
@@ -31,6 +32,8 @@ from app.scan_trigger import ScanScheduleDecision
 
 
 def reset_rate_limits() -> None:
+    os.environ["MARKET_LENS_MONITOR_TRIGGER_GLOBAL_COOLDOWN_SECONDS"] = "0"
+    os.environ["MARKET_LENS_MONITOR_TRIGGER_EVENT_COOLDOWN_SECONDS"] = "0"
     monitor_trigger._GLOBAL_TRIGGER_AT = 0.0
     monitor_trigger._EVENT_TRIGGER_AT.clear()
     scan_trigger._DISPATCHED_SCAN_KEYS.clear()
@@ -392,7 +395,7 @@ def test_monitor_live_sends_near_tp_sl_attention_without_dispatch(monkeypatch, t
     monkeypatch.setenv("MARKET_LENS_TELEGRAM_CHAT_ID", "-100")
     monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_TELEGRAM_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_THRESHOLD_PCT", "1.0")
-    monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_COOLDOWN_SECONDS", "300")
+    monkeypatch.setenv("MARKET_LENS_POSITION_ATTENTION_COOLDOWN_SECONDS", "0")
     snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
     snapshot_path.parent.mkdir(parents=True)
     snapshot_path.write_text(
