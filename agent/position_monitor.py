@@ -110,6 +110,13 @@ def main() -> None:
         print("::warning::Some positions could not be evaluated; valid events will still be saved.")
     events = [result.event for result in results if result.event]
     errors = [f"{result.ticker}: {result.error}" for result in results if result.error]
+    write_monitor_heartbeat(
+        settings,
+        run_id=run_id,
+        timestamp=timestamp,
+        health=health,
+        event_count=len(events),
+    )
     should_save = bool(events) or settings.save_noop
 
     summary_path = None
@@ -240,6 +247,32 @@ def write_notification_outbox(
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+    temporary.replace(path)
+    return path
+
+
+def write_monitor_heartbeat(
+    settings: MonitorSettings,
+    *,
+    run_id: str,
+    timestamp: str,
+    health: dict[str, Any],
+    event_count: int,
+) -> Path:
+    path = settings.run_dir / "position_monitor" / "latest_status.json"
+    payload = {
+        "schema_version": 1,
+        "timestamp": timestamp,
+        "run_id": f"monitor_{run_id}",
+        "status": health.get("status", ""),
+        "positions_checked": int(health.get("positions_checked") or 0),
+        "positions_failed": int(health.get("positions_failed") or 0),
+        "failed_positions": health.get("failed_positions") or [],
+        "event_count": int(event_count),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
     temporary.replace(path)
     return path
 

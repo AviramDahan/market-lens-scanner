@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 from agent.position_monitor import MonitorResult, classify_monitor_results
+from app.agent_dashboard import build_system_health, load_monitor_status
 
 
 @pytest.mark.parametrize("status", ["ERROR", "NO_DATA", "DATA_ERROR"])
@@ -63,3 +64,53 @@ def test_saved_summary_reports_missing_data_even_without_exception(tmp_path):
     assert "Run status: ISSUES" in content
     assert "Evaluation status: MONITOR_DEGRADED" in content
     assert "B: NO_DATA" in content
+
+
+def test_successful_no_event_monitor_writes_dashboard_heartbeat(tmp_path):
+    from agent.position_monitor import MonitorSettings, write_monitor_heartbeat
+
+    settings = MonitorSettings(tmp_path / "tracker.xlsx", tmp_path / "agent_results", "5d", "1m", False, "")
+    path = write_monitor_heartbeat(
+        settings,
+        run_id="20260912_120000",
+        timestamp="2026-09-12T12:00:00+00:00",
+        health={
+            "status": "MONITOR_OK",
+            "positions_checked": 5,
+            "positions_failed": 0,
+            "failed_positions": [],
+        },
+        event_count=0,
+    )
+
+    payload = load_monitor_status(path.parent)
+    assert payload["run_id"] == "monitor_20260912_120000"
+    assert payload["status"] == "MONITOR_OK"
+    assert payload["positions_checked"] == 5
+    assert payload["event_count"] == 0
+
+
+def test_system_health_reports_latest_monitor_evaluation_not_only_trade_event(tmp_path):
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"fixture")
+    heartbeat = {
+        "timestamp": "2026-09-12T12:00:00",
+        "run_id": "monitor_20260912_120000",
+        "status": "MONITOR_OK",
+        "positions_checked": 5,
+        "positions_failed": 0,
+        "event_count": 0,
+    }
+
+    health = build_system_health(
+        tracker_path=tracker,
+        updates=[],
+        latest_update={},
+        latest_scan_update={},
+        latest_monitor_update=heartbeat,
+    )
+
+    assert health["latest_monitor_at"] == "2026-09-12T12:00:00"
+    assert health["latest_monitor_status"] == "MONITOR_OK"
+    assert health["latest_monitor_positions_checked"] == 5
+    assert health["latest_monitor_event_count"] == 0

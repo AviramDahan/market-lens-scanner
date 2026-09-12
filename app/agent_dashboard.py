@@ -76,6 +76,9 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     full_trade_performance = compute_full_trade_performance(scoped_trades)
     annotated_trades = realized.get("trades", scoped_trades)
     latest_monitor_update = select_latest_monitor_update(updates, latest_update)
+    latest_monitor_status = load_monitor_status(position_monitor_dir) if not selected_date else {}
+    if parse_timestamp(latest_monitor_status.get("timestamp")) > parse_timestamp(latest_monitor_update.get("timestamp")):
+        latest_monitor_update = latest_monitor_status
 
     cash = to_float(latest_update.get("cash_ils"), compute_cash(scoped_trades, starting_capital))
     exposure = to_float(
@@ -1094,10 +1097,25 @@ def build_system_health(
         "latest_monitor_at": latest_monitor_at.isoformat() if latest_monitor_at != datetime.min else "",
         "latest_monitor_run_id": latest_monitor_update.get("run_id", ""),
         "latest_monitor_age_minutes": monitor_age,
-        "latest_monitor_policy": "Monitor action timestamp only changes after TP/SL portfolio updates.",
+        "latest_monitor_status": latest_monitor_update.get("status", ""),
+        "latest_monitor_positions_checked": latest_monitor_update.get("positions_checked"),
+        "latest_monitor_positions_failed": latest_monitor_update.get("positions_failed"),
+        "latest_monitor_event_count": latest_monitor_update.get("event_count"),
+        "latest_monitor_policy": "Monitor heartbeat updates after every successful or degraded evaluation.",
         "recent_runs_loaded": len(updates),
         "notes": notes,
     }
+
+
+def load_monitor_status(position_monitor_dir: Path) -> dict[str, Any]:
+    path = position_monitor_dir / "latest_status.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if payload.get("schema_version") != 1 or not payload.get("timestamp"):
+        return {}
+    return payload
 
 
 def age_minutes(now: datetime, timestamp: datetime) -> int | None:
