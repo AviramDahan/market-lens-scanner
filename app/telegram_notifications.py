@@ -215,6 +215,57 @@ def format_position_opened_message(
     return "\n".join(lines)
 
 
+def format_qualified_capital_blocked_message(
+    *,
+    result: Any,
+    decision: Any,
+    timestamp: str,
+    dashboard_url: str,
+) -> str:
+    """Format an informational alert for a qualified setup that was not entered."""
+    decision_json = getattr(decision, "decision_json", {}) or {}
+    ticker = getattr(result, "ticker", "")
+    company_name = str(decision_json.get("company_name") or "").strip()
+    ticker_label = f"{ticker} ({company_name})" if company_name else ticker
+    entry = (
+        decision_json.get("net_entry")
+        or decision_json.get("executable_entry")
+        or getattr(result, "current_price", 0)
+    )
+    blockers = decision_json.get("capital_blockers") or []
+    blocker_text = "; ".join(str(item) for item in blockers if item) or getattr(decision, "feedback", "")
+    proposed_quantity = decision_json.get("adjusted_position_size") or decision_json.get("pre_cap_position_size")
+    proposed_exposure = decision_json.get("adjusted_cash_out")
+    proposed_risk = decision_json.get("adjusted_risk_amount")
+    lines = [
+        f"<b>QUALIFIED SETUP | NOT ENTERED | {_escape(ticker_label)}</b>",
+        f"Time: {_escape(_format_message_time(timestamp))}",
+        f"Setup: {_escape(getattr(result, 'setup_type', ''))}",
+        "",
+        f"Entry: {_money(entry)}",
+        f"SL: {_price_with_percent(decision_json.get('stop_loss') or getattr(result, 'stop_loss', None), entry)}",
+        f"TP1: {_price_with_percent(decision_json.get('target_1') or getattr(result, 'target_1', None), entry)}",
+        f"TP2: {_price_with_percent(decision_json.get('target_2') or getattr(result, 'target_2', None), entry)}",
+        "",
+        (
+            f"Score: {_number(decision_json.get('setup_score') or getattr(result, 'score', 0), 2)} | "
+            f"Net R/R: {_number(decision_json.get('net_rr'), 2)} "
+            f"(TP1 {_number(decision_json.get('net_rr_1'), 2)} / TP2 {_number(decision_json.get('net_rr_2'), 2)})"
+        ),
+        (
+            f"Regime: {_escape(decision_json.get('market_regime', '-'))} | "
+            f"Sector: {_escape(decision_json.get('sector_regime', '-'))}"
+        ),
+        f"Blocked by: {_escape(_shorten(blocker_text, 260))}",
+        "Status: alert only; no position was opened and no portfolio capital changed.",
+    ]
+    if _to_float(proposed_quantity) > 0:
+        lines.insert(4, f"Proposed qty: {_escape(proposed_quantity)} | Exposure: {_money(proposed_exposure)} | Risk: {_money(proposed_risk)}")
+    if dashboard_url:
+        lines.append(f"Dashboard: {_escape(dashboard_url)}")
+    return "\n".join(lines)
+
+
 def format_position_event_message(
     *,
     position: dict[str, Any],

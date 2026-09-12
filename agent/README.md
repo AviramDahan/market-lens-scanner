@@ -127,6 +127,13 @@ When Telegram is configured, the monitor also sends paper-trading alerts for
 `TAKE_PARTIAL_PROFIT`, `TAKE_PROFIT`, and `EXIT_STOP`. These notifications are
 read-only alerts; the monitor still only updates the simulated portfolio.
 
+The scanner also sends an informational `QUALIFIED SETUP | NOT ENTERED` alert
+when every active technical entry gate passed but a capital, portfolio heat,
+sector, factor, or exposure limit prevented the paper entry. The alert includes
+the proposed entry, stop, targets, R/R, and blocker reason. It never opens a
+position or changes cash, exposure, sizing, or `final_action`. Set
+`MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED=false` to disable these alerts.
+
 In the cloud workflow, `MARKET_LENS_MONITOR_SAVE_NOOP=true` is enabled so every
 monitor run publishes a heartbeat and current-price refresh for open positions.
 

@@ -641,6 +641,10 @@ def evaluate_agent_candidate(
             else "TECHNICAL_CANDIDATE"
         ),
         "entry_qualified_before_capital": entry_qualified_before_capital,
+        "technical_entry_gates_passed": bool(
+            entry_qualified_before_capital
+            or (preliminary_capital_block and not entry_gate_blockers)
+        ),
         "capital_blocked_only": bool(entry_qualified_before_capital and capital_blockers),
         "entry_gate_blockers": [blocker["reason"] for blocker in entry_gate_blockers],
         "capital_blockers": [blocker["reason"] for blocker in capital_blockers],

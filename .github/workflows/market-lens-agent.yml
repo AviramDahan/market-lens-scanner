@@ -179,6 +179,7 @@ jobs:
           MARKET_LENS_SAVE_REJECTED_CHARTS: "false"
           MARKET_LENS_REJECTED_CHART_LIMIT: "15"
           MARKET_LENS_REJECTED_CHART_MIN_SCORE: "0.40"
+          MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED: "true"
           MARKET_LENS_AGENT_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-buy-notifications.json
         run: python agent/market_lens_ui_agent.py
 

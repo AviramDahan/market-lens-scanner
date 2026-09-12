@@ -520,6 +520,11 @@ Recommendations must remain read-only. They must not automatically change code, 
 
 ## 15. Telegram Alerts For Qualified Entries Blocked By Capital
 
+**Status**
+Implemented and verified on 2026-09-12. The implementation is alert-only and
+preserves active trading behavior. Repeated intraday signals are deduplicated;
+a materially higher setup-score or net-R/R bucket may produce a new alert.
+
 **Improvement**  
 Add a Telegram alert for setups that pass the technical entry requirements and
 would be valid entries, but are not opened in the paper portfolio because of
@@ -607,9 +612,8 @@ Required safeguards:
 High.
 
 **Timing**  
-Can be implemented after the current workflow/persistence QA is stable. This is
-safe to build before changing capital rules because it is alert-only and does
-not change trading behavior.
+Completed after workflow/persistence QA stabilized. Keep collecting alert and
+decision data before considering any capital-rule changes.
 
 **Important Constraint**  
 This must be notification-only. It must not open paper trades, alter

@@ -36,6 +36,7 @@ from app.telegram_notifications import (
     build_telegram_dedupe_key,
     dashboard_url_from_env,
     format_position_opened_message,
+    format_qualified_capital_blocked_message,
     send_telegram_chart_photo,
     send_telegram_message,
 )
@@ -825,6 +826,8 @@ def select_chart_tickers(
         if (
             action in always_actions
             or is_watch_ready_payload(action, decision_json, decision.feedback)
+            or str(decision_json.get("entry_eligibility_status") or "").upper()
+            == "QUALIFIED_CAPITAL_BLOCKED"
             or ticker in open_position_tickers
         ):
             selected.add(ticker)
@@ -1266,39 +1269,100 @@ def build_buy_notification_records(
     dashboard_url = dashboard_url_from_env(settings.url)
     records = []
     for result, decision in pending_decisions:
-        if decision.action != "BUY_SIMULATED":
+        notification_type = "BUY_SIMULATED"
+        if decision.action == "BUY_SIMULATED":
+            position = open_positions.get(result.ticker)
+            if not position:
+                continue
+            message = format_position_opened_message(
+                result=result,
+                decision=decision,
+                position=position,
+                run_id=run_id,
+                timestamp=timestamp,
+                dashboard_url=dashboard_url,
+            )
+            dedupe_key = build_telegram_dedupe_key(
+                notification_type,
+                result.ticker,
+                str(timestamp)[:10],
+                position.get("entry_price"),
+                position.get("quantity"),
+                position.get("stop_loss"),
+                position.get("target_1"),
+                position.get("target_2"),
+            )
+            chart_ref = str(position.get("chart_url") or result.chart_url or "")
+        elif is_qualified_capital_blocked_notification(decision):
+            decision_json = decision.decision_json or {}
+            notification_type = "QUALIFIED_CAPITAL_BLOCKED"
+            message = format_qualified_capital_blocked_message(
+                result=result,
+                decision=decision,
+                timestamp=timestamp,
+                dashboard_url=dashboard_url,
+            )
+            dedupe_key = qualified_capital_blocked_dedupe_key(
+                result=result,
+                decision_json=decision_json,
+                timestamp=timestamp,
+            )
+            chart_ref = str(result.chart_url or "")
+        else:
             continue
-        position = open_positions.get(result.ticker)
-        if not position:
-            continue
-        message = format_position_opened_message(
-            result=result,
-            decision=decision,
-            position=position,
-            run_id=run_id,
-            timestamp=timestamp,
-            dashboard_url=dashboard_url,
-        )
-        dedupe_key = build_telegram_dedupe_key(
-            "BUY_SIMULATED",
-            result.ticker,
-            str(timestamp)[:10],
-            position.get("entry_price"),
-            position.get("quantity"),
-            position.get("stop_loss"),
-            position.get("target_1"),
-            position.get("target_2"),
-        )
         records.append(
             {
                 "ticker": result.ticker,
+                "notification_type": notification_type,
                 "message": message,
                 "dedupe_key": dedupe_key,
-                "chart_ref": str(position.get("chart_url") or result.chart_url or ""),
+                "chart_ref": chart_ref,
                 "dashboard_url": dashboard_url,
             }
         )
     return records
+
+
+def is_qualified_capital_blocked_notification(decision: Decision) -> bool:
+    if not env_bool("MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED", True):
+        return False
+    decision_json = decision.decision_json or {}
+    eligibility = str(decision_json.get("entry_eligibility_status") or "").upper()
+    fully_assessed = bool(
+        eligibility == "QUALIFIED_CAPITAL_BLOCKED"
+        and decision_json.get("entry_qualified_before_capital") is True
+        and decision_json.get("capital_blocked_only") is True
+    )
+    zero_size_capital_block = bool(
+        eligibility == "CAPITAL_BLOCKED_UNASSESSED"
+        and decision_json.get("technical_entry_gates_passed") is True
+    )
+    return bool(
+        decision.action != "BUY_SIMULATED"
+        and (fully_assessed or zero_size_capital_block)
+        and not (decision_json.get("entry_gate_blockers") or [])
+        and bool(decision_json.get("capital_blockers") or [])
+    )
+
+
+def qualified_capital_blocked_dedupe_key(
+    *,
+    result: SetupResult,
+    decision_json: dict[str, Any],
+    timestamp: str,
+) -> str:
+    # Buckets suppress scan-to-scan noise while allowing a materially stronger
+    # setup score or net R/R to produce one new informational alert.
+    score_bucket = int(float(decision_json.get("setup_score") or result.score or 0) / 0.05)
+    rr_bucket = int(float(decision_json.get("net_rr") or 0) / 0.25)
+    return build_telegram_dedupe_key(
+        "QUALIFIED_CAPITAL_BLOCKED",
+        result.ticker,
+        str(timestamp)[:10],
+        result.setup_type,
+        f"score-{score_bucket}",
+        f"rr-{rr_bucket}",
+    )
 
 
 def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
@@ -1306,10 +1370,12 @@ def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
     for record in records:
         ticker = record["ticker"]
         dedupe_key = record["dedupe_key"]
+        notification_type = record.get("notification_type", "BUY_SIMULATED")
+        log_label = "qualified capital-blocked setup" if notification_type == "QUALIFIED_CAPITAL_BLOCKED" else "position-open"
         outcome = send_telegram_message(record["message"], dedupe_key=dedupe_key)
         outcomes.append(outcome)
         if outcome.sent:
-            log(f"Telegram position-open notification sent for {ticker}.")
+            log(f"Telegram {log_label} notification sent for {ticker}.")
             chart_outcome = send_telegram_chart_photo(
                 record.get("chart_ref"),
                 ticker=ticker,
@@ -1318,15 +1384,15 @@ def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
             )
             outcomes.append(chart_outcome)
             if chart_outcome.sent:
-                log(f"Telegram position-open chart sent for {ticker}.")
+                log(f"Telegram {log_label} chart sent for {ticker}.")
             elif chart_outcome.status == "duplicate":
-                log(f"Telegram position-open chart duplicate skipped for {ticker}.")
+                log(f"Telegram {log_label} chart duplicate skipped for {ticker}.")
             elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
-                log(f"Telegram position-open chart skipped for {ticker}: {chart_outcome.reason}")
+                log(f"Telegram {log_label} chart skipped for {ticker}: {chart_outcome.reason}")
         elif outcome.status == "duplicate":
-            log(f"Telegram position-open duplicate skipped for {ticker}.")
+            log(f"Telegram {log_label} duplicate skipped for {ticker}.")
         elif outcome.status != "not_configured":
-            log(f"Telegram position-open notification skipped for {ticker}: {outcome.reason}")
+            log(f"Telegram {log_label} notification skipped for {ticker}: {outcome.reason}")
     return outcomes
 
 

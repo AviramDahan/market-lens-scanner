@@ -1147,6 +1147,27 @@ def test_chart_retention_keeps_watch_ready_payload_even_when_action_is_watch() -
     assert selected == {"STAGED"}
 
 
+def test_chart_retention_keeps_qualified_capital_blocked_alert_chart() -> None:
+    setup, decision = chart_candidate("CAPITAL", "WATCH", score=0.45, net_rr=2.1)
+    decision.decision_json.update(
+        {
+            "entry_eligibility_status": "QUALIFIED_CAPITAL_BLOCKED",
+            "entry_qualified_before_capital": True,
+            "capital_blocked_only": True,
+            "entry_gate_blockers": [],
+            "capital_blockers": ["Portfolio heat cap would be exceeded."],
+        }
+    )
+
+    selected = select_chart_tickers(
+        [(setup, decision)],
+        settings=ChartRetentionSettings(False, 0, 0.90),
+        open_position_tickers=set(),
+    )
+
+    assert selected == {"CAPITAL"}
+
+
 def test_scan_chart_marks_premarket_quote_separately() -> None:
     setup = SimpleNamespace(
         current_price=100.0,
@@ -1384,6 +1405,7 @@ def test_preliminary_zero_size_records_blockers_without_promoting_buy(monkeypatc
     assert decision["position_size"] == 0
     assert decision["capital_blockers"]
     assert decision["entry_qualified_before_capital"] is False
+    assert decision["technical_entry_gates_passed"] is (score == 0.60)
     assert decision["portfolio_exposure_after"] == 41000
     if score == 0.20:
         assert any("requires setup score" in b for b in decision["entry_gate_blockers"])

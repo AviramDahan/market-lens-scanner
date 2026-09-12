@@ -30,6 +30,7 @@ def test_buy_notifications_are_sent_only_after_persistence() -> None:
     assert run_index < persist_index < notify_index
     run_block = text[run_index:persist_index]
     assert "MARKET_LENS_AGENT_NOTIFICATION_OUTBOX" in run_block
+    assert 'MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED: "true"' in run_block
     assert "MARKET_LENS_TELEGRAM_BOT_TOKEN" not in run_block
     assert "steps.persist.outputs.persisted == 'true'" in text[notify_index:]
 

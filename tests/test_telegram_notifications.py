@@ -15,6 +15,7 @@ from app.telegram_notifications import (
     format_position_attention_message,
     format_position_event_message,
     format_position_opened_message,
+    format_qualified_capital_blocked_message,
     format_stop_moved_to_entry_message,
     load_telegram_settings,
     send_telegram_message,
@@ -220,6 +221,53 @@ def test_position_opened_message_contains_trade_plan() -> None:
     assert "https://example.com/agent" in message
 
 
+def test_qualified_capital_blocked_message_is_explicitly_alert_only() -> None:
+    result = SimpleNamespace(
+        ticker="NVDA",
+        setup_type="Breakout + Retest",
+        score=0.64,
+        current_price=210.0,
+        stop_loss=200.0,
+        target_1=225.0,
+        target_2=245.0,
+    )
+    decision = SimpleNamespace(
+        feedback="QUALIFIED_CAPITAL_BLOCKED: Portfolio heat cap would be exceeded.",
+        decision_json={
+            "company_name": "NVIDIA Corporation",
+            "entry_eligibility_status": "QUALIFIED_CAPITAL_BLOCKED",
+            "net_entry": 210.25,
+            "stop_loss": 200.0,
+            "target_1": 225.0,
+            "target_2": 245.0,
+            "adjusted_position_size": 12,
+            "adjusted_cash_out": 2523.0,
+            "adjusted_risk_amount": 123.0,
+            "setup_score": 0.64,
+            "net_rr": 2.30,
+            "net_rr_1": 1.25,
+            "net_rr_2": 3.10,
+            "market_regime": "BULL",
+            "sector_regime": "STRONG",
+            "capital_blockers": ["WATCH: Portfolio heat cap would be exceeded."],
+        },
+    )
+
+    message = format_qualified_capital_blocked_message(
+        result=result,
+        decision=decision,
+        timestamp="2026-09-10T14:32:00+00:00",
+        dashboard_url="https://example.com/agent",
+    )
+
+    assert "QUALIFIED SETUP | NOT ENTERED | NVDA (NVIDIA Corporation)" in message
+    assert "Entry: $210.25" in message
+    assert "Proposed qty: 12 | Exposure: $2,523.00 | Risk: $123.00" in message
+    assert "TP1: $225.00 (+7.02%)" in message
+    assert "Blocked by: WATCH: Portfolio heat cap would be exceeded." in message
+    assert "no position was opened" in message
+
+
 def test_dashboard_url_from_app_url() -> None:
     assert dashboard_url_from_app_url("https://market-lens-scanner-fb63.onrender.com/?v=latest") == (
         "https://market-lens-scanner-fb63.onrender.com/agent"
@@ -412,6 +460,158 @@ def test_agent_buy_outbox_defers_notification_until_explicit_delivery(monkeypatc
     outcomes = ui_agent.send_buy_notification_outbox(outbox)
     assert [outcome.status for outcome in outcomes] == ["sent", "no_photo"]
     assert len(sent_messages) == 1
+
+
+def test_agent_builds_alert_for_qualified_capital_block_only(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED", "true")
+    settings = Settings(
+        url="https://market-lens-scanner-fb63.onrender.com/?v=latest",
+        email="test@example.com",
+        password="hidden",
+        excel_path=tmp_path / "tracker.xlsx",
+        universe="smart-universe",
+        tickers=[],
+        analysis_period="6mo",
+        min_rr=2.0,
+        headless=True,
+        timeout_seconds=60,
+    )
+    result = SetupResult(
+        ticker="NVDA",
+        setup_type="Breakout + Retest",
+        score=0.64,
+        current_price=210,
+        buy_zone_low=208,
+        buy_zone_high=211,
+        stop_loss=200,
+        target_1=225,
+        target_2=245,
+        risk_reward=2.5,
+        reason="valid",
+        raw_text="",
+        chart_url="agent_results/charts/nvda.png",
+    )
+    capital_decision = ui_agent.Decision(
+        "WATCH",
+        "QUALIFIED_CAPITAL_BLOCKED: Portfolio heat cap would be exceeded.",
+        decision_json={
+            "entry_eligibility_status": "QUALIFIED_CAPITAL_BLOCKED",
+            "entry_qualified_before_capital": True,
+            "capital_blocked_only": True,
+            "entry_gate_blockers": [],
+            "capital_blockers": ["WATCH: Portfolio heat cap would be exceeded."],
+            "setup_score": 0.64,
+            "net_rr": 2.30,
+        },
+    )
+    technical_decision = ui_agent.Decision(
+        "WATCH",
+        "Entry confirmation missing.",
+        decision_json={
+            "entry_eligibility_status": "ENTRY_GATES_BLOCKED",
+            "entry_qualified_before_capital": False,
+            "capital_blocked_only": False,
+            "entry_gate_blockers": ["Entry confirmation missing."],
+            "capital_blockers": [],
+        },
+    )
+
+    records = ui_agent.build_buy_notification_records(
+        [(result, capital_decision), (result, technical_decision)],
+        open_positions={},
+        settings=settings,
+        run_id="run-1",
+        timestamp="2026-09-10T14:32:00+00:00",
+    )
+
+    assert len(records) == 1
+    assert records[0]["notification_type"] == "QUALIFIED_CAPITAL_BLOCKED"
+    assert "NOT ENTERED" in records[0]["message"]
+    assert records[0]["chart_ref"] == "agent_results/charts/nvda.png"
+    assert capital_decision.action == "WATCH"
+    assert technical_decision.action == "WATCH"
+
+
+def test_agent_builds_alert_for_zero_size_after_technical_gates_pass(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED", "true")
+    settings = Settings(
+        url="https://market-lens-scanner-fb63.onrender.com/?v=latest",
+        email="test@example.com",
+        password="hidden",
+        excel_path=tmp_path / "tracker.xlsx",
+        universe="smart-universe",
+        tickers=[],
+        analysis_period="6mo",
+        min_rr=2.0,
+        headless=True,
+        timeout_seconds=60,
+    )
+    result = SetupResult(
+        ticker="MSFT", setup_type="VWAP Reclaim", score=0.60, current_price=500,
+        buy_zone_low=495, buy_zone_high=501, stop_loss=485, target_1=520,
+        target_2=545, risk_reward=2.4, reason="valid", raw_text="",
+    )
+    decision = ui_agent.Decision(
+        "SKIP",
+        "SKIP: Position size blocked by cash, exposure, or risk limits.",
+        decision_json={
+            "entry_eligibility_status": "CAPITAL_BLOCKED_UNASSESSED",
+            "technical_entry_gates_passed": True,
+            "entry_qualified_before_capital": False,
+            "capital_blocked_only": False,
+            "entry_gate_blockers": [],
+            "capital_blockers": ["Position size blocked by cash, exposure, or risk limits."],
+            "setup_score": 0.60,
+            "net_rr": 2.40,
+        },
+    )
+
+    records = ui_agent.build_buy_notification_records(
+        [(result, decision)], open_positions={}, settings=settings,
+        run_id="run-2", timestamp="2026-09-10T15:30:00+00:00",
+    )
+
+    assert len(records) == 1
+    assert records[0]["notification_type"] == "QUALIFIED_CAPITAL_BLOCKED"
+    assert "NOT ENTERED" in records[0]["message"]
+    assert "Proposed qty" not in records[0]["message"]
+    assert decision.action == "SKIP"
+
+
+def test_qualified_capital_alert_dedupe_ignores_small_quality_noise() -> None:
+    result = SetupResult(
+        ticker="NVDA",
+        setup_type="Breakout + Retest",
+        score=0.61,
+        current_price=210,
+        buy_zone_low=208,
+        buy_zone_high=211,
+        stop_loss=200,
+        target_1=225,
+        target_2=245,
+        risk_reward=2.5,
+        reason="valid",
+        raw_text="",
+    )
+
+    first = ui_agent.qualified_capital_blocked_dedupe_key(
+        result=result,
+        decision_json={"setup_score": 0.61, "net_rr": 2.31},
+        timestamp="2026-09-10T14:32:00+00:00",
+    )
+    noisy_repeat = ui_agent.qualified_capital_blocked_dedupe_key(
+        result=result,
+        decision_json={"setup_score": 0.62, "net_rr": 2.34},
+        timestamp="2026-09-10T15:30:00+00:00",
+    )
+    material_improvement = ui_agent.qualified_capital_blocked_dedupe_key(
+        result=result,
+        decision_json={"setup_score": 0.67, "net_rr": 2.58},
+        timestamp="2026-09-10T16:30:00+00:00",
+    )
+
+    assert noisy_repeat == first
+    assert material_improvement != first
 
 
 def test_position_event_message_contains_exit_details() -> None:
