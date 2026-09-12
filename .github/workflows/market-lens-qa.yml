@@ -1,0 +1,61 @@
+name: Market Lens Source QA
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "agent/**"
+      - "app/**"
+      - "tests/**"
+      - ".github/workflows/**"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "agent/**"
+      - "app/**"
+      - "tests/**"
+      - ".github/workflows/**"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: market-lens-source-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Validate workflow YAML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          for path in sorted(Path(".github/workflows").glob("*.yml")):
+              payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+              if not isinstance(payload, dict) or not payload.get("jobs"):
+                  raise SystemExit(f"Invalid workflow structure: {path}")
+              print(f"Validated {path}")
+          PY
+
+      - name: Run regression suite
+        run: python -m pytest -q

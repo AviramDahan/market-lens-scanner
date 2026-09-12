@@ -11,6 +11,16 @@ def test_scanner_workflow_is_valid_yaml() -> None:
     assert payload["jobs"]["run-agent"]["timeout-minutes"] == 30
 
 
+def test_scanner_refreshes_queued_workflow_to_latest_portfolio_before_scan() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    refresh_index = text.index("- name: Refresh portfolio baseline")
+    scan_index = text.index("- name: Run Market Lens UI agent")
+    assert refresh_index < scan_index
+    assert "git fetch origin main" in text[refresh_index:scan_index]
+    assert "git reset --hard origin/main" in text[refresh_index:scan_index]
+
+
 def test_buy_notifications_are_sent_only_after_persistence() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
 

@@ -74,6 +74,14 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Refresh portfolio baseline
+        if: steps.schedule_time.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
+
       - name: Set up Python
         if: steps.schedule_time.outputs.should_run == 'true'
         uses: actions/setup-python@v5

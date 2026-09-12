@@ -69,7 +69,8 @@ def test_scanner_generated_state_overlay_requires_guard():
     path = Path(__file__).resolve().parents[1] / ".github/workflows" / name
     lines = path.read_text().splitlines()
     assert sum('BASE_REV="$(git rev-parse HEAD)"' in line for line in lines) == 1
-    resets = [i for i, line in enumerate(lines) if "git reset --hard origin/main" in line]
+    base_index = next(i for i, line in enumerate(lines) if 'BASE_REV="$(git rev-parse HEAD)"' in line)
+    resets = [i for i, line in enumerate(lines) if i > base_index and "git reset --hard origin/main" in line]
     assert len(resets) == 2
     for index in resets:
         assert 'python -m agent.persistence_guard "$BASE_REV" origin/main' in lines[index - 1]
