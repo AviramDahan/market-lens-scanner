@@ -1,0 +1,49 @@
+name: Market Lens Telegram Diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: HTML-formatted diagnostic message
+        required: true
+        type: string
+      dedupe_key:
+        description: Stable event key used to prevent duplicate sends
+        required: true
+        type: string
+      ticker:
+        description: Optional ticker label for a historical chart
+        required: false
+        default: ""
+        type: string
+      chart_object:
+        description: Optional validated git object containing a historical chart
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  send-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Send Telegram diagnostic
+        env:
+          MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
+          MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
+          MARKET_LENS_TELEGRAM_DIAGNOSTIC_MESSAGE: ${{ inputs.message }}
+          MARKET_LENS_TELEGRAM_DIAGNOSTIC_DEDUPE_KEY: ${{ inputs.dedupe_key }}
+          MARKET_LENS_TELEGRAM_DIAGNOSTIC_TICKER: ${{ inputs.ticker }}
+          MARKET_LENS_TELEGRAM_DIAGNOSTIC_CHART_OBJECT: ${{ inputs.chart_object }}
+        run: python agent/send_telegram_diagnostic.py
