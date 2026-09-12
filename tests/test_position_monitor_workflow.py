@@ -33,3 +33,14 @@ def test_monitor_conflict_path_recalculates_instead_of_overlaying_stale_portfoli
     assert "Portfolio changed during monitor run; recalculating once from latest main." in text
     assert "Push rejected because main changed. Recalculating once on top of latest main." in text
     assert text.count("run_monitor_pipeline") >= 3
+
+
+def test_monitor_persists_generated_state_with_manifest_bundle() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    persist_index = text.index("- name: Commit monitor results safely")
+    block = text[persist_index:]
+
+    assert "python -m agent.generated_state_bundle save" in block
+    assert "python -m agent.generated_state_bundle apply" in block
+    assert "python -m agent.generated_state_bundle stage" in block
+    assert 'git add "$EXCEL_FILE" "$RESULTS_DIR"' not in block

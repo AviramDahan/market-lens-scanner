@@ -238,19 +238,20 @@ jobs:
           PY
           }
 
-          echo "Saving Monitor-generated files aside..."
-          rm -rf "$TEMP_DIR"
-          mkdir -p "$TEMP_DIR"
+          save_monitor_bundle() {
+            echo "Saving changed Monitor-generated files aside..."
+            python -m agent.generated_state_bundle save \
+              --bundle "$TEMP_DIR" \
+              --path "$EXCEL_FILE" \
+              --path "$RESULTS_DIR"
+          }
 
-          if [ -f "$EXCEL_FILE" ]; then
-            mkdir -p "$TEMP_DIR/agent_tracker"
-            cp "$EXCEL_FILE" "$TEMP_DIR/$EXCEL_FILE"
-          fi
+          apply_and_stage_monitor_bundle() {
+            python -m agent.generated_state_bundle apply --bundle "$TEMP_DIR"
+            python -m agent.generated_state_bundle stage --bundle "$TEMP_DIR"
+          }
 
-          if [ -d "$RESULTS_DIR" ]; then
-            mkdir -p "$TEMP_DIR/$RESULTS_DIR"
-            cp -R "$RESULTS_DIR"/. "$TEMP_DIR/$RESULTS_DIR"/
-          fi
+          save_monitor_bundle
 
           echo "Moving local repo to latest origin/main..."
           git fetch origin main
@@ -259,23 +260,15 @@ jobs:
             git clean -fd
 
             echo "Restoring Monitor-generated files on top of latest main..."
-            if [ -f "$TEMP_DIR/$EXCEL_FILE" ]; then
-              mkdir -p "$(dirname "$EXCEL_FILE")"
-              cp "$TEMP_DIR/$EXCEL_FILE" "$EXCEL_FILE"
-            fi
-
-            if [ -d "$TEMP_DIR/$RESULTS_DIR" ]; then
-              mkdir -p "$RESULTS_DIR"
-              cp -R "$TEMP_DIR/$RESULTS_DIR"/. "$RESULTS_DIR"/
-            fi
+            apply_and_stage_monitor_bundle
           else
             echo "Portfolio changed during monitor run; recalculating once from latest main."
             git reset --hard origin/main
             git clean -fd
             run_monitor_pipeline
+            save_monitor_bundle
+            apply_and_stage_monitor_bundle
           fi
-
-          git add "$EXCEL_FILE" "$RESULTS_DIR"
 
           if git diff --cached --quiet; then
             echo "No position monitor changes to commit after synchronization."
@@ -294,8 +287,8 @@ jobs:
             git reset --hard origin/main
             git clean -fd
             run_monitor_pipeline
-
-            git add "$EXCEL_FILE" "$RESULTS_DIR"
+            save_monitor_bundle
+            apply_and_stage_monitor_bundle
 
             if git diff --cached --quiet; then
               echo "No position monitor changes to commit after recalculation."

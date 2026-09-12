@@ -32,3 +32,14 @@ def test_buy_notifications_are_sent_only_after_persistence() -> None:
     assert "MARKET_LENS_AGENT_NOTIFICATION_OUTBOX" in run_block
     assert "MARKET_LENS_TELEGRAM_BOT_TOKEN" not in run_block
     assert "steps.persist.outputs.persisted == 'true'" in text[notify_index:]
+
+
+def test_scanner_persists_generated_state_with_manifest_bundle() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    persist_index = text.index("- name: Commit agent results safely")
+    block = text[persist_index:]
+
+    assert "python -m agent.generated_state_bundle save" in block
+    assert "python -m agent.generated_state_bundle apply" in block
+    assert "python -m agent.generated_state_bundle stage" in block
+    assert 'git add "$EXCEL_FILE" "$RESULTS_DIR"' not in block
