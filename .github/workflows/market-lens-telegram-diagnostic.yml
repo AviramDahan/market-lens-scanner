@@ -44,4 +44,4 @@ jobs:
           MARKET_LENS_TELEGRAM_DIAGNOSTIC_DEDUPE_KEY: ${{ inputs.dedupe_key }}
           MARKET_LENS_TELEGRAM_DIAGNOSTIC_TICKER: ${{ inputs.ticker }}
           MARKET_LENS_TELEGRAM_DIAGNOSTIC_CHART_OBJECT: ${{ inputs.chart_object }}
-        run: python agent/send_telegram_diagnostic.py
+        run: python -m agent.send_telegram_diagnostic

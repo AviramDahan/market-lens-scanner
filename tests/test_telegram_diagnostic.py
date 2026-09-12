@@ -1,8 +1,18 @@
 from types import SimpleNamespace
+from pathlib import Path
 
 import pytest
 
 import agent.send_telegram_diagnostic as diagnostic
+
+
+WORKFLOW = Path(".github/workflows/market-lens-telegram-diagnostic.yml")
+
+
+def test_diagnostic_workflow_runs_agent_as_module() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "python -m agent.send_telegram_diagnostic" in text
+    assert "python agent/send_telegram_diagnostic.py" not in text
 
 
 def test_diagnostic_sends_message_without_chart(monkeypatch) -> None:
