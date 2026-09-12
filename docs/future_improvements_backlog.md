@@ -517,3 +517,101 @@ After at least one week of paper trading.
 
 **Important Constraint**  
 Recommendations must remain read-only. They must not automatically change code, thresholds, gates, Smart Universe, monitor behavior, or active trade decisions.
+
+## 15. Telegram Alerts For Qualified Entries Blocked By Capital
+
+**Improvement**  
+Add a Telegram alert for setups that pass the technical entry requirements and
+would be valid entries, but are not opened in the paper portfolio because of
+capital or portfolio constraints.
+
+Examples of qualifying blockers:
+
+- Not enough available cash.
+- Portfolio exposure limit reached.
+- Too many open positions.
+- Sector exposure limit reached.
+- Portfolio heat limit reached.
+- Per-position dollar cap prevents a valid practical size.
+
+The alert should look similar to a real entry alert, including:
+
+- ticker and company name
+- setup type
+- entry / executable entry
+- stop loss
+- target 1 and target 2
+- risk/reward
+- setup score / confidence
+- market regime and sector regime
+- reason it was not added to the portfolio
+- chart image when available
+
+It must be clearly labeled as:
+
+`QUALIFIED ENTRY ALERT - NOT ENTERED`
+
+or similar, so it cannot be confused with an actual `BUY_SIMULATED`.
+
+**Why It Matters**  
+If the system finds valid setups but does not enter them because of portfolio
+constraints, the user should still see those opportunities in Telegram. This
+helps distinguish between:
+
+- no good trades exist
+- good trades exist but capital/risk limits blocked entry
+- the system is under-allocated
+- the capital model may be too conservative
+
+**Problem It Solves**  
+Today a high-quality setup blocked by capital can disappear into logs or the
+dashboard. That makes it harder to understand whether missed opportunities are
+caused by strategy quality, capital allocation, or portfolio exposure rules.
+
+**Risk**  
+Medium.
+
+Risks to manage:
+
+- Users may mistake the alert for a real portfolio entry.
+- Telegram can become noisy if every blocked candidate is sent.
+- Duplicate alerts can appear across repeated scans.
+- Poorly labeled alerts could create confusion in performance review.
+
+Required safeguards:
+
+- Do not create or modify a position.
+- Do not change `final_action` to `BUY_SIMULATED`.
+- Do not affect portfolio sizing, cash, exposure, or monitor logic.
+- Use a separate alert type, for example `QUALIFIED_CAPITAL_BLOCKED`.
+- Add dedupe by ticker + setup + entry zone + scan date/session.
+- Limit repeated alerts unless the setup materially improves.
+- Include the blocker reason in the message.
+
+**Data Needed Before Implementation**  
+
+- Decision JSON fields:
+  - `entry_eligibility_status`
+  - `entry_gate_blockers`
+  - `capital_blockers`
+  - `capital_quality_tier`
+  - `trade_risk_budget`
+  - `portfolio_heat_before`
+  - `portfolio_heat_after`
+  - `dynamic_exposure_limit`
+  - `final_action`
+- Telegram notification ledger to prevent duplicates.
+- A few days of examples where technical gates passed but capital blocked entry.
+
+**Priority**  
+High.
+
+**Timing**  
+Can be implemented after the current workflow/persistence QA is stable. This is
+safe to build before changing capital rules because it is alert-only and does
+not change trading behavior.
+
+**Important Constraint**  
+This must be notification-only. It must not open paper trades, alter
+`BUY_SIMULATED`, weaken gates, change Smart Universe, or change portfolio
+allocation. The purpose is visibility, not execution.
