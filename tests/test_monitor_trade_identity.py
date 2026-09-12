@@ -186,6 +186,7 @@ def test_tp1_is_bound_to_trade_and_advances_stop_and_cursor():
     apply_event(wb, positions, p, event, "2026-09-08T14:12:00Z", "run", 1)
     assert p["quantity"] == 13
     assert p["stop_loss"] == p["entry_price"]
+    assert p["risk_ils"] == 0
     assert p["partial_taken"] is True
     assert wb["Position Events"].cell(2, 16).value == "new-trade"
     assert read_last_event_times(wb, positions)["CHTR"].isoformat() == "2026-09-08T14:11:00+00:00"

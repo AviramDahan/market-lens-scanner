@@ -98,9 +98,25 @@ def test_hold_mark_delta_is_idempotent_and_uses_portfolio_currency():
     p = position()
     p["exposure_ils"] = 3700.
     assert strategy.refresh_strategy_position(p, 105., 3.7) == 185.
-    assert p["risk_ils"] == 370.
+    assert p["risk_ils"] == 185.
     assert p["unrealized_ils"] == 185.
     assert strategy.refresh_strategy_position(p, 105., 3.7) == 0.
+
+
+def test_partial_profit_moves_stop_to_entry_and_removes_open_risk():
+    positions = {"OLD": position(10)}
+    decision = strategy.StrategyDecision(
+        "TAKE_PARTIAL_PROFIT",
+        "TP1",
+        quantity=5,
+        cash_in_ils=550.,
+        execution_price=110.,
+    )
+    strategy.apply_strategy_exit(positions, candidate(price=110.), decision, 1.)
+    assert positions["OLD"]["stop_loss"] == positions["OLD"]["entry_price"]
+    assert positions["OLD"]["risk_ils"] == 0.
+    strategy.refresh_strategy_position(positions["OLD"], 115., 1.)
+    assert positions["OLD"]["risk_ils"] == 0.
 
 
 @pytest.mark.parametrize("price", [0., float("nan"), float("inf")])
@@ -140,7 +156,7 @@ def test_user_next_candidate_sees_exit_proceeds_without_mutating_input(monkeypat
     def final(**kwargs):
         if kwargs["result"].ticker == "NEW":
             if price == 105:
-                assert kwargs["portfolio_open_risk_before"] == 100.
+                assert kwargs["portfolio_open_risk_before"] == 50.
             observed.append((kwargs["cash_available"], kwargs["portfolio_exposure_before"], kwargs["quantity"]))
             return {"final_action": "WATCH", "reason": "Final gate remains authoritative"}
         return {"final_action": kwargs["initial_action"], "reason": "Exit"}
@@ -178,7 +194,7 @@ def test_agent_next_candidate_sees_exit_proceeds(monkeypatch, tmp_path, price, c
     def final(**kwargs):
         if kwargs["result"].ticker == "NEW":
             if price == 105:
-                assert kwargs["portfolio_open_risk_before"] == 100.
+                assert kwargs["portfolio_open_risk_before"] == 50.
             observed.append((kwargs["cash_available"], kwargs["portfolio_exposure_before"], kwargs["quantity"]))
             raise EndOfCheck
         return {"final_action": kwargs["initial_action"], "reason": "Exit"}

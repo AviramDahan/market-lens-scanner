@@ -188,7 +188,7 @@ def refresh_strategy_position(position: dict[str, Any], price: float, currency_r
     position.update(current_price=price, exposure_ils=exposure,
                     unrealized_usd=round((price - entry) * quantity, 2),
                     unrealized_ils=round((price - entry) * quantity * currency_rate, 2),
-                    risk_ils=round(max(0.0, price - stop) * quantity * currency_rate, 2))
+                    risk_ils=round(max(0.0, entry - stop) * quantity * currency_rate, 2))
     return exposure - old_exposure
 
 
@@ -224,7 +224,7 @@ def apply_strategy_exit(
     pos["current_price"] = result.current_price
     pos["notes"] = "Partial profit taken; stop moved to breakeven."
     pos["exposure_ils"] = round(remaining * result.current_price * currency_rate, 2)
-    pos["risk_ils"] = round(max(0.0, result.current_price - pos["stop_loss"]) * remaining * currency_rate, 2)
+    pos["risk_ils"] = round(max(0.0, entry - pos["stop_loss"]) * remaining * currency_rate, 2)
     return decision.cash_in_ils, pos["exposure_ils"] - old_exposure
 
 

@@ -1513,7 +1513,7 @@ def with_position_calculations(position: dict[str, Any]) -> dict[str, Any]:
     position["unrealized_pnl_usd"] = round((current - entry) * quantity, 2)
     position["unrealized_pnl_ils"] = position["unrealized_pnl_usd"]
     position["exposure_ils"] = round(current * quantity, 2)
-    position["open_risk_ils"] = round(max(0.0, current - stop) * quantity, 2)
+    position["open_risk_ils"] = round(max(0.0, entry - stop) * quantity, 2)
     position["potential_profit_t1_ils"] = round(max(0.0, target_1 - current) * quantity, 2)
     position["potential_profit_t2_ils"] = round(max(0.0, target_2 - current) * quantity, 2)
     position["potential_profit_plan_ils"] = weighted_target_profit(

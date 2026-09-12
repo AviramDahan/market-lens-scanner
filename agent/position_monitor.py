@@ -623,7 +623,7 @@ def refresh_position(position: dict[str, Any], current_price: float, currency_ra
     position["unrealized_usd"] = round((current_price - entry) * quantity, 2)
     position["unrealized_ils"] = round((current_price - entry) * quantity * currency_rate, 2)
     position["exposure_ils"] = round(current_price * quantity * currency_rate, 2)
-    position["risk_ils"] = round(max(0.0, current_price - stop) * quantity * currency_rate, 2)
+    position["risk_ils"] = round(max(0.0, entry - stop) * quantity * currency_rate, 2)
     position["notes"] = position.get("notes") or "Open position refreshed by monitor."
 
 
