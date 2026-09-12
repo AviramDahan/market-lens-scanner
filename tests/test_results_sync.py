@@ -115,6 +115,7 @@ def test_dashboard_asset_paths_extract_agent_result_urls() -> None:
 
 def test_dashboard_snapshot_asset_sync_downloads_missing_assets(monkeypatch, tmp_path: Path) -> None:
     reset_results_sync_cache()
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
     monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_DASHBOARD_ASSET_SYNC_TTL_SECONDS", "0")
@@ -158,6 +159,7 @@ def test_dashboard_snapshot_asset_sync_downloads_missing_assets(monkeypatch, tmp
 
 def test_dashboard_snapshot_asset_sync_prioritizes_latest_missing_assets(monkeypatch, tmp_path: Path) -> None:
     reset_results_sync_cache()
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
     monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_DASHBOARD_ASSET_SYNC_TTL_SECONDS", "0")
@@ -209,6 +211,7 @@ def test_dashboard_snapshot_asset_sync_prioritizes_latest_missing_assets(monkeyp
 
 def test_dashboard_snapshot_sync_downloads_exact_blob(monkeypatch, tmp_path: Path) -> None:
     reset_results_sync_cache()
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
     monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS", "0")
