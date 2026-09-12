@@ -51,6 +51,7 @@ def prune_directory(
     dry_run: bool,
     project_root: Path = PROJECT_ROOT,
     preserve_paths: set[Path] | None = None,
+    suffixes: set[str] | None = None,
 ) -> dict[str, object]:
     directory = directory.resolve()
     project_root = project_root.resolve()
@@ -58,8 +59,9 @@ def prune_directory(
         raise RuntimeError(f"Refusing to prune outside project root: {directory}")
 
     files = []
+    allowed_suffixes = suffixes or MEDIA_SUFFIXES
     for path in directory.glob("*"):
-        if not path.is_file() or path.suffix.lower() not in MEDIA_SUFFIXES:
+        if not path.is_file() or path.suffix.lower() not in allowed_suffixes:
             continue
         stat = path.stat()
         files.append(
@@ -142,6 +144,25 @@ def collect_preserved_media(project_root: Path = PROJECT_ROOT) -> set[Path]:
     return preserved
 
 
+def collect_preserved_result_files(project_root: Path = PROJECT_ROOT) -> set[Path]:
+    snapshot_path = project_root / "agent_results" / "dashboard_snapshot.json"
+    if not snapshot_path.exists():
+        return set()
+    try:
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+
+    preserved: set[Path] = {snapshot_path.resolve()}
+    for asset in preserved_dashboard_assets(snapshot):
+        path = (project_root / "agent_results" / asset).resolve()
+        preserved.add(path)
+    latest_monitor = project_root / "agent_results" / "position_monitor" / "latest_status.json"
+    if latest_monitor.exists():
+        preserved.add(latest_monitor.resolve())
+    return preserved
+
+
 def preserved_dashboard_assets(snapshot: dict[str, Any]) -> list[Path]:
     assets: list[Path] = []
     for key in ("latest_run", "open_positions", "latest_setups"):
@@ -180,18 +201,70 @@ def main() -> int:
     screenshot_mb_limit = env_float("MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_MB", 80.0)
     chart_age_days = env_float("MARKET_LENS_AGENT_CHART_RETENTION_MAX_AGE_DAYS", 21.0)
     screenshot_age_days = env_float("MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_AGE_DAYS", 14.0)
+    decision_limit = env_int("MARKET_LENS_AGENT_DECISION_RETENTION_MAX_FILES", 80)
+    summary_limit = env_int("MARKET_LENS_AGENT_SUMMARY_RETENTION_MAX_FILES", 180)
+    runtime_limit = env_int("MARKET_LENS_AGENT_RUNTIME_RETENTION_MAX_FILES", 120)
+    diagnostic_limit = env_int("MARKET_LENS_AGENT_DIAGNOSTIC_RETENTION_MAX_FILES", 80)
+    monitor_limit = env_int("MARKET_LENS_AGENT_MONITOR_RETENTION_MAX_FILES", 80)
 
     if not enabled:
         print("Agent media retention disabled.")
         return 0
 
     results = []
-    preserve_paths = collect_preserved_media(PROJECT_ROOT)
+    preserve_paths = collect_preserved_result_files(PROJECT_ROOT)
     targets = [
-        (PROJECT_ROOT / "agent_results" / "charts", chart_limit, chart_mb_limit, chart_age_days),
-        (PROJECT_ROOT / "agent_results" / "screenshots", screenshot_limit, screenshot_mb_limit, screenshot_age_days),
+        (
+            PROJECT_ROOT / "agent_results" / "charts",
+            chart_limit,
+            chart_mb_limit,
+            chart_age_days,
+            MEDIA_SUFFIXES,
+        ),
+        (
+            PROJECT_ROOT / "agent_results" / "screenshots",
+            screenshot_limit,
+            screenshot_mb_limit,
+            screenshot_age_days,
+            MEDIA_SUFFIXES,
+        ),
+        (
+            PROJECT_ROOT / "agent_results" / "decisions",
+            decision_limit,
+            None,
+            None,
+            {".jsonl"},
+        ),
+        (
+            PROJECT_ROOT / "agent_results" / "summaries",
+            summary_limit,
+            None,
+            None,
+            {".md", ".json"},
+        ),
+        (
+            PROJECT_ROOT / "agent_results" / "runtime",
+            runtime_limit,
+            None,
+            None,
+            {".json"},
+        ),
+        (
+            PROJECT_ROOT / "agent_results" / "diagnostics",
+            diagnostic_limit,
+            None,
+            None,
+            {".json"},
+        ),
+        (
+            PROJECT_ROOT / "agent_results" / "position_monitor",
+            monitor_limit,
+            None,
+            None,
+            {".md", ".json"},
+        ),
     ]
-    for directory, limit, mb_limit, age_days in targets:
+    for directory, limit, mb_limit, age_days, suffixes in targets:
         if directory.exists():
             results.append(
                 prune_directory(
@@ -201,6 +274,7 @@ def main() -> int:
                     max_age_days=age_days,
                     dry_run=dry_run,
                     preserve_paths=preserve_paths,
+                    suffixes=suffixes,
                 )
             )
 

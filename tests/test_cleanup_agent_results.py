@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from agent.cleanup_agent_results import collect_preserved_media, prune_directory
+from agent.cleanup_agent_results import collect_preserved_media, collect_preserved_result_files, prune_directory
 
 
 def touch_file(path: Path, index: int) -> None:
@@ -131,3 +131,45 @@ def test_prune_directory_refuses_outside_project_root(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match="outside project root"):
         prune_directory(outside, max_files=0, dry_run=True, project_root=tmp_path)
+
+
+def test_prune_directory_can_limit_jsonl_result_files(tmp_path: Path) -> None:
+    decision_dir = tmp_path / "agent_results" / "decisions"
+    for index in range(4):
+        touch_file(decision_dir / f"market_lens_agent_20260714_12000{index}.jsonl", index)
+    touch_file(decision_dir / "notes.txt", 99)
+
+    result = prune_directory(
+        decision_dir,
+        max_files=2,
+        dry_run=False,
+        project_root=tmp_path,
+        suffixes={".jsonl"},
+    )
+    remaining = sorted(path.name for path in decision_dir.glob("*"))
+
+    assert result["deleted"] == 2
+    assert remaining == [
+        "market_lens_agent_20260714_120002.jsonl",
+        "market_lens_agent_20260714_120003.jsonl",
+        "notes.txt",
+    ]
+
+
+def test_collect_preserved_result_files_includes_dashboard_assets(tmp_path: Path) -> None:
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_path.write_text(
+        '{"latest_run":{"decision_jsonl_url":"/agent-results/decisions/latest.jsonl"},'
+        '"latest_setups":[{"chart_url":"/agent-results/charts/latest.png"}]}',
+        encoding="utf-8",
+    )
+    monitor_path = tmp_path / "agent_results" / "position_monitor" / "latest_status.json"
+    touch_file(monitor_path, 1)
+
+    preserved = collect_preserved_result_files(tmp_path)
+
+    assert snapshot_path.resolve() in preserved
+    assert (tmp_path / "agent_results" / "decisions" / "latest.jsonl").resolve() in preserved
+    assert (tmp_path / "agent_results" / "charts" / "latest.png").resolve() in preserved
+    assert monitor_path.resolve() in preserved
