@@ -19,6 +19,8 @@ from app.agent_dashboard import (
     build_risk_dashboard,
     build_system_health,
     compact_agent_dashboard_payload,
+    compute_full_trade_performance,
+    compute_realized_pnl,
     dashboard_section_payload,
     load_period_summary,
     parse_timestamp,
@@ -164,6 +166,34 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
 
     positions = dashboard.get("open_positions") if isinstance(dashboard.get("open_positions"), list) else []
     summary = dashboard.get("summary") if isinstance(dashboard.get("summary"), dict) else {}
+    recent_trades = dashboard.get("recent_trades") if isinstance(dashboard.get("recent_trades"), list) else []
+    if recent_trades and any(
+        key not in summary
+        for key in (
+            "closed_trade_realized_pnl_ils",
+            "open_lot_partial_realized_pnl_ils",
+            "all_lifecycle_realized_pnl_ils",
+            "realized_pnl_reconciliation_delta_ils",
+        )
+    ):
+        realized = compute_realized_pnl(recent_trades)
+        lifecycle = compute_full_trade_performance(recent_trades)
+        summary.setdefault("closed_trade_realized_pnl_ils", lifecycle["closed_trade_realized_pnl_ils"])
+        summary.setdefault(
+            "open_lot_partial_realized_pnl_ils",
+            lifecycle["open_lot_partial_realized_pnl_ils"],
+        )
+        summary.setdefault("all_lifecycle_realized_pnl_ils", lifecycle["all_lifecycle_realized_pnl_ils"])
+        summary.setdefault(
+            "realized_pnl_reconciliation_delta_ils",
+            round(realized["total"] - lifecycle["all_lifecycle_realized_pnl_ils"], 2),
+        )
+        existing_lifecycle = (
+            dashboard.get("full_trade_performance")
+            if isinstance(dashboard.get("full_trade_performance"), dict)
+            else {}
+        )
+        dashboard["full_trade_performance"] = {**existing_lifecycle, **lifecycle}
     latest_decisions = dashboard.get("latest_decisions") if isinstance(dashboard.get("latest_decisions"), list) else []
     if "risk_dashboard" not in dashboard:
         dashboard["risk_dashboard"] = build_risk_dashboard(positions, summary, latest_decisions)

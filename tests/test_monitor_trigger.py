@@ -183,6 +183,59 @@ def test_current_agent_dashboard_syncs_assets_before_sanitizing(monkeypatch, tmp
     assert dashboard["results_sync"]["asset_sync"]["downloaded"] == 1
 
 
+def test_current_agent_dashboard_reconciles_realized_pnl_in_legacy_snapshot(monkeypatch, tmp_path) -> None:
+    reset_rate_limits()
+    snapshot_path = tmp_path / "agent_results" / "dashboard_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_text(
+        json.dumps(
+            {
+                "status": "ok",
+                "summary": {"realized_pnl_ils": 50},
+                "recent_trades": [
+                    {
+                        "timestamp": "2026-09-01T14:00:00Z",
+                        "action": "BUY_SIMULATED",
+                        "ticker": "TEST",
+                        "entry_price_usd": 100,
+                        "price_usd": 100,
+                        "quantity": 10,
+                        "cash_out_ils": 1000,
+                        "stop_loss": 95,
+                    },
+                    {
+                        "timestamp": "2026-09-02T14:00:00Z",
+                        "action": "TAKE_PARTIAL_PROFIT",
+                        "ticker": "TEST",
+                        "exit_price_usd": 110,
+                        "price_usd": 110,
+                        "quantity": 5,
+                        "cash_in_ils": 550,
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", snapshot_path.parent)
+    monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", snapshot_path)
+    monkeypatch.setattr(main, "sync_dashboard_snapshot_if_enabled", lambda _root: {"enabled": False})
+    monkeypatch.setattr(
+        main,
+        "sync_dashboard_snapshot_assets_if_enabled",
+        lambda _root, _dashboard: {"enabled": False},
+    )
+
+    dashboard = main.current_agent_dashboard()
+
+    assert dashboard["summary"]["closed_trade_realized_pnl_ils"] == 0
+    assert dashboard["summary"]["open_lot_partial_realized_pnl_ils"] == 50
+    assert dashboard["summary"]["all_lifecycle_realized_pnl_ils"] == 50
+    assert dashboard["summary"]["realized_pnl_reconciliation_delta_ils"] == 0
+    assert dashboard["full_trade_performance"]["open_count"] == 1
+
+
 def test_detect_live_monitor_event_target_2_before_target_1() -> None:
     position = {"ticker": "TEST", "stop_loss": 95, "target_1": 105, "target_2": 112}
     event = detect_live_monitor_event(position, 113)
