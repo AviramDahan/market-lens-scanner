@@ -70,7 +70,7 @@ jobs:
 
       - name: Checkout
         if: steps.schedule_time.outputs.should_run == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
@@ -84,7 +84,7 @@ jobs:
 
       - name: Set up Python
         if: steps.schedule_time.outputs.should_run == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
