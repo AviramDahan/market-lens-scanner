@@ -189,11 +189,41 @@ def assess_candidate(
             ]
         )
     else:
+        candidate_professional_score = candidate.get("professional_adjusted_score")
+        candidate_confirmation = candidate.get("entry_confirmation_passed")
+        candidate_target_status = str(candidate.get("target_feasibility_status") or "").upper()
         checks.extend(
             [
-                check("professional_setup_score", "UNASSESSABLE", "Alternative-specific professional score was not persisted."),
-                check("entry_confirmation", "UNASSESSABLE", "Completed-candle confirmation was calculated only for the active setup."),
-                check("target_feasibility", "UNASSESSABLE", "ATR/structure feasibility was calculated only for the active setup."),
+                check(
+                    "professional_setup_score",
+                    "PASS"
+                    if candidate_professional_score is not None
+                    and to_float(candidate_professional_score) >= to_float(record.get("minimum_setup_score_required"), 0.45)
+                    else "FAIL"
+                    if candidate_professional_score is not None
+                    else "UNASSESSABLE",
+                    f"Candidate professional score {to_float(candidate_professional_score):.2f}."
+                    if candidate_professional_score is not None
+                    else "Alternative-specific professional score was not persisted.",
+                ),
+                check(
+                    "entry_confirmation",
+                    "PASS" if candidate_confirmation is True else "FAIL" if candidate_confirmation is False else "UNASSESSABLE",
+                    "Candidate-specific completed-candle confirmation passed."
+                    if candidate_confirmation is True
+                    else "Candidate-specific completed-candle confirmation failed."
+                    if candidate_confirmation is False
+                    else "Candidate-specific completed-candle confirmation was not evaluated.",
+                ),
+                check(
+                    "target_feasibility",
+                    "PASS"
+                    if candidate_target_status == "OK"
+                    else "FAIL"
+                    if candidate_target_status and candidate_target_status != "UNKNOWN"
+                    else "UNASSESSABLE",
+                    f"Candidate target status: {candidate_target_status or 'UNAVAILABLE'}.",
+                ),
             ]
         )
     if record.get("cooldown_active"):

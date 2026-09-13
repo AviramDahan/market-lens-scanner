@@ -2,6 +2,7 @@ import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 from app.data import (
     fetch_daily_frame,
@@ -23,7 +24,8 @@ from app.indicators import (
     filter_hvn,
 )
 from app.models import ExtendedHoursInfo, ScanResult, VolumeProfile
-from app.professional import enrich_professional_context
+from app.professional import assess_quality, build_trade_plan, enrich_professional_context
+from app.agent_risk import validate_targets
 from app.setups import detect_setup
 
 logger = logging.getLogger(__name__)
@@ -127,6 +129,7 @@ def scan_ticker_detail(
         benchmarks=benchmarks,
         earnings_date=earnings_date,
     )
+    result = enrich_setup_candidate_measurements(result, daily=data.daily, atr=atr)
     result = attach_extended_hours(result, ticker)
     vp_from_date = data.hourly.index[0].strftime("%Y-%m-%d")
     vp_to_date = data.hourly.index[-1].strftime("%Y-%m-%d")
@@ -147,6 +150,107 @@ def scan_ticker_detail(
         relative_strength=relative_strength,
         benchmarks=benchmarks,
     )
+
+
+def enrich_setup_candidate_measurements(
+    result: ScanResult,
+    *,
+    daily: "pd.DataFrame",
+    atr: float,
+) -> ScanResult:
+    """Persist candidate-specific shadow evidence without changing the active setup."""
+    if not result.setup_candidates:
+        return result
+
+    measured: list[dict[str, object]] = []
+    for rank, payload in enumerate(result.setup_candidates, start=1):
+        candidate = dict(payload)
+        candidate_result = result.model_copy(
+            update={
+                "setup_type": candidate.get("setup_type") or result.setup_type,
+                "score": float(candidate.get("legacy_score") or 0.0),
+                "buy_zone": (
+                    float(candidate.get("buy_zone_low") or 0.0),
+                    float(candidate.get("buy_zone_high") or 0.0),
+                ),
+                "stop_loss": float(candidate.get("stop_loss") or 0.0),
+                "target_1": float(candidate.get("target_1") or 0.0),
+                "target_2": float(candidate.get("target_2") or 0.0),
+                "risk_reward": float(candidate.get("risk_reward") or 0.0),
+                "risk_reward_primary": float(candidate.get("risk_reward_primary") or 0.0),
+                "risk_reward_stretch": float(candidate.get("risk_reward_stretch") or 0.0),
+                "reason": str(candidate.get("reason") or ""),
+                "setup_candidates": [],
+            }
+        )
+        assessment = result.professional_assessment
+        if all(
+            value is not None
+            for value in (
+                result.market_regime,
+                result.relative_strength_info,
+                result.liquidity,
+                result.trend_quality,
+                result.volume_confirmation,
+                result.event_risk,
+            )
+        ):
+            assessment = assess_quality(
+                result=candidate_result,
+                market_regime=result.market_regime,
+                relative_strength=result.relative_strength_info,
+                liquidity=result.liquidity,
+                trend_quality=result.trend_quality,
+                volume_confirmation=result.volume_confirmation,
+                event_risk=result.event_risk,
+            )
+            trade_plan = build_trade_plan(candidate_result, daily)
+        else:
+            trade_plan = None
+
+        adjusted_score = None
+        if assessment is not None:
+            adjusted_score = round(
+                max(
+                    0.0,
+                    min(
+                        1.0,
+                        float(candidate_result.score) * 0.55
+                        + assessment.quality_score * 0.45,
+                    ),
+                ),
+                4,
+            )
+        target_info = validate_targets(
+            candidate_result,
+            SimpleNamespace(atr=float(atr or 0.0), daily=daily),
+        )
+        candidate.update(
+            {
+                "candidate_measurement_version": "setup_candidate_v2",
+                "selection_rank": rank,
+                "is_active_legacy_candidate": rank == 1,
+                "professional_quality_score": assessment.quality_score if assessment else None,
+                "professional_adjusted_score": adjusted_score,
+                "professional_grade": assessment.grade if assessment else "UNKNOWN",
+                "professional_decision": assessment.decision if assessment else "Unavailable",
+                "professional_warnings": list(assessment.warnings) if assessment else [],
+                "target_1_atr_distance": target_info["target_1_atr_distance"],
+                "target_2_atr_distance": target_info["target_2_atr_distance"],
+                "target_feasibility_status": target_info["status"],
+                "target_market_structure_status": target_info["market_structure_status"],
+                "target_warnings": list(target_info["warnings"]),
+                "entry_trigger": trade_plan.entry_trigger if trade_plan else "",
+                "trigger_price": trade_plan.trigger_price if trade_plan else None,
+                "entry_confirmation_status": "NOT_EVALUATED",
+                "entry_confirmation_passed": None,
+                "measurement_warnings": [
+                    "Candidate-specific completed-candle confirmation and executable sizing are not evaluated by the scanner."
+                ],
+            }
+        )
+        measured.append(candidate)
+    return result.model_copy(update={"setup_candidates": measured})
 
 
 def attach_extended_hours(result: ScanResult, ticker: str) -> ScanResult:

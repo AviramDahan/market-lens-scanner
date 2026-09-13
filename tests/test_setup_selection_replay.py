@@ -76,6 +76,28 @@ def test_alternative_never_borrows_active_confirmation_or_score() -> None:
     assert value["counterfactual_entry_eligibility"] == "UNASSESSABLE"
 
 
+def test_prospective_candidate_evidence_reduces_but_does_not_hide_unassessed_gates() -> None:
+    record = decision()
+    alternative = dict(record["setup_candidates"][1])
+    alternative.update(
+        {
+            "professional_adjusted_score": 0.62,
+            "target_feasibility_status": "OK",
+            "entry_confirmation_status": "NOT_EVALUATED",
+            "entry_confirmation_passed": None,
+        }
+    )
+
+    value = assess_candidate(record, alternative, active=False)
+    evidence = {item["name"]: item["status"] for item in value["gate_evidence"]}
+
+    assert evidence["professional_setup_score"] == "PASS"
+    assert evidence["target_feasibility"] == "PASS"
+    assert evidence["entry_confirmation"] == "UNASSESSABLE"
+    assert evidence["sector_factor_capital_sizing"] == "UNASSESSABLE"
+    assert value["counterfactual_entry_eligibility"] == "UNASSESSABLE"
+
+
 def test_replay_is_read_only_and_deduplicates_first_daily_signal() -> None:
     first = decision()
     repeated = deepcopy(first)

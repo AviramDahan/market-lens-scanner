@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pandas as pd
 
+import app.scanner as scanner
 import app.setups as setups
-from app.models import ScanResult, VolumeProfile
+from app.models import ProfessionalAssessment, ScanResult, VolumeProfile
 
 
 def candidate(setup_type: str, score: float) -> ScanResult:
@@ -106,3 +107,47 @@ def test_later_detector_failure_does_not_discard_legacy_winner(monkeypatch) -> N
 
     assert result.setup_type == setups.SETUP_BREAKOUT_RETEST
     assert [item["setup_type"] for item in result.setup_candidates] == [setups.SETUP_BREAKOUT_RETEST]
+
+
+def test_candidate_measurements_are_shadow_only_and_preserve_active_result(monkeypatch) -> None:
+    active = candidate(setups.SETUP_BREAKOUT_RETEST, 0.55).model_copy(
+        update={
+            "professional_assessment": ProfessionalAssessment(
+                quality_score=0.7,
+                grade="B",
+                decision="Tradable if trigger confirms",
+                warnings=[],
+                strengths=[],
+            ),
+            "setup_candidates": [setups.setup_candidate_payload(candidate(setups.SETUP_BREAKOUT_RETEST, 0.55))],
+        }
+    )
+    monkeypatch.setattr(
+        scanner,
+        "validate_targets",
+        lambda *_args, **_kwargs: {
+            "target_1_atr_distance": 3.0,
+            "target_2_atr_distance": 6.0,
+            "status": "OK",
+            "market_structure_status": "SUPPORTED",
+            "warnings": [],
+        },
+    )
+
+    measured = scanner.enrich_setup_candidate_measurements(
+        active,
+        daily=pd.DataFrame({"High": [99.0, 101.0], "Close": [98.0, 100.0]}),
+        atr=2.0,
+    )
+
+    assert measured.setup_type == active.setup_type
+    assert measured.score == active.score
+    assert measured.stop_loss == active.stop_loss
+    payload = measured.setup_candidates[0]
+    assert payload["candidate_measurement_version"] == "setup_candidate_v2"
+    assert payload["selection_rank"] == 1
+    assert payload["is_active_legacy_candidate"] is True
+    assert payload["professional_adjusted_score"] == 0.6175
+    assert payload["target_feasibility_status"] == "OK"
+    assert payload["entry_confirmation_status"] == "NOT_EVALUATED"
+    assert payload["entry_confirmation_passed"] is None
