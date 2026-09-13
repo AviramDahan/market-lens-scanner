@@ -154,6 +154,23 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     dashboard = sanitize_dashboard_media_urls(dashboard, PROJECT_ROOT)
     latest_setups = dashboard.get("latest_setups") if isinstance(dashboard.get("latest_setups"), list) else []
     decision_diagnostics = dashboard.get("decision_diagnostics")
+    diagnostic_drilldowns = (
+        decision_diagnostics.get("drilldowns")
+        if isinstance(decision_diagnostics, dict)
+        and isinstance(decision_diagnostics.get("drilldowns"), dict)
+        else {}
+    )
+    diagnostic_items = [
+        item
+        for items in diagnostic_drilldowns.values()
+        if isinstance(items, list)
+        for item in items
+        if isinstance(item, dict)
+    ]
+    selection_schema_missing = bool(diagnostic_items) and any(
+        "active_setup_selection_policy" not in item or "setup_candidates" not in item
+        for item in diagnostic_items
+    )
     if (
         not isinstance(decision_diagnostics, dict)
         or "drilldowns" not in decision_diagnostics
@@ -161,6 +178,7 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
         or "watch_ready_funnel" not in decision_diagnostics
         or "entry_blockers_summary" not in decision_diagnostics
         or "closest_to_entry" not in decision_diagnostics
+        or selection_schema_missing
     ):
         dashboard["decision_diagnostics"] = build_decision_diagnostics(latest_setups)
 

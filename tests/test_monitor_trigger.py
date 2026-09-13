@@ -922,6 +922,66 @@ def test_smart_universe_endpoint_returns_fallback_on_error(monkeypatch) -> None:
     assert payload["companies"]
 
 
+def test_snapshot_enrichment_refreshes_stale_setup_selection_diagnostics(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", tmp_path / "agent_results")
+    dashboard = {
+        "status": "ok",
+        "latest_setups": [
+            {
+                "ticker": "AAA",
+                "company_name": "Alpha Corp",
+                "sector": "Technology",
+                "action": "WATCH_READY",
+                "setup_type": "Fib 61.8 Confluence Buy Zone",
+                "score": 0.55,
+                "risk_reward": 2.4,
+                "decision_json": {
+                    "active_setup_selection_policy": "FIRST_MATCH_LEGACY",
+                    "final_action": "WATCH_READY",
+                    "setup_type": "Fib 61.8 Confluence Buy Zone",
+                    "setup_candidates": [
+                        {
+                            "setup_type": "Fib 61.8 Confluence Buy Zone",
+                            "legacy_score": 0.4,
+                            "shadow_setup_normalized_score": 0.5,
+                        },
+                        {
+                            "setup_type": "VWAP Reclaim Setup",
+                            "legacy_score": 0.3,
+                            "shadow_setup_normalized_score": 0.45,
+                        },
+                    ],
+                },
+            }
+        ],
+        "decision_diagnostics": {
+            "drilldowns": {"WATCH_READY": [{"ticker": "AAA"}]},
+            "why_no_buys": [],
+            "watch_ready_funnel": {},
+            "entry_blockers_summary": [],
+            "closest_to_entry": [],
+        },
+        "open_positions": [],
+        "summary": {},
+        "recent_trades": [],
+        "latest_decisions": [],
+        "risk_dashboard": {},
+        "position_timeline": [],
+        "daily_summary": {},
+        "weekly_summary": {},
+        "system_health": {},
+    }
+
+    enriched = main.enrich_agent_dashboard_snapshot(dashboard)
+    item = enriched["decision_diagnostics"]["drilldowns"]["WATCH_READY"][0]
+
+    assert item["active_setup_selection_policy"] == "FIRST_MATCH_LEGACY"
+    assert item["setup_candidate_count"] == 2
+    assert item["setup_candidates"][0]["is_active"] is True
+    assert item["setup_candidates"][1]["is_active"] is False
+
+
 def test_diagnostic_chart_endpoint_generates_only_for_current_diagnostic(monkeypatch, tmp_path) -> None:
     class FakeResult:
         ticker = "AAA"
