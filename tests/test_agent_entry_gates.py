@@ -1240,6 +1240,21 @@ def test_candidate_risk_evidence_reuses_snapshot_without_changing_active_selecti
     assert measured[1]["entry_confirmation_passed"] is True
     assert measured[1]["target_feasibility_status"] == "OK"
 
+
+def test_normalized_user_candidate_preserves_setup_candidates() -> None:
+    source = result()
+    source.setup_candidates = [
+        {
+            "setup_type": "Breakout + Retest",
+            "candidate_measurement_version": "setup_candidate_v2",
+        }
+    ]
+
+    normalized = normalize_strategy_candidate(source)
+
+    assert normalized.setup_candidates == source.setup_candidates
+    assert normalized.setup_candidates is not source.setup_candidates
+
 def test_scan_chart_marks_premarket_quote_separately() -> None:
     setup = SimpleNamespace(
         current_price=100.0,
