@@ -1653,15 +1653,30 @@ function renderSetupSelectionAudit(item) {
       <p>The first matching detector remains active. Other matches below are recorded for shadow comparison only and cannot change this trade decision.</p>
       <div class="setup-candidate-list">
         ${candidates
-          .map(
-            (candidate) => `
+          .map((candidate) => {
+            const evidence = [
+              candidate.professional_adjusted_score != null
+                ? `professional ${Number(candidate.professional_adjusted_score).toFixed(2)}`
+                : "",
+              candidate.weighted_net_rr != null
+                ? `Net R/R ${Number(candidate.weighted_net_rr).toFixed(2)}x`
+                : "",
+              candidate.entry_confirmation_status
+                ? `confirm ${candidate.entry_confirmation_status}`
+                : "",
+              candidate.target_feasibility_status
+                ? `targets ${candidate.target_feasibility_status}`
+                : "",
+            ].filter(Boolean);
+            return `
               <span class="setup-candidate ${candidate.is_active ? "active" : "shadow"}">
                 <b>${candidate.is_active ? "Active" : "Shadow"}</b>
                 <em>${escapeHtml(candidate.setup_type || "Unknown setup")}</em>
                 <small>Legacy ${Number(candidate.legacy_score || 0).toFixed(2)} / normalized ${Number(candidate.shadow_setup_normalized_score || 0).toFixed(2)}</small>
+                ${evidence.length ? `<small>${escapeHtml(evidence.join(" · "))}</small>` : ""}
               </span>
-            `,
-          )
+            `;
+          })
           .join("")}
       </div>
     </div>

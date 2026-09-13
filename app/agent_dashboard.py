@@ -870,6 +870,18 @@ def diagnostic_drilldown_item(
             "shadow_setup_normalized_score": round(
                 to_float(candidate.get("shadow_setup_normalized_score")), 3
             ),
+            "professional_adjusted_score": (
+                round(to_float(candidate.get("professional_adjusted_score")), 3)
+                if candidate.get("professional_adjusted_score") is not None
+                else None
+            ),
+            "weighted_net_rr": (
+                round(to_float(candidate.get("weighted_net_rr")), 3)
+                if candidate.get("weighted_net_rr") is not None
+                else None
+            ),
+            "entry_confirmation_status": candidate.get("entry_confirmation_status", ""),
+            "target_feasibility_status": candidate.get("target_feasibility_status", ""),
             "is_active": str(candidate.get("setup_type") or "") == str(setup_type or ""),
         }
         for candidate in decision.get("setup_candidates") or []

@@ -424,6 +424,10 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
                             "setup_type": "VWAP Reclaim",
                             "legacy_score": 0.61,
                             "shadow_setup_normalized_score": 0.72,
+                            "professional_adjusted_score": 0.64,
+                            "weighted_net_rr": 2.22,
+                            "entry_confirmation_status": "FAILED",
+                            "target_feasibility_status": "OK",
                         },
                         {
                             "setup_type": "Liquidity Trap",
@@ -447,6 +451,10 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
     assert watch_ready["active_setup_selection_policy"] == "FIRST_MATCH_LEGACY"
     assert watch_ready["setup_candidate_count"] == 2
     assert watch_ready["setup_candidates"][0]["is_active"] is True
+    assert watch_ready["setup_candidates"][0]["professional_adjusted_score"] == 0.64
+    assert watch_ready["setup_candidates"][0]["weighted_net_rr"] == 2.22
+    assert watch_ready["setup_candidates"][0]["entry_confirmation_status"] == "FAILED"
+    assert watch_ready["setup_candidates"][0]["target_feasibility_status"] == "OK"
     assert watch_ready["setup_candidates"][1]["is_active"] is False
     assert diagnostics["why_no_buys"][0]["label"] == "Entry confirmation missing"
     assert diagnostics["watch_ready_funnel"]["unique_detected"] == 1
