@@ -156,6 +156,14 @@ def main() -> None:
             mark_runtime_phase(runtime_metrics, "scan_seconds", phase_started)
             log(f"Scan completed: {len(results)} results")
             scan_status = f"completed: {len(results)} results"
+            missing_tickers = missing_scan_tickers(scan_tickers, results)
+            runtime_metrics["missing_tickers"] = missing_tickers
+            runtime_metrics["scan_complete"] = not missing_tickers
+            if missing_tickers:
+                issue = f"PARTIAL_SCAN: No result card for {', '.join(missing_tickers)}."
+                errors.append(issue)
+                log(issue)
+                scan_status = f"partial: {len(results)} results; {len(missing_tickers)} missing"
             log("Saving screenshot")
             phase_started = time.monotonic()
             page.screenshot(path=str(screenshot_path), full_page=True)
@@ -722,6 +730,11 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
           })"""
     )
     return [parse_result(item) for item in extracted]
+
+
+def missing_scan_tickers(tickers: list[str], results: list[SetupResult]) -> list[str]:
+    returned = {result.ticker.strip().upper() for result in results}
+    return sorted({ticker.strip().upper() for ticker in tickers} - returned)
 
 
 def run_scan_batches(page: Page, tickers: list[str], deadline: float) -> list[SetupResult]:
