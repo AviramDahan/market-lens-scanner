@@ -1615,6 +1615,7 @@ function renderDiagnosticItems(items) {
                 <span class="meta">${escapeHtml(tickerMeta(item, item.setup_type || "Setup"))}</span>
               </div>
               <span class="${actionBadgeClass(item.action)}">${escapeHtml(item.action || "UNKNOWN")}</span>
+              <button type="button" class="entry-check-button" data-detail-check="${escapeHtml(item.ticker)}" title="Entry checklist" aria-label="Entry checklist for ${escapeHtml(item.ticker)}"><i data-lucide="list-checks"></i></button>
             </div>
             <div class="diagnostic-metrics">
               <span><b>Score</b>${score.toFixed(2)}</span>
@@ -1759,20 +1760,39 @@ function renderWatchReadyPanel(diagnostics) {
     .map((item) => {
       const score = Number(item.setup_score || 0);
       const rr = Number(item.weighted_net_rr || item.net_rr || 0);
-      const confirmation = item.entry_confirmation_passed ? "Confirmed" : "Needs confirmation";
+      const confirmation = item.entry_confirmation_passed ? "Candle passed" : "Needs confirmation";
       return `
-        <button class="watch-ready-card" type="button" data-watch-ready-open="true">
+        <div class="watch-ready-card">
           <strong>${escapeHtml(tickerLabel(item))}</strong>
-          <span class="candidate-status"><span>Readiness</span><b>${escapeHtml(confirmation)}</b></span>
+          <span class="candidate-status"><span>Candle confirmation</span><b>${escapeHtml(confirmation)}</b>
+            <button type="button" class="entry-check-button" data-watch-check="${escapeHtml(item.ticker)}" aria-label="Entry checklist for ${escapeHtml(item.ticker)}" title="Entry checklist for ${escapeHtml(item.ticker)}"><i data-lucide="list-checks"></i></button>
+          </span>
           <small>${escapeHtml(tickerMeta(item, item.setup_type || "Setup"))}</small>
           <em>Score ${score.toFixed(2)} / R/R ${rr.toFixed(2)}x</em>
-        </button>
+        </div>
       `;
     })
     .join("");
-  list.querySelectorAll("[data-watch-ready-open]").forEach((card) => {
-    card.addEventListener("click", () => openDiagnosticModal("WATCH_READY", "WATCH_READY"));
+  list.querySelectorAll("[data-watch-check]").forEach((button) => {
+    button.addEventListener("click", () => openWatchChecklist(topItems.find((item) => item.ticker === button.dataset.watchCheck)));
   });
+  body.querySelectorAll("[data-detail-check]").forEach((button) => {
+    button.addEventListener("click", () => openWatchChecklist(state.diagnostic.items.find((item) => item.ticker === button.dataset.detailCheck)));
+  });
+}
+
+function openWatchChecklist(item) {
+  if (!item) return;
+  openSectionHelp("WATCH_READY");
+  document.getElementById("sectionHelpTitle").textContent = `${tickerLabel(item)} - Entry checklist`;
+  document.getElementById("sectionHelpEyebrow").textContent = item.decision_timestamp || "Scan snapshot; timestamp unavailable";
+  const checks = item.entry_checklist || [];
+  const body = document.getElementById("sectionHelpBody");
+  body.innerHTML = checks.length
+    ? `<div class="watch-entry-checks">${checks.map((check) => `<div class="watch-entry-check ${escapeHtml(check.status)}"><i data-lucide="${check.status === "pass" ? "check" : check.status === "fail" ? "x" : check.status === "info" ? "info" : "circle-help"}"></i><div><b>${escapeHtml(check.label)}</b><p>${escapeHtml(check.detail)}</p></div></div>`).join("")}</div>`
+    : '<p>Checklist evidence is unavailable for this scan. Re-scan to obtain evaluated conditions.</p>';
+  document.getElementById("sectionHelpClose").focus();
+  if (window.lucide) window.lucide.createIcons();
 }
 
 function renderEquity(curve, summary) {

@@ -1095,8 +1095,17 @@ td {
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
+  cursor: default;
 }
+
+.watch-ready-card .entry-check-button { justify-self: end; min-width: 44px; min-height: 44px; }
+.watch-entry-check { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.watch-entry-check svg { width: 20px; height: 20px; }
+.watch-entry-check.pass > svg { color: #16803c; }
+.watch-entry-check.fail > svg { color: #c62c37; }
+.watch-entry-check.unknown > svg { color: #946400; }
+.watch-entry-check.info > svg { color: var(--muted); }
+.watch-entry-check p { margin: 4px 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 
 .watch-ready-card:hover,
 .watch-ready-card:focus-visible {
@@ -1839,7 +1848,7 @@ td {
 .section-help-modal {
   position: fixed;
   inset: 0;
-  z-index: 48;
+  z-index: 70;
   display: none;
   place-items: center;
   padding: 24px;

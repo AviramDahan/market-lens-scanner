@@ -856,6 +856,61 @@ def entry_readiness_score(
     return int(max(0, min(100, round(base))))
 
 
+def watch_entry_checklist(decision: dict[str, Any]) -> list[dict[str, str]]:
+    """Render persisted evidence; absent evaluations must never become passes."""
+    rows = []
+
+    def add(label, status, detail):
+        rows.append({"label": label, "status": status, "detail": detail})
+
+    for label, actual, threshold in (
+        ("Setup score", "setup_score", "minimum_setup_score_required"),
+        ("Net R/R", "net_rr", "minimum_net_rr_required"),
+    ):
+        value, limit = decision.get(actual), decision.get(threshold)
+        known = isinstance(value, (int, float)) and isinstance(limit, (int, float))
+        add(label, ("pass" if value >= limit else "fail") if known else "unknown",
+            f"Current: {value if value is not None else 'Unavailable'} | Required: {limit if limit is not None else 'Not recorded'}")
+
+    for label, field, inverted in (
+        ("Regular trading session", "market_session_can_open_new_buy", False),
+        ("Completed candle confirmation", "entry_confirmation_passed", False),
+        ("Confirmation timing", "confirmation_timing_valid", False),
+        ("Earnings blackout", "earnings_blackout", True),
+        ("Sector exposure", "sector_exposure_limit_exceeded", True),
+        ("Factor exposure", "factor_exposure_limit_exceeded", True),
+    ):
+        value = decision.get(field)
+        passed = value is (False if inverted else True)
+        add(label, ("pass" if passed else "fail") if isinstance(value, bool) else "unknown",
+            f"Recorded: {value if value is not None else 'Not evaluated'}")
+
+    cooldown = decision.get("cooldown_active")
+    add("Stop-loss cooldown", "pass" if cooldown is False or decision.get("cooldown_exception_used") is True else "fail" if cooldown is True else "unknown",
+        f"Active: {cooldown} | Exception: {decision.get('cooldown_exception_used', 'Not recorded')}")
+
+    for label, fields in (
+        ("Market / sector", ("market_regime", "sector_regime")),
+        ("Price / buy zone", ("price", "buy_zone_low", "buy_zone_high")),
+        ("Stop / targets", ("stop_loss", "target_1", "target_2")),
+        ("Target R/R and quality", ("net_rr_1", "net_rr_2", "target_feasibility_status", "target_1_atr_distance", "target_2_atr_distance")),
+        ("Confirmation evidence", ("confirmation_candle_close_timestamp", "confirmation_freshness_status", "confirmation_reason")),
+        ("Earnings date", ("earnings_date", "days_to_earnings")),
+        ("Correlation", ("highest_correlation_ticker", "highest_correlation_value", "correlation_warning")),
+        ("Cash / position size", ("cash_available", "adjusted_position_size", "adjusted_cash_out", "adjusted_risk_amount")),
+        ("Exposure", ("portfolio_exposure_before", "portfolio_exposure_after", "dynamic_exposure_limit", "sector_exposure_after", "sector_exposure_cap", "factor_exposure_after", "factor_exposure_cap")),
+        ("Portfolio heat", ("portfolio_heat_before", "portfolio_heat_after", "portfolio_heat_cap")),
+    ):
+        add(label, "info", " | ".join(f"{field.replace('_', ' ')}: {decision.get(field) if decision.get(field) is not None else 'Not recorded'}" for field in fields))
+    for group in ("entry_gate_blockers", "capital_blockers"):
+        for reason in decision.get(group) or []:
+            add("Entry blocker" if group == "entry_gate_blockers" else "Portfolio blocker", "fail", str(reason))
+    for warning in decision.get("warnings") or []:
+        add("Warning", "unknown", str(warning))
+    add("Final eligibility", "info", str(decision.get("entry_eligibility_status") or "Not evaluated"))
+    return rows
+
+
 def diagnostic_drilldown_item(
     setup: dict[str, Any],
     decision: dict[str, Any],
@@ -889,6 +944,8 @@ def diagnostic_drilldown_item(
     ]
     return {
         "ticker": setup.get("ticker"),
+        "entry_checklist": watch_entry_checklist(decision),
+        "decision_timestamp": decision.get("timestamp") or setup.get("run_date"),
         "company_name": setup.get("company_name", ""),
         "sector": setup.get("sector", "") or decision.get("sector", ""),
         "action": action,
