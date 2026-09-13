@@ -24,7 +24,8 @@ temporary Git repositories verifying state conflicts versus source-only edits.
 
 Outstanding: media retention deletions are lost by the reset/overlay pattern.
 No bulk deletion was enabled. Preserve/archive historical assets before repairing
-deletion persistence. Historical accounting reconciliation is also unfinished.
+deletion persistence. Historical execution evidence still requires manual
+reconciliation; realized-PnL scope reconciliation is now explicit and read-only.
 
 ## Rejection summary measurement
 

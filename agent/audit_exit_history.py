@@ -8,10 +8,12 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 from agent.position_monitor import parse_timestamp
+from app.agent_dashboard import compute_full_trade_performance, compute_realized_pnl, read_trades
 
 
 def audit_workbook(wb):
     findings = []
+    trade_records = read_trades(wb)
     trades = list(wb["Trade Log"].iter_rows(min_row=2, values_only=True))
     buys = {}
     exits = {}
@@ -63,10 +65,38 @@ def audit_workbook(wb):
     return {"audit_version": "exit_identity_v1", "read_only": True,
             "events_checked": checked, "findings": findings,
             "measurement_provenance": measurement_provenance(buys, matched_events, findings),
+            "accounting_reconciliation": accounting_reconciliation(trade_records),
             "affected_trade_ids": sorted({f["trade_id"] for f in findings if f.get("trade_id")}),
             "limitations": ["Absence of findings does not validate fills, prices, or data completeness.",
                             "Only recorded monitor events are audited; scanner exits without events are not covered.",
                             "No corrected PnL is inferred from invalid execution evidence."]}
+
+
+def accounting_reconciliation(trades):
+    """Explain realized-PnL scopes without changing or validating historical fills."""
+    exit_events = compute_realized_pnl(trades)
+    lifecycle = compute_full_trade_performance(trades)
+    event_realized = round(float(exit_events["total"]), 2)
+    closed_realized = round(float(lifecycle["closed_trade_realized_pnl_ils"]), 2)
+    open_partial_realized = round(float(lifecycle["open_lot_partial_realized_pnl_ils"]), 2)
+    lifecycle_realized = round(float(lifecycle["all_lifecycle_realized_pnl_ils"]), 2)
+    return {
+        "version": "realized_pnl_scope_v1",
+        "currency_field_suffix": "legacy_ils_name; workbook currency setting controls display currency",
+        "exit_event_realized_pnl_ils": event_realized,
+        "closed_trade_realized_pnl_ils": closed_realized,
+        "open_lot_partial_realized_pnl_ils": open_partial_realized,
+        "all_lifecycle_realized_pnl_ils": lifecycle_realized,
+        "reconciliation_delta_ils": round(event_realized - lifecycle_realized, 2),
+        "reconciled": abs(event_realized - lifecycle_realized) < 0.01,
+        "closed_trade_count": lifecycle["closed_count"],
+        "open_trade_count": lifecycle["open_count"],
+        "cash_or_pnl_corrected": False,
+        "usage": (
+            "Closed-trade PnL excludes partial exits from positions that remain open; "
+            "all-lifecycle realized PnL includes both scopes."
+        ),
+    }
 
 
 def measurement_provenance(buys, matched_events, findings):

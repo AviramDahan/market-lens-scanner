@@ -150,6 +150,13 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         "full_trade_breakeven": full_trade_performance["breakeven"],
         "full_trade_win_rate": full_trade_performance["win_rate"],
         "full_trade_realized_pnl_ils": full_trade_performance["total_pnl_ils"],
+        "closed_trade_realized_pnl_ils": full_trade_performance["closed_trade_realized_pnl_ils"],
+        "open_lot_partial_realized_pnl_ils": full_trade_performance["open_lot_partial_realized_pnl_ils"],
+        "all_lifecycle_realized_pnl_ils": full_trade_performance["all_lifecycle_realized_pnl_ils"],
+        "realized_pnl_reconciliation_delta_ils": round(
+            realized["total"] - full_trade_performance["all_lifecycle_realized_pnl_ils"],
+            2,
+        ),
         "open_full_trades": full_trade_performance["open_count"],
     }
 
@@ -2036,6 +2043,11 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
                 lots[ticker].popleft()
 
     open_lots = [lot for ticker_lots in lots.values() for lot in ticker_lots if to_int(lot.get("remaining_quantity")) > 0]
+    open_lot_partial_realized_pnl = round(
+        sum(to_float(lot.get("realized_pnl_ils")) for lot in open_lots),
+        2,
+    )
+    all_lifecycle_realized_pnl = round(total_pnl + open_lot_partial_realized_pnl, 2)
     closed_count = len(closed)
     return {
         "closed_count": closed_count,
@@ -2044,7 +2056,11 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
         "losses": losses,
         "breakeven": breakeven,
         "win_rate": round(wins / closed_count * 100, 2) if closed_count else 0,
+        # Compatibility: total_pnl_ils continues to mean fully closed trade PnL.
         "total_pnl_ils": total_pnl,
+        "closed_trade_realized_pnl_ils": total_pnl,
+        "open_lot_partial_realized_pnl_ils": open_lot_partial_realized_pnl,
+        "all_lifecycle_realized_pnl_ils": all_lifecycle_realized_pnl,
         "closed": closed,
     }
 

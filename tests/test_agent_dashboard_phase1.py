@@ -183,6 +183,10 @@ def test_full_trade_winrate_ignores_still_open_partial_position() -> None:
     assert full_trades["open_count"] == 1
     assert full_trades["wins"] == 0
     assert full_trades["losses"] == 0
+    assert full_trades["total_pnl_ils"] == 0
+    assert full_trades["closed_trade_realized_pnl_ils"] == 0
+    assert full_trades["open_lot_partial_realized_pnl_ils"] == 50
+    assert full_trades["all_lifecycle_realized_pnl_ils"] == 50
 
 
 def test_full_trade_preserves_entry_strategy_fields_across_partial_exit() -> None:

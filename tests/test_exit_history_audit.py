@@ -71,3 +71,32 @@ def test_unmatched_findings_and_no_event_trades_are_explicit():
     p = audit_workbook(wb)["measurement_provenance"]
     assert p["unattributed_findings"] == 1
     assert p["trades"][0]["status"] == "NO_MATCHED_MONITOR_EVIDENCE"
+
+
+def test_accounting_reconciliation_separates_open_partial_profit():
+    wb = workbook("2026-09-08T13:00:00Z")
+    trade_log = wb["Trade Log"]
+    buy = [None] * 21
+    buy[0:16] = [
+        "2026-09-09T14:00:00Z", "BUY_SIMULATED", "OPEN", 100, None, 10, 1,
+        1000, 0, 1000, 0, 95, 110, 120, 50, "entry",
+    ]
+    buy[20] = "open-trade"
+    trade_log.append(buy)
+    partial = [None] * 21
+    partial[0:16] = [
+        "2026-09-10T14:00:00Z", "TAKE_PARTIAL_PROFIT", "OPEN", 100, 110, 5, 1,
+        0, 550, 0, 550, 95, 110, 120, 0, "partial",
+    ]
+    partial[20] = "open-trade"
+    trade_log.append(partial)
+
+    reconciliation = audit_workbook(wb)["accounting_reconciliation"]
+
+    assert reconciliation["closed_trade_realized_pnl_ils"] == 0
+    assert reconciliation["open_lot_partial_realized_pnl_ils"] == 50
+    assert reconciliation["all_lifecycle_realized_pnl_ils"] == 50
+    assert reconciliation["exit_event_realized_pnl_ils"] == 50
+    assert reconciliation["reconciliation_delta_ils"] == 0
+    assert reconciliation["reconciled"] is True
+    assert reconciliation["cash_or_pnl_corrected"] is False
