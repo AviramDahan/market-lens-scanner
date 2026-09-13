@@ -30,6 +30,7 @@ from app.agent_risk import (
     dynamic_exposure_pct,
     evaluate_agent_candidate,
     market_session_status,
+    measure_setup_candidate_risk_evidence,
     validate_targets,
 )
 from app.charts import _quote_line_for_chart
@@ -1158,7 +1159,6 @@ def test_chart_retention_keeps_qualified_capital_blocked_alert_chart() -> None:
             "capital_blockers": ["Portfolio heat cap would be exceeded."],
         }
     )
-
     selected = select_chart_tickers(
         [(setup, decision)],
         settings=ChartRetentionSettings(False, 0, 0.90),
@@ -1167,6 +1167,78 @@ def test_chart_retention_keeps_qualified_capital_blocked_alert_chart() -> None:
 
     assert selected == {"CAPITAL"}
 
+
+def test_candidate_risk_evidence_reuses_snapshot_without_changing_active_selection(monkeypatch) -> None:
+    import app.agent_risk as risk
+
+    candidate = result()
+    candidate.setup_candidates = [
+        {
+            "setup_type": "Breakout + Retest",
+            "legacy_score": 0.6,
+            "buy_zone_low": 98.0,
+            "buy_zone_high": 100.0,
+            "stop_loss": 95.0,
+            "target_1": 105.0,
+            "target_2": 115.0,
+        },
+        {
+            "setup_type": "VWAP Reclaim Setup",
+            "legacy_score": 0.58,
+            "buy_zone_low": 99.0,
+            "buy_zone_high": 101.0,
+            "stop_loss": 96.0,
+            "target_1": 107.0,
+            "target_2": 116.0,
+        },
+    ]
+    original_candidates = json.loads(json.dumps(candidate.setup_candidates))
+    rr = {
+        "gross_rr_1": 1.5,
+        "gross_rr_2": 4.0,
+        "net_rr_1": 1.4,
+        "net_rr_2": 3.8,
+        "net_rr": 1.88,
+        "executable_entry": 100.0,
+    }
+    target = {
+        "target_1_atr_distance": 1.4,
+        "target_2_atr_distance": 3.2,
+        "status": "OK",
+        "market_structure_status": "SUPPORTED",
+    }
+    confirmation = {
+        "confirmation_status": "PASSED",
+        "confirmation_reason": "Completed candle passed.",
+        "entry_confirmation_passed": True,
+        "confirmation_timeframe": "30m_completed",
+        "confirmation_candle_timestamp": "2026-09-13T14:00:00-04:00",
+    }
+    freshness = {"status": "FRESH_SAME_SESSION"}
+    monkeypatch.setattr(risk, "calculate_net_rr", lambda *_args: rr)
+    monkeypatch.setattr(risk, "validate_targets", lambda *_args: target)
+    monkeypatch.setattr(risk, "calculate_entry_confirmation", lambda *_args: confirmation)
+    monkeypatch.setattr(risk, "calculate_confirmation_freshness", lambda *_args, **_kwargs: freshness)
+
+    measured = measure_setup_candidate_risk_evidence(
+        result=candidate,
+        snapshot=CandidateMarketSnapshot(ticker="TEST"),
+        config=config(),
+        market_session={"can_open_new_buy": True},
+        active_net_rr=rr,
+        active_target=target,
+        active_confirmation=confirmation,
+        active_confirmation_freshness=freshness,
+    )
+
+    assert candidate.setup_type == "Breakout + Retest"
+    assert candidate.setup_candidates == original_candidates
+    assert len(measured) == 2
+    assert measured[0]["is_active_legacy_candidate"] is True
+    assert measured[1]["is_active_legacy_candidate"] is False
+    assert measured[1]["candidate_risk_measurement_version"] == "setup_candidate_risk_v1"
+    assert measured[1]["entry_confirmation_passed"] is True
+    assert measured[1]["target_feasibility_status"] == "OK"
 
 def test_scan_chart_marks_premarket_quote_separately() -> None:
     setup = SimpleNamespace(

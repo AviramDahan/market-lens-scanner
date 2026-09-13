@@ -24,12 +24,24 @@ Each item in `setup_candidates` now records:
 
 The schema is identified by `candidate_measurement_version=setup_candidate_v2`.
 
-## Evidence intentionally not inferred
+## Agent-side risk evidence
 
-Completed-candle entry confirmation and executable portfolio sizing are not
-calculated by the scanner for alternative candidates. They are stored as
-`NOT_EVALUATED` / `null` with a warning. The offline replay treats these gates
-as `UNASSESSABLE`; it never copies the active candidate's confirmation or size.
+The UI scanner initially stores completed-candle confirmation as
+`NOT_EVALUATED`. When the Agent evaluates the active ticker, it reuses the same
+already-loaded market snapshot to measure each candidate independently and adds:
+
+- Gross, TP1, TP2, and weighted Net R/R.
+- Executable entry.
+- Config-aware ATR and market-structure target validation.
+- Completed-candle entry confirmation and freshness.
+
+This second schema is identified by
+`candidate_risk_measurement_version=setup_candidate_risk_v1`. It is copied into
+Decision JSON only; it is not passed into active selection or trade execution.
+
+Executable portfolio sizing is still intentionally not inferred for alternative
+candidates. The offline replay treats that gate as `UNASSESSABLE`; it never
+copies the active candidate's size or exposure result.
 
 ## Safety contract
 
@@ -42,8 +54,8 @@ as `UNASSESSABLE`; it never copies the active candidate's confirmation or size.
 ## Verification
 
 - Unit tests assert that the active result is unchanged.
-- Replay tests assert that new professional/target evidence reduces only the
-  corresponding evidence gaps.
-- Missing confirmation and sizing continue to block a counterfactual `PASS`.
+- Replay tests assert that candidate evidence reduces only the corresponding
+  evidence gaps.
+- Missing sizing continues to block a counterfactual `PASS`.
 - A live single-ticker scan verifies that candidate v2 data survives the real
   scanner path.

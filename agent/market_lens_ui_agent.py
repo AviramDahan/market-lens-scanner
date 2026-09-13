@@ -1041,7 +1041,9 @@ def update_workbook(
             neutral_pilot_trades_today=neutral_pilot_buys_today,
         )
         decision_json["scan_source"] = scan_source_text(settings)
-        decision_json["setup_candidates"] = list(result.setup_candidates or [])
+        decision_json["setup_candidates"] = list(
+            decision_json.get("setup_candidates") or result.setup_candidates or []
+        )
         decision_json["active_setup_selection_policy"] = "FIRST_MATCH_LEGACY"
         decision_json["setup_score_run_percentile"] = setup_score_percentiles.get(result.ticker)
         active_candidate = next(

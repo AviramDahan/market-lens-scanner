@@ -4,6 +4,7 @@ import math
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -590,6 +591,16 @@ def evaluate_agent_candidate(
         else watch_status_for(final_action)
     )
     off_hours_candidate = bool(off_hours_initial_candidate and watch_status == "WATCH_READY")
+    setup_candidate_measurements = measure_setup_candidate_risk_evidence(
+        result=result,
+        snapshot=snapshot,
+        config=config,
+        market_session=market_session,
+        active_net_rr=net_rr_info,
+        active_target=target_info,
+        active_confirmation=confirmation,
+        active_confirmation_freshness=confirmation_freshness,
+    )
     decision = {
         "timestamp": timestamp,
         "ticker": ticker,
@@ -663,6 +674,7 @@ def evaluate_agent_candidate(
         "normalized_quality_score": normalized_quality_score,
         "setup_type": result.setup_type,
         "setup_score": round(float(result.score or 0), 4),
+        "setup_candidates": setup_candidate_measurements,
         "buy_zone_low": result.buy_zone_low,
         "buy_zone_high": result.buy_zone_high,
         "stop_loss": result.stop_loss,
@@ -799,6 +811,94 @@ def evaluate_agent_candidate(
         "warnings": unique_strings(warnings),
     }
     return decision
+
+
+def measure_setup_candidate_risk_evidence(
+    *,
+    result: Any,
+    snapshot: CandidateMarketSnapshot,
+    config: AgentRiskConfig,
+    market_session: dict[str, Any],
+    active_net_rr: dict[str, Any],
+    active_target: dict[str, Any],
+    active_confirmation: dict[str, Any],
+    active_confirmation_freshness: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Measure every setup candidate against shared data without selecting it."""
+    measured: list[dict[str, Any]] = []
+    active_type = str(getattr(result, "setup_type", "") or "")
+    for payload in getattr(result, "setup_candidates", None) or []:
+        if not isinstance(payload, dict):
+            continue
+        candidate = dict(payload)
+        candidate_type = str(candidate.get("setup_type") or "")
+        is_active = candidate_type == active_type
+        candidate_result = SimpleNamespace(
+            ticker=getattr(result, "ticker", ""),
+            setup_type=candidate_type,
+            score=float(
+                candidate.get("professional_adjusted_score")
+                if candidate.get("professional_adjusted_score") is not None
+                else candidate.get("legacy_score") or 0.0
+            ),
+            current_price=float(getattr(result, "current_price", 0.0) or 0.0),
+            buy_zone_low=candidate.get("buy_zone_low"),
+            buy_zone_high=candidate.get("buy_zone_high"),
+            stop_loss=candidate.get("stop_loss"),
+            target_1=candidate.get("target_1"),
+            target_2=candidate.get("target_2"),
+            risk_reward=float(candidate.get("risk_reward") or 0.0),
+        )
+        if is_active:
+            net_rr = active_net_rr
+            target = active_target
+            confirmation = active_confirmation
+            freshness = active_confirmation_freshness
+        else:
+            net_rr = calculate_net_rr(candidate_result, snapshot, config)
+            target = validate_targets(candidate_result, snapshot, config)
+            confirmation = calculate_entry_confirmation(candidate_result, snapshot, config)
+            freshness = calculate_confirmation_freshness(
+                confirmation,
+                market_session,
+                lookback_candles=config.entry_confirmation_lookback_candles,
+            )
+            if (
+                config.require_entry_confirmation
+                and market_session["can_open_new_buy"]
+                and freshness["status"] != "FRESH_SAME_SESSION"
+            ):
+                confirmation = {
+                    **confirmation,
+                    "entry_confirmation_passed": False,
+                    "confirmation_status": "TIMING_INVALID",
+                    "confirmation_reason": freshness["reason"],
+                }
+        candidate.update(
+            {
+                "candidate_risk_measurement_version": "setup_candidate_risk_v1",
+                "is_active_legacy_candidate": is_active,
+                "gross_rr_1": net_rr["gross_rr_1"],
+                "gross_rr_2": net_rr["gross_rr_2"],
+                "net_rr_1": net_rr["net_rr_1"],
+                "net_rr_2": net_rr["net_rr_2"],
+                "weighted_net_rr": net_rr["net_rr"],
+                "executable_entry": net_rr["executable_entry"],
+                "target_1_atr_distance": target["target_1_atr_distance"],
+                "target_2_atr_distance": target["target_2_atr_distance"],
+                "target_feasibility_status": target["status"],
+                "target_market_structure_status": target["market_structure_status"],
+                "entry_confirmation_status": confirmation["confirmation_status"],
+                "entry_confirmation_passed": confirmation["entry_confirmation_passed"],
+                "entry_confirmation_reason": confirmation["confirmation_reason"],
+                "confirmation_timeframe": confirmation["confirmation_timeframe"],
+                "confirmation_candle_timestamp": confirmation["confirmation_candle_timestamp"],
+                "confirmation_freshness_status": freshness["status"],
+                "confirmation_timing_valid": freshness["status"] == "FRESH_SAME_SESSION",
+            }
+        )
+        measured.append(candidate)
+    return measured
 
 
 def neutral_pilot_status(
