@@ -757,8 +757,14 @@ function renderMetrics(summary) {
     {
       label: "Total P/L",
       value: formatSignedMoney(summary.total_pnl_ils),
-      detail: `${formatSignedMoney(summary.realized_pnl_ils)} realized`,
+      detail: `${formatSignedMoney(summary.all_lifecycle_realized_pnl_ils ?? summary.realized_pnl_ils)} realized`,
       tone: summary.total_pnl_ils >= 0 ? "good" : "bad",
+    },
+    {
+      label: "Realized P/L",
+      value: formatSignedMoney(summary.all_lifecycle_realized_pnl_ils ?? summary.realized_pnl_ils),
+      detail: `${formatSignedMoney(summary.closed_trade_realized_pnl_ils)} closed + ${formatSignedMoney(summary.open_lot_partial_realized_pnl_ils)} open partial`,
+      tone: Number(summary.all_lifecycle_realized_pnl_ils ?? summary.realized_pnl_ils ?? 0) >= 0 ? "good" : "bad",
     },
     {
       label: "Cash",
@@ -1624,6 +1630,7 @@ function renderDiagnosticItems(items) {
               <span><b>Stop</b>${diagnosticPrice(item.stop_loss)}</span>
               <span><b>Targets</b>${diagnosticPrice(item.target_1)} / ${diagnosticPrice(item.target_2)}</span>
             </div>
+            ${renderSetupSelectionAudit(item)}
             ${selectionLines(item)}
             <p>${escapeHtml(item.reason || "No reason provided")}</p>
           </div>
@@ -1631,6 +1638,34 @@ function renderDiagnosticItems(items) {
       `;
     })
     .join("");
+}
+
+function renderSetupSelectionAudit(item) {
+  const candidates = Array.isArray(item.setup_candidates) ? item.setup_candidates : [];
+  if (!candidates.length) return "";
+  const policy = item.active_setup_selection_policy || "FIRST_MATCH_LEGACY";
+  return `
+    <div class="setup-selection-audit">
+      <div>
+        <strong>Setup selection</strong>
+        <span>${escapeHtml(policy)}</span>
+      </div>
+      <p>The first matching detector remains active. Other matches below are recorded for shadow comparison only and cannot change this trade decision.</p>
+      <div class="setup-candidate-list">
+        ${candidates
+          .map(
+            (candidate) => `
+              <span class="setup-candidate ${candidate.is_active ? "active" : "shadow"}">
+                <b>${candidate.is_active ? "Active" : "Shadow"}</b>
+                <em>${escapeHtml(candidate.setup_type || "Unknown setup")}</em>
+                <small>Legacy ${Number(candidate.legacy_score || 0).toFixed(2)} / normalized ${Number(candidate.shadow_setup_normalized_score || 0).toFixed(2)}</small>
+              </span>
+            `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
 }
 
 function attachDiagnosticItemListeners() {

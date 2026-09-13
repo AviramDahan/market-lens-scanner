@@ -418,6 +418,19 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
                     "net_rr_1": 1.1,
                     "net_rr_2": 3.0,
                     "entry_confirmation_passed": False,
+                    "active_setup_selection_policy": "FIRST_MATCH_LEGACY",
+                    "setup_candidates": [
+                        {
+                            "setup_type": "VWAP Reclaim",
+                            "legacy_score": 0.61,
+                            "shadow_setup_normalized_score": 0.72,
+                        },
+                        {
+                            "setup_type": "Liquidity Trap",
+                            "legacy_score": 0.58,
+                            "shadow_setup_normalized_score": 0.79,
+                        },
+                    ],
                     "warnings": ["WATCH_READY: staged for confirmation"],
                 },
             }
@@ -431,6 +444,10 @@ def test_decision_diagnostics_includes_drilldown_items_with_charts() -> None:
     assert watch_ready["chart_url"] == "/agent-results/charts/aaa.png"
     assert watch_ready["weighted_net_rr"] == 2.22
     assert watch_ready["entry_confirmation_passed"] is False
+    assert watch_ready["active_setup_selection_policy"] == "FIRST_MATCH_LEGACY"
+    assert watch_ready["setup_candidate_count"] == 2
+    assert watch_ready["setup_candidates"][0]["is_active"] is True
+    assert watch_ready["setup_candidates"][1]["is_active"] is False
     assert diagnostics["why_no_buys"][0]["label"] == "Entry confirmation missing"
     assert diagnostics["watch_ready_funnel"]["unique_detected"] == 1
     assert diagnostics["watch_ready_funnel"]["confirmation_passed_unique"] == 0

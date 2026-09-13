@@ -863,6 +863,18 @@ def diagnostic_drilldown_item(
     setup_type: str,
     reason: str,
 ) -> dict[str, Any]:
+    setup_candidates = [
+        {
+            "setup_type": candidate.get("setup_type"),
+            "legacy_score": round(to_float(candidate.get("legacy_score")), 3),
+            "shadow_setup_normalized_score": round(
+                to_float(candidate.get("shadow_setup_normalized_score")), 3
+            ),
+            "is_active": str(candidate.get("setup_type") or "") == str(setup_type or ""),
+        }
+        for candidate in decision.get("setup_candidates") or []
+        if isinstance(candidate, dict)
+    ]
     return {
         "ticker": setup.get("ticker"),
         "company_name": setup.get("company_name", ""),
@@ -885,6 +897,11 @@ def diagnostic_drilldown_item(
         "target_2": setup.get("target_2") or decision.get("target_2"),
         "chart_url": setup.get("chart_url", ""),
         "selection_context": setup.get("selection_context", ""),
+        "active_setup_selection_policy": decision.get(
+            "active_setup_selection_policy", "FIRST_MATCH_LEGACY"
+        ),
+        "setup_candidates": setup_candidates,
+        "setup_candidate_count": len(setup_candidates),
         "reason": reason,
     }
 
