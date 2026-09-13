@@ -31,6 +31,14 @@ items requiring reconciliation across three identified trades:
 - One CHTR event was recorded with trigger evidence before its linked entry.
 - One legacy CME TP1 event has unresolved entry identity because its trade ID is blank.
 
+The v2 reconciliation classifies all six without rewriting history:
+
+- Five pre-entry events are `QUARANTINED_STALE_PRE_ENTRY_BAR`. Their bars cannot
+  support the linked trades and are excluded from validated execution evidence.
+- The CME event is `IDENTITY_ATTRIBUTABLE_NOT_MUTATED`: the sole earlier CME
+  entry matches its ticker, stop and both targets. This resolves attribution for
+  audit purposes only; it does not validate the fill or alter the original row.
+
 The audit does not remove these rows or claim corrected performance. A clean
 identity check also does not prove that a historical fill price was executable.
 The report therefore retains evidence labels and explicitly states that cash,

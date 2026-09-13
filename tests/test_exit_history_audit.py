@@ -28,6 +28,8 @@ def test_pre_entry_event_is_reported_without_mutation():
     before = {ws.title: list(ws.values) for ws in wb}
     report = audit_workbook(wb)
     assert report["findings"][0]["status"] == "PRE_ENTRY_EVENT"
+    assert report["findings"][0]["resolution_status"] == "QUARANTINED_STALE_PRE_ENTRY_BAR"
+    assert report["findings"][0]["evidence_usable"] is False
     assert report["affected_trade_ids"] == ["trade"]
     assert before == {ws.title: list(ws.values) for ws in wb}
 
@@ -100,3 +102,27 @@ def test_accounting_reconciliation_separates_open_partial_profit():
     assert reconciliation["reconciliation_delta_ils"] == 0
     assert reconciliation["reconciled"] is True
     assert reconciliation["cash_or_pnl_corrected"] is False
+
+
+def test_blank_legacy_trade_id_is_attributed_only_by_unique_matching_trade_plan():
+    wb = workbook("2026-09-08T13:00:00Z", identity="")
+    trade_log = wb["Trade Log"]
+    buy = list(trade_log.values)[1]
+    exit_row = list(trade_log.values)[2]
+    for index, value in ((11, 95), (12, 110), (13, 120)):
+        trade_log.cell(2, index + 1, value)
+        trade_log.cell(3, index + 1, value)
+    trade_log.cell(3, 21).value = None
+    event = wb["Position Events"]
+    event.cell(2, 16).value = None
+
+    report = audit_workbook(wb)
+
+    finding = report["findings"][0]
+    assert finding["status"] == "UNRESOLVED_ENTRY_IDENTITY"
+    assert finding["inferred_trade_id"] == "trade"
+    assert finding["resolution_status"] == "IDENTITY_ATTRIBUTABLE_NOT_MUTATED"
+    assert report["reconciliation_summary"]["identity_attributed_count"] == 1
+    provenance = report["measurement_provenance"]
+    assert provenance["unattributed_findings"] == 0
+    assert provenance["trades"][0]["status"] == "IDENTITY_ATTRIBUTED_AUDIT_ONLY"
