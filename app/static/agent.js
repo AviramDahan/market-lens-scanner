@@ -1686,6 +1686,9 @@ function renderSetupSelectionAudit(item) {
 
 function attachDiagnosticItemListeners() {
   const body = document.getElementById("diagnosticModalBody");
+  body.querySelectorAll("[data-detail-check]").forEach((button) => {
+    button.addEventListener("click", () => openWatchChecklist(state.diagnostic.items.find((item) => item.ticker === button.dataset.detailCheck)));
+  });
   body.querySelectorAll(".diagnostic-chart-button").forEach((button) => {
     button.addEventListener("click", () => openMediaModal(button.dataset.fullSrc || ""));
   });
@@ -1775,9 +1778,6 @@ function renderWatchReadyPanel(diagnostics) {
     .join("");
   list.querySelectorAll("[data-watch-check]").forEach((button) => {
     button.addEventListener("click", () => openWatchChecklist(topItems.find((item) => item.ticker === button.dataset.watchCheck)));
-  });
-  body.querySelectorAll("[data-detail-check]").forEach((button) => {
-    button.addEventListener("click", () => openWatchChecklist(state.diagnostic.items.find((item) => item.ticker === button.dataset.detailCheck)));
   });
 }
 
