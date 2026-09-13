@@ -22,10 +22,12 @@ conflict before retrying, rather than blindly re-running notifications.
 Tests: 338 passed, including zero-size quality/capital diagnostics and real
 temporary Git repositories verifying state conflicts versus source-only edits.
 
-Outstanding: media retention deletions are lost by the reset/overlay pattern.
-No bulk deletion was enabled. Preserve/archive historical assets before repairing
-deletion persistence. Historical execution evidence still requires manual
-reconciliation; realized-PnL scope reconciliation is now explicit and read-only.
+Media retention deletions are now carried through reset/overlay by the generated
+state bundle manifest, including explicit deleted paths. Structured history was
+archived before the active checkout was reduced; see
+`agent_results_retention_2026-09-12.md`. Historical execution evidence still
+requires manual reconciliation; realized-PnL scope reconciliation is explicit
+and read-only.
 
 ## Rejection summary measurement
 
