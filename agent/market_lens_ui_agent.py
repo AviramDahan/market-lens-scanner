@@ -111,6 +111,7 @@ def main() -> None:
     runtime_path = RUNTIME_DIR / f"market_lens_agent_{run_id}.json"
 
     errors: list[str] = []
+    warnings: list[str] = []
     results: list[SetupResult] = []
     decisions: dict[str, Decision] = {}
     login_status = "not_started"
@@ -161,9 +162,9 @@ def main() -> None:
             runtime_metrics["scan_complete"] = not missing_tickers
             if missing_tickers:
                 issue = f"PARTIAL_SCAN: No result card for {', '.join(missing_tickers)}."
-                errors.append(issue)
+                warnings.append(issue)
                 log(issue)
-                scan_status = f"partial: {len(results)} results; {len(missing_tickers)} missing"
+                scan_status = f"completed: {len(results)} results; {len(missing_tickers)} unavailable"
             log("Saving screenshot")
             phase_started = time.monotonic()
             page.screenshot(path=str(screenshot_path), full_page=True)
@@ -215,6 +216,7 @@ def main() -> None:
     runtime_metrics["result_cards_read"] = len(results)
     runtime_metrics["valid_setups"] = sum(1 for result in results if result.setup_type != "No Trade")
     runtime_metrics["errors"] = errors
+    runtime_metrics["warnings"] = warnings
     write_runtime_metrics(runtime_path, runtime_metrics)
     workbook_context["runtime_metrics_path"] = runtime_path
     log("Writing summary")

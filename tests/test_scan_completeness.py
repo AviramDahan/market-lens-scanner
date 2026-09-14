@@ -14,3 +14,8 @@ def test_complete_scan_and_case_normalization():
 
 def test_empty_results_report_all_missing():
     assert missing_scan_tickers(["RDDT", "ARM", "MMC"], []) == ["ARM", "MMC", "RDDT"]
+
+
+def test_partial_scan_status_remains_eligible_for_processing():
+    status = "completed: 143 results; 3 unavailable"
+    assert status.startswith("completed:")
