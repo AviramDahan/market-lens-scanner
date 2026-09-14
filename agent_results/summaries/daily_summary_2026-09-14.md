@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-14
-Total scans: 13
-Tickers scanned: 1813
+Total scans: 14
+Tickers scanned: 1946
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 183
+WATCH_REVIEW: 197
 WATCH_REVIEW unique tickers: 34
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 183
-SKIP: 1568
-NO_TRADE: 1220
+WATCH: 197
+SKIP: 1683
+NO_TRADE: 1300
 Realized PnL: -47.26
-Unrealized PnL: 627.03
-Portfolio value: 100886.18
-Daily recorded-equity change (%): -0.4936
+Unrealized PnL: 609.34
+Portfolio value: 100868.49
+Daily recorded-equity change (%): -0.5111
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-13
-Cumulative recorded-equity change (%): 0.8862
+Cumulative recorded-equity change (%): 0.8685
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: ETN
 Worst ticker: AR
@@ -33,14 +33,14 @@ Shadow would-buy counts:
 Top rejected candidates:
 - GILD: SKIP score=0.56 reason=SKIP: WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked. Also: Position size blocked by cash, exposure, or risk limits.
 - EQT: SKIP score=0.55 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
-- AIG: SKIP score=0.51 reason=SKIP: WATCH: NEUTRAL market requires setup score (0.51 < 0.55). Also: Position size blocked by cash, exposure, or risk limits.
+- AIG: SKIP score=0.54 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
+- PG: SKIP score=0.52 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.15.
 - JNJ: SKIP score=0.5 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
 - WFC: SKIP score=0.49 reason=SKIP: WATCH: NEUTRAL market requires setup score (0.49 < 0.55). Also: Position size blocked by cash, exposure, or risk limits.
 - ECHO: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.35 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.03.
-- PG: SKIP score=0.48 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.19.
+- BA: SKIP score=0.47 reason=SKIP: Industrials sector regime is weak (18/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 3.29.
 - CB: SKIP score=0.47 reason=SKIP: WATCH: NEUTRAL market requires setup score (0.47 < 0.55). Also: Position size blocked by cash, exposure, or risk limits.
 - MA: SKIP score=0.47 reason=SKIP: WATCH: NEUTRAL market requires setup score (0.47 < 0.55). Also: Position size blocked by cash, exposure, or risk limits.
-- HAL: SKIP score=0.47 reason=SKIP: WATCH: NEUTRAL market requires setup score (0.47 < 0.55). Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
