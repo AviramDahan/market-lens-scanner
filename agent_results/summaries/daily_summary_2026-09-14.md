@@ -1,33 +1,33 @@
 Daily Performance Summary
 
 Date: 2026-09-14
-Total scans: 9
-Tickers scanned: 1269
+Total scans: 10
+Tickers scanned: 1407
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 134
-WATCH_REVIEW unique tickers: 29
+WATCH_REVIEW: 146
+WATCH_REVIEW unique tickers: 30
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 134
-SKIP: 1090
-NO_TRADE: 859
+WATCH: 146
+SKIP: 1211
+NO_TRADE: 954
 Realized PnL: 0.0
-Unrealized PnL: 513.72
-Portfolio value: 100820.13
-Daily recorded-equity change (%): -0.5588
+Unrealized PnL: 500.55
+Portfolio value: 100806.96
+Daily recorded-equity change (%): -0.5718
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-13
-Cumulative recorded-equity change (%): 0.8201
+Cumulative recorded-equity change (%): 0.807
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: ETN
 Worst ticker: AR
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STRUCTURE_STOP: 2
-- TREND_PULLBACK_RECLAIM: 6
+- FIB_STRUCTURE_STOP: 3
+- TREND_PULLBACK_RECLAIM: 9
 
 Top rejected candidates:
 - EQT: SKIP score=0.55 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
