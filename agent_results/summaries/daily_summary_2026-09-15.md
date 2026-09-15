@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-15
-Total scans: 15
-Tickers scanned: 2012
+Total scans: 16
+Tickers scanned: 2145
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 226
+WATCH_REVIEW: 238
 WATCH_REVIEW unique tickers: 27
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 226
-SKIP: 1726
-NO_TRADE: 1234
+WATCH: 238
+SKIP: 1843
+NO_TRADE: 1329
 Realized PnL: 0.0
-Unrealized PnL: 898.39
-Portfolio value: 101157.54
-Daily recorded-equity change (%): 0.2858
+Unrealized PnL: 921.93
+Portfolio value: 101181.08
+Daily recorded-equity change (%): 0.3092
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-14
-Cumulative recorded-equity change (%): 1.1575
+Cumulative recorded-equity change (%): 1.1811
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: ETN
 Worst ticker: VZ
@@ -35,7 +35,7 @@ Top rejected candidates:
 - CB: SKIP score=0.47 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 - T: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.98.
 - TSLA: SKIP score=0.45 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.55.
-- HAL: WATCH score=0.45 reason=WATCH: Technical setup detected, but weighted risk/reward 1.71 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.24.
+- HAL: SKIP score=0.45 reason=SKIP: WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 - AMT: SKIP score=0.45 reason=SKIP: Utilities / Real Assets sector regime is weak (18/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.14.
 - KO: SKIP score=0.44 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.39.
 
