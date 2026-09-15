@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-15
-Total scans: 24
-Tickers scanned: 3252
+Total scans: 25
+Tickers scanned: 3389
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 328
-WATCH_REVIEW unique tickers: 36
+WATCH_REVIEW: 341
+WATCH_REVIEW unique tickers: 37
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 328
-SKIP: 2828
-NO_TRADE: 2112
+WATCH: 341
+SKIP: 2948
+NO_TRADE: 2200
 Realized PnL: 0.0
-Unrealized PnL: 596.51
-Portfolio value: 100855.66
-Daily recorded-equity change (%): -0.0135
+Unrealized PnL: 573.35
+Portfolio value: 100832.5
+Daily recorded-equity change (%): -0.0364
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-14
-Cumulative recorded-equity change (%): 0.8557
+Cumulative recorded-equity change (%): 0.8325
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: BA
 Worst ticker: VZ
@@ -33,10 +33,10 @@ Top rejected candidates:
 - PG: SKIP score=0.52 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.15.
 - BA: SKIP score=0.48 reason=SKIP: Industrials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.22.
 - CB: SKIP score=0.47 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
+- DHR: SKIP score=0.47 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
 - TRGP: SKIP score=0.46 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
-- DHR: SKIP score=0.46 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
 - T: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.98.
-- TSLA: SKIP score=0.45 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.55.
+- TSLA: SKIP score=0.45 reason=SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.81.
 - HAL: SKIP score=0.45 reason=SKIP: WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
