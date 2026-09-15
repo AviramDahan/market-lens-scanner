@@ -1,28 +1,28 @@
 Daily Performance Summary
 
 Date: 2026-09-15
-Total scans: 14
-Tickers scanned: 1878
+Total scans: 15
+Tickers scanned: 2012
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 212
-WATCH_REVIEW unique tickers: 21
+WATCH_REVIEW: 226
+WATCH_REVIEW unique tickers: 27
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 212
-SKIP: 1610
-NO_TRADE: 1142
+WATCH: 226
+SKIP: 1726
+NO_TRADE: 1234
 Realized PnL: 0.0
-Unrealized PnL: 610.08
-Portfolio value: 100869.23
-Daily recorded-equity change (%): 0.0
+Unrealized PnL: 898.39
+Portfolio value: 101157.54
+Daily recorded-equity change (%): 0.2858
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-14
-Cumulative recorded-equity change (%): 0.8692
+Cumulative recorded-equity change (%): 1.1575
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: ETN
-Worst ticker: COP
+Worst ticker: VZ
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
