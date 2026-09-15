@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-15
-Total scans: 25
-Tickers scanned: 3389
+Total scans: 26
+Tickers scanned: 3526
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 341
-WATCH_REVIEW unique tickers: 37
+WATCH_REVIEW: 354
+WATCH_REVIEW unique tickers: 38
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 341
-SKIP: 2948
-NO_TRADE: 2200
+WATCH: 354
+SKIP: 3068
+NO_TRADE: 2290
 Realized PnL: 0.0
-Unrealized PnL: 573.35
-Portfolio value: 100832.5
-Daily recorded-equity change (%): -0.0364
+Unrealized PnL: 569.55
+Portfolio value: 100828.7
+Daily recorded-equity change (%): -0.0402
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-14
-Cumulative recorded-equity change (%): 0.8325
+Cumulative recorded-equity change (%): 0.8287
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: BA
 Worst ticker: VZ
