@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-15
-Total scans: 29
-Tickers scanned: 3937
+Total scans: 30
+Tickers scanned: 4072
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 401
+WATCH_REVIEW: 418
 WATCH_REVIEW unique tickers: 43
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 401
-SKIP: 3420
-NO_TRADE: 2562
+WATCH: 418
+SKIP: 3534
+NO_TRADE: 2635
 Realized PnL: 0.0
-Unrealized PnL: 621.91
-Portfolio value: 100881.06
-Daily recorded-equity change (%): 0.0117
+Unrealized PnL: 631.35
+Portfolio value: 100890.5
+Daily recorded-equity change (%): 0.0211
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-14
-Cumulative recorded-equity change (%): 0.8811
+Cumulative recorded-equity change (%): 0.8905
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: BA
 Worst ticker: VZ
@@ -36,8 +36,8 @@ Top rejected candidates:
 - DHR: SKIP score=0.47 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
 - TRGP: SKIP score=0.46 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
 - T: WATCH score=0.46 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.98.
+- RTX: SKIP score=0.45 reason=SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 4.58.
 - TSLA: SKIP score=0.45 reason=SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.91.
-- HAL: SKIP score=0.45 reason=SKIP: WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
