@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-14
-Total scans: 40
-Tickers scanned: 5457
+Total scans: 41
+Tickers scanned: 5593
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 557
-WATCH_REVIEW unique tickers: 46
+WATCH_REVIEW: 566
+WATCH_REVIEW unique tickers: 47
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 557
-SKIP: 4730
-NO_TRADE: 3548
+WATCH: 566
+SKIP: 4853
+NO_TRADE: 3643
 Realized PnL: -47.26
-Unrealized PnL: 587.49
-Portfolio value: 100846.64
+Unrealized PnL: 545.4
+Portfolio value: 100804.55
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8466
+Cumulative recorded-equity change (%): 0.8045
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: ETN
 Worst ticker: AR
