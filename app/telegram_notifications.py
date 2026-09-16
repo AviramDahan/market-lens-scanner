@@ -215,6 +215,31 @@ def format_position_opened_message(
     return "\n".join(lines)
 
 
+def format_qualified_setup_message(*, ticker: str, alert: dict, timestamp: str, dashboard_url: str) -> str:
+    """Community-ready setup. Intentionally excludes account state and dashboard links."""
+    entry = alert.get("current_price")
+    company = str(alert.get("company_name") or "").strip()
+    label = f"{ticker} ({company})" if company else ticker
+    lines = [
+        f"<b>QUALIFIED SETUP | {_escape(label)}</b>",
+        f"Time: {_escape(_format_message_time(timestamp))}",
+        f"Setup: {_escape(alert.get('setup_type', ''))}",
+        f"Price: {_money(entry)}",
+        f"Entry zone: {_money(alert.get('buy_zone_low'))} - {_money(alert.get('buy_zone_high'))}",
+        f"SL: {_price_with_percent(alert.get('stop_loss'), entry)}",
+        f"TP1: {_price_with_percent(alert.get('target_1'), entry)}",
+        f"TP2: {_price_with_percent(alert.get('target_2'), entry)}",
+        f"Score: {_number(alert.get('setup_score'), 2)} | Net R/R: {_number(alert.get('net_rr'), 2)} "
+        f"(TP1 {_number(alert.get('net_rr_1'), 2)} / TP2 {_number(alert.get('net_rr_2'), 2)})",
+        f"Market: {_escape(alert.get('market_regime', '-'))} | Sector: {_escape(alert.get('sector_regime', '-'))}",
+        "Confirmation: fresh completed candle; entry-quality checks passed.",
+    ]
+    if alert.get("market_regime") == "BEAR":
+        lines.append("Market note: BEAR / risk-off conditions. This long setup is against the broader market regime.")
+    lines.append("Setup alert only; this is not a trade execution report.")
+    return "\n".join(lines)
+
+
 def format_qualified_capital_blocked_message(
     *,
     result: Any,

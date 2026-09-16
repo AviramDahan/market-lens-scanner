@@ -298,12 +298,16 @@ jobs:
           fi
           echo "persisted=true" >> "$GITHUB_OUTPUT"
 
-      - name: Send persisted BUY notifications
+      - name: Send persisted BUY and setup notifications
         if: steps.schedule_time.outputs.should_run == 'true' && steps.persist.outputs.persisted == 'true'
         env:
           MARKET_LENS_TELEGRAM_BOT_TOKEN: ${{ secrets.MARKET_LENS_TELEGRAM_BOT_TOKEN }}
           MARKET_LENS_TELEGRAM_CHAT_ID: ${{ secrets.MARKET_LENS_TELEGRAM_CHAT_ID }}
         run: python agent/send_buy_notifications.py "${{ runner.temp }}/market-lens-buy-notifications.json"
+
+      - name: Persist Telegram delivery receipts
+        if: always() && !cancelled() && steps.schedule_time.outputs.should_run == 'true' && steps.persist.outputs.persisted == 'true'
+        run: python agent/persist_notification_receipts.py
 
       - name: Prepare scanner recovery bundle on failure
         if: failure() && steps.schedule_time.outputs.should_run == 'true'

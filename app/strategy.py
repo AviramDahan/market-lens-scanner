@@ -137,6 +137,7 @@ def apply_strategy_decisions(
                 recent_stop_events=recent_stop_events or {},
                 neutral_pilot_trades_today=neutral_pilot_trades_today,
                 currency_rate=currency_rate,
+                base_min_rr=min_rr,
             )
             return decision, decision_json
 

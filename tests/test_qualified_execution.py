@@ -45,7 +45,7 @@ def test_existing_position_never_switches_setup_or_version():
         calls.append(c.setup_type)
         return None, dict(final_action='HOLD')
     _, _, evidence = select_qualified_candidate(c, evaluate, existing=True)
-    assert calls == ['original']
+    assert calls == ['original', 'other']  # Alternatives are assessed for alerts only.
     assert 'strategy_version' not in evidence
 
 

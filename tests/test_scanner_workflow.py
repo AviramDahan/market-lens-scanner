@@ -26,8 +26,9 @@ def test_buy_notifications_are_sent_only_after_persistence() -> None:
 
     run_index = text.index("- name: Run Market Lens UI agent")
     persist_index = text.index("- name: Commit agent results safely")
-    notify_index = text.index("- name: Send persisted BUY notifications")
-    assert run_index < persist_index < notify_index
+    notify_index = text.index("- name: Send persisted BUY and setup notifications")
+    receipt_index = text.index("- name: Persist Telegram delivery receipts")
+    assert run_index < persist_index < notify_index < receipt_index
     run_block = text[run_index:persist_index]
     assert "MARKET_LENS_AGENT_NOTIFICATION_OUTBOX" in run_block
     assert 'MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED: "true"' in run_block

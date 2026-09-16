@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from typing import Any
@@ -354,6 +354,7 @@ def evaluate_agent_candidate(
     recent_stop_events: dict[str, dict[str, Any]] | None = None,
     neutral_pilot_trades_today: int = 0,
     currency_rate: float = 1.0,
+    base_min_rr: float = 2.0,
 ) -> dict[str, Any]:
     config = run_context.config
     ticker = str(result.ticker).upper()
@@ -849,7 +850,77 @@ def evaluate_agent_candidate(
             decision.pop(key, None)
             if key in entry_metadata:
                 decision[key] = entry_metadata[key]
+    decision["setup_alert_evidence"] = evaluate_setup_alert_quality(
+        result=result, run_context=run_context, sector_info=sector_info,
+        net_rr_info=net_rr_info, earnings_info=earnings_info, target_info=target_info,
+        confirmation=confirmation, market_session=market_session,
+        normalized_quality_score=normalized_quality_score, base_min_rr=base_min_rr,
+    )
     return decision
+
+
+def evaluate_setup_alert_quality(
+    *, result, run_context, sector_info, net_rr_info, earnings_info, target_info,
+    confirmation, market_session, normalized_quality_score, base_min_rr=2.0,
+):
+    """Informational eligibility only. Never changes an action, size or portfolio.
+
+    BEAR's disabled-entry sentinel thresholds are replaced by the configured BULL
+    quality floors for this assessment only. Account exposure, sizing, correlation,
+    holdings, trade quotas and stop cooldown are intentionally absent.
+    """
+    config = run_context.config
+    regime = run_context.market_regime
+    if regime.label == "BEAR":
+        regime = replace(regime, label="BULL", minimum_net_rr=config.bull_min_net_rr,
+                         min_setup_score=config.bull_min_setup_score)
+    context = replace(run_context, market_regime=regime)
+    pilot = neutral_pilot_status(
+        initial_action="BUY_SIMULATED", result=result, run_context=context,
+        sector_info=sector_info, net_rr_info=net_rr_info, earnings_info=earnings_info,
+        confirmation=confirmation, market_session=market_session, neutral_pilot_trades_today=0,
+    )
+    score_floor = config.neutral_pilot_min_setup_score if pilot["eligible"] else regime.min_setup_score
+    rr_floor = config.neutral_pilot_min_net_rr if pilot["eligible"] else minimum_net_rr_for(regime, sector_info, config)
+    blockers = buy_blockers(
+        result=result, run_context=context, sector_info=sector_info, net_rr_info=net_rr_info,
+        earnings_info=earnings_info, target_info=target_info, confirmation=confirmation,
+        cooldown={"cooldown_active": False}, sector_exposure={"limit_exceeded": False},
+        factor_exposure={"limit_exceeded": False}, correlation={"correlation_warning": False},
+        normalized_quality_score=normalized_quality_score, portfolio_exposure_after=0,
+        sizing={"blocked": False}, minimum_net_rr=rr_floor, minimum_setup_score=score_floor,
+        entry_mode=pilot["entry_mode"], market_session=market_session,
+    )
+    reasons = [item["reason"] for item in blockers]
+    levels = [getattr(result, key, None) for key in
+              ("current_price", "buy_zone_low", "buy_zone_high", "stop_loss", "target_1", "target_2", "risk_reward", "score")]
+    numeric = all(isinstance(v, (int, float)) and math.isfinite(v) for v in levels)
+    if not numeric:
+        reasons.append("Missing or invalid setup levels.")
+    elif not (0 < result.stop_loss < result.current_price
+              and result.buy_zone_low <= result.current_price <= result.buy_zone_high
+              and result.current_price < result.target_1 <= result.target_2
+              and result.risk_reward >= base_min_rr):
+        reasons.append("Entry zone, stop, targets or gross R/R did not pass.")
+    if str(result.setup_type).upper().replace(" ", "_") in {"", "NO_TRADE", "NO-TRADE"}:
+        reasons.append("No technical setup.")
+    if regime.label not in {"BULL", "NEUTRAL"}:
+        reasons.append("Unknown market regime.")
+    if target_info.get("status") != "OK":
+        reasons.append("Target feasibility is not confirmed.")
+    if not all(math.isfinite(float(net_rr_info.get(key) or 0)) for key in ("net_rr", "net_rr_1", "net_rr_2")):
+        reasons.append("Invalid net R/R.")
+    if not math.isfinite(normalized_quality_score):
+        reasons.append("Invalid normalized quality score.")
+    freshness = calculate_confirmation_freshness(
+        confirmation, market_session, lookback_candles=config.entry_confirmation_lookback_candles)
+    if (not market_session.get("regular_session_open") or not confirmation.get("entry_confirmation_passed")
+            or freshness["status"] != "FRESH_SAME_SESSION"):
+        reasons.append("A fresh completed regular-session confirmation is required.")
+    return {"policy": "QUALITY_ONLY_SETUP_V1", "eligible": not reasons, "blockers": reasons,
+            "quality_reference_regime": regime.label, "minimum_setup_score": score_floor,
+            "minimum_net_rr": rr_floor, "market_regime_ignored": run_context.market_regime.label == "BEAR",
+            "portfolio_constraints_ignored": True}
 
 
 def measure_setup_candidate_risk_evidence(
