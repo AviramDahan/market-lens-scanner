@@ -173,6 +173,7 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     )
     if (
         not isinstance(decision_diagnostics, dict)
+        or decision_diagnostics.get("blocker_schema_version") != 2
         or "drilldowns" not in decision_diagnostics
         or "why_no_buys" not in decision_diagnostics
         or "watch_ready_funnel" not in decision_diagnostics

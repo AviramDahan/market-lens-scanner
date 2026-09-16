@@ -603,25 +603,22 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             blockers["Qualified but capital blocked"] += 1
             drilldowns["CAPITAL_BLOCKED"].append(drilldown_item)
 
-        if setup_type.lower() == "no trade" or "no trade result" in text:
-            blockers["No Trade"] += 1
-        if "risk/reward" in text or "net r/r" in text or "weighted" in text:
-            blockers["R/R below gate"] += 1
-            drilldowns["RR_BLOCKED"].append(drilldown_item)
-        if "setup score" in text:
-            blockers["Setup score below gate"] += 1
-            drilldowns["SCORE_BLOCKED"].append(drilldown_item)
-        if "entry confirmation" in text or "confirmed entry" in text or "confirmation failed" in text:
-            blockers["Entry confirmation missing"] += 1
-            drilldowns["CONFIRM_BLOCKED"].append(drilldown_item)
-        if "earnings blackout" in text:
-            blockers["Earnings blackout"] += 1
-            drilldowns["WEAK_EARNINGS"].append(drilldown_item)
-        if "bear market regime blocks" in text:
-            blockers["BEAR blocks new buys"] += 1
-        if "sector regime is weak" in text or "weak sector" in text:
-            blockers["Weak sector"] += 1
-            drilldowns["WEAK_EARNINGS"].append(drilldown_item)
+        # Count evaluated conditions, not incidental words in descriptive setup text.
+        # A normal reason containing "net R/R" does not prove an R/R rejection.
+        keys = {condition["key"] for condition in missing_conditions}
+        for condition_keys, label, drilldown in (
+            ({"no_trade"}, "No Trade", None),
+            ({"net_rr", "primary_rr"}, "R/R below gate", "RR_BLOCKED"),
+            ({"setup_score"}, "Setup score below gate", "SCORE_BLOCKED"),
+            ({"entry_confirmation"}, "Entry confirmation missing", "CONFIRM_BLOCKED"),
+            ({"earnings"}, "Earnings blackout", "WEAK_EARNINGS"),
+            ({"market_bear"}, "BEAR blocks new buys", "MARKET_BLOCKED"),
+            ({"weak_sector"}, "Weak sector", "WEAK_EARNINGS"),
+        ):
+            if keys & condition_keys:
+                blockers[label] += 1
+                if drilldown:
+                    drilldowns[drilldown].append(drilldown_item)
 
         for condition in missing_conditions:
             register_entry_blocker(entry_blockers, condition, drilldown_item)
@@ -649,6 +646,7 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
     )
     return {
         "total_results": len(setups),
+        "blocker_schema_version": 2,
         "action_counts": dict(sorted(action_counts.items())),
         "blockers": dict(sorted(blockers.items(), key=lambda item: item[1], reverse=True)),
         "entry_blockers_summary": sorted_entry_blockers(entry_blockers),
@@ -731,9 +729,11 @@ def entry_missing_conditions(
         conditions.append(blocker_condition("no_trade", "No technical setup", "No actionable setup structure was detected.", "warn"))
     if str(decision.get("market_regime") or "").upper() == "BEAR":
         conditions.append(blocker_condition("market_bear", "BEAR market", "Bear market regime blocks new paper buys.", "fail"))
+    if normalized_setup == "no trade" or "no trade result" in text:
+        return conditions
     if str(decision.get("sector_regime") or "").upper() == "WEAK" or "weak sector" in text:
         conditions.append(blocker_condition("weak_sector", "Weak sector", "Sector regime is weak, so auto-buy eligibility is blocked.", "fail"))
-    if min_setup_score and setup_score < min_setup_score:
+    if str(decision.get("market_regime") or "").upper() != "BEAR" and min_setup_score and setup_score < min_setup_score:
         conditions.append(
             blocker_condition(
                 "setup_score",
@@ -863,11 +863,19 @@ def watch_entry_checklist(decision: dict[str, Any]) -> list[dict[str, str]]:
     def add(label, status, detail):
         rows.append({"label": label, "status": status, "detail": detail})
 
+    regime = str(decision.get("market_regime") or "").upper()
+    bear = regime == "BEAR"
+    add("Market entry policy", "fail" if bear else "info" if regime else "unknown",
+        "BEAR blocks all new paper buys; available cash does not override this policy."
+        if bear else f"Recorded regime: {regime or 'Not recorded'}; remaining entry gates still apply.")
     for label, actual, threshold in (
         ("Setup score", "setup_score", "minimum_setup_score_required"),
         ("Net R/R", "net_rr", "minimum_net_rr_required"),
     ):
         value, limit = decision.get(actual), decision.get(threshold)
+        if bear:
+            add(label, "info", f"Current: {value if value is not None else 'Unavailable'} | New entries disabled by BEAR policy.")
+            continue
         known = isinstance(value, (int, float)) and isinstance(limit, (int, float))
         add(label, ("pass" if value >= limit else "fail") if known else "unknown",
             f"Current: {value if value is not None else 'Unavailable'} | Required: {limit if limit is not None else 'Not recorded'}")
@@ -905,6 +913,16 @@ def watch_entry_checklist(decision: dict[str, Any]) -> list[dict[str, str]]:
     for group in ("entry_gate_blockers", "capital_blockers"):
         for reason in decision.get(group) or []:
             add("Entry blocker" if group == "entry_gate_blockers" else "Portfolio blocker", "fail", str(reason))
+    add("Regime calculation", "info",
+        f"Risk points: {decision.get('market_regime_risk_points', 'Not recorded')} | BEAR <= -2; BULL >= 4; otherwise NEUTRAL.")
+    for symbol, state in (decision.get("market_regime_indicators") or {}).items():
+        if not isinstance(state, dict):
+            continue
+        add(f"Regime input: {symbol}", "info", " | ".join(
+            f"{key.replace('_', ' ')}: {state.get(key) if state.get(key) is not None else 'Not recorded'}"
+            for key in ("price", "ema20", "ema50", "ema200", "trend", "risk_point_contribution",
+                        "last_bar_session", "expected_completed_session", "freshness_status", "provider_fetched_at")
+        ) + " | Daily bars identify sessions, not live quote timestamps.")
     for warning in decision.get("warnings") or []:
         add("Warning", "unknown", str(warning))
     add("Final eligibility", "info", str(decision.get("entry_eligibility_status") or "Not evaluated"))
@@ -1001,7 +1019,7 @@ def build_why_no_buys(
             }
         ]
 
-    ranked = sorted(blockers.items(), key=lambda item: item[1], reverse=True)
+    ranked = sorted(blockers.items(), key=lambda item: (item[0] == "BEAR blocks new buys", item[1]), reverse=True)
     if not ranked:
         return [
             {
