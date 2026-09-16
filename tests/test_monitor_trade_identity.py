@@ -198,3 +198,30 @@ def test_legacy_identity_includes_entry_timestamp():
     first = position_trade_id(p)
     p["entry_date"] = "2026-09-08T14:00:00Z"
     assert first != position_trade_id(p)
+
+
+@pytest.mark.parametrize('terminal,high,low,opening,expected', [
+    ('EXIT_STOP', 149, 147, 148, 147.6),
+    ('TAKE_PROFIT', 182, 175, 177, 180.32),
+])
+def test_costed_window_partial_then_terminal_preserves_fill_metadata(monkeypatch, tmp_path, terminal, high, low, opening, expected):
+    from app.execution import EXECUTION_VERSION, STRATEGY_VERSION
+    frame = pd.DataFrame({'Open': [155, opening], 'High': [160, high],
+                          'Low': [155, low], 'Close': [159, high - 1]},
+                         index=pd.to_datetime(['2026-09-08T14:11:00Z', '2026-09-08T14:12:00Z']))
+    monkeypatch.setattr('agent.position_monitor.fetch_intraday_frame', lambda *a, **k: frame)
+    wb, p = book(), position()
+    p['decision_json'] = json.dumps(dict(trade_id='new-trade', strategy_version=STRATEGY_VERSION,
+        execution_model_version=EXECUTION_VERSION, execution_cost_policy=dict(
+            half_spread_per_share=.1, slippage_per_share=.2, fee_per_share=.1)))
+    positions = {'CHTR': p}
+    results, _ = process_position_window(wb, positions, p, settings=settings(tmp_path),
+        since=None, currency_rate=1, timestamp='2026-09-08T14:15:00Z', run_id='costed')
+    assert [r.event.action for r in results] == ['TAKE_PARTIAL_PROFIT', terminal]
+    assert results[0].event.trigger_price == 159.14
+    assert results[1].event.trigger_price == expected
+    assert [r.event.quantity for r in results] == [13, 13]
+    assert not positions
+    exit_meta = json.loads(wb['Trade Log'].cell(3, 20).value)
+    assert exit_meta['exit_execution_price'] == expected
+    assert exit_meta['execution_model_version'] == EXECUTION_VERSION

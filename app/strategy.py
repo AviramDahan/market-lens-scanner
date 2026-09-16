@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from app.candidate_selection import select_qualified_candidate
+from app.execution import sell_fill
+
 import math
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -103,55 +106,85 @@ def apply_strategy_decisions(
     for result_index in allocation_order_indices(results, simulated_positions):
         result = results[result_index]
         candidate = normalize_strategy_candidate(result)
-        decision = decide_strategy_candidate(
-            candidate,
-            open_positions=simulated_positions,
-            cash=running_cash,
-            exposure=running_exposure,
-            currency_rate=currency_rate,
-            max_position=max_position,
-            max_total_exposure=max_total_exposure,
-            max_risk=max_risk,
-            min_rr=min_rr,
-            sector_map=sector_map,
-            sector_health=sector_health,
-        )
-        decision_json = evaluate_agent_candidate(
-            timestamp=timestamp,
-            result=candidate,
-            initial_action=decision.action,
-            initial_reason=decision.feedback,
-            quantity=decision.quantity,
-            cash_out=decision.cash_out_ils,
-            risk_amount=decision.risk_ils,
-            cash_available=running_cash,
-            portfolio_exposure_before=running_exposure,
-            portfolio_open_risk_before=sum(float(p.get("risk_ils") or 0) for p in simulated_positions.values()),
-            open_positions=simulated_positions,
-            sector_map=sector_map,
-            run_context=run_context,
-            recent_stop_events=recent_stop_events or {},
-            neutral_pilot_trades_today=neutral_pilot_trades_today,
+        def evaluate_selection(candidate):
+            decision = decide_strategy_candidate(
+                candidate,
+                open_positions=simulated_positions,
+                cash=running_cash,
+                exposure=running_exposure,
+                currency_rate=currency_rate,
+                max_position=max_position,
+                max_total_exposure=max_total_exposure,
+                max_risk=max_risk,
+                min_rr=min_rr,
+                sector_map=sector_map,
+                sector_health=sector_health,
+            )
+            decision_json = evaluate_agent_candidate(
+                timestamp=timestamp,
+                result=candidate,
+                initial_action=decision.action,
+                initial_reason=decision.feedback,
+                quantity=decision.quantity,
+                cash_out=decision.cash_out_ils,
+                risk_amount=decision.risk_ils,
+                cash_available=running_cash,
+                portfolio_exposure_before=running_exposure,
+                portfolio_open_risk_before=sum(float(p.get("risk_ils") or 0) for p in simulated_positions.values()),
+                open_positions=simulated_positions,
+                sector_map=sector_map,
+                run_context=run_context,
+                recent_stop_events=recent_stop_events or {},
+                neutral_pilot_trades_today=neutral_pilot_trades_today,
+                currency_rate=currency_rate,
+            )
+            return decision, decision_json
+
+        candidate, decision, decision_json = select_qualified_candidate(
+            candidate, evaluate_selection, existing=candidate.ticker in simulated_positions
         )
         final_action = str(decision_json.get("final_action") or decision.action)
         final_reason = str(decision_json.get("reason") or decision.feedback)
+        decision_json.update(decision.decision_json)
         decision.decision_json = decision_json
         decision.action = final_action
         decision.feedback = final_reason
+        if candidate.setup_type != result.setup_type or candidate.score != result.score:
+            fields = {"setup_type": candidate.setup_type, "score": candidate.score,
+                      "stop_loss": candidate.stop_loss, "target_1": candidate.target_1,
+                      "target_2": candidate.target_2, "risk_reward": candidate.risk_reward}
+            if hasattr(result, "model_copy"):
+                fields["buy_zone"] = (candidate.buy_zone_low, candidate.buy_zone_high)
+                payload = next((item for item in candidate.setup_candidates
+                                if item.get("setup_type") == candidate.setup_type), {})
+                fields["reason"] = payload.get("reason", result.reason)
+                fields["risk_reward_primary"] = payload.get("risk_reward_primary", 0.0)
+                fields["risk_reward_stretch"] = payload.get("risk_reward_stretch", 0.0)
+                fields["risk_reward_decision"] = candidate.risk_reward
+                if candidate.setup_type != result.setup_type:
+                    # An old setup's narrative and technical overlays must not describe a new one.
+                    fields.update(trade_plan=None, professional_assessment=None,
+                                  fibonacci=None, volume_supported_swing_low=None, breakout_retest=None)
+                result = result.model_copy(update=fields)
+            else:
+                for key, value in fields.items():
+                    setattr(result, key, value)
         enriched[result_index] = enrich_result_with_strategy(result, final_action, final_reason, decision_json)
         if final_action == "BUY_SIMULATED":
             if decision_json.get("entry_mode") == "neutral_pilot":
                 neutral_pilot_trades_today += 1
             running_cash -= float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0)
-            running_exposure += float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0)
+            mark_exposure = round(int(decision_json.get("position_size") or decision.quantity or 0) * candidate.current_price * currency_rate, 2)
+            running_exposure += mark_exposure
             simulated_positions[candidate.ticker] = {
                 "ticker": candidate.ticker,
-                "entry_price": candidate.current_price,
+                "entry_price": decision_json.get("entry_execution_price", candidate.current_price),
+                "decision_json": decision_json,
                 "quantity": int(decision_json.get("position_size") or decision.quantity or 0),
                 "stop_loss": candidate.stop_loss or 0,
                 "target_1": candidate.target_1 or 0,
                 "target_2": candidate.target_2 or 0,
-                "exposure_ils": float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils or 0),
+                "exposure_ils": mark_exposure,
                 "risk_ils": float(decision_json.get("adjusted_risk_amount") or decision.risk_ils or 0),
             }
         elif final_action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
@@ -194,7 +227,7 @@ def refresh_strategy_position(position: dict[str, Any], price: float, currency_r
     position.update(current_price=price, exposure_ils=exposure,
                     unrealized_usd=round((price - entry) * quantity, 2),
                     unrealized_ils=round((price - entry) * quantity * currency_rate, 2),
-                    risk_ils=round(max(0.0, entry - stop) * quantity * currency_rate, 2))
+                    risk_ils=round(max(0.0, entry - sell_fill(position, "EXIT_STOP", stop)[0]) * quantity * currency_rate, 2))
     return exposure - old_exposure
 
 
@@ -230,7 +263,7 @@ def apply_strategy_exit(
     pos["current_price"] = result.current_price
     pos["notes"] = "Partial profit taken; stop moved to breakeven."
     pos["exposure_ils"] = round(remaining * result.current_price * currency_rate, 2)
-    pos["risk_ils"] = round(max(0.0, entry - pos["stop_loss"]) * remaining * currency_rate, 2)
+    pos["risk_ils"] = round(max(0.0, entry - sell_fill(pos, "EXIT_STOP", pos["stop_loss"])[0]) * remaining * currency_rate, 2)
     return decision.cash_in_ils, pos["exposure_ils"] - old_exposure
 
 
@@ -252,34 +285,37 @@ def decide_strategy_candidate(
     if existing:
         quantity = int(existing.get("quantity") or 0)
         if result.current_price <= float(existing["stop_loss"]):
-            exit_price = float(existing["stop_loss"])
+            exit_price, fill = sell_fill(existing, "EXIT_STOP", float(existing["stop_loss"]), result.current_price)
             return StrategyDecision(
                 "EXIT_STOP",
                 "Current price reached stop loss.",
                 quantity=quantity,
                 cash_in_ils=round(quantity * exit_price * currency_rate, 2),
                 execution_price=exit_price,
+                decision_json=fill,
             )
         target_1 = float(existing.get("target_1") or 0)
         target_2 = float(existing.get("target_2") or 0)
         if target_2 > 0 and result.current_price >= target_2:
-            exit_price = target_2
+            exit_price, fill = sell_fill(existing, "TAKE_PROFIT", target_2)
             return StrategyDecision(
                 "TAKE_PROFIT",
                 "Target 2 reached; close remaining simulated position.",
                 quantity=quantity,
                 cash_in_ils=round(quantity * exit_price * currency_rate, 2),
                 execution_price=exit_price,
+                decision_json=fill,
             )
         if target_1 > 0 and result.current_price >= target_1 and not existing.get("partial_taken"):
             partial_qty = max(1, quantity // 2)
-            exit_price = target_1
+            exit_price, fill = sell_fill(existing, "TAKE_PARTIAL_PROFIT", target_1)
             return StrategyDecision(
                 "TAKE_PARTIAL_PROFIT",
                 "Target 1 reached; take partial simulated profit and move stop to breakeven.",
                 quantity=partial_qty,
                 cash_in_ils=round(partial_qty * exit_price * currency_rate, 2),
                 execution_price=exit_price,
+                decision_json=fill,
             )
         return StrategyDecision("HOLD", "Existing simulated position remains open.")
 

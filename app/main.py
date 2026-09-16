@@ -189,6 +189,7 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     if recent_trades and any(
         key not in summary
         for key in (
+            "strategy_cohorts",
             "closed_trade_realized_pnl_ils",
             "open_lot_partial_realized_pnl_ils",
             "all_lifecycle_realized_pnl_ils",
@@ -197,6 +198,7 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     ):
         realized = compute_realized_pnl(recent_trades)
         lifecycle = compute_full_trade_performance(recent_trades)
+        summary.setdefault("strategy_cohorts", lifecycle["strategy_cohorts"])
         summary.setdefault("closed_trade_realized_pnl_ils", lifecycle["closed_trade_realized_pnl_ils"])
         summary.setdefault(
             "open_lot_partial_realized_pnl_ils",

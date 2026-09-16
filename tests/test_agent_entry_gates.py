@@ -804,8 +804,9 @@ def test_neutral_pilot_can_buy_half_size_when_only_strict_neutral_score_blocks(m
 
     assert decision["final_action"] == "BUY_SIMULATED"
     assert decision["entry_mode"] == "neutral_pilot"
-    assert decision["position_size"] == 50
-    assert decision["adjusted_cash_out"] == 5_000
+    assert decision["position_size"] == 48  # 250 risk budget / 5.2 all-in risk per share
+    assert decision["adjusted_risk_amount"] == 249.6
+    assert decision["adjusted_cash_out"] == 4_804.8
     assert decision["minimum_setup_score_required"] == 0.45
     assert decision["minimum_net_rr_required"] == 2.0
 
@@ -836,7 +837,8 @@ def test_neutral_pilot_allows_second_pilot_trade(monkeypatch) -> None:
 
     assert decision["final_action"] == "BUY_SIMULATED"
     assert decision["entry_mode"] == "neutral_pilot"
-    assert decision["position_size"] == 50
+    assert decision["position_size"] == 48  # 250 risk budget / 5.2 all-in risk per share
+    assert decision["adjusted_risk_amount"] == 249.6
 
 
 def test_neutral_pilot_daily_limit_blocks_third_pilot_trade(monkeypatch) -> None:
