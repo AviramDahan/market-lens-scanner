@@ -1681,7 +1681,7 @@ function renderSetupSelectionAudit(item) {
             ].filter(Boolean);
             return `
               <span class="setup-candidate ${candidate.is_active ? "active" : "shadow"}">
-                <b>${candidate.is_active ? "Selected" : "Alternative"}</b>
+                <b>${candidate.is_active ? "Selected" : "Other"}</b>
                 <em>${escapeHtml(candidate.setup_type || "Unknown setup")}</em>
                 <small>Legacy ${Number(candidate.legacy_score || 0).toFixed(2)} / normalized ${Number(candidate.shadow_setup_normalized_score || 0).toFixed(2)}</small>
                 ${evidence.length ? `<small>${escapeHtml(evidence.join(" · "))}</small>` : ""}
