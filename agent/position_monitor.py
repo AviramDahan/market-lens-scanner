@@ -4,7 +4,7 @@ import json
 import math
 import os
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from app.execution import EXECUTION_VERSION, position_metadata, sell_fill
 from app.data import fetch_intraday_frame
 from app.telegram_notifications import (
     build_telegram_dedupe_key,
@@ -56,6 +57,7 @@ class PositionEvent:
     cash_in: float
     note: str
     trade_id: str = ""
+    execution_details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -506,6 +508,7 @@ def monitor_position(
                 action="EXIT_STOP",
                 triggered_at=index.isoformat(),
                 trigger_price=stop,
+                observed_price=(float(row["Open"]) if position_metadata(position).get("execution_model_version") == EXECUTION_VERSION else None),
                 high=high,
                 low=low,
                 close=close,
@@ -562,7 +565,9 @@ def build_event(
     quantity: int,
     currency_rate: float,
     note: str,
+    observed_price: float | None = None,
 ) -> PositionEvent:
+    trigger_price, details = sell_fill(position, action, trigger_price, observed_price)
     return PositionEvent(
         ticker=str(position.get("ticker") or "").upper(),
         action=action,
@@ -575,6 +580,7 @@ def build_event(
         cash_in=round(quantity * trigger_price * currency_rate, 2),
         note=note,
         trade_id=position_trade_id(position),
+        execution_details=details,
     )
 
 
@@ -623,7 +629,7 @@ def refresh_position(position: dict[str, Any], current_price: float, currency_ra
     position["unrealized_usd"] = round((current_price - entry) * quantity, 2)
     position["unrealized_ils"] = round((current_price - entry) * quantity * currency_rate, 2)
     position["exposure_ils"] = round(current_price * quantity * currency_rate, 2)
-    position["risk_ils"] = round(max(0.0, entry - stop) * quantity * currency_rate, 2)
+    position["risk_ils"] = round(max(0.0, entry - sell_fill(position, "EXIT_STOP", stop)[0]) * quantity * currency_rate, 2)
     position["notes"] = position.get("notes") or "Open position refreshed by monitor."
 
 
@@ -931,9 +937,11 @@ def append_trade_log_row(
     ws.cell(row, 19, position.get("selection_context", ""))
     ws.cell(row, 20, position.get("decision_json", ""))
     analytics = parse_decision_json(position.get("decision_json", ""))
+    analytics.update(event.execution_details)
     analytics["exit_reason"] = event.action
     analytics["r_multiple"] = event_r_multiple(position, event, analytics)
     analytics["duration"] = position_duration(position.get("entry_date"), event.triggered_at)
+    ws.cell(row, 20, json.dumps(analytics, ensure_ascii=False, sort_keys=True, default=str))
     for col_idx, value in enumerate(trade_analytics_values(analytics), start=21):
         ws.cell(row, col_idx, value)
 

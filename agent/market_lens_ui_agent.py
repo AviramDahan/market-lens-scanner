@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.candidate_selection import select_qualified_candidate
+
 import json
 import os
 import re
@@ -1025,41 +1027,47 @@ def update_workbook(
     allocation_order = rank_results_for_allocation(results, open_positions)
 
     for result in allocation_order:
-        decision = decide(
-            result,
-            open_positions=open_positions,
-            cash=cash,
-            exposure=exposure,
-            usd_ils=currency_rate,
-            max_position=max_position,
-            max_total_exposure=max_total_exposure,
-            max_risk=max_risk,
-            min_rr=min_rr,
-            sector_map=sector_map,
-            sector_health=sector_health,
-        )
-        decision_json = evaluate_agent_candidate(
-            timestamp=timestamp,
-            result=result,
-            initial_action=decision.action,
-            initial_reason=decision.feedback,
-            quantity=decision.quantity,
-            cash_out=decision.cash_out_ils,
-            risk_amount=decision.risk_ils,
-            cash_available=cash,
-            portfolio_exposure_before=exposure,
-            open_positions=open_positions,
-            sector_map=sector_map,
-            run_context=run_context,
-            portfolio_open_risk_before=open_risk,
-            recent_stop_events=recent_stop_events,
-            neutral_pilot_trades_today=neutral_pilot_buys_today,
+        def evaluate_selection(result):
+            decision = decide(
+                result,
+                open_positions=open_positions,
+                cash=cash,
+                exposure=exposure,
+                usd_ils=currency_rate,
+                max_position=max_position,
+                max_total_exposure=max_total_exposure,
+                max_risk=max_risk,
+                min_rr=min_rr,
+                sector_map=sector_map,
+                sector_health=sector_health,
+            )
+            decision_json = evaluate_agent_candidate(
+                timestamp=timestamp,
+                result=result,
+                initial_action=decision.action,
+                initial_reason=decision.feedback,
+                quantity=decision.quantity,
+                cash_out=decision.cash_out_ils,
+                risk_amount=decision.risk_ils,
+                cash_available=cash,
+                portfolio_exposure_before=exposure,
+                open_positions=open_positions,
+                sector_map=sector_map,
+                run_context=run_context,
+                portfolio_open_risk_before=open_risk,
+                recent_stop_events=recent_stop_events,
+                neutral_pilot_trades_today=neutral_pilot_buys_today,
+                currency_rate=currency_rate,
+            )
+            return decision, decision_json
+
+        result, decision, decision_json = select_qualified_candidate(
+            result, evaluate_selection, existing=result.ticker in open_positions
         )
         decision_json["scan_source"] = scan_source_text(settings)
         decision_json["setup_candidates"] = list(
             decision_json.get("setup_candidates") or result.setup_candidates or []
         )
-        decision_json["active_setup_selection_policy"] = "FIRST_MATCH_LEGACY"
         decision_json["setup_score_run_percentile"] = setup_score_percentiles.get(result.ticker)
         active_candidate = next(
             (
@@ -1080,15 +1088,17 @@ def update_workbook(
             decision.quantity = int(decision_json.get("position_size") or decision.quantity)
             decision.cash_out_ils = float(decision_json.get("adjusted_cash_out") or decision.cash_out_ils)
             decision.risk_ils = float(decision_json.get("adjusted_risk_amount") or decision.risk_ils)
+            decision.execution_price = decision_json["entry_execution_price"]
         if final_action != decision.action:
             decision = Decision(final_action, final_reason, decision_json=decision_json)
         else:
             decision.feedback = final_reason
+            decision_json.update(decision.decision_json)
             decision.decision_json = decision_json
         enrich_decision_analytics(decision_json, run_id=run_id, result=result, final_action=final_action)
         if final_action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
             capture_position_exit_plan(decision_json, open_positions[result.ticker])
-        decision_json["active_strategy"] = "CURRENT_AGENT_GATES"
+        decision_json["active_strategy"] = "QUALIFIED_SELECTION_V1"
         decision_json["shadow_strategies"] = evaluate_shadow_strategies(result, decision_json)
         result.selection_context = build_selection_context(
             result,
@@ -1108,7 +1118,7 @@ def update_workbook(
             if decision_json.get("entry_mode") == "neutral_pilot":
                 neutral_pilot_buys_today += 1
             cash -= decision.cash_out_ils
-            exposure += decision.cash_out_ils
+            exposure += open_positions[result.ticker]["exposure_ils"]
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
             cash_delta, exposure_delta = apply_exit_decision(open_positions, result, decision, currency_rate)
             cash += cash_delta
@@ -1963,11 +1973,11 @@ def append_trade_log_row(
     ws.cell(row, 1, timestamp)
     ws.cell(row, 2, decision.action)
     ws.cell(row, 3, result.ticker)
-    ws.cell(row, 4, result.current_price if decision.action == "BUY_SIMULATED" else None)
+    ws.cell(row, 4, (decision.execution_price or result.current_price) if decision.action == "BUY_SIMULATED" else None)
     ws.cell(row, 5, (decision.execution_price or result.current_price) if decision.action != "BUY_SIMULATED" else None)
     ws.cell(row, 6, decision.quantity)
     ws.cell(row, 7, usd_ils)
-    ws.cell(row, 8, decision.quantity * result.current_price * usd_ils if decision.action == "BUY_SIMULATED" else 0)
+    ws.cell(row, 8, decision.cash_out_ils if decision.action == "BUY_SIMULATED" else 0)
     ws.cell(row, 9, decision.cash_in_ils)
     ws.cell(row, 10, decision.cash_out_ils)
     ws.cell(row, 11, decision.cash_in_ils)
@@ -2011,20 +2021,21 @@ def position_from_buy(
     timestamp: str,
     screenshot_path: Path,
 ) -> dict[str, Any]:
+    entry = decision.execution_price or result.current_price
     exposure = decision.quantity * result.current_price * usd_ils
-    risk = decision.quantity * (result.current_price - float(result.stop_loss or 0)) * usd_ils
+    risk = decision.risk_ils
     return {
         "ticker": result.ticker,
         "entry_date": timestamp,
-        "entry_price": result.current_price,
+        "entry_price": entry,
         "current_price": result.current_price,
         "quantity": decision.quantity,
         "stop_loss": result.stop_loss,
         "target_1": result.target_1,
         "target_2": result.target_2,
         "status": "OPEN",
-        "unrealized_usd": 0,
-        "unrealized_ils": 0,
+        "unrealized_usd": round((result.current_price - entry) * decision.quantity, 2),
+        "unrealized_ils": round((result.current_price - entry) * decision.quantity * usd_ils, 2),
         "exposure_ils": round(exposure, 2),
         "risk_ils": round(risk, 2),
         "notes": decision.feedback,

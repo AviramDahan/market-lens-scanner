@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.execution import sell_fill
+
 import hashlib
 import json
 import os
@@ -158,6 +160,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             2,
         ),
         "open_full_trades": full_trade_performance["open_count"],
+        "strategy_cohorts": full_trade_performance["strategy_cohorts"],
     }
 
     dashboard = {
@@ -987,6 +990,9 @@ def diagnostic_drilldown_item(
         "active_setup_selection_policy": decision.get(
             "active_setup_selection_policy", "FIRST_MATCH_LEGACY"
         ),
+        "strategy_version": decision.get("strategy_version", "legacy"),
+        "selection_reason": decision.get("selection_reason", ""),
+        "selection_candidates": decision.get("selection_candidates", []),
         "setup_candidates": setup_candidates,
         "setup_candidate_count": len(setup_candidates),
         "reason": reason,
@@ -1624,7 +1630,7 @@ def with_position_calculations(position: dict[str, Any]) -> dict[str, Any]:
     position["unrealized_pnl_usd"] = round((current - entry) * quantity, 2)
     position["unrealized_pnl_ils"] = position["unrealized_pnl_usd"]
     position["exposure_ils"] = round(current * quantity, 2)
-    position["open_risk_ils"] = round(max(0.0, entry - stop) * quantity, 2)
+    position["open_risk_ils"] = round(max(0.0, entry - sell_fill(position, "EXIT_STOP", stop)[0]) * quantity, 2)
     position["potential_profit_t1_ils"] = round(max(0.0, target_1 - current) * quantity, 2)
     position["potential_profit_t2_ils"] = round(max(0.0, target_2 - current) * quantity, 2)
     position["potential_profit_plan_ils"] = weighted_target_profit(
@@ -2065,13 +2071,16 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
             usd_ils = to_float(trade.get("usd_ils"), 1.0)
             stop = to_float(trade.get("stop_loss"))
             decision = trade.get("decision_json") if isinstance(trade.get("decision_json"), dict) else {}
-            risk_per_share = max(0.0, entry_price - stop) * usd_ils
+            risk_per_share = max(0.0, entry_price - sell_fill(trade, "EXIT_STOP", stop)[0]) * usd_ils
             lot = {
                 "trade_id": trade_identity(trade),
                 "ticker": ticker,
                 "entry_timestamp": trade.get("timestamp"),
                 "entry_price_usd": entry_price,
                 "stop_loss": stop,
+                "strategy_version": decision.get("strategy_version", "legacy"),
+                "execution_model_version": decision.get("execution_model_version", "legacy"),
+                "modeled_costs": to_float(decision.get("entry_cost_per_share")) * quantity * usd_ils,
                 "initial_quantity": quantity,
                 "remaining_quantity": quantity,
                 "unit_cost_ils": cash_out / quantity if quantity else 0.0,
@@ -2129,6 +2138,7 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
                 }
             )
             exit_decision = trade.get("decision_json") if isinstance(trade.get("decision_json"), dict) else {}
+            lot["modeled_costs"] += to_float(exit_decision.get("exit_cost_per_share")) * used * to_float(trade.get("usd_ils"), 1.0)
             for metric in ("mfe", "mae", "mfe_r", "mae_r"):
                 if exit_decision.get(metric) not in (None, ""):
                     lot[metric] = exit_decision.get(metric)
@@ -2152,8 +2162,23 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
         2,
     )
     all_lifecycle_realized_pnl = round(total_pnl + open_lot_partial_realized_pnl, 2)
+    cohorts = {}
+    for lot in [*closed, *open_lots]:
+        key = lot.get("strategy_version", "legacy")
+        cohort = cohorts.setdefault(key, {"closed_count": 0, "open_count": 0,
+                                         "closed_pnl": 0.0, "modeled_costs": 0.0})
+        cohort["modeled_costs"] += to_float(lot.get("modeled_costs"))
+        if "exit_timestamp" in lot:
+            cohort["closed_count"] += 1
+            cohort["closed_pnl"] += to_float(lot.get("pnl_ils"))
+        else:
+            cohort["open_count"] += 1
+    for cohort in cohorts.values():
+        cohort["closed_pnl"] = round(cohort["closed_pnl"], 2)
+        cohort["modeled_costs"] = round(cohort["modeled_costs"], 2)
     closed_count = len(closed)
     return {
+        "strategy_cohorts": cohorts,
         "closed_count": closed_count,
         "open_count": len(open_lots),
         "wins": wins,
@@ -2189,6 +2214,9 @@ def completed_full_trade(lot: dict[str, Any], exit_timestamp: Any) -> dict[str, 
     initial_risk = to_float(lot.get("initial_risk_ils"))
     exit_events = list(lot.get("exit_events") or [])
     return {
+        "strategy_version": lot.get("strategy_version", "legacy"),
+        "execution_model_version": lot.get("execution_model_version", "legacy"),
+        "modeled_costs": round(to_float(lot.get("modeled_costs")), 2),
         "trade_id": lot.get("trade_id", ""),
         "ticker": lot.get("ticker", ""),
         "entry_timestamp": lot.get("entry_timestamp"),

@@ -798,6 +798,14 @@ function renderMetrics(summary) {
     },
   ];
 
+  for (const [version, cohort] of Object.entries(summary.strategy_cohorts || {})) {
+    metrics.push({
+      label: version === "legacy" ? "Legacy closed P/L" : "Upgraded closed net P/L",
+      value: formatSignedMoney(cohort.closed_pnl),
+      detail: `${cohort.closed_count} closed / ${cohort.open_count} open · ${version === "legacy" ? "Historical fills; costs not reconstructed" : `${money.format(cohort.modeled_costs)} modeled costs across open/closed trades`}`,
+      tone: Number(cohort.closed_pnl) >= 0 ? "good" : "bad",
+    });
+  }
   document.getElementById("metricGrid").innerHTML = metrics
     .map(
       (metric) => `
@@ -1652,7 +1660,8 @@ function renderSetupSelectionAudit(item) {
         <strong>Setup selection</strong>
         <span>${escapeHtml(policy)}</span>
       </div>
-      <p>The first matching detector remains active. Other matches below are recorded for shadow comparison only and cannot change this trade decision.</p>
+      <p>${escapeHtml(item.selection_reason || "Historical first-match selection; alternatives were observation only.")}</p>
+      ${(item.selection_candidates || []).map(c => `<p>${escapeHtml(c.setup_type)}: ${escapeHtml(c.final_action)} — ${escapeHtml(c.reason || "")}</p>`).join("")}
       <div class="setup-candidate-list">
         ${candidates
           .map((candidate) => {
@@ -1672,7 +1681,7 @@ function renderSetupSelectionAudit(item) {
             ].filter(Boolean);
             return `
               <span class="setup-candidate ${candidate.is_active ? "active" : "shadow"}">
-                <b>${candidate.is_active ? "Active" : "Shadow"}</b>
+                <b>${candidate.is_active ? "Selected" : "Alternative"}</b>
                 <em>${escapeHtml(candidate.setup_type || "Unknown setup")}</em>
                 <small>Legacy ${Number(candidate.legacy_score || 0).toFixed(2)} / normalized ${Number(candidate.shadow_setup_normalized_score || 0).toFixed(2)}</small>
                 ${evidence.length ? `<small>${escapeHtml(evidence.join(" · "))}</small>` : ""}

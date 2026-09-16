@@ -353,6 +353,7 @@ def evaluate_agent_candidate(
     portfolio_open_risk_before: float = 0.0,
     recent_stop_events: dict[str, dict[str, Any]] | None = None,
     neutral_pilot_trades_today: int = 0,
+    currency_rate: float = 1.0,
 ) -> dict[str, Any]:
     config = run_context.config
     ticker = str(result.ticker).upper()
@@ -407,6 +408,10 @@ def evaluate_agent_candidate(
         market_session=market_session,
         neutral_pilot_trades_today=neutral_pilot_trades_today,
     )
+    # Price the actual paper entry using the same costs as the eligibility gate.
+    if initial_action == "BUY_SIMULATED" and quantity > 0:
+        cash_out = round(quantity * net_rr_info["net_entry"] * currency_rate, 2)
+        risk_amount = round(quantity * net_rr_info["net_risk_per_share"] * currency_rate, 2)
     sizing_quantity = quantity
     sizing_cash_out = cash_out
     sizing_risk_amount = risk_amount
@@ -616,7 +621,18 @@ def evaluate_agent_candidate(
         active_confirmation=confirmation,
         active_confirmation_freshness=confirmation_freshness,
     )
+    from app.execution import EXECUTION_VERSION, STRATEGY_VERSION
     decision = {
+        "strategy_version": STRATEGY_VERSION,
+        "execution_model_version": EXECUTION_VERSION,
+        "entry_signal_price": result.current_price,
+        "entry_execution_price": net_rr_info["net_entry"],
+        "execution_cost_policy": {
+            "half_spread_per_share": net_rr_info["estimated_spread"] / 2,
+            "slippage_per_share": net_rr_info["estimated_slippage"] / 2,
+            "fee_per_share": net_rr_info["estimated_fees"],
+        },
+        "entry_cost_per_share": round(net_rr_info["net_entry"] - result.current_price, 4),
         "timestamp": timestamp,
         "ticker": ticker,
         "company_name": company_name_for(ticker),
@@ -825,6 +841,14 @@ def evaluate_agent_candidate(
         "reason": final_reason,
         "warnings": unique_strings(warnings),
     }
+    if ticker in open_positions:
+        from app.execution import position_metadata
+        entry_metadata = position_metadata(open_positions[ticker])
+        for key in ("execution_model_version", "execution_cost_policy", "entry_signal_price",
+                    "entry_execution_price", "entry_cost_per_share", "strategy_version"):
+            decision.pop(key, None)
+            if key in entry_metadata:
+                decision[key] = entry_metadata[key]
     return decision
 
 
@@ -1640,7 +1664,7 @@ def calculate_net_rr(result: Any, snapshot: CandidateMarketSnapshot, config: Age
     half_spread = estimated_spread / 2.0
 
     net_entry = entry + half_spread + entry_slippage + estimated_fees
-    net_stop = stop - half_spread - stop_slippage
+    net_stop = stop - half_spread - stop_slippage - estimated_fees
     net_target_1 = target_1 - half_spread - target_slippage - estimated_fees
     net_target_2 = target_2 - half_spread - target_slippage - estimated_fees
     net_risk = max(0.0, net_entry - net_stop)
