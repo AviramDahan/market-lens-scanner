@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-14
-Total scans: 74
-Tickers scanned: 10019
+Total scans: 75
+Tickers scanned: 10157
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1103
+WATCH_REVIEW: 1117
 WATCH_REVIEW unique tickers: 60
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1103
-SKIP: 8610
-NO_TRADE: 6260
+WATCH: 1117
+SKIP: 8730
+NO_TRADE: 6347
 Realized PnL: -47.26
-Unrealized PnL: 781.02
-Portfolio value: 101040.17
+Unrealized PnL: 728.36
+Portfolio value: 100987.51
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.0402
+Cumulative recorded-equity change (%): 0.9875
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CAT
 Worst ticker: AR
