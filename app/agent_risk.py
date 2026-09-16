@@ -12,6 +12,7 @@ import pandas as pd
 
 from app.data import fetch_daily_frame, fetch_intraday_frame, fetch_next_earnings_date
 from app.indicators import compute_atr
+from app.regime_evidence import daily_regime_evidence
 from app.trading_clock import INTERVAL_MINUTES, bar_close_time, completed_frame, session_status
 from app.smart_universe import SECTOR_ETFS, build_sector_health, company_name_for
 
@@ -210,12 +211,22 @@ def build_agent_run_context(
 def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
     indicators: dict[str, Any] = {}
     warnings: list[str] = []
+    evaluated_at = datetime.now(timezone.utc)
 
     for label, symbol in MARKET_REGIME_SYMBOLS.items():
         try:
             # Regime EMA200 needs its own warm-up, independent of chart range.
             frame = fetch_daily_frame(symbol, period="2y")
             indicators[label] = benchmark_state(frame, is_vix=label == "VIX")
+            indicators[label].update(daily_regime_evidence(frame, evaluated_at))
+            indicators[label]["symbol"] = symbol
+            if indicators[label]["freshness_status"] in {
+                "UNKNOWN", "STALE_SESSION", "FUTURE_SESSION", "INVALID_TIMESTAMPS", "UNEXPECTED_SESSION"
+            }:
+                warnings.append(
+                    f"{label} regime input freshness: {indicators[label]['freshness_status']} "
+                    "(daily session evidence; quote freshness is not recorded)."
+                )
         except Exception as exc:
             warnings.append(f"{label} data unavailable: {exc}")
 
@@ -226,13 +237,17 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
     us10y = indicators.get("US10Y", {})
     dxy = indicators.get("DXY", {})
 
-    risk_points = 0.0
-    risk_points += 2 if trend_is_bullish(spy) else -2 if trend_is_bearish(spy) else 0
-    risk_points += 2 if trend_is_bullish(qqq) else -2 if trend_is_bearish(qqq) else 0
-    risk_points += (1 if not trend_is_bearish(iwm) else -1) if iwm else 0
-    risk_points += 1 if vix_is_calm(vix) else -2 if vix_is_stressed(vix) else 0
-    risk_points += -0.5 if trend_is_bullish(us10y) else 0.25 if trend_is_bearish(us10y) else 0
-    risk_points += -0.25 if trend_is_bullish(dxy) else 0.25 if trend_is_bearish(dxy) else 0
+    contributions = {
+        "SPY": 2 if trend_is_bullish(spy) else -2 if trend_is_bearish(spy) else 0,
+        "QQQ": 2 if trend_is_bullish(qqq) else -2 if trend_is_bearish(qqq) else 0,
+        "IWM": (1 if not trend_is_bearish(iwm) else -1) if iwm else 0,
+        "VIX": 1 if vix_is_calm(vix) else -2 if vix_is_stressed(vix) else 0,
+        "US10Y": -0.5 if trend_is_bullish(us10y) else 0.25 if trend_is_bearish(us10y) else 0,
+        "DXY": -0.25 if trend_is_bullish(dxy) else 0.25 if trend_is_bearish(dxy) else 0,
+    }
+    risk_points = float(sum(contributions.values()))
+    for label, state in indicators.items():
+        state["risk_point_contribution"] = contributions[label]
 
     if risk_points >= 4:
         label = "BULL"

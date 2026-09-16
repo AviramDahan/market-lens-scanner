@@ -4,7 +4,7 @@ import threading
 import time
 import warnings
 from dataclasses import dataclass
-from datetime import time as dt_time
+from datetime import datetime, timezone, time as dt_time
 from pathlib import Path
 
 import pandas as pd
@@ -212,6 +212,9 @@ def _fetch_frame(ticker: str, interval: str, period: str, include_prepost: bool 
     else:
         df.index = df.index.tz_convert("UTC")
 
+    # Preserve provider retrieval time across cache hits; bar labels are not quote times.
+    df.attrs["provider"] = "yfinance"
+    df.attrs["provider_fetched_at"] = datetime.now(timezone.utc).isoformat()
     _set_frame_cache(cache_key, df)
     return df.copy()
 
