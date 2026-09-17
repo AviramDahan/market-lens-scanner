@@ -2,17 +2,17 @@ Weekly Performance Summary
 
 Date: 2026-09-14
 Total scans: 82
-Tickers scanned: 11022
+Tickers scanned: 11019
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1232
+WATCH_REVIEW: 1236
 WATCH_REVIEW unique tickers: 57
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1232
-SKIP: 9460
-NO_TRADE: 6652
+WATCH: 1236
+SKIP: 9454
+NO_TRADE: 6619
 Realized PnL: -47.26
 Unrealized PnL: 525.05
 Portfolio value: 100784.2
@@ -26,8 +26,8 @@ Worst ticker: VZ
 Best shadow strategy: TREND_PULLBACK_RECLAIM
 Worst shadow strategy: FIB_STRUCTURE_STOP
 Shadow would-buy counts:
-- FIB_STRUCTURE_STOP: 4
-- TREND_PULLBACK_RECLAIM: 13
+- FIB_STRUCTURE_STOP: 3
+- TREND_PULLBACK_RECLAIM: 10
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -38,9 +38,9 @@ Top rejected candidates:
 - HAL: WATCH score=0.51 reason=WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.27.
 - OKE: SKIP score=0.4962 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
 - SNOW: SKIP score=0.49 reason=SKIP: SKIP: Bear market regime blocks new simulated buys. Also: Position size blocked by cash, exposure, or risk limits.
-- WFC: SKIP score=0.49 reason=SKIP: WATCH: NEUTRAL market requires setup score (0.49 < 0.55). Also: Position size blocked by cash, exposure, or risk limits.
 - ECHO: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.35 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.03.
 - TMO: WATCH score=0.4842 reason=WATCH: Technical setup detected, but weighted risk/reward 1.42 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.01.
+- WFC: SKIP score=0.4826 reason=SKIP: Financials sector regime is weak (29/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.63.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
