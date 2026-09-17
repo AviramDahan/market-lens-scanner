@@ -2,17 +2,17 @@ Weekly Performance Summary
 
 Date: 2026-09-14
 Total scans: 82
-Tickers scanned: 11015
+Tickers scanned: 11013
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1241
+WATCH_REVIEW: 1245
 WATCH_REVIEW unique tickers: 57
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1241
-SKIP: 9446
-NO_TRADE: 6585
+WATCH: 1245
+SKIP: 9440
+NO_TRADE: 6562
 Realized PnL: -47.26
 Unrealized PnL: 525.05
 Portfolio value: 100784.2
@@ -26,9 +26,8 @@ Worst ticker: VZ
 Best shadow strategy: TREND_PULLBACK_RECLAIM
 Worst shadow strategy: FIB_STRUCTURE_STOP
 Shadow would-buy counts:
-- FIB_STRUCTURE_STOP: 2
-- TREND_PULLBACK_RECLAIM: 7
-- VWAP_RECLAIM: 2
+- FIB_STRUCTURE_STOP: 1
+- TREND_PULLBACK_RECLAIM: 4
 
 Top rejected candidates:
 - GILD: SKIP score=0.56 reason=SKIP: WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked. Also: Position size blocked by cash, exposure, or risk limits.
