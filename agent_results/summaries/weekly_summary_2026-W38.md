@@ -2,24 +2,24 @@ Weekly Performance Summary
 
 Date: 2026-09-14
 Total scans: 82
-Tickers scanned: 11107
+Tickers scanned: 11115
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1329
-WATCH_REVIEW unique tickers: 64
+WATCH_REVIEW: 1339
+WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1329
-SKIP: 9433
-NO_TRADE: 6575
+WATCH: 1339
+SKIP: 9429
+NO_TRADE: 6577
 Realized PnL: -47.26
-Unrealized PnL: 988.01
-Portfolio value: 101247.16
+Unrealized PnL: 981.27
+Portfolio value: 101240.42
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.2472
+Cumulative recorded-equity change (%): 1.2404
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CAT
 Worst ticker: VZ
@@ -28,10 +28,10 @@ Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - FIB_STOP_075_ATR: 22
 - FIB_STOP_100_ATR: 10
-- FIB_STRUCTURE_STOP: 18
-- RELATIVE_STRENGTH_LEADER: 5
-- TREND_PULLBACK_RECLAIM: 27
-- VWAP_RECLAIM: 1
+- FIB_STRUCTURE_STOP: 20
+- RELATIVE_STRENGTH_LEADER: 6
+- TREND_PULLBACK_RECLAIM: 29
+- VWAP_RECLAIM: 2
 
 Top rejected candidates:
 - JNJ: WATCH score=0.5631 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
