@@ -39,6 +39,7 @@ from app.telegram_notifications import (
     dashboard_url_from_env,
     format_position_opened_message,
     format_qualified_capital_blocked_message,
+    format_qualified_setup_message,
     send_telegram_chart_photo,
     send_telegram_message,
 )
@@ -1058,6 +1059,7 @@ def update_workbook(
                 recent_stop_events=recent_stop_events,
                 neutral_pilot_trades_today=neutral_pilot_buys_today,
                 currency_rate=currency_rate,
+                base_min_rr=min_rr,
             )
             return decision, decision_json
 
@@ -1320,7 +1322,20 @@ def build_buy_notification_records(
                 position.get("target_2"),
             )
             chart_ref = str(position.get("chart_url") or result.chart_url or "")
-        elif is_qualified_capital_blocked_notification(decision):
+        elif (
+            env_bool("MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED", True)
+            and (decision.decision_json or {}).get("qualified_setup_alert")
+            and decision.decision_json["qualified_setup_alert"].get("setup_alert_evidence", {}).get("eligible") is True
+            and not decision.decision_json["qualified_setup_alert"].get("setup_alert_evidence", {}).get("blockers")
+        ):
+            alert = decision.decision_json["qualified_setup_alert"]
+            notification_type = "QUALIFIED_SETUP"
+            message = format_qualified_setup_message(
+                ticker=result.ticker, alert=alert, timestamp=timestamp, dashboard_url=dashboard_url)
+            dedupe_key = build_telegram_dedupe_key(
+                notification_type, result.ticker, str(timestamp)[:10], alert["setup_type"])
+            chart_ref = str(alert.get("chart_url") or "")
+        elif "setup_alert_evidence" not in (decision.decision_json or {}) and is_qualified_capital_blocked_notification(decision):
             decision_json = decision.decision_json or {}
             notification_type = "QUALIFIED_CAPITAL_BLOCKED"
             message = format_qualified_capital_blocked_message(
@@ -1398,7 +1413,7 @@ def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
         ticker = record["ticker"]
         dedupe_key = record["dedupe_key"]
         notification_type = record.get("notification_type", "BUY_SIMULATED")
-        log_label = "qualified capital-blocked setup" if notification_type == "QUALIFIED_CAPITAL_BLOCKED" else "position-open"
+        log_label = "qualified setup" if notification_type in {"QUALIFIED_CAPITAL_BLOCKED", "QUALIFIED_SETUP"} else "position-open"
         outcome = send_telegram_message(record["message"], dedupe_key=dedupe_key)
         outcomes.append(outcome)
         if outcome.sent:
