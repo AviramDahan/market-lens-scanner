@@ -2,29 +2,29 @@ Weekly Performance Summary
 
 Date: 2026-09-14
 Total scans: 82
-Tickers scanned: 11134
+Tickers scanned: 11133
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1502
+WATCH_REVIEW: 1511
 WATCH_REVIEW unique tickers: 68
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1502
-SKIP: 9231
-NO_TRADE: 6415
-Realized PnL: -89.92
-Unrealized PnL: 801.91
-Portfolio value: 101018.4
+WATCH: 1511
+SKIP: 9221
+NO_TRADE: 6402
+Realized PnL: -14.56
+Unrealized PnL: 796.32
+Portfolio value: 101088.17
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.0184
+Cumulative recorded-equity change (%): 1.0882
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
-Best ticker: CAT
-Worst ticker: AIG
+Best ticker: APP
+Worst ticker: AMZN
 Best shadow strategy: VWAP_RECLAIM
-Worst shadow strategy: RELATIVE_STRENGTH_LEADER
+Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 15
 - FIB_STOP_075_ATR: 36
@@ -35,16 +35,16 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
-- JNJ: WATCH score=0.5631 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- JNJ: WATCH score=0.5667 reason=Gross R/R is valid, but Net R/R 1.99 failed minimum 2.50 after slippage/spread adjustment.
+- KMI: WATCH score=0.5574 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - DDOG: WATCH score=0.5551 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - AIG: SKIP score=0.5332 reason=SKIP: Financials sector regime is weak (29/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.94.
 - TSLA: SKIP score=0.5325 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 1.69.
 - HAL: WATCH score=0.5321 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - MSFT: WATCH score=0.5309 reason=WATCH: Technical setup detected, but weighted risk/reward 1.78 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - ETN: SKIP score=0.529 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.63.
+- CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
 - APA: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.03.
-- ORCL: WATCH score=0.5169 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- WMB: WATCH score=0.5156 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
