@@ -2,31 +2,31 @@ Weekly Performance Summary
 
 Date: 2026-09-14
 Total scans: 82
-Tickers scanned: 11135
+Tickers scanned: 11136
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1506
+WATCH_REVIEW: 1503
 WATCH_REVIEW unique tickers: 68
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1506
-SKIP: 9231
-NO_TRADE: 6348
+WATCH: 1503
+SKIP: 9234
+NO_TRADE: 6376
 Realized PnL: -89.92
-Unrealized PnL: 782.3
-Portfolio value: 100998.79
+Unrealized PnL: 791.22
+Portfolio value: 101007.71
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.9988
+Cumulative recorded-equity change (%): 1.0077
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CAT
 Worst ticker: AIG
 Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: RELATIVE_STRENGTH_LEADER
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 10
+- BREAKOUT_CONTINUATION: 11
 - FIB_STOP_075_ATR: 33
 - FIB_STOP_100_ATR: 13
 - FIB_STRUCTURE_STOP: 31
