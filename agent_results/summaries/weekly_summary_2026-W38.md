@@ -6,13 +6,13 @@ Tickers scanned: 11128
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1424
+WATCH_REVIEW: 1433
 WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1424
-SKIP: 9337
-NO_TRADE: 6324
+WATCH: 1433
+SKIP: 9326
+NO_TRADE: 6301
 Realized PnL: -47.26
 Unrealized PnL: 968.0
 Portfolio value: 101227.15
