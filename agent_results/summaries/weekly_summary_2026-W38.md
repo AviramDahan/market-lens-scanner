@@ -2,17 +2,17 @@ Weekly Performance Summary
 
 Date: 2026-09-14
 Total scans: 82
-Tickers scanned: 11103
+Tickers scanned: 11093
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1576
-WATCH_REVIEW unique tickers: 61
+WATCH_REVIEW: 1590
+WATCH_REVIEW unique tickers: 64
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1576
-SKIP: 9126
-NO_TRADE: 6218
+WATCH: 1590
+SKIP: 9102
+NO_TRADE: 6183
 Realized PnL: -14.56
 Unrealized PnL: 796.32
 Portfolio value: 101088.17
@@ -44,7 +44,7 @@ Top rejected candidates:
 - MSFT: WATCH score=0.5309 reason=WATCH: Technical setup detected, but weighted risk/reward 1.78 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - ETN: SKIP score=0.529 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.63.
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
-- APA: WATCH score=0.52 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.03.
+- ORCL: WATCH score=0.5169 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
