@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 15
-Tickers scanned: 1960
+Total scans: 16
+Tickers scanned: 2103
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 394
-WATCH_REVIEW unique tickers: 54
+WATCH_REVIEW: 422
+WATCH_REVIEW unique tickers: 56
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 394
-SKIP: 1510
-NO_TRADE: 992
+WATCH: 422
+SKIP: 1622
+NO_TRADE: 1088
 Realized PnL: 356.36
-Unrealized PnL: 967.64
-Portfolio value: 101615.85
+Unrealized PnL: 1003.56
+Portfolio value: 101651.77
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.6158
+Cumulative recorded-equity change (%): 1.6518
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AMZN
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STRUCTURE_STOP: 2
-- TREND_PULLBACK_RECLAIM: 7
+- FIB_STRUCTURE_STOP: 4
+- TREND_PULLBACK_RECLAIM: 11
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -38,9 +38,9 @@ Top rejected candidates:
 - WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - APP: WATCH score=0.5018 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - SMCI: SKIP score=0.4996 reason=SKIP: Semiconductors sector regime is weak (34/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.33.
+- ORCL: WATCH score=0.4972 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - MRK: WATCH score=0.4923 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
 - MDT: WATCH score=0.4843 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
-- ANET: WATCH score=0.4816 reason=WATCH: Technical setup detected, but weighted risk/reward 1.25 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.92.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
