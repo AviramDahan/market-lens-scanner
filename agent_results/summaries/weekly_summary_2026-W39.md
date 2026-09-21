@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 17
-Tickers scanned: 2246
+Total scans: 18
+Tickers scanned: 2387
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 451
+WATCH_REVIEW: 480
 WATCH_REVIEW unique tickers: 56
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 451
-SKIP: 1733
-NO_TRADE: 1184
+WATCH: 480
+SKIP: 1842
+NO_TRADE: 1279
 Realized PnL: 356.36
-Unrealized PnL: 1064.84
-Portfolio value: 101713.05
+Unrealized PnL: 1078.68
+Portfolio value: 101726.89
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.713
+Cumulative recorded-equity change (%): 1.7269
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AMZN
@@ -27,8 +27,9 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
+- FIB_STOP_075_ATR: 1
 - FIB_STRUCTURE_STOP: 7
-- TREND_PULLBACK_RECLAIM: 13
+- TREND_PULLBACK_RECLAIM: 16
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -40,7 +41,7 @@ Top rejected candidates:
 - WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - APP: WATCH score=0.5018 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - SMCI: SKIP score=0.4996 reason=SKIP: Semiconductors sector regime is weak (34/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.33.
-- ORCL: WATCH score=0.4972 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
+- ORCL: WATCH score=0.4982 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - MRK: WATCH score=0.4923 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
 
 Recommendations:
