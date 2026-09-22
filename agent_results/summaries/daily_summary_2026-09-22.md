@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-22
-Total scans: 23
-Tickers scanned: 3134
+Total scans: 24
+Tickers scanned: 3275
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 607
+WATCH_REVIEW: 631
 WATCH_REVIEW unique tickers: 55
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 607
-SKIP: 2441
-NO_TRADE: 1817
+WATCH: 631
+SKIP: 2554
+NO_TRADE: 1913
 Realized PnL: -56.39
-Unrealized PnL: 848.57
-Portfolio value: 101440.38
-Daily recorded-equity change (%): -0.2992
+Unrealized PnL: 884.98
+Portfolio value: 101476.79
+Daily recorded-equity change (%): -0.2634
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-21
-Cumulative recorded-equity change (%): 1.4404
+Cumulative recorded-equity change (%): 1.4768
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: ABBV
