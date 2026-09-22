@@ -78,3 +78,36 @@ The original archive repository is public. An automated scan of the recovered
 payload found no email addresses or common credential/token patterns, but that
 does not prove the absence of every possible sensitive value. Other daily
 equity gaps remain explicit and have not been inferred.
+
+## Verified 2026-W38 performance
+
+The historical workbook at `ea81994beacde7c8c9c110840a61a51498647b5e`
+contains 93 trade-log rows, six of them dated September 14-20. The workbook
+before the week at `f2a3e73c520d17ec1a9f949f77a9ebbdecd0975d` has 87
+rows. The six event rows are unchanged in the later workbook. The existing
+dashboard calculations yield:
+
+| Measure | Verified value |
+| --- | ---: |
+| Realized exit PnL | -$14.56 |
+| Stop exits | 3 |
+| Partial profit exits | 1 |
+| Fully closed trades | 3 |
+| PnL of fully closed trades | -$214.90 |
+| Partial profit PnL on an open lot | +$200.34 |
+| Portfolio equity change | -$298.49 |
+
+The realized exit events were TRGP -$47.26, DDOG -$42.66, AMD partial profit
++$200.34, and APP -$124.98. Their sum is -$14.56. Independently, recorded
+cumulative realized PnL changed from $306.41 before the week to $291.85 after
+it, also -$14.56. Unrealized PnL fell from $1,080.25 to $796.32, a change of
+-$283.93. The total equity change of -$298.49 reconciles to the realized and
+unrealized changes. Both equity snapshots were recorded outside regular market
+hours, so this is a recorded snapshot-to-snapshot change, not a regular-session
+return series.
+
+The legacy weekly JSON already reported -$14.56 realized PnL correctly, while
+its scan and decision counts were partial (82 runs / 11,093 records). It now
+contains a labelled recovered trade audit alongside the previously recovered
+155-run / 20,974-decision audit. Other metrics calculated from the partial
+decision window must not be presented as full-week statistics.

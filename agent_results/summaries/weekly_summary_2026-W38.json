@@ -1307,8 +1307,8 @@
   "worst_setup_type": "Fib 61.8 Confluence Buy Zone",
   "worst_shadow_strategy": "FIB_STOP_100_ATR",
   "worst_ticker": "AMZN",
-  "history_coverage_status": "PARTIAL_LIVE_SUMMARY_WITH_RECOVERED_DECISION_AUDIT",
-  "history_coverage_note": "Existing performance and trade statistics were computed from a retained window of 82 runs. Do not use them as full-week estimates. The audit below counts the recovered full-week decision records only.",
+  "history_coverage_status": "PARTIAL_DECISION_WINDOW_WITH_VERIFIED_PNL_AUDIT",
+  "history_coverage_note": "Decision-derived metrics were computed from a retained window of 82 runs and are not full-week estimates. The recovered decision audit supplies full-week counts. The trade audit verifies realized PnL against both the workbook exit ledger and portfolio snapshot deltas.",
   "recovered_decision_audit": {
     "source": "Git-recovered Decision JSONL",
     "source_release": "https://github.com/AviramDahan/market-lens-data-archive/releases/tag/measurement-history-recovery-2026-09-22",
@@ -1328,6 +1328,39 @@
       "QUALIFIED_PROFESSIONAL_SCORE_V1": 10694
     },
     "capital_fields_present": 20974,
-    "trade_pnl_coverage": "NOT_RECONSTRUCTED"
+    "trade_pnl_coverage": "VERIFIED_SEPARATELY_IN_RECOVERED_TRADE_AUDIT"
+  },
+  "recovered_trade_audit": {
+    "period": "2026-09-14/2026-09-20",
+    "currency": "USD",
+    "opening_source_commit": "f2a3e73c520d17ec1a9f949f77a9ebbdecd0975d",
+    "closing_source_commit": "ea81994beacde7c8c9c110840a61a51498647b5e",
+    "ledger_rows_at_week_start": 87,
+    "ledger_rows_at_week_end": 93,
+    "week_ledger_rows": 6,
+    "subsequent_ledger_rows_unchanged": true,
+    "buy_events": 2,
+    "stop_exit_events": 3,
+    "partial_profit_events": 1,
+    "exit_events": 4,
+    "exit_event_realized_pnl": -14.56,
+    "fully_closed_trades": 3,
+    "fully_closed_trades_pnl": -214.9,
+    "partial_profit_pnl": 200.34,
+    "opening_equity": 101386.66,
+    "closing_equity": 101088.17,
+    "equity_change": -298.49,
+    "opening_realized_pnl": 306.41,
+    "closing_realized_pnl": 291.85,
+    "snapshot_realized_change": -14.56,
+    "opening_unrealized_pnl": 1080.25,
+    "closing_unrealized_pnl": 796.32,
+    "unrealized_change": -283.93,
+    "reconciliation_delta": 0.0,
+    "limitations": [
+      "Equity change includes unrealized mark-to-market changes and is not realized trade PnL.",
+      "Snapshots were recorded outside regular trading hours on September 13 and 20.",
+      "Three fully closed losses and one partial profit must not be collapsed into one win-rate definition."
+    ]
   }
 }
