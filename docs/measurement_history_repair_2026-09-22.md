@@ -31,13 +31,29 @@ production files. Files never committed cannot be recovered. Historical equity
 is not inferred from today's equity. The summary explicitly labels history as
 not independently verified; archive support alone is not proof of completeness.
 
-Local recovery found 1,509 files. Recovered decision coverage:
+Recovery found 1,509 files. The verified ZIP and source manifest are retained at:
+
+https://github.com/AviramDahan/market-lens-data-archive/releases/tag/measurement-history-recovery-2026-09-22
+
+The ZIP contains 1,513 entries (1,509 source files, three revision indexes and
+the manifest), passed a full CRC check, and has SHA-256
+`5813554a07282eb31780411b98a0dad748695f9f9c3a9cb6c07ce94993ae89cd`.
+Recovered decision coverage:
 
 - 2026-W38: 155 decision files, 20,974 decisions, 2 BUY_SIMULATED records.
 - 2026-W39 through September 21: 28 files, 3,799 decisions.
 
-These are decision records, not independent signals or completed trades. Staged
-historical recovery is not automatically merged into the production repository.
+These are decision records, not independent signals or completed trades. The
+historical ZIP is available for research but is not merged into the production
+checkout. The live weekly summary therefore covers retained and subsequently
+archived production files; historic weeks require explicit archive import.
+
+The missing September 21 daily summary was recovered as an equity-only record
+from `dashboard_snapshot.json` at commit
+`cab77125a336fc876006f209a861384ec6d1cb74`. It carries the recorded
+end-of-day portfolio value of $101,744.80, source timestamp and coverage label.
+It supplies a reference for subsequent daily-return calculation without
+claiming recovered scan, exit or trade statistics for that day.
 
 ## Cohorts
 
@@ -58,6 +74,7 @@ Regression tests cover archival round trips, permanent summary retention, active
 backfill precedence, revision-index selection, new-directory persistence,
 legacy-versus-selected identity, cohort labels and Git recovery isolation.
 
-The original archive repository is public. Recovered files remain local pending
-a reviewed storage/publication path. Do not treat an uncommitted local recovery
-as a remotely available production archive. Daily equity gaps remain explicit.
+The original archive repository is public. An automated scan of the recovered
+payload found no email addresses or common credential/token patterns, but that
+does not prove the absence of every possible sensitive value. Other daily
+equity gaps remain explicit and have not been inferred.
