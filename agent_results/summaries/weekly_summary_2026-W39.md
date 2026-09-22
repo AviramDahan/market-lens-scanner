@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 51
-Tickers scanned: 6923
+Total scans: 52
+Tickers scanned: 7065
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1358
+WATCH_REVIEW: 1388
 WATCH_REVIEW unique tickers: 69
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1358
-SKIP: 5379
-NO_TRADE: 3942
+WATCH: 1388
+SKIP: 5488
+NO_TRADE: 4034
 Realized PnL: 299.97
-Unrealized PnL: 722.76
-Portfolio value: 101314.58
+Unrealized PnL: 818.0
+Portfolio value: 101409.82
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.3146
+Cumulative recorded-equity change (%): 1.4098
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AMZN
@@ -27,10 +27,11 @@ Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- FIB_STOP_075_ATR: 16
-- FIB_STRUCTURE_STOP: 24
+- FIB_STOP_075_ATR: 19
+- FIB_STOP_100_ATR: 1
+- FIB_STRUCTURE_STOP: 26
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 31
+- TREND_PULLBACK_RECLAIM: 33
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -39,11 +40,11 @@ Top rejected candidates:
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
+- QBTS: WATCH score=0.5179 reason=WATCH: Neutral market requires stronger normalized quality (43.12/100).
 - WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - ORCL: WATCH score=0.5063 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - APP: WATCH score=0.5018 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - SMCI: SKIP score=0.4996 reason=SKIP: Semiconductors sector regime is weak (34/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.33.
-- EQIX: SKIP score=0.4976 reason=SKIP: Utilities / Real Assets sector regime is weak (10/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.09.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
