@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 50
-Tickers scanned: 6775
+Total scans: 51
+Tickers scanned: 6923
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1327
+WATCH_REVIEW: 1358
 WATCH_REVIEW unique tickers: 69
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1327
-SKIP: 5265
-NO_TRADE: 3844
+WATCH: 1358
+SKIP: 5379
+NO_TRADE: 3942
 Realized PnL: 299.97
-Unrealized PnL: 795.54
-Portfolio value: 101387.36
+Unrealized PnL: 722.76
+Portfolio value: 101314.58
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.3874
+Cumulative recorded-equity change (%): 1.3146
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AMZN
@@ -27,10 +27,10 @@ Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- FIB_STOP_075_ATR: 12
-- FIB_STRUCTURE_STOP: 22
+- FIB_STOP_075_ATR: 16
+- FIB_STRUCTURE_STOP: 24
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 29
+- TREND_PULLBACK_RECLAIM: 31
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
