@@ -1,34 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-22
-Total scans: 15
-Tickers scanned: 2006
+Total scans: 16
+Tickers scanned: 2141
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 391
-WATCH_REVIEW unique tickers: 35
+WATCH_REVIEW: 417
+WATCH_REVIEW unique tickers: 41
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 391
-SKIP: 1555
-NO_TRADE: 1059
-Realized PnL: 0.0
-Unrealized PnL: 1096.59
-Portfolio value: 101744.8
-Daily recorded-equity change (%): 0.0
+WATCH: 417
+SKIP: 1661
+NO_TRADE: 1149
+Realized PnL: -56.39
+Unrealized PnL: 1065.02
+Portfolio value: 101656.84
+Daily recorded-equity change (%): -0.0865
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-21
-Cumulative recorded-equity change (%): 1.7448
+Cumulative recorded-equity change (%): 1.6568
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
-Worst ticker: GOOG
+Worst ticker: TMO
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 
 Top rejected candidates:
 - KMI: WATCH score=0.5574 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
+- QCOM: WATCH score=0.5468 reason=WATCH: Technical setup detected, but weighted risk/reward 1.16 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.90.
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - CAT: SKIP score=0.5187 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.35.
 - WMB: WATCH score=0.5019 reason=WATCH: Technical setup detected, but weighted risk/reward 1.89 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.54.
@@ -37,7 +38,6 @@ Top rejected candidates:
 - TSM: WATCH score=0.4909 reason=WATCH: Technical setup detected, but weighted risk/reward 1.29 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.89.
 - MDT: WATCH score=0.4843 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
 - KLAC: WATCH score=0.484 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
-- TMO: WATCH score=0.4776 reason=WATCH: Technical setup detected, but weighted risk/reward 1.20 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.83.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
