@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-22
-Total scans: 22
-Tickers scanned: 2996
+Total scans: 23
+Tickers scanned: 3134
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 584
+WATCH_REVIEW: 607
 WATCH_REVIEW unique tickers: 55
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 584
-SKIP: 2330
-NO_TRADE: 1719
+WATCH: 607
+SKIP: 2441
+NO_TRADE: 1817
 Realized PnL: -56.39
-Unrealized PnL: 822.87
-Portfolio value: 101414.68
-Daily recorded-equity change (%): -0.3245
+Unrealized PnL: 848.57
+Portfolio value: 101440.38
+Daily recorded-equity change (%): -0.2992
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-21
-Cumulative recorded-equity change (%): 1.4147
+Cumulative recorded-equity change (%): 1.4404
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: ABBV
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 12
-- FIB_STOP_100_ATR: 2
-- FIB_STRUCTURE_STOP: 8
-- TREND_PULLBACK_RECLAIM: 8
+- FIB_STOP_075_ATR: 14
+- FIB_STOP_100_ATR: 3
+- FIB_STRUCTURE_STOP: 9
+- TREND_PULLBACK_RECLAIM: 9
 
 Top rejected candidates:
 - KMI: WATCH score=0.5574 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
