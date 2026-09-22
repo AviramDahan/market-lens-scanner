@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 48
-Tickers scanned: 6487
+Total scans: 49
+Tickers scanned: 6634
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1273
-WATCH_REVIEW unique tickers: 64
+WATCH_REVIEW: 1308
+WATCH_REVIEW unique tickers: 68
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1273
-SKIP: 5037
-NO_TRADE: 3650
+WATCH: 1308
+SKIP: 5146
+NO_TRADE: 3739
 Realized PnL: 299.97
-Unrealized PnL: 980.26
-Portfolio value: 101572.08
+Unrealized PnL: 980.02
+Portfolio value: 101571.84
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.5721
+Cumulative recorded-equity change (%): 1.5718
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: AVGO
 Worst ticker: AMZN
@@ -28,9 +28,9 @@ Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
 - FIB_STOP_075_ATR: 12
-- FIB_STRUCTURE_STOP: 21
+- FIB_STRUCTURE_STOP: 22
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 27
+- TREND_PULLBACK_RECLAIM: 28
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -40,8 +40,8 @@ Top rejected candidates:
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
 - WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
+- ORCL: WATCH score=0.5063 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - APP: WATCH score=0.5018 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
-- ORCL: WATCH score=0.4999 reason=WATCH: Technical setup detected, but weighted risk/reward 1.96 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.62.
 - SMCI: SKIP score=0.4996 reason=SKIP: Semiconductors sector regime is weak (34/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.33.
 - EQIX: SKIP score=0.4976 reason=SKIP: Utilities / Real Assets sector regime is weak (10/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.09.
 
