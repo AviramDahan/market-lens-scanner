@@ -107,7 +107,24 @@ hours, so this is a recorded snapshot-to-snapshot change, not a regular-session
 return series.
 
 The legacy weekly JSON already reported -$14.56 realized PnL correctly, while
-its scan and decision counts were partial (82 runs / 11,093 records). It now
-contains a labelled recovered trade audit alongside the previously recovered
-155-run / 20,974-decision audit. Other metrics calculated from the partial
-decision window must not be presented as full-week statistics.
+its scan and decision counts were partial (82 runs / 11,093 records). The W38
+weekly JSON and Markdown were subsequently rebuilt with
+`python scripts/rebuild_week38_summary.py --recovery outputs/recovered_measurements_20260922`.
+The script verifies every selected compressed file against the recovery manifest,
+then invokes the application's existing weekly aggregation on all 155 archived
+runs and the recorded end-of-week workbook. The rebuilt report has 20,974
+decision records: 17,594 SKIP, 2,677 WATCH, 701 HOLD, and two BUY_SIMULATED.
+It records 12,352 No Trade setup results; these are a setup classification, not
+an additional action category. All five trading weekdays are represented.
+
+The rebuilt closed-trade money win rate is 0% across three fully closed losses.
+The one partial profit belongs to an open lot, so it does not count as a fully
+closed winner. Realized exit PnL remains -$14.56. Recorded equity fell $298.49,
+including $283.93 of unrealized change. The report retains the archive URL,
+snapshot commit IDs, decision counts, and reconciliation basis in
+`historical_rebuild`; the previous partial version remains in Git history.
+
+This is full coverage of the 155 Git-recoverable decision files for W38, not
+proof that every run ever attempted was committed. Historical runtime/retry
+details and outcomes that were never recorded remain unavailable. The report
+labels those limits rather than treating absent values as zero.
