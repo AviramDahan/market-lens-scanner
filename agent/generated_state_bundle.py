@@ -51,7 +51,7 @@ def parse_status(output: bytes) -> list[dict[str, str]]:
 
 
 def changed_records(paths: Iterable[str], *, cwd: Path) -> list[dict[str, str]]:
-    result = run_git(["status", "--porcelain", "-z", "--", *paths], cwd=cwd)
+    result = run_git(["status", "--porcelain", "--untracked-files=all", "-z", "--", *paths], cwd=cwd)
     return parse_status(result.stdout)
 
 

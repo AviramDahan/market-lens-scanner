@@ -69,3 +69,17 @@ def test_bundle_limits_fail_closed(tmp_path: Path) -> None:
         assert "bytes exceeds" in str(exc)
     else:
         raise AssertionError("Expected generated state byte limit to fail closed")
+
+
+def test_new_archive_directory_is_copied_file_by_file(tmp_path: Path) -> None:
+    init_repo(tmp_path)
+    archive = tmp_path / "agent_results" / "decisions" / "archive" / "run.jsonl.hash.gz"
+    archive.parent.mkdir()
+    archive.write_bytes(b"verified archive")
+    bundle = tmp_path.parent / f"{tmp_path.name}_archive_bundle"
+    save_bundle(bundle, ["agent_results"], cwd=tmp_path, max_files=10, max_bytes=1024)
+    archive.unlink()
+    apply_bundle(bundle, cwd=tmp_path)
+    stage_bundle(bundle, cwd=tmp_path)
+    assert archive.read_bytes() == b"verified archive"
+    assert "archive/run.jsonl.hash.gz" in git(tmp_path, "diff", "--cached", "--name-only")

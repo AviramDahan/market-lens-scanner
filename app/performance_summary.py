@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import gzip
 import math
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
@@ -206,6 +207,18 @@ def build_period_summary(
 
     summary = {
         "summary_type": period,
+        "decision_cohorts": dict(Counter(
+            str(record.get("active_setup_selection_policy") or "UNKNOWN")
+            for record in records
+        )),
+        "capital_measurement_cohorts": dict(Counter(
+            "DYNAMIC_CAPITAL_FIELDS_PRESENT" if all(key in record for key in (
+                "market_regime_risk_points", "dynamic_exposure_limit", "portfolio_heat_cap"
+            )) else "CAPITAL_SCHEMA_UNKNOWN" for record in records
+        )),
+        "performance_by_strategy_version": trade_performance_by(performance_records, "strategy_version"),
+        "performance_by_execution_model_version": trade_performance_by(performance_records, "execution_model_version"),
+        "history_coverage_status": "AVAILABLE_FILES_ONLY_NOT_INDEPENDENTLY_VERIFIED",
         "date": target_date.isoformat() if period == "daily" else None,
         "week_start": week_start.isoformat() if period == "weekly" else None,
         "week_end": week_end.isoformat() if period == "weekly" else None,
@@ -485,7 +498,31 @@ def realized_pnl_from_events(events: list[dict[str, Any]]) -> float | None:
 def collect_records(decision_dir: Path, *, period: str, target_date: date) -> tuple[list[dict[str, Any]], list[Path]]:
     records: list[dict[str, Any]] = []
     files: list[Path] = []
-    for path in sorted(decision_dir.glob("market_lens_agent_*.jsonl")):
+    # Active files override archived copies of the same run (e.g. outcome backfills).
+    archived = {}
+    index_path = decision_dir / "archive" / "index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {}
+    for path in sorted((decision_dir / "archive").glob("market_lens_agent_*.jsonl.*.gz")):
+        key = path.name.split(".jsonl", 1)[0] + ".jsonl"
+        if key in index and path.name != index[key]:
+            continue
+        if key in archived:
+            raise ValueError(f"Ambiguous archive revisions for {key}; restore the archive index")
+        archived[key] = path
+    for key, name in index.items():
+        if key.startswith("market_lens_agent_") and key.endswith(".jsonl") and key not in archived:
+            raise ValueError(f"Missing indexed decision archive for {key}")
+    archived.update({path.name: path for path in decision_dir.glob("market_lens_agent_*.jsonl")})
+    for name, path in sorted(archived.items()):
+        try:
+            file_date = datetime.strptime(name.removeprefix("market_lens_agent_")[:8], "%Y%m%d").date()
+        except ValueError:
+            file_date = None
+        if file_date is not None:
+            if period == "daily" and file_date != target_date:
+                continue
+            if period == "weekly" and file_date.isocalendar()[:2] != target_date.isocalendar()[:2]:
+                continue
         file_records = read_jsonl(path)
         selected = [record for record in file_records if in_period(record, period, target_date)]
         if selected:
@@ -498,7 +535,8 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     records = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    content = gzip.decompress(path.read_bytes()).decode("utf-8") if path.suffix == ".gz" else path.read_text(encoding="utf-8")
+    for line in content.splitlines():
         if not line.strip():
             continue
         try:

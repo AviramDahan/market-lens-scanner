@@ -1242,6 +1242,19 @@ def test_candidate_risk_evidence_reuses_snapshot_without_changing_active_selecti
     assert measured[1]["entry_confirmation_passed"] is True
     assert measured[1]["target_feasibility_status"] == "OK"
 
+    candidate.setup_type = "VWAP Reclaim Setup"
+    candidate.setup_candidates[0]["is_active_legacy_candidate"] = True
+    candidate.setup_candidates[1]["is_active_legacy_candidate"] = False
+    alternate = measure_setup_candidate_risk_evidence(
+        result=candidate, snapshot=CandidateMarketSnapshot(ticker="TEST"), config=config(),
+        market_session={"can_open_new_buy": True}, active_net_rr=rr, active_target=target,
+        active_confirmation=confirmation, active_confirmation_freshness=freshness,
+    )
+    assert alternate[0]["is_active_legacy_candidate"] is True
+    assert alternate[1]["is_active_legacy_candidate"] is False
+    assert alternate[1]["is_selected_candidate"] is True
+    assert alternate[0]["is_selected_candidate"] is False
+
 
 def test_normalized_user_candidate_preserves_setup_candidates() -> None:
     source = result()

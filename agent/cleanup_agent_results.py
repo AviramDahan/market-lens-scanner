@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import gzip
+import hashlib
 import os
 import time
 from pathlib import Path
@@ -52,6 +54,7 @@ def prune_directory(
     project_root: Path = PROJECT_ROOT,
     preserve_paths: set[Path] | None = None,
     suffixes: set[str] | None = None,
+    archive: bool = False,
 ) -> dict[str, object]:
     directory = directory.resolve()
     project_root = project_root.resolve()
@@ -85,7 +88,7 @@ def prune_directory(
     for item in files:
         path = item["path"]
         resolved = item["resolved"]
-        if resolved in preserve_resolved:
+        if resolved in preserve_resolved or (archive and path.name.startswith(("daily_summary_", "weekly_summary_"))):
             keep.add(path)
             kept_bytes += item["size"]
             continue
@@ -111,6 +114,26 @@ def prune_directory(
         deleted.append(str(path.relative_to(project_root)))
         bytes_deleted += size
         if not dry_run:
+            if archive:
+                # Content-addressed copies survive reruns without overwriting history.
+                raw = path.read_bytes()
+                digest = hashlib.sha256(raw).hexdigest()
+                destination = directory / "archive" / f"{path.name}.{digest}.gz"
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                if not destination.exists():
+                    temporary = destination.with_suffix(".tmp")
+                    temporary.write_bytes(gzip.compress(raw, mtime=0))
+                    if gzip.decompress(temporary.read_bytes()) != raw:
+                        raise RuntimeError("Archive verification failed; original retained")
+                    temporary.replace(destination)
+                if gzip.decompress(destination.read_bytes()) != raw:
+                    raise RuntimeError("Archive mismatch; original retained")
+                index_path = destination.parent / "index.json"
+                index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {}
+                index[path.name] = destination.name
+                temporary_index = index_path.with_suffix(".tmp")
+                temporary_index.write_text(json.dumps(index, sort_keys=True), encoding="utf-8")
+                temporary_index.replace(index_path)
             path.unlink()
 
     return {
@@ -124,6 +147,8 @@ def prune_directory(
         "deleted": len(deleted),
         "bytes_deleted": bytes_deleted,
         "deleted_paths": deleted[:25],
+        "archived": len(deleted) if archive else 0,
+        "permanently_deleted": 0 if archive else len(deleted),
     }
 
 
@@ -275,6 +300,7 @@ def main() -> int:
                     dry_run=dry_run,
                     preserve_paths=preserve_paths,
                     suffixes=suffixes,
+                    archive=suffixes != MEDIA_SUFFIXES,
                 )
             )
 

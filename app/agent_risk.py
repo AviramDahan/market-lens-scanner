@@ -937,7 +937,7 @@ def measure_setup_candidate_risk_evidence(
     """Measure every setup candidate against shared data without selecting it."""
     measured: list[dict[str, Any]] = []
     active_type = str(getattr(result, "setup_type", "") or "")
-    for payload in getattr(result, "setup_candidates", None) or []:
+    for candidate_index, payload in enumerate(getattr(result, "setup_candidates", None) or []):
         if not isinstance(payload, dict):
             continue
         candidate = dict(payload)
@@ -987,7 +987,11 @@ def measure_setup_candidate_risk_evidence(
         candidate.update(
             {
                 "candidate_risk_measurement_version": "setup_candidate_risk_v1",
-                "is_active_legacy_candidate": is_active,
+                "is_active_legacy_candidate": candidate.get(
+                    "is_active_legacy_candidate",
+                    candidate.get("selection_rank", candidate_index + 1) == 1,
+                ),
+                "is_selected_candidate": is_active,
                 "gross_rr_1": net_rr["gross_rr_1"],
                 "gross_rr_2": net_rr["gross_rr_2"],
                 "net_rr_1": net_rr["net_rr_1"],
