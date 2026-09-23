@@ -395,8 +395,21 @@ function renderDashboard(data) {
   document.getElementById("latestSnapshot").disabled = !snapshot.selected_date;
   document.getElementById("trackerLink").href = data.tracker_url;
   document.getElementById("lastRun").textContent = formatDate(data.latest_run.timestamp);
-  document.getElementById("runStatus").textContent = "OK";
-  document.getElementById("tickerCount").textContent = data.latest_run.tickers.length;
+  const runStatus = String(data.latest_run.run_status || "FAILED").toUpperCase();
+  const runStatusElement = document.getElementById("runStatus");
+  runStatusElement.textContent = runStatus;
+  runStatusElement.dataset.status = runStatus;
+  const coverage = data.latest_run.scan_coverage || {};
+  const received = Number(coverage.received ?? data.latest_run.tickers.length ?? 0);
+  const requested = Number(coverage.requested ?? received);
+  const missing = Number(coverage.missing ?? data.latest_run.missing_tickers?.length ?? 0);
+  document.getElementById("tickerCount").textContent = received;
+  const scanCoverageMeta = document.getElementById("scanCoverageMeta");
+  scanCoverageMeta.textContent = requested
+    ? `${received}/${requested} results${missing ? ` · ${missing} unavailable` : ""}${coverage.estimated ? " · historical estimate" : ""}`
+    : `${received} results`;
+  const missingTickers = data.latest_run.missing_tickers || [];
+  scanCoverageMeta.title = missingTickers.length ? `Unavailable: ${missingTickers.join(", ")}` : "Complete provider coverage";
   document.getElementById("validSetups").textContent = data.latest_run.valid_setups;
   document.getElementById("tradeReadySetups").textContent = data.latest_run.trade_ready_setups ?? countTradeReady(data.latest_setups);
 

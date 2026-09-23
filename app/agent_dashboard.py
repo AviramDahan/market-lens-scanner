@@ -15,6 +15,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from openpyxl import load_workbook
 
+from app.run_status import build_scan_coverage, normalize_run_status
 from app.smart_universe import base_universe, company_name_for
 
 
@@ -29,6 +30,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     summary_dir = results_dir / "summaries"
     position_monitor_dir = results_dir / "position_monitor"
     decision_dir = results_dir / "decisions"
+    runtime_dir = results_dir / "runtime"
 
     if not tracker_path.exists():
         return {
@@ -74,6 +76,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         if current_snapshot
         else reconstruct_open_positions(scoped_trades, setup_rows, latest_run_timestamp)
     )
+    wb.close()
     realized = compute_realized_pnl(scoped_trades)
     full_trade_performance = compute_full_trade_performance(scoped_trades)
     annotated_trades = realized.get("trades", scoped_trades)
@@ -101,6 +104,55 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     if not selected_date and not latest_summary_path:
         latest_summary_path = resolve_latest_file(summary_dir, ".md")
     latest_summary = latest_summary_path.read_text(encoding="utf-8") if latest_summary_path else ""
+    latest_scan_summary_path = resolve_record_file(latest_scan_update.get("summary"), summary_dir, ".md")
+    latest_scan_summary = (
+        latest_scan_summary_path.read_text(encoding="utf-8")
+        if latest_scan_summary_path
+        else latest_summary
+    )
+    latest_runtime = load_run_runtime_metrics(runtime_dir, str(latest_scan_update.get("run_id") or ""))
+    scan_status = str(latest_runtime.get("scan_status") or summary_value(latest_scan_summary, "Scan status"))
+    raw_run_status = str(latest_runtime.get("run_status") or summary_value(latest_scan_summary, "Run status"))
+    scan_metadata_source = "runtime" if latest_runtime else ("summary" if scan_status or raw_run_status else "update_log_fallback")
+    received_count, unavailable_count = scan_status_counts(scan_status)
+    received_count = to_int(latest_runtime.get("result_cards_read"), received_count)
+    update_tickers = latest_scan_update.get("tickers") if isinstance(latest_scan_update.get("tickers"), list) else []
+    if not received_count and update_tickers:
+        received_count = len(update_tickers)
+        scan_status = scan_status or f"completed: {received_count} results"
+        raw_run_status = raw_run_status or "OK"
+    missing_tickers = [
+        str(ticker).strip().upper()
+        for ticker in latest_runtime.get("missing_tickers", [])
+        if str(ticker).strip()
+    ] if isinstance(latest_runtime.get("missing_tickers"), list) else []
+    requested_count = to_int(
+        latest_runtime.get("tickers_requested"),
+        received_count + max(unavailable_count, len(missing_tickers)),
+    )
+    raw_scan_complete = latest_runtime.get("scan_complete")
+    scan_complete = (
+        bool(raw_scan_complete)
+        if isinstance(raw_scan_complete, bool)
+        else not (missing_tickers or unavailable_count)
+    )
+    scan_coverage = build_scan_coverage(
+        requested=requested_count,
+        received=received_count,
+        missing_tickers=missing_tickers,
+    )
+    if unavailable_count > scan_coverage["missing"]:
+        scan_coverage["missing"] = unavailable_count
+    scan_coverage["source"] = scan_metadata_source
+    scan_coverage["estimated"] = scan_metadata_source == "update_log_fallback"
+    canonical_run_status = normalize_run_status(
+        raw_run_status,
+        scan_complete=scan_complete,
+        scan_status=scan_status,
+        received=received_count,
+        requested=requested_count,
+        missing_tickers=missing_tickers,
+    )
     screenshot_source = latest_update.get("screenshot") or latest_scan_update.get("screenshot")
     if not selected_date and not screenshot_source:
         screenshot_source = resolve_latest_file(screenshot_dir, ".png")
@@ -191,6 +243,11 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "market_regime": latest_decisions[0].get("market_regime", "") if latest_decisions else "",
             "latest_scan_run_id": latest_scan_update.get("run_id"),
             "latest_scan_timestamp": latest_scan_update.get("timestamp"),
+            "run_status": canonical_run_status,
+            "scan_status": scan_status,
+            "scan_complete": scan_complete,
+            "scan_coverage": scan_coverage,
+            "missing_tickers": missing_tickers,
         },
         # Keep current-run assets early in the snapshot. The deployed app syncs
         # referenced files lazily, so latest charts should be discovered before
@@ -361,6 +418,11 @@ def write_diagnostic_snapshot(project_root: Path, dashboard: dict[str, Any]) -> 
             "trade_ready_setups": latest_run.get("trade_ready_setups", 0),
             "action_counts": latest_run.get("action_counts", {}),
             "market_regime": latest_run.get("market_regime", ""),
+            "run_status": latest_run.get("run_status", ""),
+            "scan_status": latest_run.get("scan_status", ""),
+            "scan_complete": latest_run.get("scan_complete"),
+            "scan_coverage": latest_run.get("scan_coverage", {}),
+            "missing_tickers": latest_run.get("missing_tickers", []),
         },
         "decision_diagnostics": dashboard.get("decision_diagnostics", {}),
     }
@@ -374,6 +436,39 @@ def write_diagnostic_snapshot(project_root: Path, dashboard: dict[str, Any]) -> 
 def sanitize_snapshot_id(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9_\-]+", "_", value).strip("_")
     return cleaned[:80] or "latest"
+
+
+def load_run_runtime_metrics(runtime_dir: Path, run_id: str) -> dict[str, Any]:
+    if run_id:
+        candidate = runtime_dir / f"market_lens_agent_{run_id}.json"
+        if candidate.exists():
+            return read_json_object(candidate)
+        return {}
+    latest = resolve_latest_file(runtime_dir, ".json")
+    return read_json_object(latest) if latest else {}
+
+
+def read_json_object(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def summary_value(summary_text: str, label: str) -> str:
+    prefix = f"{label}:"
+    for line in str(summary_text or "").splitlines():
+        if line.startswith(prefix):
+            return line.split(":", 1)[1].strip()
+    return ""
+
+
+def scan_status_counts(scan_status: str) -> tuple[int, int]:
+    match = re.search(r"completed:\s*(\d+)\s+results(?:;\s*(\d+)\s+unavailable)?", str(scan_status or ""), re.I)
+    if not match:
+        return 0, 0
+    return int(match.group(1)), int(match.group(2) or 0)
 
 
 def dashboard_section_payload(

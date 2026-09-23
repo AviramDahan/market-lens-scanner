@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Market Lens Agent</title>
-    <link rel="stylesheet" href="/static/agent.css?v=20260923-live-price-provenance" />
+    <link rel="stylesheet" href="/static/agent.css?v=20260923-partial-scan-status" />
   </head>
   <body>
     <main class="agent-shell">
@@ -56,6 +56,7 @@
         <div>
           <span class="label">Tickers scanned</span>
           <strong id="tickerCount">0</strong>
+          <small id="scanCoverageMeta">Waiting for scan coverage</small>
         </div>
         <div>
           <span class="label">Technical setups</span>
@@ -458,6 +459,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="/static/agent.js?v=20260923-live-price-provenance"></script>
+    <script src="/static/agent.js?v=20260923-partial-scan-status"></script>
   </body>
 </html>

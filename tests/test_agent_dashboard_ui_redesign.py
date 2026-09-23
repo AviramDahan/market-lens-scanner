@@ -65,3 +65,10 @@ def test_open_positions_explain_live_quote_provenance() -> None:
     assert 'position.persisted_price_usd' in JS
     assert 'position.live_price_source ? "Latest quote" : "Saved mark"' in JS
     assert ".position-price-meta" in CSS
+
+
+def test_run_strip_shows_canonical_status_and_scan_coverage() -> None:
+    assert 'id="scanCoverageMeta"' in HTML
+    assert 'data.latest_run.run_status || "FAILED"' in JS
+    assert '`${received}/${requested} results' in JS
+    assert 'data-status="PARTIAL_OK"' in CSS

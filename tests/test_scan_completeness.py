@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from agent.market_lens_ui_agent import missing_scan_tickers
+from app.run_status import PARTIAL_OK, classify_run_status
 
 
 def test_equal_counts_do_not_hide_missing_ticker():
@@ -19,3 +20,10 @@ def test_empty_results_report_all_missing():
 def test_partial_scan_status_remains_eligible_for_processing():
     status = "completed: 143 results; 3 unavailable"
     assert status.startswith("completed:")
+    assert classify_run_status(
+        auth_failed=False,
+        scan_completed=True,
+        requested=146,
+        received=143,
+        missing_tickers=["ARM", "MMC", "RDDT"],
+    ) == PARTIAL_OK

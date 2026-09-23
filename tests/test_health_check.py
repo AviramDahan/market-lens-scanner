@@ -27,6 +27,27 @@ def test_dashboard_payload_flags_fake_zero_scan() -> None:
     assert by_name["Latest scan breadth"].ok is False
 
 
+def test_dashboard_payload_accepts_partial_scan_and_reports_coverage() -> None:
+    payload = {
+        "latest_run": {
+            "timestamp": datetime.now(health_check.NEW_YORK_TZ).isoformat(timespec="seconds"),
+            "run_status": "PARTIAL_OK",
+            "scan_status": "completed: 136 results; 3 unavailable",
+            "scan_complete": False,
+            "scan_coverage": {"requested": 139, "received": 136, "missing": 3},
+            "missing_tickers": ["ARM", "MMC", "RDDT"],
+            "summary_text": "Run status: PARTIAL_OK\nScan status: completed: 136 results; 3 unavailable\n",
+        }
+    }
+
+    checks = health_check.check_dashboard_payload(payload, max_scan_age_minutes=10, min_result_cards=100)
+
+    by_name = {check.name: check for check in checks}
+    assert by_name["Latest scan status"].ok is True
+    assert "coverage=136/139" in by_name["Latest scan status"].detail
+    assert "missing=3" in by_name["Latest scan status"].detail
+
+
 def test_latest_runtime_metrics_passes_for_recent_nonzero_file(monkeypatch, tmp_path: Path) -> None:
     runtime_dir = tmp_path / "agent_results" / "runtime"
     runtime_dir.mkdir(parents=True)

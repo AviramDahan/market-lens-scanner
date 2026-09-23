@@ -26,6 +26,13 @@ from app.agent_dashboard import read_trades as dashboard_read_trades
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.trading_clock import session_status
 from app.performance_summary import write_performance_summaries
+from app.run_status import (
+    AUTH_FAILED,
+    FAILED,
+    SUCCESSFUL_RUN_STATUSES,
+    build_scan_coverage,
+    classify_run_status,
+)
 from app.scanner import scan_ticker_detail
 from app.shadow_strategies import evaluate_shadow_strategies
 from app.smart_universe import base_universe, build_sector_health, build_smart_universe, curated_universe
@@ -121,6 +128,7 @@ def main() -> None:
     scan_status = "not_started"
     auth_failed = False
     scan_tickers: list[str] = []
+    missing_tickers: list[str] = []
     deadline = time.monotonic() + settings.timeout_seconds
     run_started_at = datetime.now().isoformat(timespec="seconds")
     total_started = time.monotonic()
@@ -191,8 +199,14 @@ def main() -> None:
             browser.close()
 
     scan_completed = scan_status.startswith("completed:")
-    if auth_failed or not scan_completed:
-        run_status = "AUTH_FAILED" if auth_failed else "RUN_FAILED"
+    run_status = classify_run_status(
+        auth_failed=auth_failed,
+        scan_completed=scan_completed,
+        requested=len(scan_tickers),
+        received=len(results),
+        missing_tickers=missing_tickers,
+    )
+    if run_status not in SUCCESSFUL_RUN_STATUSES:
         log(f"{run_status}; skipping workbook/trade updates")
         workbook_context = workbook_snapshot(settings=settings, run_status=run_status)
         decisions = {}
@@ -210,9 +224,18 @@ def main() -> None:
         )
         mark_runtime_phase(runtime_metrics, "workbook_update_seconds", phase_started)
         decisions = workbook_context["decisions"]
+        run_status = classify_run_status(
+            auth_failed=False,
+            scan_completed=True,
+            requested=len(scan_tickers),
+            received=len(results),
+            missing_tickers=missing_tickers,
+            nonfatal_errors=errors,
+        )
+        workbook_context["run_status"] = run_status
     runtime_metrics["finished_at"] = datetime.now().isoformat(timespec="seconds")
     runtime_metrics["total_seconds"] = round(time.monotonic() - total_started, 3)
-    runtime_metrics["run_status"] = workbook_context.get("run_status") or ("OK" if not errors else "ISSUES")
+    runtime_metrics["run_status"] = run_status
     runtime_metrics["login_status"] = login_status
     runtime_metrics["scan_status"] = scan_status
     runtime_metrics["tickers_requested"] = len(scan_tickers)
@@ -220,6 +243,11 @@ def main() -> None:
     runtime_metrics["valid_setups"] = sum(1 for result in results if result.setup_type != "No Trade")
     runtime_metrics["errors"] = errors
     runtime_metrics["warnings"] = warnings
+    runtime_metrics["scan_coverage"] = build_scan_coverage(
+        requested=len(scan_tickers),
+        received=len(results),
+        missing_tickers=missing_tickers,
+    )
     write_runtime_metrics(runtime_path, runtime_metrics)
     workbook_context["runtime_metrics_path"] = runtime_path
     log("Writing summary")
@@ -236,7 +264,7 @@ def main() -> None:
         errors=errors,
     )
     print(f"Agent run complete: {summary_path}")
-    if workbook_context.get("run_status") in {"AUTH_FAILED", "RUN_FAILED"}:
+    if run_status in {AUTH_FAILED, FAILED}:
         raise SystemExit(2)
 
 
@@ -1264,7 +1292,9 @@ def update_workbook(
         "daily_summary_path": performance_summary_paths.get("daily_summary_json"),
         "weekly_summary_path": performance_summary_paths.get("weekly_summary_json"),
         "excel_updated": True,
-        "run_status": "OK" if not errors else "ISSUES",
+        # The main run controller replaces this provisional value with the
+        # canonical COMPLETE/PARTIAL_OK status after all optional steps finish.
+        "run_status": "COMPLETE" if not errors else "PARTIAL_OK",
     }
 
 
@@ -2284,7 +2314,7 @@ def write_summary(
         if market_regime
         else "Not available"
     )
-    run_status = str(workbook_context.get("run_status") or ("OK" if not errors else "ISSUES"))
+    run_status = str(workbook_context.get("run_status") or ("COMPLETE" if not errors else "PARTIAL_OK"))
     excel_line = (
         f"Excel updated: {settings.excel_path}"
         if workbook_context.get("excel_updated", True)

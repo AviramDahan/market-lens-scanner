@@ -8,8 +8,8 @@ continuation.
 
 | # | Upgrade | Status | QA gate |
 | --- | --- | --- | --- |
-| 1 | Live price provenance and consistency | COMPLETE - PENDING OWNER APPROVAL | API contract, 496 tests, desktop/mobile UI, production smoke |
-| 2 | Explicit partial-scan status taxonomy | NOT STARTED | Runtime/API/UI status tests and partial-provider simulation |
+| 1 | Live price provenance and consistency | COMPLETE - APPROVED | API contract, 496 tests, desktop/mobile UI, production smoke |
+| 2 | Explicit partial-scan status taxonomy | IN PROGRESS | Runtime/API/UI status tests and partial-provider simulation |
 | 3 | Workbook update performance | NOT STARTED | Output-equivalence test, tracker integrity, measured runtime comparison |
 | 4 | Market-regime freshness and fallback | NOT STARTED | stale/missing/provider-session fixtures and conservative behavior verification |
 | 5 | Focused recovery for unavailable tickers | NOT STARTED | retry/normalization fixtures and bounded runtime validation |

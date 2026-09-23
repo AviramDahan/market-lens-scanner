@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.telegram_notifications import send_telegram_message
+from app.run_status import SUCCESSFUL_RUN_STATUSES, normalize_run_status
 
 
 NEW_YORK_TZ = ZoneInfo("America/New_York")
@@ -101,17 +102,36 @@ def check_dashboard_payload(payload: dict[str, Any], max_scan_age_minutes: int, 
     checks: list[HealthCheck] = []
     latest_run = payload.get("latest_run") or {}
     summary_text = str(latest_run.get("summary_text") or "")
-    run_status = parse_summary_value(summary_text, "Run status") or str(latest_run.get("run_status") or "")
+    raw_run_status = str(latest_run.get("run_status") or parse_summary_value(summary_text, "Run status"))
     scan_status = parse_summary_value(summary_text, "Scan status") or str(latest_run.get("scan_status") or "")
     latest_ts = str(latest_run.get("timestamp") or payload.get("snapshot", {}).get("resolved_timestamp") or "")
     age_minutes = timestamp_age_minutes(latest_ts)
     result_cards = int_from_scan_status(scan_status) or len(latest_run.get("tickers") or [])
+    coverage = latest_run.get("scan_coverage") if isinstance(latest_run.get("scan_coverage"), dict) else {}
+    requested = int(coverage.get("requested") or result_cards)
+    received = int(coverage.get("received") or result_cards)
+    missing_tickers = latest_run.get("missing_tickers") if isinstance(latest_run.get("missing_tickers"), list) else []
+    scan_complete = latest_run.get("scan_complete")
+    if not isinstance(scan_complete, bool):
+        scan_complete = "unavailable" not in scan_status
+    run_status = normalize_run_status(
+        raw_run_status,
+        scan_complete=scan_complete,
+        scan_status=scan_status,
+        received=received,
+        requested=requested,
+        missing_tickers=missing_tickers,
+    )
 
     checks.append(
         HealthCheck(
             "Latest scan status",
-            "AUTH_FAILED" not in summary_text and "RUN_FAILED" not in summary_text and "completed:" in scan_status,
-            f"run_status={run_status or 'unknown'}; scan_status={scan_status or 'unknown'}",
+            run_status in SUCCESSFUL_RUN_STATUSES,
+            (
+                f"run_status={run_status}; coverage={received}/{requested}; "
+                f"missing={int(coverage.get('missing') or len(missing_tickers))}; "
+                f"scan_status={scan_status or 'unknown'}"
+            ),
         )
     )
     checks.append(
@@ -186,10 +206,18 @@ def check_latest_runtime_metrics(max_runtime_seconds: int) -> HealthCheck:
         return HealthCheck("Latest runtime metrics", False, f"Could not read {latest.name}: {exc.__class__.__name__}.")
     total_seconds = float(payload.get("total_seconds") or 0)
     result_cards = int(payload.get("result_cards_read") or 0)
+    run_status = normalize_run_status(
+        payload.get("run_status"),
+        scan_complete=payload.get("scan_complete") if isinstance(payload.get("scan_complete"), bool) else None,
+        scan_status=str(payload.get("scan_status") or ""),
+        received=result_cards,
+        requested=int(payload.get("tickers_requested") or result_cards),
+        missing_tickers=payload.get("missing_tickers") if isinstance(payload.get("missing_tickers"), list) else [],
+    )
     return HealthCheck(
         "Latest runtime metrics",
-        total_seconds <= max_runtime_seconds and result_cards > 0,
-        f"{latest.name}; total_seconds={total_seconds:.1f}; result_cards={result_cards}",
+        total_seconds <= max_runtime_seconds and result_cards > 0 and run_status in SUCCESSFUL_RUN_STATUSES,
+        f"{latest.name}; status={run_status}; total_seconds={total_seconds:.1f}; result_cards={result_cards}",
     )
 
 

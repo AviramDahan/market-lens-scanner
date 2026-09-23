@@ -10,11 +10,26 @@ from app.agent_dashboard import (
     compute_realized_pnl,
     dashboard_section_payload,
     historical_tracker_copy,
+    load_run_runtime_metrics,
     read_decision_setup_rows,
+    scan_status_counts,
     with_position_calculations,
     write_diagnostic_snapshot,
 )
 from agent.market_lens_ui_agent import merge_position_decision_json
+
+
+def test_scan_status_counts_reads_partial_coverage() -> None:
+    assert scan_status_counts("completed: 136 results; 3 unavailable") == (136, 3)
+    assert scan_status_counts("failed") == (0, 0)
+
+
+def test_runtime_loader_does_not_mix_missing_historical_run_with_latest(tmp_path) -> None:
+    runtime_dir = tmp_path / "runtime"
+    runtime_dir.mkdir()
+    (runtime_dir / "market_lens_agent_newer.json").write_text('{"run_status":"COMPLETE"}', encoding="utf-8")
+
+    assert load_run_runtime_metrics(runtime_dir, "older") == {}
 
 
 def test_compute_realized_pnl_annotates_exit_trade_with_entry_and_r() -> None:
