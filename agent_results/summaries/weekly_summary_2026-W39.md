@@ -1,37 +1,37 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 81
-Tickers scanned: 11031
+Total scans: 82
+Tickers scanned: 11172
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2213
+WATCH_REVIEW: 2235
 WATCH_REVIEW unique tickers: 79
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2213
-SKIP: 8513
-NO_TRADE: 6335
+WATCH: 2235
+SKIP: 8628
+NO_TRADE: 6440
 Realized PnL: 299.97
-Unrealized PnL: 849.92
-Portfolio value: 101441.73
+Unrealized PnL: 788.7
+Portfolio value: 101380.51
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.4417
+Cumulative recorded-equity change (%): 1.3805
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
 Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 7
-- FIB_STOP_075_ATR: 30
+- BREAKOUT_CONTINUATION: 8
+- FIB_STOP_075_ATR: 32
 - FIB_STOP_100_ATR: 3
 - FIB_STRUCTURE_STOP: 31
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 45
+- TREND_PULLBACK_RECLAIM: 47
 - VWAP_RECLAIM: 3
 
 Top rejected candidates:
@@ -40,10 +40,10 @@ Top rejected candidates:
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
-- DHR: WATCH score=0.5214 reason=WATCH: Technical setup detected, but weighted risk/reward 1.35 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.97.
+- DHR: WATCH score=0.5237 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.
 - QBTS: WATCH score=0.5179 reason=WATCH: Neutral market requires stronger normalized quality (43.12/100).
+- WMB: WATCH score=0.5168 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - SMCI: WATCH score=0.5163 reason=WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.24.
-- WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - PH: SKIP score=0.5073 reason=SKIP: Industrials sector regime is weak (15/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.14.
 
 Recommendations:
