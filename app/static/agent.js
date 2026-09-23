@@ -1902,6 +1902,7 @@ function renderPositionsOverview(positions, liveUpdatedAt = "") {
   grid.innerHTML = positions
     .map((position) => {
       const pnlClass = position.unrealized_pnl_ils >= 0 ? "money-pos" : "money-neg";
+      const quoteMeta = positionQuoteMeta(position);
       return `
         <article class="position-mini-card">
           <div class="position-mini-head">
@@ -1913,12 +1914,13 @@ function renderPositionsOverview(positions, liveUpdatedAt = "") {
           </div>
           <div class="position-mini-grid">
             <span><b>Entry</b>${usd.format(position.entry_price_usd)}</span>
-            <span><b>Now</b>${usd.format(position.current_price_usd)}</span>
+            <span><b>${position.live_price_source ? "Latest quote" : "Saved mark"}</b>${usd.format(position.current_price_usd)}</span>
             <span><b>Stop</b>${formatLevelWithPercent(position.stop_loss, position.entry_price_usd)}</span>
             <span><b>TP</b>${formatLevelWithPercent(position.target_1, position.entry_price_usd)} / ${formatLevelWithPercent(position.target_2, position.entry_price_usd)}</span>
             <span><b>Exposure</b>${money.format(position.exposure_ils)}</span>
             <span><b>P/L</b><em class="${pnlClass}">${formatSignedMoney(position.unrealized_pnl_ils)}</em></span>
           </div>
+          <div class="position-price-meta">${escapeHtml(quoteMeta)}</div>
           <div class="progress" title="${position.progress_to_target_1}% to target 1">
             <span style="width:${Math.max(0, Math.min(100, position.progress_to_target_1))}%"></span>
           </div>
@@ -1954,7 +1956,10 @@ function renderPositions(positions, liveUpdatedAt = "") {
           <td><span class="badge neutral">${escapeHtml(position.status)}</span></td>
           <td>${position.quantity}</td>
           <td>${usd.format(position.entry_price_usd)}</td>
-          <td>${usd.format(position.current_price_usd)}</td>
+          <td>
+            ${usd.format(position.current_price_usd)}
+            <span class="position-price-meta">${escapeHtml(positionQuoteMeta(position))}</span>
+          </td>
           <td>${formatLevelWithPercent(position.stop_loss, position.entry_price_usd)}</td>
           <td>${formatLevelWithPercent(position.target_1, position.entry_price_usd)} / ${formatLevelWithPercent(position.target_2, position.entry_price_usd)}</td>
           <td class="${position.unrealized_pnl_ils >= 0 ? "money-pos" : "money-neg"}">${formatSignedMoney(position.unrealized_pnl_ils)}</td>
@@ -1970,6 +1975,20 @@ function renderPositions(positions, liveUpdatedAt = "") {
       `,
     )
     .join("");
+}
+
+function positionQuoteMeta(position) {
+  const label = position.live_price_session_label || (position.live_price_source ? "Latest provider quote" : "Saved tracker mark");
+  const timestamp = position.live_price_updated_at ? formatDate(position.live_price_updated_at) : "";
+  const freshness = position.live_price_freshness && position.live_price_freshness !== "UNKNOWN"
+    ? position.live_price_freshness.toLowerCase()
+    : "";
+  const persisted = Number(position.persisted_price_usd || 0);
+  const current = Number(position.current_price_usd || 0);
+  const saved = persisted > 0 && Math.abs(persisted - current) >= 0.005
+    ? `tracker ${usd.format(persisted)}`
+    : "";
+  return [label, timestamp, freshness, saved].filter(Boolean).join(" · ");
 }
 
 function renderPositionCharts(positions) {

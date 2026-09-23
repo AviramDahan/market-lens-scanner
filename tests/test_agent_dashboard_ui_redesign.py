@@ -56,3 +56,12 @@ def test_portfolio_heat_has_legacy_snapshot_fallback() -> None:
     assert "summary.starting_capital_ils || 100000" in JS
     assert "risk.portfolio_heat_cap || startingCapital * 0.025" in JS
     assert "Math.max(0, heatCap - openRisk)" in JS
+
+
+def test_open_positions_explain_live_quote_provenance() -> None:
+    assert "function positionQuoteMeta(position)" in JS
+    assert 'position.live_price_session_label' in JS
+    assert 'position.live_price_updated_at' in JS
+    assert 'position.persisted_price_usd' in JS
+    assert 'position.live_price_source ? "Latest quote" : "Saved mark"' in JS
+    assert ".position-price-meta" in CSS

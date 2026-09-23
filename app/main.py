@@ -4,6 +4,7 @@ import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -64,6 +65,7 @@ from app.telegram_notifications import (
     send_telegram_message,
     telegram_configured,
 )
+from app.trading_clock import session_status
 from app.watchlists import list_watchlists
 
 app = FastAPI(title="Market Lens", version="0.1.0", description="Swing trade scanner")
@@ -454,19 +456,31 @@ async def get_agent_live_prices() -> dict:
         try:
             price, source_time = fetch_live_price(ticker)
             updated = dict(position)
+            updated["persisted_price_usd"] = position.get("current_price_usd")
             updated["current_price_usd"] = round(price, 2)
             updated["live_price_updated_at"] = source_time
             updated["live_price_source"] = "1m intraday/prepost"
+            updated.update(live_price_metadata(source_time))
+            updated["price_display_basis"] = "LATEST_AVAILABLE_INTRADAY_QUOTE"
             refreshed_position = with_position_calculations(updated)
             refreshed.append(refreshed_position)
             prices[ticker] = {
                 "current_price_usd": refreshed_position["current_price_usd"],
+                "persisted_price_usd": refreshed_position.get("persisted_price_usd"),
                 "updated_at": source_time,
+                "session": refreshed_position.get("live_price_session"),
+                "freshness": refreshed_position.get("live_price_freshness"),
+                "source": refreshed_position.get("live_price_source"),
             }
         except Exception as exc:
             warnings[ticker] = str(exc)
             fallback = dict(position)
             fallback["live_price_warning"] = str(exc)
+            fallback["persisted_price_usd"] = position.get("current_price_usd")
+            fallback["price_display_basis"] = "PERSISTED_TRACKER_FALLBACK"
+            fallback["live_price_session"] = "UNAVAILABLE"
+            fallback["live_price_session_label"] = "Saved tracker mark"
+            fallback["live_price_freshness"] = "UNAVAILABLE"
             refreshed.append(fallback)
 
     summary = dict(dashboard.get("summary") or {})
@@ -493,6 +507,47 @@ async def get_agent_live_prices() -> dict:
         "position_attention": build_position_attention(refreshed),
         "prices": prices,
         "warnings": warnings,
+        "quote_contract": {
+            "current_price_usd": "Latest available one-minute close, including pre-market and after-hours when supplied.",
+            "persisted_price_usd": "Last price stored in the committed portfolio tracker.",
+            "persistence": "Dashboard quote refresh does not persist a trade or portfolio mark.",
+            "monitoring": "The server-side TP/SL sensor validates events with one-minute high/low data before dispatch.",
+        },
+    }
+
+
+def live_price_metadata(source_time: str, *, observed_at: datetime | None = None) -> dict:
+    """Describe the latest provider quote without implying that it is a live fill."""
+    try:
+        stamp = datetime.fromisoformat(str(source_time).replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            raise ValueError("timezone missing")
+        current = observed_at or datetime.now(timezone.utc)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+        age_seconds = max(0, int((current.astimezone(timezone.utc) - stamp.astimezone(timezone.utc)).total_seconds()))
+        phase = str(session_status(stamp).get("phase") or "UNKNOWN")
+    except (TypeError, ValueError):
+        return {
+            "live_price_session": "UNKNOWN",
+            "live_price_session_label": "Latest provider quote",
+            "live_price_age_seconds": None,
+            "live_price_freshness": "UNKNOWN",
+        }
+    labels = {
+        "REGULAR": "Regular session",
+        "PRE_MARKET": "Pre-market",
+        "AFTER_HOURS": "After-hours",
+        "CLOSED": "Closed session",
+        "HOLIDAY": "Holiday session",
+        "WEEKEND": "Weekend session",
+    }
+    freshness = "FRESH" if age_seconds <= 180 else "DELAYED" if age_seconds <= 900 else "STALE"
+    return {
+        "live_price_session": phase,
+        "live_price_session_label": labels.get(phase, "Latest provider quote"),
+        "live_price_age_seconds": age_seconds,
+        "live_price_freshness": freshness,
     }
 
 
