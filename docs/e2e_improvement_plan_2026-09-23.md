@@ -157,8 +157,23 @@ Source QA result (2026-09-24):
   blocking, VIX degradation and malformed-cache recovery.
 - A live provider smoke test returned all six inputs from the latest completed NYSE
   session, `data_status=HEALTHY`, `allows_new_buys=true` and no warnings.
-- Python compilation and `git diff --check` passed. Production deployment and one
-  persisted scanner-run validation remain the release gate.
+- Python compilation and `git diff --check` passed.
+
+Production QA result (2026-09-24):
+
+- GitHub Actions run `35930298904` completed successfully in 5m59s on source commit
+  `ce2ce3337`; the scan itself took 80.2 seconds.
+- Run `20260923_224929` persisted 136/139 result cards (`PARTIAL_OK`, 97.84%
+  coverage) with no runtime, authentication or workbook errors.
+- All 136 Decision JSON records contain the new market-regime quality contract.
+  Every benchmark used `CURRENT_COMPLETED_SESSION` for 2026-09-23, the run was
+  `HEALTHY`, new buys were permitted by data quality, and fallback was not needed.
+- The bounded cache persisted all six benchmark states under `agent_results/regime`.
+- The after-hours run opened no new position: five existing positions remained
+  `HOLD`; no off-hours `BUY_SIMULATED` was created.
+- Production `/health` and `/agent/data` returned HTTP 200. The per-ticker production
+  checklist rendered data status, completed session, source and fallback age for all
+  six inputs.
 
 ## 5. Focused recovery for unavailable tickers
 
