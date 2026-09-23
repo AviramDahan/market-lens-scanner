@@ -1,29 +1,29 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 78
-Tickers scanned: 10604
+Total scans: 79
+Tickers scanned: 10740
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2132
+WATCH_REVIEW: 2159
 WATCH_REVIEW unique tickers: 76
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2132
-SKIP: 8179
-NO_TRADE: 6048
+WATCH: 2159
+SKIP: 8284
+NO_TRADE: 6140
 Realized PnL: 299.97
-Unrealized PnL: 1092.56
-Portfolio value: 101684.37
+Unrealized PnL: 762.53
+Portfolio value: 101354.34
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.6844
+Cumulative recorded-equity change (%): 1.3543
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
-Best ticker: AVGO
+Best ticker: APP
 Worst ticker: AMZN
-Best shadow strategy: TREND_PULLBACK_RECLAIM
+Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 7
@@ -40,11 +40,11 @@ Top rejected candidates:
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
+- DHR: WATCH score=0.521 reason=WATCH: Technical setup detected, but weighted risk/reward 1.16 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.82.
 - QBTS: WATCH score=0.5179 reason=WATCH: Neutral market requires stronger normalized quality (43.12/100).
 - SMCI: WATCH score=0.5163 reason=WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.24.
 - WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - PH: SKIP score=0.5073 reason=SKIP: Industrials sector regime is weak (15/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.14.
-- ORCL: WATCH score=0.5063 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
