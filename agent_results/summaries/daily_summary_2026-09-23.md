@@ -1,37 +1,37 @@
 Daily Performance Summary
 
 Date: 2026-09-23
-Total scans: 28
-Tickers scanned: 3874
+Total scans: 29
+Tickers scanned: 4012
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 789
-WATCH_REVIEW unique tickers: 51
+WATCH_REVIEW: 821
+WATCH_REVIEW unique tickers: 53
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 789
-SKIP: 2972
-NO_TRADE: 2394
+WATCH: 821
+SKIP: 3073
+NO_TRADE: 2462
 Realized PnL: 0.0
-Unrealized PnL: 746.89
-Portfolio value: 101338.7
-Daily recorded-equity change (%): -0.1446
+Unrealized PnL: 661.97
+Portfolio value: 101253.78
+Daily recorded-equity change (%): -0.2283
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-22
-Cumulative recorded-equity change (%): 1.3387
+Cumulative recorded-equity change (%): 1.2538
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: MDLZ
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 12
-- FIB_STOP_075_ATR: 10
-- FIB_STOP_100_ATR: 1
-- FIB_STRUCTURE_STOP: 4
-- TREND_PULLBACK_RECLAIM: 24
-- VWAP_RECLAIM: 1
+- BREAKOUT_CONTINUATION: 13
+- FIB_STOP_075_ATR: 12
+- FIB_STOP_100_ATR: 2
+- FIB_STRUCTURE_STOP: 5
+- TREND_PULLBACK_RECLAIM: 25
+- VWAP_RECLAIM: 2
 
 Top rejected candidates:
 - SMCI: WATCH score=0.5597 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.17.
@@ -39,11 +39,11 @@ Top rejected candidates:
 - DHR: WATCH score=0.5237 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.
 - KMI: WATCH score=0.5165 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.98.
 - EQIX: SKIP score=0.4976 reason=SKIP: Utilities / Real Assets sector regime is weak (11/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.09.
+- LRCX: WATCH score=0.4971 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - TSM: WATCH score=0.4914 reason=WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.92.
 - PG: SKIP score=0.4861 reason=SKIP: Consumer sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 0.89.
 - KLAC: WATCH score=0.4849 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
-- AIG: SKIP score=0.469 reason=SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.31.
-- DE: SKIP score=0.467 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.12.
+- CAT: SKIP score=0.4805 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.28.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
