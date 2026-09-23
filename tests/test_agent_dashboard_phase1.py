@@ -9,6 +9,7 @@ from app.agent_dashboard import (
     compute_full_trade_performance,
     compute_realized_pnl,
     dashboard_section_payload,
+    enrich_latest_run_status,
     historical_tracker_copy,
     load_run_runtime_metrics,
     read_decision_setup_rows,
@@ -30,6 +31,22 @@ def test_runtime_loader_does_not_mix_missing_historical_run_with_latest(tmp_path
     (runtime_dir / "market_lens_agent_newer.json").write_text('{"run_status":"COMPLETE"}', encoding="utf-8")
 
     assert load_run_runtime_metrics(runtime_dir, "older") == {}
+
+
+def test_old_snapshot_summary_is_backfilled_as_partial_ok() -> None:
+    latest_run = enrich_latest_run_status(
+        {
+            "tickers": [f"T{index}" for index in range(136)],
+            "summary_text": "Run status: OK\nScan status: completed: 136 results; 3 unavailable\n",
+        }
+    )
+
+    assert latest_run["run_status"] == "PARTIAL_OK"
+    assert latest_run["scan_complete"] is False
+    assert latest_run["scan_coverage"]["requested"] == 139
+    assert latest_run["scan_coverage"]["received"] == 136
+    assert latest_run["scan_coverage"]["missing"] == 3
+    assert latest_run["scan_coverage"]["source"] == "snapshot_summary"
 
 
 def test_compute_realized_pnl_annotates_exit_trade_with_entry_and_r() -> None:

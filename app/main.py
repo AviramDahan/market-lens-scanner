@@ -23,6 +23,7 @@ from app.agent_dashboard import (
     compute_full_trade_performance,
     compute_realized_pnl,
     dashboard_section_payload,
+    enrich_latest_run_status,
     load_period_summary,
     parse_timestamp,
     sanitize_dashboard_media_urls,
@@ -224,6 +225,8 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
         dashboard["position_timeline"] = build_position_timeline(positions)
 
     latest_run = dashboard.get("latest_run") if isinstance(dashboard.get("latest_run"), dict) else {}
+    latest_run = enrich_latest_run_status(latest_run)
+    dashboard["latest_run"] = latest_run
     latest_dt = parse_timestamp(latest_run.get("timestamp"))
     summary_dir = AGENT_RESULTS_DIR / "summaries"
     if "daily_summary" not in dashboard:

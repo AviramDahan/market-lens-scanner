@@ -471,6 +471,58 @@ def scan_status_counts(scan_status: str) -> tuple[int, int]:
     return int(match.group(1)), int(match.group(2) or 0)
 
 
+def enrich_latest_run_status(latest_run: dict[str, Any]) -> dict[str, Any]:
+    """Backfill canonical scan status on snapshots written by older agents."""
+    enriched = dict(latest_run or {})
+    summary_text = str(enriched.get("summary_text") or "")
+    scan_status = str(enriched.get("scan_status") or summary_value(summary_text, "Scan status"))
+    raw_run_status = str(enriched.get("run_status") or summary_value(summary_text, "Run status"))
+    received, unavailable = scan_status_counts(scan_status)
+    if not received:
+        tickers = enriched.get("tickers") if isinstance(enriched.get("tickers"), list) else []
+        received = len(tickers)
+        if received and not scan_status:
+            scan_status = f"completed: {received} results"
+            raw_run_status = raw_run_status or "OK"
+    missing_tickers = (
+        [str(ticker).strip().upper() for ticker in enriched.get("missing_tickers", []) if str(ticker).strip()]
+        if isinstance(enriched.get("missing_tickers"), list)
+        else []
+    )
+    existing_coverage = enriched.get("scan_coverage") if isinstance(enriched.get("scan_coverage"), dict) else {}
+    requested = to_int(existing_coverage.get("requested"), received + max(unavailable, len(missing_tickers)))
+    received = to_int(existing_coverage.get("received"), received)
+    raw_complete = enriched.get("scan_complete")
+    scan_complete = bool(raw_complete) if isinstance(raw_complete, bool) else not (unavailable or missing_tickers)
+    coverage = build_scan_coverage(
+        requested=requested,
+        received=received,
+        missing_tickers=missing_tickers,
+    )
+    if unavailable > coverage["missing"]:
+        coverage["missing"] = unavailable
+    coverage.update({key: value for key, value in existing_coverage.items() if key not in coverage})
+    coverage.setdefault("source", "snapshot_summary")
+    coverage.setdefault("estimated", True)
+    enriched.update(
+        {
+            "run_status": normalize_run_status(
+                raw_run_status,
+                scan_complete=scan_complete,
+                scan_status=scan_status,
+                received=received,
+                requested=requested,
+                missing_tickers=missing_tickers,
+            ),
+            "scan_status": scan_status,
+            "scan_complete": scan_complete,
+            "scan_coverage": coverage,
+            "missing_tickers": missing_tickers,
+        }
+    )
+    return enriched
+
+
 def dashboard_section_payload(
     dashboard: dict[str, Any],
     *,
