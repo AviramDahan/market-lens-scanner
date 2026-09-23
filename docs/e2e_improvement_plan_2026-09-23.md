@@ -104,6 +104,24 @@ QA result (2026-09-23):
   scan must publish `workbook_phase_seconds` and complete without accounting or
   tracker-integrity errors.
 
+Production validation (2026-09-24):
+
+- Eight consecutive instrumented scanner runs completed successfully with no
+  runtime or accounting errors. All published `workbook_phase_seconds`.
+- Instrumented workbook-update time ranged from 105.0s to 138.4s (median
+  124.2s). The two immediately preceding runs measured 119.6s and 169.7s, so the
+  sample does not justify claiming a precise percentage speedup.
+- The latest representative run spent 73.2s evaluating candidates and 29.5s
+  applying chart retention, versus 6.3s loading, 8.7s saving and 0.014s on trade
+  analytics. Candidate and chart work, not ledger parsing, dominate this phase.
+- A normal post-deployment paper entry opened APP and persisted its trade ID,
+  quantity and cash debit. Five positions remained readable through `/agent/data`.
+- Production `/health`, `/agent` and `/agent/data` returned healthy responses.
+- Result: the safe read consolidation and timing instrumentation are accepted by
+  QA. This upgrade is a modest persistence optimization plus a material
+  observability improvement, not a claim that the full scan became dramatically
+  faster.
+
 ## 4. Market-regime freshness and fallback
 
 Record freshness coverage for every regime input. Use the latest completed exchange
