@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 79
-Tickers scanned: 10740
+Total scans: 80
+Tickers scanned: 10886
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2159
-WATCH_REVIEW unique tickers: 76
+WATCH_REVIEW: 2184
+WATCH_REVIEW unique tickers: 78
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2159
-SKIP: 8284
-NO_TRADE: 6140
+WATCH: 2184
+SKIP: 8401
+NO_TRADE: 6241
 Realized PnL: 299.97
-Unrealized PnL: 762.53
-Portfolio value: 101354.34
+Unrealized PnL: 727.08
+Portfolio value: 101318.89
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.3543
+Cumulative recorded-equity change (%): 1.3189
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -40,7 +40,7 @@ Top rejected candidates:
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
-- DHR: WATCH score=0.521 reason=WATCH: Technical setup detected, but weighted risk/reward 1.16 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.82.
+- DHR: WATCH score=0.5214 reason=WATCH: Technical setup detected, but weighted risk/reward 1.35 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.97.
 - QBTS: WATCH score=0.5179 reason=WATCH: Neutral market requires stronger normalized quality (43.12/100).
 - SMCI: WATCH score=0.5163 reason=WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.24.
 - WMB: WATCH score=0.5162 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
