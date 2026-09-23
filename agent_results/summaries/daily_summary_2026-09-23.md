@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-23
-Total scans: 26
-Tickers scanned: 3597
+Total scans: 27
+Tickers scanned: 3736
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 728
+WATCH_REVIEW: 760
 WATCH_REVIEW unique tickers: 51
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 728
-SKIP: 2765
-NO_TRADE: 2216
+WATCH: 760
+SKIP: 2868
+NO_TRADE: 2303
 Realized PnL: 0.0
-Unrealized PnL: 762.01
-Portfolio value: 101353.82
-Daily recorded-equity change (%): -0.1297
+Unrealized PnL: 765.17
+Portfolio value: 101356.98
+Daily recorded-equity change (%): -0.1266
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-22
-Cumulative recorded-equity change (%): 1.3538
+Cumulative recorded-equity change (%): 1.357
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
-Worst ticker: GILD
+Worst ticker: MDLZ
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 10
 - FIB_STOP_075_ATR: 9
 - FIB_STRUCTURE_STOP: 3
-- TREND_PULLBACK_RECLAIM: 21
+- TREND_PULLBACK_RECLAIM: 22
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
@@ -42,7 +42,7 @@ Top rejected candidates:
 - PG: SKIP score=0.4861 reason=SKIP: Consumer sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 0.89.
 - KLAC: WATCH score=0.4849 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
 - AIG: SKIP score=0.469 reason=SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.31.
-- QCOM: WATCH score=0.4661 reason=WATCH: Technical setup detected, but weighted risk/reward 1.44 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.06.
+- DE: SKIP score=0.467 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.12.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
