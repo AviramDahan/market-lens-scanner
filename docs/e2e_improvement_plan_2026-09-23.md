@@ -9,8 +9,8 @@ continuation.
 | # | Upgrade | Status | QA gate |
 | --- | --- | --- | --- |
 | 1 | Live price provenance and consistency | COMPLETE - APPROVED | API contract, 496 tests, desktop/mobile UI, production smoke |
-| 2 | Explicit partial-scan status taxonomy | COMPLETE - PENDING OWNER APPROVAL | Runtime/API/UI status tests and partial-provider simulation |
-| 3 | Workbook update performance | NOT STARTED | Output-equivalence test, tracker integrity, measured runtime comparison |
+| 2 | Explicit partial-scan status taxonomy | COMPLETE - APPROVED | Runtime/API/UI status tests and partial-provider simulation |
+| 3 | Workbook update performance | COMPLETE - PENDING OWNER APPROVAL | Output-equivalence test, tracker integrity, measured runtime comparison |
 | 4 | Market-regime freshness and fallback | NOT STARTED | stale/missing/provider-session fixtures and conservative behavior verification |
 | 5 | Focused recovery for unavailable tickers | NOT STARTED | retry/normalization fixtures and bounded runtime validation |
 | 6 | Automated production smoke workflow | NOT STARTED | intentional pass/failure runs with actionable diagnostics |
@@ -76,6 +76,33 @@ QA result (2026-09-23):
 Profile the current workbook path, then reduce repeated workbook reads, writes and
 recalculation while preserving every sheet and accounting result. Compare generated
 workbooks cell-for-cell on representative runs before activation.
+
+Acceptance criteria:
+
+- Cash, cooldown, neutral-pilot and trade-performance calculations remain identical.
+- Trade analytics reuse the Smart Universe sector map already loaded by the run.
+- Cash and entry-control state are read from Trade Log in one pass.
+- Runtime metrics separate workbook load/save from market context, candidate
+  evaluation, chart retention, outcome backfill, analytics and summaries.
+- No tracker sheet, row, historical record, strategy gate or monitor behavior changes.
+
+QA result (2026-09-23):
+
+- Full suite passed: 511 tests.
+- The production tracker retained identical values in every cell after the new
+  read paths were exercised.
+- Cash, recent stop cooldowns, neutral-pilot count, realized P/L ($591.82) and
+  39 completed trade lifecycles matched the previous calculations.
+- The one-pass ledger snapshot reduced the three initial Trade Log passes to one;
+  measured state-read time fell from 9.3ms to 3.8ms on the current tracker. The
+  post-write cash calculation now shares the analytics read instead of scanning
+  the sheet separately.
+- The analytics reader completed in 14.6ms without refreshing external universe
+  data. The tracker still requires roughly 9-10 seconds to load and 13 seconds to
+  save locally; those costs are reported rather than hidden.
+- Production timing validation remains the deployment gate: the next scheduled
+  scan must publish `workbook_phase_seconds` and complete without accounting or
+  tracker-integrity errors.
 
 ## 4. Market-regime freshness and fallback
 

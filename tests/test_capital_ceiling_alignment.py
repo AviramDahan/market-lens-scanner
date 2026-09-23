@@ -45,10 +45,16 @@ def test_agent_workbook_path_uses_final_risk_ceiling(monkeypatch, tmp_path, ceil
     monkeypatch.setattr(agent, "read_settings", lambda _: {"max_total_exposure_pct": .4})
     monkeypatch.setattr(agent, "build_agent_run_context", lambda **_: context)
     monkeypatch.setattr(agent, "base_universe", lambda: {})
-    monkeypatch.setattr(agent, "read_recent_stop_events", lambda *_: {})
-    monkeypatch.setattr(agent, "count_neutral_pilot_buys_today", lambda _: 0)
+    monkeypatch.setattr(
+        agent,
+        "read_trade_ledger_state",
+        lambda *_, **__: {
+            "cash": 100_000,
+            "recent_stop_events": {},
+            "neutral_pilot_buys_today": 0,
+        },
+    )
     monkeypatch.setattr(agent, "read_open_positions", lambda _: {})
-    monkeypatch.setattr(agent, "compute_cash", lambda *_: 100_000)
     monkeypatch.setattr(agent, "rank_results_for_allocation", lambda rows, _: rows)
     monkeypatch.setattr(agent, "calculate_setup_score_percentiles", lambda _: {})
     observed = []

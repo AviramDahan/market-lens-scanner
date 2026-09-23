@@ -22,7 +22,8 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sy
 from app.charts import write_scan_chart
 from app.agent_dashboard import compute_full_trade_performance as dashboard_compute_full_trade_performance
 from app.agent_dashboard import compute_realized_pnl as dashboard_compute_realized_pnl
-from app.agent_dashboard import read_trades as dashboard_read_trades
+from app.agent_dashboard import compute_cash as dashboard_compute_cash
+from app.agent_dashboard import read_trade_analytics as dashboard_read_trade_analytics
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.trading_clock import session_status
 from app.performance_summary import write_performance_summaries
@@ -223,6 +224,8 @@ def main() -> None:
             errors=errors,
         )
         mark_runtime_phase(runtime_metrics, "workbook_update_seconds", phase_started)
+        if workbook_context.get("workbook_phase_seconds"):
+            runtime_metrics["workbook_phase_seconds"] = workbook_context["workbook_phase_seconds"]
         decisions = workbook_context["decisions"]
         run_status = classify_run_status(
             auth_failed=False,
@@ -1015,9 +1018,12 @@ def update_workbook(
     decision_path: Path,
     errors: list[str],
 ) -> dict[str, Any]:
+    workbook_phase_seconds: dict[str, float] = {}
+    phase_started = time.monotonic()
     wb = load_workbook(settings.excel_path)
     ensure_agent_columns(wb)
     settings_values = read_settings(wb)
+    mark_runtime_phase(workbook_phase_seconds, "load_and_schema_seconds", phase_started)
     currency = str(settings_values.get("budget_currency") or "USD").upper()
     currency_rate = 1.0 if currency == "USD" else float(settings_values.get("usd_ils_rate", 3.7))
     starting_capital = float(
@@ -1029,6 +1035,7 @@ def update_workbook(
     max_total_exposure = starting_capital * float(settings_values.get("max_total_exposure_pct", 0.4))
     max_risk = starting_capital * float(settings_values.get("max_risk_per_trade_pct", 0.01))
     min_rr = float(settings_values.get("min_risk_reward", settings.min_rr))
+    phase_started = time.monotonic()
     sector_map = base_universe()
     run_context = build_agent_run_context(
         analysis_period=settings.analysis_period,
@@ -1037,13 +1044,20 @@ def update_workbook(
         max_position=max_position,
     )
     sector_health = run_context.sector_health or build_sector_health(settings.analysis_period)
+    mark_runtime_phase(workbook_phase_seconds, "market_context_seconds", phase_started)
     # Do not apply the legacy workbook ceiling before the dynamic risk ceiling.
     max_total_exposure = run_context.market_regime.max_total_exposure
-    recent_stop_events = read_recent_stop_events(wb, run_context.config.stop_cooldown_days)
-    neutral_pilot_buys_today = count_neutral_pilot_buys_today(wb)
-
+    phase_started = time.monotonic()
+    ledger_state = read_trade_ledger_state(
+        wb,
+        starting_capital=starting_capital,
+        cooldown_days=run_context.config.stop_cooldown_days,
+    )
+    recent_stop_events = ledger_state["recent_stop_events"]
+    neutral_pilot_buys_today = ledger_state["neutral_pilot_buys_today"]
     open_positions = read_open_positions(wb)
-    cash = compute_cash(wb, starting_capital)
+    cash = ledger_state["cash"]
+    mark_runtime_phase(workbook_phase_seconds, "portfolio_state_seconds", phase_started)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
     initial_open_position_tickers = set(open_positions)
@@ -1055,6 +1069,7 @@ def update_workbook(
     setup_score_percentiles = calculate_setup_score_percentiles(results)
     allocation_order = rank_results_for_allocation(results, open_positions)
 
+    phase_started = time.monotonic()
     for result in allocation_order:
         def evaluate_selection(result):
             decision = decide(
@@ -1156,7 +1171,9 @@ def update_workbook(
         elif result.ticker in open_positions:
             exposure += refresh_open_position(open_positions[result.ticker], result, currency_rate, decision)
         open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
+    mark_runtime_phase(workbook_phase_seconds, "candidate_evaluation_seconds", phase_started)
 
+    phase_started = time.monotonic()
     apply_chart_retention_policy(
         pending_decisions,
         base_url=settings.url,
@@ -1165,6 +1182,8 @@ def update_workbook(
         min_rr=settings.min_rr,
         open_position_tickers=initial_open_position_tickers | set(open_positions),
     )
+    mark_runtime_phase(workbook_phase_seconds, "chart_retention_seconds", phase_started)
+    phase_started = time.monotonic()
     for result, decision in pending_decisions:
         if result.ticker in open_positions and (result.chart_url or result.ticker in new_buy_tickers):
             open_positions[result.ticker]["chart_url"] = result.chart_url
@@ -1173,7 +1192,9 @@ def update_workbook(
             append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
         elif decision.action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
             append_trade_log_row(wb, timestamp, result, decision, currency_rate, screenshot_path)
+    mark_runtime_phase(workbook_phase_seconds, "append_rows_seconds", phase_started)
 
+    phase_started = time.monotonic()
     try:
         outcome_backfill_limit = max(0, int(os.getenv("MARKET_LENS_TRADE_OUTCOME_BACKFILL_LIMIT", "8") or "0"))
     except ValueError:
@@ -1191,24 +1212,31 @@ def update_workbook(
                 log(f"Trade outcome backfill warning: {issue}")
         except Exception as exc:
             log(f"Trade outcome backfill skipped safely: {exc}")
+    mark_runtime_phase(workbook_phase_seconds, "outcome_backfill_seconds", phase_started)
 
+    phase_started = time.monotonic()
     write_open_positions(wb, open_positions)
     write_decision_jsonl(decision_path, decision_records)
-    cash = compute_cash(wb, starting_capital)
+    mark_runtime_phase(workbook_phase_seconds, "portfolio_and_decision_write_seconds", phase_started)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
     trade_events: list[dict[str, Any]] = []
     completed_trades: list[dict[str, Any]] = []
     realized_pnl = None
+    phase_started = time.monotonic()
     try:
-        workbook_trades = dashboard_read_trades(wb)
+        workbook_trades = dashboard_read_trade_analytics(wb, ticker_sectors=sector_map)
+        cash = dashboard_compute_cash(workbook_trades, starting_capital)
         trade_analytics = dashboard_compute_realized_pnl(workbook_trades)
         completed_trades = dashboard_compute_full_trade_performance(workbook_trades).get("closed", [])
         trade_events = trade_analytics.get("trades", [])
         realized_pnl = round(float(trade_analytics.get("total") or 0), 2)
     except Exception as exc:
         errors.append(f"TRADE_ANALYTICS_FAILED: {exc}")
+        cash = compute_cash(wb, starting_capital)
+    mark_runtime_phase(workbook_phase_seconds, "trade_analytics_seconds", phase_started)
     performance_summary_paths: dict[str, Path] = {}
+    phase_started = time.monotonic()
     try:
         performance_summary_paths = write_performance_summaries(
             summary_dir=SUMMARY_DIR,
@@ -1236,6 +1264,8 @@ def update_workbook(
         )
     except Exception as exc:
         errors.append(f"PERFORMANCE_SUMMARY_FAILED: {exc}")
+    mark_runtime_phase(workbook_phase_seconds, "performance_summary_seconds", phase_started)
+    phase_started = time.monotonic()
     append_update_log(
         wb,
         timestamp=timestamp,
@@ -1258,7 +1288,14 @@ def update_workbook(
             f"removed {retention['rows_removed']} old rows; "
             f"kept {retention['rows_after']}."
         )
-    wb.save(settings.excel_path)
+    mark_runtime_phase(workbook_phase_seconds, "update_log_and_retention_seconds", phase_started)
+    phase_started = time.monotonic()
+    try:
+        wb.save(settings.excel_path)
+    finally:
+        wb.close()
+    mark_runtime_phase(workbook_phase_seconds, "save_seconds", phase_started)
+    phase_started = time.monotonic()
     outbox_path = buy_notification_outbox_path()
     if outbox_path is not None:
         write_buy_notification_outbox(
@@ -1277,6 +1314,7 @@ def update_workbook(
             run_id=run_id,
             timestamp=timestamp,
         )
+    mark_runtime_phase(workbook_phase_seconds, "notification_seconds", phase_started)
     return {
         "decisions": decisions,
         "cash": cash,
@@ -1292,6 +1330,7 @@ def update_workbook(
         "daily_summary_path": performance_summary_paths.get("daily_summary_json"),
         "weekly_summary_path": performance_summary_paths.get("weekly_summary_json"),
         "excel_updated": True,
+        "workbook_phase_seconds": workbook_phase_seconds,
         # The main run controller replaces this provisional value with the
         # canonical COMPLETE/PARTIAL_OK status after all optional steps finish.
         "run_status": "COMPLETE" if not errors else "PARTIAL_OK",
@@ -1737,6 +1776,66 @@ def compute_cash(wb: Any, starting_capital: float) -> float:
         cash_out += float(row[9] or 0)
         cash_in += float(row[10] or 0)
     return round(starting_capital - cash_out + cash_in, 2)
+
+
+def read_trade_ledger_state(
+    wb: Any,
+    *,
+    starting_capital: float,
+    cooldown_days: int,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Read cash and entry-control state from Trade Log in one pass."""
+    if "Trade Log" not in wb.sheetnames:
+        return {
+            "cash": round(starting_capital, 2),
+            "recent_stop_events": {},
+            "neutral_pilot_buys_today": 0,
+        }
+
+    current_time = now or datetime.now()
+    cash_out = 0.0
+    cash_in = 0.0
+    recent_stop_events: dict[str, dict[str, Any]] = {}
+    neutral_pilot_buys_today = 0
+    for row in wb["Trade Log"].iter_rows(min_row=2, values_only=True):
+        cash_out += float(row[9] or 0) if len(row) > 9 else 0.0
+        cash_in += float(row[10] or 0) if len(row) > 10 else 0.0
+
+        timestamp = parse_agent_timestamp(row[0] if row else None)
+        action = str(row[1] or "").upper().strip() if len(row) > 1 else ""
+        ticker = str(row[2] or "").upper().strip() if len(row) > 2 else ""
+        if timestamp is None:
+            continue
+
+        decision_json: dict[str, Any] | None = None
+        if action == "BUY_SIMULATED" and timestamp.date() == current_time.date():
+            decision_json = parse_json_cell(row[19] if len(row) > 19 else "")
+            if decision_json.get("entry_mode") == "neutral_pilot":
+                neutral_pilot_buys_today += 1
+
+        if cooldown_days <= 0 or action != "EXIT_STOP" or not ticker:
+            continue
+        elapsed = business_days_between(timestamp, current_time)
+        if elapsed > cooldown_days:
+            continue
+        if decision_json is None:
+            decision_json = parse_json_cell(row[19] if len(row) > 19 else "")
+        previous = recent_stop_events.get(ticker)
+        if previous and timestamp <= previous["timestamp"]:
+            continue
+        recent_stop_events[ticker] = {
+            "timestamp": timestamp,
+            "last_stop_date": timestamp.isoformat(timespec="seconds"),
+            "setup_type": decision_json.get("setup_type", ""),
+            "days_remaining": max(0, cooldown_days - elapsed),
+        }
+
+    return {
+        "cash": round(starting_capital - cash_out + cash_in, 2),
+        "recent_stop_events": recent_stop_events,
+        "neutral_pilot_buys_today": neutral_pilot_buys_today,
+    }
 
 
 def read_open_position_tickers(excel_path: Path) -> list[str]:

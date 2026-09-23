@@ -178,10 +178,16 @@ def test_agent_next_candidate_sees_exit_proceeds(monkeypatch, tmp_path, price, c
     monkeypatch.setattr(agent, "read_settings", lambda _: {})
     monkeypatch.setattr(agent, "build_agent_run_context", lambda **_: context())
     monkeypatch.setattr(agent, "base_universe", lambda: {})
-    monkeypatch.setattr(agent, "read_recent_stop_events", lambda *_: {})
-    monkeypatch.setattr(agent, "count_neutral_pilot_buys_today", lambda _: 0)
+    monkeypatch.setattr(
+        agent,
+        "read_trade_ledger_state",
+        lambda *_, **__: {
+            "cash": 0.0,
+            "recent_stop_events": {},
+            "neutral_pilot_buys_today": 0,
+        },
+    )
     monkeypatch.setattr(agent, "read_open_positions", lambda _: {"OLD": position()})
-    monkeypatch.setattr(agent, "compute_cash", lambda *_: 0.)
     monkeypatch.setattr(agent, "rank_results_for_allocation", lambda rows, _: rows)
     monkeypatch.setattr(agent, "calculate_setup_score_percentiles", lambda _: {})
     monkeypatch.setattr(agent, "evaluate_shadow_strategies", lambda *_: [])

@@ -1474,51 +1474,67 @@ def read_open_positions(wb: Any) -> list[dict[str, Any]]:
     return rows
 
 
-def read_trades(wb: Any) -> list[dict[str, Any]]:
+def read_trade_analytics(
+    wb: Any,
+    *,
+    ticker_sectors: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Read trade records without initiating a Smart Universe refresh.
+
+    The scanner already has the current ticker-to-sector map. Accepting that map
+    here keeps workbook analytics deterministic and avoids a second external
+    universe lookup during the persistence phase.
+    """
     rows = []
     ws = wb["Trade Log"]
     for row in data_rows(ws):
         action = row[1]
         price = row[3] if action == "BUY_SIMULATED" else row[4]
-        trade = with_ticker_meta(
-            {
-                "timestamp": row[0],
-                "action": action,
-                "ticker": row[2],
-                "price_usd": round(to_float(price), 2) if price is not None else None,
-                "entry_price_usd": round(to_float(row[3]), 2) if row[3] is not None else None,
-                "exit_price_usd": round(to_float(row[4]), 2) if row[4] is not None else None,
-                "quantity": to_int(row[5]),
-                "usd_ils": to_float(row[6], 1.0),
-                "buy_value_ils": round(to_float(row[7]), 2),
-                "sell_value_ils": round(to_float(row[8]), 2),
-                "cash_out_ils": round(to_float(row[9]), 2),
-                "cash_in_ils": round(to_float(row[10]), 2),
-                "stop_loss": round(to_float(row[11]), 2),
-                "target_1": round(to_float(row[12]), 2),
-                "target_2": round(to_float(row[13]), 2),
-                "risk_ils": round(to_float(row[14]), 2),
-                "reason": row[15] or "",
-                "screenshot_url": resolve_asset_url(row[16]),
-                "chart_url": resolve_asset_url(cell(row, 17)),
-                "selection_context": cell(row, 18),
-                "decision_json": parse_json(cell(row, 19), {}),
-                "trade_id": cell(row, 20),
-                "setup_score_bucket": cell(row, 21),
-                "entry_confirmation_status": cell(row, 22),
-                "mfe": cell(row, 23, None),
-                "mae": cell(row, 24, None),
-                "r_multiple": cell(row, 25, None),
-                "duration": cell(row, 26),
-                "exit_reason": cell(row, 27),
-                "outcome_after_1d": cell(row, 28, None),
-                "outcome_after_3d": cell(row, 29, None),
-                "outcome_after_5d": cell(row, 30, None),
-                "outcome_after_10d": cell(row, 31, None),
-            }
-        )
+        ticker = str(row[2] or "").upper()
+        trade = {
+            "timestamp": row[0],
+            "action": action,
+            "ticker": ticker,
+            "price_usd": round(to_float(price), 2) if price is not None else None,
+            "entry_price_usd": round(to_float(row[3]), 2) if row[3] is not None else None,
+            "exit_price_usd": round(to_float(row[4]), 2) if row[4] is not None else None,
+            "quantity": to_int(row[5]),
+            "usd_ils": to_float(row[6], 1.0),
+            "buy_value_ils": round(to_float(row[7]), 2),
+            "sell_value_ils": round(to_float(row[8]), 2),
+            "cash_out_ils": round(to_float(row[9]), 2),
+            "cash_in_ils": round(to_float(row[10]), 2),
+            "stop_loss": round(to_float(row[11]), 2),
+            "target_1": round(to_float(row[12]), 2),
+            "target_2": round(to_float(row[13]), 2),
+            "risk_ils": round(to_float(row[14]), 2),
+            "reason": row[15] or "",
+            "screenshot_url": resolve_asset_url(row[16]),
+            "chart_url": resolve_asset_url(cell(row, 17)),
+            "selection_context": cell(row, 18),
+            "decision_json": parse_json(cell(row, 19), {}),
+            "trade_id": cell(row, 20),
+            "setup_score_bucket": cell(row, 21),
+            "entry_confirmation_status": cell(row, 22),
+            "mfe": cell(row, 23, None),
+            "mae": cell(row, 24, None),
+            "r_multiple": cell(row, 25, None),
+            "duration": cell(row, 26),
+            "exit_reason": cell(row, 27),
+            "outcome_after_1d": cell(row, 28, None),
+            "outcome_after_3d": cell(row, 29, None),
+            "outcome_after_5d": cell(row, 30, None),
+            "outcome_after_10d": cell(row, 31, None),
+        }
+        if ticker_sectors is not None:
+            trade["sector"] = ticker_sectors.get(ticker, "Unknown")
+            trade["company_name"] = company_name_for(ticker)
         rows.append(with_trade_potential(trade))
     return rows
+
+
+def read_trades(wb: Any) -> list[dict[str, Any]]:
+    return read_trade_analytics(wb, ticker_sectors=sector_map())
 
 
 def read_setup_rows(
