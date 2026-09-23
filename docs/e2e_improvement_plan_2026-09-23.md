@@ -10,8 +10,8 @@ continuation.
 | --- | --- | --- | --- |
 | 1 | Live price provenance and consistency | COMPLETE - APPROVED | API contract, 496 tests, desktop/mobile UI, production smoke |
 | 2 | Explicit partial-scan status taxonomy | COMPLETE - APPROVED | Runtime/API/UI status tests and partial-provider simulation |
-| 3 | Workbook update performance | COMPLETE - PENDING OWNER APPROVAL | Output-equivalence test, tracker integrity, measured runtime comparison |
-| 4 | Market-regime freshness and fallback | NOT STARTED | stale/missing/provider-session fixtures and conservative behavior verification |
+| 3 | Workbook update performance | COMPLETE - APPROVED | Output-equivalence test, tracker integrity, measured runtime comparison |
+| 4 | Market-regime freshness and fallback | COMPLETE - PENDING OWNER APPROVAL | stale/missing/provider-session fixtures and conservative behavior verification |
 | 5 | Focused recovery for unavailable tickers | NOT STARTED | retry/normalization fixtures and bounded runtime validation |
 | 6 | Automated production smoke workflow | NOT STARTED | intentional pass/failure runs with actionable diagnostics |
 | 7 | Move suitable live services from Actions to Render | NOT STARTED | parallel shadow run, failover test, cost/runtime comparison |
@@ -127,6 +127,38 @@ Production validation (2026-09-24):
 Record freshness coverage for every regime input. Use the latest completed exchange
 session and a bounded last-known-good cache when the provider misses a bar. Mark the
 regime `DEGRADED` when evidence is incomplete and retain conservative entry behavior.
+
+Implemented behavior:
+
+- Regime arithmetic excludes the current unfinished daily candle and any future
+  provider session. After the exchange close, that day's completed candle becomes
+  eligible.
+- SPY, QQQ, IWM, VIX, US10Y and DXY each record expected session, effective session,
+  provider freshness, effective source and fallback age.
+- The last valid completed-session benchmark state is persisted under
+  `agent_results/regime/market_regime_lkg.json` and may be reused for at most three
+  completed NYSE sessions.
+- A fallback or missing input produces `market_regime_data_status=DEGRADED` without
+  overwriting the directional `BULL/NEUTRAL/BEAR` evidence.
+- Missing SPY or QQQ evidence after fallback blocks new buys. A missing/fallback core
+  volatility input cannot leave an otherwise bullish calculation in BULL; it uses
+  conservative NEUTRAL thresholds and exposure. Missing optional macro inputs make a
+  zero contribution but do not invent a trade blocker.
+- Healthy completed-session data retains the existing contribution weights, regime
+  thresholds, entry gates and dynamic-exposure calculation.
+- Decision JSON, run summaries and the per-ticker checklist expose the data-quality
+  status and human-readable reason.
+
+Source QA result (2026-09-24):
+
+- Full suite passed: 521 tests.
+- Fixtures verified regular-session candle exclusion, post-close inclusion, valid
+  fallback, expired fallback rejection, future-session rejection, missing-core entry
+  blocking, VIX degradation and malformed-cache recovery.
+- A live provider smoke test returned all six inputs from the latest completed NYSE
+  session, `data_status=HEALTHY`, `allows_new_buys=true` and no warnings.
+- Python compilation and `git diff --check` passed. Production deployment and one
+  persisted scanner-run validation remain the release gate.
 
 ## 5. Focused recovery for unavailable tickers
 

@@ -12,7 +12,15 @@ import pandas as pd
 
 from app.data import fetch_daily_frame, fetch_intraday_frame, fetch_next_earnings_date
 from app.indicators import compute_atr
-from app.regime_evidence import daily_regime_evidence
+from app.regime_evidence import (
+    cached_regime_state,
+    completed_regime_frame,
+    expected_completed_session,
+    load_regime_cache,
+    regime_cache_path,
+    save_regime_cache,
+    update_regime_cache,
+)
 from app.trading_clock import INTERVAL_MINUTES, bar_close_time, completed_frame, session_status
 from app.smart_universe import SECTOR_ETFS, build_sector_health, company_name_for
 
@@ -40,6 +48,11 @@ class MarketRegime:
     warnings: list[str] = field(default_factory=list)
     risk_points: float = 0.0
     exposure_limit_pct: float = 0.0
+    data_status: str = "HEALTHY"
+    allows_new_buys: bool = True
+    fallback_used: bool = False
+    freshness_coverage: dict[str, Any] = field(default_factory=dict)
+    data_quality_reason: str = "All market-regime inputs use the latest completed session."
 
 
 @dataclass
@@ -208,27 +221,82 @@ def build_agent_run_context(
     return AgentRunRiskContext(config=config, market_regime=market_regime, sector_health=sector_health)
 
 
-def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
+def assess_agent_market_regime(
+    config: AgentRiskConfig, *, evaluated_at: datetime | None = None
+) -> MarketRegime:
     indicators: dict[str, Any] = {}
     warnings: list[str] = []
-    evaluated_at = datetime.now(timezone.utc)
+    evaluated_at = evaluated_at or datetime.now(timezone.utc)
+    expected = expected_completed_session(evaluated_at)
+    expected_session = expected.isoformat() if expected else None
+    cache_path = regime_cache_path()
+    cache = load_regime_cache(cache_path)
+    cache_changed = False
+    max_cache_age = max(0, int(os.getenv("MARKET_LENS_REGIME_LKG_MAX_SESSION_AGE", "3")))
 
     for label, symbol in MARKET_REGIME_SYMBOLS.items():
+        evidence: dict[str, Any] = {
+            "symbol": symbol,
+            "evaluated_at": evaluated_at.isoformat(),
+            "expected_completed_session": expected_session,
+            "freshness_status": "UNKNOWN",
+            "regime_data_source": "UNAVAILABLE",
+            "fallback_used": False,
+        }
         try:
             # Regime EMA200 needs its own warm-up, independent of chart range.
             frame = fetch_daily_frame(symbol, period="2y")
-            indicators[label] = benchmark_state(frame, is_vix=label == "VIX")
-            indicators[label].update(daily_regime_evidence(frame, evaluated_at))
-            indicators[label]["symbol"] = symbol
-            if indicators[label]["freshness_status"] in {
-                "UNKNOWN", "STALE_SESSION", "FUTURE_SESSION", "INVALID_TIMESTAMPS", "UNEXPECTED_SESSION"
-            }:
-                warnings.append(
-                    f"{label} regime input freshness: {indicators[label]['freshness_status']} "
-                    "(daily session evidence; quote freshness is not recorded)."
+            completed, evidence = completed_regime_frame(frame, evaluated_at)
+            evidence["symbol"] = symbol
+            if evidence.get("provider_freshness_status") == "FUTURE_SESSION":
+                raise ValueError("provider returned a future daily session")
+            if evidence.get("freshness_status") != "LATEST_COMPLETED_SESSION":
+                raise ValueError(
+                    f"completed-session freshness is {evidence.get('freshness_status', 'UNKNOWN')}"
                 )
+            benchmark = benchmark_state(completed, is_vix=label == "VIX")
+            state = dict(benchmark)
+            state.update(evidence)
+            state["regime_data_source"] = "CURRENT_COMPLETED_SESSION"
+            state["fallback_used"] = False
+            indicators[label] = state
+            if expected_session:
+                update_regime_cache(cache, label, benchmark, expected_session, symbol)
+                cache_changed = True
         except Exception as exc:
-            warnings.append(f"{label} data unavailable: {exc}")
+            cached, cache_age = cached_regime_state(
+                cache,
+                label,
+                expected_session,
+                max_session_age=max_cache_age,
+            )
+            if cached is not None:
+                cached.update(evidence)
+                cached.update({
+                    "freshness_status": "LAST_KNOWN_GOOD",
+                    "regime_data_source": "LAST_KNOWN_GOOD",
+                    "fallback_used": True,
+                    "last_bar_session": cached.get("cached_session"),
+                    "fallback_session_age": cache_age,
+                    "fallback_reason": str(exc),
+                })
+                indicators[label] = cached
+                warnings.append(
+                    f"{label} uses last-known-good completed-session data "
+                    f"({cache_age} session(s) old): {exc}"
+                )
+            else:
+                evidence.update({
+                    "data_available": False,
+                    "fallback_session_age": cache_age,
+                    "fallback_reason": str(exc),
+                })
+                indicators[label] = evidence
+                warnings.append(f"{label} regime data unavailable with no valid fallback: {exc}")
+
+    if cache_changed and not save_regime_cache(cache_path, cache):
+        if cache_path is not None:
+            warnings.append("Market-regime last-known-good cache could not be saved.")
 
     spy = indicators.get("SPY", {})
     qqq = indicators.get("QQQ", {})
@@ -237,17 +305,54 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
     us10y = indicators.get("US10Y", {})
     dxy = indicators.get("DXY", {})
 
+    def usable(state: dict[str, Any]) -> bool:
+        return state.get("regime_data_source") in {"CURRENT_COMPLETED_SESSION", "LAST_KNOWN_GOOD"}
+
     contributions = {
-        "SPY": 2 if trend_is_bullish(spy) else -2 if trend_is_bearish(spy) else 0,
-        "QQQ": 2 if trend_is_bullish(qqq) else -2 if trend_is_bearish(qqq) else 0,
-        "IWM": (1 if not trend_is_bearish(iwm) else -1) if iwm else 0,
-        "VIX": 1 if vix_is_calm(vix) else -2 if vix_is_stressed(vix) else 0,
-        "US10Y": -0.5 if trend_is_bullish(us10y) else 0.25 if trend_is_bearish(us10y) else 0,
-        "DXY": -0.25 if trend_is_bullish(dxy) else 0.25 if trend_is_bearish(dxy) else 0,
+        "SPY": (2 if trend_is_bullish(spy) else -2 if trend_is_bearish(spy) else 0) if usable(spy) else 0,
+        "QQQ": (2 if trend_is_bullish(qqq) else -2 if trend_is_bearish(qqq) else 0) if usable(qqq) else 0,
+        "IWM": (1 if not trend_is_bearish(iwm) else -1) if usable(iwm) else 0,
+        "VIX": (1 if vix_is_calm(vix) else -2 if vix_is_stressed(vix) else 0) if usable(vix) else 0,
+        "US10Y": (-0.5 if trend_is_bullish(us10y) else 0.25 if trend_is_bearish(us10y) else 0) if usable(us10y) else 0,
+        "DXY": (-0.25 if trend_is_bullish(dxy) else 0.25 if trend_is_bearish(dxy) else 0) if usable(dxy) else 0,
     }
     risk_points = float(sum(contributions.values()))
     for label, state in indicators.items():
         state["risk_point_contribution"] = contributions[label]
+
+    coverage = {
+        label: {
+            "available": bool(state.get("regime_data_source") != "UNAVAILABLE"),
+            "source": state.get("regime_data_source", "UNAVAILABLE"),
+            "freshness_status": state.get("freshness_status", "UNKNOWN"),
+            "session": state.get("last_bar_session") or state.get("expected_completed_session"),
+            "fallback_session_age": state.get("fallback_session_age"),
+        }
+        for label, state in indicators.items()
+    }
+    degraded_inputs = [label for label, item in coverage.items() if item["source"] != "CURRENT_COMPLETED_SESSION"]
+    unavailable_inputs = [label for label, item in coverage.items() if not item["available"]]
+    fallback_inputs = [label for label, item in coverage.items() if item["source"] == "LAST_KNOWN_GOOD"]
+    directional_missing = [label for label in ("SPY", "QQQ") if label in unavailable_inputs]
+    core_degraded = any(label in degraded_inputs for label in ("SPY", "QQQ", "VIX"))
+    data_status = "DEGRADED" if degraded_inputs else "HEALTHY"
+    allows_new_buys = not directional_missing
+    if directional_missing:
+        data_quality_reason = (
+            "New buys blocked because completed-session evidence is unavailable for "
+            + ", ".join(directional_missing)
+            + "."
+        )
+    elif core_degraded:
+        data_quality_reason = (
+            "Core regime evidence is degraded; bounded fallback or conservative neutral policy is active."
+        )
+    elif degraded_inputs:
+        data_quality_reason = (
+            "Optional regime inputs are incomplete; missing contributions are neutral and entry gates are unchanged."
+        )
+    else:
+        data_quality_reason = "All market-regime inputs use the latest completed session."
 
     if risk_points >= 4:
         label = "BULL"
@@ -271,6 +376,14 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
         min_rr = config.neutral_min_net_rr
         min_setup_score = config.neutral_min_setup_score
 
+    if core_degraded and label == "BULL":
+        label = "NEUTRAL"
+        score = 0.52
+        reason = "Market evidence would be bullish, but incomplete core data requires a conservative neutral regime."
+        max_exposure = float(config.neutral_max_exposure or config.default_max_total_exposure)
+        min_rr = config.neutral_min_net_rr
+        min_setup_score = config.neutral_min_setup_score
+
     exposure_pct = max_exposure / config.starting_capital if config.starting_capital else 0.0
     if config.dynamic_exposure_enabled:
         exposure_pct = dynamic_exposure_pct(
@@ -278,6 +391,10 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
             max_exposure_pct=min(config.dynamic_exposure_max_pct, 1.0 - config.cash_floor_pct),
         )
         max_exposure = config.starting_capital * exposure_pct
+    if core_degraded and label != "BEAR":
+        neutral_cap = float(config.neutral_max_exposure or config.default_max_total_exposure)
+        max_exposure = min(max_exposure, neutral_cap, config.starting_capital * 0.30)
+        exposure_pct = max_exposure / config.starting_capital if config.starting_capital else 0.0
 
     return MarketRegime(
         label=label,
@@ -290,6 +407,11 @@ def assess_agent_market_regime(config: AgentRiskConfig) -> MarketRegime:
         warnings=warnings,
         risk_points=round(risk_points, 2),
         exposure_limit_pct=round(exposure_pct, 4),
+        data_status=data_status,
+        allows_new_buys=allows_new_buys,
+        fallback_used=bool(fallback_inputs),
+        freshness_coverage=coverage,
+        data_quality_reason=data_quality_reason,
     )
 
 
@@ -642,6 +764,11 @@ def evaluate_agent_candidate(
         "market_regime_score": run_context.market_regime.score,
         "market_regime_risk_points": run_context.market_regime.risk_points,
         "market_regime_reason": run_context.market_regime.reason,
+        "market_regime_data_status": run_context.market_regime.data_status,
+        "market_regime_allows_new_buys": run_context.market_regime.allows_new_buys,
+        "market_regime_fallback_used": run_context.market_regime.fallback_used,
+        "market_regime_freshness_coverage": run_context.market_regime.freshness_coverage,
+        "market_regime_data_quality_reason": run_context.market_regime.data_quality_reason,
         "dynamic_exposure_enabled": config.dynamic_exposure_enabled,
         "dynamic_exposure_limit_pct": run_context.market_regime.exposure_limit_pct,
         "dynamic_exposure_limit": round(run_context.market_regime.max_total_exposure, 2),
@@ -1149,6 +1276,11 @@ def buy_blockers(
     session = market_session or market_session_status(
         allow_off_hours_buys=run_context.config.allow_off_hours_buys
     )
+    if not regime.allows_new_buys:
+        blockers.append({
+            "action": "SKIP",
+            "reason": f"SKIP: {regime.data_quality_reason}",
+        })
     freshness = calculate_confirmation_freshness(
         confirmation, session,
         lookback_candles=run_context.config.entry_confirmation_lookback_candles,

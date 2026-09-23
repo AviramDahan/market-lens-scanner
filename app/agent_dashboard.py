@@ -763,6 +763,7 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             ({"entry_confirmation"}, "Entry confirmation missing", "CONFIRM_BLOCKED"),
             ({"earnings"}, "Earnings blackout", "WEAK_EARNINGS"),
             ({"market_bear"}, "BEAR blocks new buys", "MARKET_BLOCKED"),
+            ({"market_data_quality"}, "Market data quality", "MARKET_BLOCKED"),
             ({"weak_sector"}, "Weak sector", "WEAK_EARNINGS"),
         ):
             if keys & condition_keys:
@@ -879,6 +880,15 @@ def entry_missing_conditions(
         conditions.append(blocker_condition("no_trade", "No technical setup", "No actionable setup structure was detected.", "warn"))
     if str(decision.get("market_regime") or "").upper() == "BEAR":
         conditions.append(blocker_condition("market_bear", "BEAR market", "Bear market regime blocks new paper buys.", "fail"))
+    if decision.get("market_regime_allows_new_buys") is False:
+        conditions.append(
+            blocker_condition(
+                "market_data_quality",
+                "Market data quality",
+                str(decision.get("market_regime_data_quality_reason") or "Core regime evidence is incomplete."),
+                "fail",
+            )
+        )
     if normalized_setup == "no trade" or "no trade result" in text:
         return conditions
     if str(decision.get("sector_regime") or "").upper() == "WEAK" or "weak sector" in text:
@@ -1018,6 +1028,20 @@ def watch_entry_checklist(decision: dict[str, Any]) -> list[dict[str, str]]:
     add("Market entry policy", "fail" if bear else "info" if regime else "unknown",
         "BEAR blocks all new paper buys; available cash does not override this policy."
         if bear else f"Recorded regime: {regime or 'Not recorded'}; remaining entry gates still apply.")
+    regime_data_status = str(decision.get("market_regime_data_status") or "").upper()
+    regime_allows_buys = decision.get("market_regime_allows_new_buys")
+    add(
+        "Market-regime data quality",
+        "pass" if regime_data_status == "HEALTHY" and regime_allows_buys is True
+        else "fail" if regime_allows_buys is False
+        else "unknown" if not regime_data_status
+        else "info",
+        (
+            f"Status: {regime_data_status or 'Not recorded'} | New buys allowed: "
+            f"{regime_allows_buys if regime_allows_buys is not None else 'Not recorded'} | "
+            f"{decision.get('market_regime_data_quality_reason') or 'No data-quality reason recorded.'}"
+        ),
+    )
     for label, actual, threshold in (
         ("Setup score", "setup_score", "minimum_setup_score_required"),
         ("Net R/R", "net_rr", "minimum_net_rr_required"),
@@ -1071,7 +1095,8 @@ def watch_entry_checklist(decision: dict[str, Any]) -> list[dict[str, str]]:
         add(f"Regime input: {symbol}", "info", " | ".join(
             f"{key.replace('_', ' ')}: {state.get(key) if state.get(key) is not None else 'Not recorded'}"
             for key in ("price", "ema20", "ema50", "ema200", "trend", "risk_point_contribution",
-                        "last_bar_session", "expected_completed_session", "freshness_status", "provider_fetched_at")
+                        "last_bar_session", "expected_completed_session", "freshness_status",
+                        "regime_data_source", "fallback_session_age", "provider_fetched_at")
         ) + " | Daily bars identify sessions, not live quote timestamps.")
     for warning in decision.get("warnings") or []:
         add("Warning", "unknown", str(warning))

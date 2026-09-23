@@ -260,8 +260,13 @@ def blockers_for(
     target_status: str = "OK",
     confirmation_passed: bool = True,
     cooldown_active: bool = False,
+    regime_allows_new_buys: bool = True,
 ) -> list[dict[str, str]]:
     run_context = context(regime)
+    run_context.market_regime.allows_new_buys = regime_allows_new_buys
+    if not regime_allows_new_buys:
+        run_context.market_regime.data_status = "DEGRADED"
+        run_context.market_regime.data_quality_reason = "SPY completed-session evidence is unavailable."
     confirmation = {
         "entry_confirmation_passed": confirmation_passed,
         "confirmation_reason": "test confirmation",
@@ -314,6 +319,11 @@ def test_neutral_setup_score_below_floor_must_not_buy() -> None:
 def test_bear_blocks_all_new_buys() -> None:
     blockers = blockers_for(score=0.90, regime="BEAR", net_rr=999.0)
     assert any(item["action"] == "SKIP" for item in blockers)
+
+
+def test_missing_core_regime_evidence_blocks_new_buy() -> None:
+    blockers = blockers_for(regime_allows_new_buys=False)
+    assert any(item["action"] == "SKIP" and "SPY" in item["reason"] for item in blockers)
 
 
 def test_primary_net_rr_below_threshold_blocks_even_when_target2_is_strong() -> None:
@@ -415,6 +425,11 @@ def test_off_hours_candidate_is_staged_and_requires_regular_confirmation(monkeyp
     assert decision["off_hours_candidate"] is True
     assert decision["regular_session_confirmation_required"] is True
     assert decision["watch_status"] == "WATCH_READY"
+    assert decision["market_regime_data_status"] == "HEALTHY"
+    assert decision["market_regime_allows_new_buys"] is True
+    assert decision["market_regime_fallback_used"] is False
+    assert decision["market_regime_freshness_coverage"] == {}
+    assert "latest completed session" in decision["market_regime_data_quality_reason"]
     assert "blocked until a regular-session confirmation scan" in decision["off_hours_staging_reason"]
 
 

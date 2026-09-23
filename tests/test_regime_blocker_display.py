@@ -72,6 +72,20 @@ def test_benchmark_evidence_is_present_and_legacy_timestamps_are_unknown():
     assert "757.315" in row["detail"]
 
 
+def test_degraded_core_regime_data_is_visible_as_entry_blocker():
+    setup = candidate(
+        market_regime="NEUTRAL",
+        market_regime_data_status="DEGRADED",
+        market_regime_allows_new_buys=False,
+        market_regime_data_quality_reason="SPY completed-session evidence is unavailable.",
+    )
+    result = build_decision_diagnostics([setup])
+    assert result["blockers"]["Market data quality"] == 1
+    rows = {row["label"]: row for row in watch_entry_checklist(setup["decision_json"])}
+    assert rows["Market-regime data quality"]["status"] == "fail"
+    assert "SPY" in rows["Market-regime data quality"]["detail"]
+
+
 def test_existing_snapshot_diagnostics_are_upgraded_without_changing_positions(monkeypatch):
     from app.main import enrich_agent_dashboard_snapshot
     setup = candidate()

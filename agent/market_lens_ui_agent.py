@@ -2409,7 +2409,8 @@ def write_summary(
     closed = [ticker for ticker, decision in decisions.items() if decision.action in {"TAKE_PROFIT", "EXIT_STOP", "TAKE_PARTIAL_PROFIT"}]
     market_regime = workbook_context.get("market_regime")
     market_text = (
-        f"{market_regime.label} ({market_regime.score:.2f}) - {market_regime.reason}"
+        f"{market_regime.label} ({market_regime.score:.2f}) [{market_regime.data_status}] - "
+        f"{market_regime.reason} Data quality: {market_regime.data_quality_reason}"
         if market_regime
         else "Not available"
     )

@@ -47,6 +47,13 @@ def test_scanner_persists_generated_state_with_manifest_bundle() -> None:
     assert 'git add "$EXCEL_FILE" "$RESULTS_DIR"' not in block
 
 
+def test_scanner_persists_bounded_market_regime_cache() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "MARKET_LENS_REGIME_CACHE_PATH: agent_results/regime/market_regime_lkg.json" in text
+    assert 'MARKET_LENS_REGIME_LKG_MAX_SESSION_AGE: "3"' in text
+    assert '--path "$RESULTS_DIR"' in text
+
+
 def test_scanner_compacts_large_workbook_before_github_warning_size() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
 
