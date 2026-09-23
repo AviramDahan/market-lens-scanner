@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 80
-Tickers scanned: 10886
+Total scans: 81
+Tickers scanned: 11031
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2184
-WATCH_REVIEW unique tickers: 78
+WATCH_REVIEW: 2213
+WATCH_REVIEW unique tickers: 79
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2184
-SKIP: 8401
-NO_TRADE: 6241
+WATCH: 2213
+SKIP: 8513
+NO_TRADE: 6335
 Realized PnL: 299.97
-Unrealized PnL: 727.08
-Portfolio value: 101318.89
+Unrealized PnL: 849.92
+Portfolio value: 101441.73
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.3189
+Cumulative recorded-equity change (%): 1.4417
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -31,8 +31,8 @@ Shadow would-buy counts:
 - FIB_STOP_100_ATR: 3
 - FIB_STRUCTURE_STOP: 31
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 44
-- VWAP_RECLAIM: 2
+- TREND_PULLBACK_RECLAIM: 45
+- VWAP_RECLAIM: 3
 
 Top rejected candidates:
 - JNJ: WATCH score=0.5667 reason=Gross R/R is valid, but Net R/R 1.99 failed minimum 2.50 after slippage/spread adjustment.
