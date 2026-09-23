@@ -9,7 +9,7 @@ continuation.
 | # | Upgrade | Status | QA gate |
 | --- | --- | --- | --- |
 | 1 | Live price provenance and consistency | COMPLETE - APPROVED | API contract, 496 tests, desktop/mobile UI, production smoke |
-| 2 | Explicit partial-scan status taxonomy | IN PROGRESS | Runtime/API/UI status tests and partial-provider simulation |
+| 2 | Explicit partial-scan status taxonomy | COMPLETE - PENDING OWNER APPROVAL | Runtime/API/UI status tests and partial-provider simulation |
 | 3 | Workbook update performance | NOT STARTED | Output-equivalence test, tracker integrity, measured runtime comparison |
 | 4 | Market-regime freshness and fallback | NOT STARTED | stale/missing/provider-session fixtures and conservative behavior verification |
 | 5 | Focused recovery for unavailable tickers | NOT STARTED | retry/normalization fixtures and bounded runtime validation |
@@ -48,6 +48,28 @@ QA result (2026-09-23):
 Replace the conflicting `OK` plus `scan_complete=false` presentation with explicit
 `COMPLETE`, `PARTIAL_OK`, `FAILED` and `AUTH_FAILED` states. Keep usable partial
 results while making missing-symbol coverage visible to health checks and users.
+
+Acceptance criteria:
+
+- Runtime records use `COMPLETE`, `PARTIAL_OK`, `FAILED` or `AUTH_FAILED`.
+- A partial scan with usable cards still updates decisions and the paper tracker.
+- A zero-card scan, authentication failure or terminal UI failure cannot appear successful.
+- `/agent/data` exposes requested, received, missing and coverage percentage.
+- Historical `OK` / `ISSUES` summaries are normalized without rewriting old files.
+- Health checks accept `PARTIAL_OK` while reporting its coverage and missing count.
+
+QA result (2026-09-23):
+
+- Full suite passed: 509 tests.
+- A simulated 136/139 provider response normalized historical `OK` to `PARTIAL_OK`
+  and retained all 136 usable result cards.
+- Production API reported `PARTIAL_OK`, `scan_complete=false`, 136/139 results and
+  three unavailable symbols for run `20260923_113131`.
+- Production desktop (1440px) and mobile (390px) rendered the status and coverage
+  without horizontal overflow or console errors.
+- Dashboard workbook reads now close their read-only file handle after extraction.
+- Scanner strategy, trade gates, position sizing, TP/SL monitor and paper positions
+  were not changed.
 
 ## 3. Workbook update performance
 
