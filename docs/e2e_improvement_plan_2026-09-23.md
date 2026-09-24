@@ -296,6 +296,10 @@ Shadow implementation result (2026-09-24):
   quote warnings or runtime failures. It detected one ORCL stop candidate from the
   completed 1m observation and still created no GitHub Actions run, notification or
   portfolio update, proving the production Shadow path has no execution side effect.
+- The active legacy path independently dispatched monitor run `36006394672`, which
+  persisted one ORCL `EXIT_STOP` and reduced the open portfolio from five positions
+  to four. The next Shadow cycle immediately observed the four-position snapshot and
+  zero events, with no duplicate dispatch or repeated portfolio action.
 - An independent legacy UI-driven ORCL monitor dispatch occurred during production
   validation with source `agent-ui-live-price`. It was not emitted by the Shadow
   task and completed with no portfolio event. This path remains part of the parity
