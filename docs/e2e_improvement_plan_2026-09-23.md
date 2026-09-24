@@ -344,3 +344,29 @@ Parity acceptance window:
 - Review `persistence_lag_seconds`; the cutover target is at most 90 seconds. During
   Shadow mode, the 15-minute active fallback can legitimately produce a longer lag
   and is measured rather than hidden.
+
+Durable parity production QA (2026-09-24):
+
+- Local regression QA passed 555 tests, Python compilation, workflow YAML parsing
+  and whitespace validation. A FastAPI lifecycle check confirmed the task was
+  enabled/running while `side_effects_enabled=false`.
+- Source QA run `36010678662` passed. Production Smoke run `36010854812` passed
+  against Render revision `8fd93423548b`, including the Agent HTML, 134 Decision
+  JSONL records, the 22MB tracker, a read-only chart scan, position-monitor state
+  and the new bounded Shadow journal contract.
+- The first smoke run exposed a pre-existing dashboard synchronization defect: the
+  scan snapshot could retain a monitor timestamp while omitting the independently
+  stored `latest_status.json` fields. Render now synchronizes that heartbeat beside
+  the snapshot and overlays the newer monitor status during snapshot enrichment.
+  Regression coverage protects both the download and overlay behavior.
+- Real position-monitor workflow run `36011085076` passed end to end. It evaluated
+  four open paper positions with zero failures/events, ran the parity collector,
+  produced no parity mutation because no Shadow event existed, and sent no Telegram
+  notification. Production then reported `MONITOR_OK`, four positions checked,
+  zero failed, zero events and a fresh heartbeat.
+- Production Shadow reported regular-session polling, four positions checked,
+  zero quote warnings, zero consecutive failures and no side effects. The event
+  journal was empty at validation time, which is the correct no-touch baseline.
+- A one-time follow-up review is scheduled for 2026-10-02 at 10:00 Asia/Jerusalem,
+  after five complete trading sessions. It may recommend a cutover but cannot
+  perform one or change trading behavior automatically.
