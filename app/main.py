@@ -4,6 +4,7 @@ import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -46,6 +47,7 @@ from app.results_sync import (
     sync_dashboard_snapshot_assets_if_enabled,
     sync_dashboard_snapshot_if_enabled,
 )
+from app.render_shadow_monitor import render_shadow_monitor
 from app.scanner import scan_ticker_detail, scan_tickers
 from app.scan_trigger import (
     dispatch_agent_scan,
@@ -69,7 +71,22 @@ from app.telegram_notifications import (
 from app.trading_clock import session_status
 from app.watchlists import list_watchlists
 
-app = FastAPI(title="Market Lens", version="0.1.0", description="Swing trade scanner")
+
+@asynccontextmanager
+async def lifespan(_application: FastAPI):
+    render_shadow_monitor.start(run_render_shadow_monitor_cycle)
+    try:
+        yield
+    finally:
+        await render_shadow_monitor.stop()
+
+
+app = FastAPI(
+    title="Market Lens",
+    version="0.1.0",
+    description="Swing trade scanner",
+    lifespan=lifespan,
+)
 
 PROJECT_ROOT = Path(__file__).parent.parent
 STATIC_DIR = Path(__file__).parent / "static"
@@ -794,6 +811,81 @@ async def monitor_live_positions(
         "reason": dispatchable_event.reason,
         "dispatch": compact_dispatch_payload(dispatch),
     }, compact)
+
+
+async def run_render_shadow_monitor_cycle() -> dict:
+    """Evaluate live TP/SL touches without alerts, dispatch, or persistence."""
+    session = session_status()
+    phase = str(session.get("phase") or "UNKNOWN")
+    config = render_shadow_monitor.config()
+    if config["regular_session_only"] and not session.get("regular_session_open"):
+        return {
+            "status": "outside_regular_session",
+            "session_phase": phase,
+            "positions_checked": 0,
+            "events": [],
+            "warnings": {},
+        }
+
+    dashboard = await asyncio.to_thread(monitor_agent_dashboard)
+    if dashboard.get("status") != "ok":
+        return {
+            "status": "dashboard_unavailable",
+            "session_phase": phase,
+            "positions_checked": 0,
+            "events": [],
+            "warnings": {},
+        }
+
+    positions = dashboard.get("open_positions")
+    if not isinstance(positions, list) or not positions:
+        return {
+            "status": "no_open_positions",
+            "session_phase": phase,
+            "positions_checked": 0,
+            "events": [],
+            "warnings": {},
+        }
+
+    events = []
+    warnings = {}
+    positions_checked = 0
+    for position in positions:
+        ticker = str(position.get("ticker") or "").upper().strip()
+        if not ticker:
+            continue
+        try:
+            live_price, source_time, live_high, live_low = await asyncio.to_thread(
+                fetch_live_quote, ticker
+            )
+        except Exception as exc:
+            warnings[ticker] = type(exc).__name__
+            continue
+        positions_checked += 1
+        event = detect_live_monitor_event(
+            position,
+            live_price,
+            live_high=live_high,
+            live_low=live_low,
+        )
+        if event:
+            payload = live_monitor_event_payload(event)
+            payload["observed_at"] = source_time
+            events.append(payload)
+
+    return {
+        "status": "events_detected" if events else "ok",
+        "session_phase": phase,
+        "positions_checked": positions_checked,
+        "events": events,
+        "warnings": warnings,
+    }
+
+
+@app.get("/agent/monitor-shadow-status")
+async def get_render_shadow_monitor_status() -> dict:
+    """Expose bounded read-only evidence for the Render shadow trial."""
+    return render_shadow_monitor.snapshot()
 
 
 @app.get("/agent/trigger-scan")
