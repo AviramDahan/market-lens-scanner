@@ -292,6 +292,10 @@ Shadow implementation result (2026-09-24):
 - Production deployed the expected revision and reported the Shadow task enabled
   and running. Its first pre-market cycle returned `outside_regular_session`, zero
   quote checks, zero events and zero failures, proving the server-side session guard.
+- The first regular-session cycle checked all five open positions in 260ms with no
+  quote warnings or runtime failures. It detected one ORCL stop candidate from the
+  completed 1m observation and still created no GitHub Actions run, notification or
+  portfolio update, proving the production Shadow path has no execution side effect.
 - An independent legacy UI-driven ORCL monitor dispatch occurred during production
   validation with source `agent-ui-live-price`. It was not emitted by the Shadow
   task and completed with no portfolio event. This path remains part of the parity
