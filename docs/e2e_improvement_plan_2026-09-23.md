@@ -13,8 +13,8 @@ continuation.
 | 3 | Workbook update performance | COMPLETE - APPROVED | Output-equivalence test, tracker integrity, measured runtime comparison |
 | 4 | Market-regime freshness and fallback | COMPLETE - APPROVED | stale/missing/provider-session fixtures and conservative behavior verification |
 | 5 | Focused recovery for unavailable tickers | COMPLETE - APPROVED | focused retry, provider normalization, bounded runtime and structured outcomes |
-| 6 | Automated production smoke workflow | COMPLETE - PENDING OWNER APPROVAL | automatic source-QA chain and verified read-only production contract |
-| 7 | Move suitable live services from Actions to Render | NOT STARTED | parallel shadow run, failover test, cost/runtime comparison |
+| 6 | Automated production smoke workflow | COMPLETE - APPROVED | automatic source-QA chain and verified read-only production contract |
+| 7 | Move suitable live services from Actions to Render | SHADOW ACTIVE - PARITY PENDING | parallel shadow run, failover test, cost/runtime comparison |
 
 ## 1. Live price provenance and consistency
 
@@ -263,3 +263,46 @@ Production QA result (2026-09-24):
 Evaluate running price polling, the TP/SL sensor, cache and heartbeat on the paid
 Render service. Activate only after a shadow period proves event parity and GitHub
 Actions remains available as a low-frequency fallback.
+
+Shadow implementation result (2026-09-24):
+
+- Added one bounded asyncio task to the existing `market-lens-scanner` Starter web
+  service. No Worker, datastore, additional instance or paid Render resource was
+  created; the projected Render charge remains $7/month.
+- The task is explicitly observation-only. It reads the lightweight dashboard
+  snapshot, reuses the existing one-minute quote cache and TP/SL event detector,
+  and records only bounded in-memory evidence. It cannot call GitHub dispatch,
+  Telegram notification or portfolio/workbook persistence code.
+- Polling is limited to the regular NYSE session, starts after a 20-second service
+  warm-up, runs every 60 seconds and has a 45-second cycle timeout. Failures are
+  contained and reported by type without exposing provider or account secrets.
+- `/agent/monitor-shadow-status` exposes enabled/running state, last session,
+  duration, positions checked, event count, warnings and failure count. The payload
+  always declares `mode=shadow` and `side_effects_enabled=false`.
+- Local QA exercised the real background lifecycle against five paper positions.
+  It detected an event candidate without dispatching GitHub, sending Telegram or
+  changing portfolio state. The normal `/agent/monitor-live` endpoint remained
+  independent and returned HTTP 200.
+- Full source QA passed 546 tests, Python compilation and whitespace validation.
+  Dedicated fixtures cover disabled-by-default behavior, bounded evidence,
+  contained failures, no-dispatch/no-alert guarantees, off-hours skipping and the
+  single-service Starter Blueprint contract.
+- GitHub Source QA run `36004870224` and automatic Production Smoke run
+  `36005038976` both passed on source commit `4d3d628b1`.
+- Production deployed the expected revision and reported the Shadow task enabled
+  and running. Its first pre-market cycle returned `outside_regular_session`, zero
+  quote checks, zero events and zero failures, proving the server-side session guard.
+- An independent legacy UI-driven ORCL monitor dispatch occurred during production
+  validation with source `agent-ui-live-price`. It was not emitted by the Shadow
+  task and completed with no portfolio event. This path remains part of the parity
+  study and must be retired or session-guarded only after the Shadow evidence is
+  sufficient for cutover.
+
+Remaining acceptance work:
+
+- Collect several regular-session days of Shadow detections and compare them with
+  current `/agent/monitor-live`, UI-trigger and persisted monitor outcomes.
+- Prove no missed TP1, TP2 or stop event, no duplicate persisted action and stable
+  provider/runtime behavior before enabling any Render-side dispatch.
+- Keep GitHub Actions as the only portfolio mutation path and preserve the current
+  external monitor as fallback until an explicitly approved cutover.
