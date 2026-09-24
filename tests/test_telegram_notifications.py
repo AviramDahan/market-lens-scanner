@@ -19,6 +19,7 @@ from app.telegram_notifications import (
     format_stop_moved_to_entry_message,
     load_telegram_settings,
     send_telegram_message,
+    send_telegram_notification,
     send_telegram_photo,
     telegram_configured,
 )
@@ -174,6 +175,45 @@ def test_chart_photo_source_resolves_saved_agent_results_path() -> None:
     )
 
 
+def test_telegram_notification_combines_text_and_chart_into_one_delivery() -> None:
+    captured = []
+
+    def opener(request, timeout):
+        captured.append((request.full_url, json.loads(request.data.decode("utf-8")), timeout))
+        return FakeTelegramResponse()
+
+    result = send_telegram_notification(
+        "<b>BUY | APP</b>\nEntry: $316.01",
+        chart_ref="https://example.com/app.png",
+        ticker="APP",
+        settings=TelegramSettings(bot_token="SECRET_TOKEN", chat_id="-100", timeout_seconds=4),
+        opener=opener,
+    )
+
+    assert result.sent is True
+    assert len(captured) == 1
+    assert captured[0][0].endswith("/sendPhoto")
+    assert captured[0][1]["caption"] == "<b>BUY | APP</b>\nEntry: $316.01"
+
+
+def test_telegram_notification_uses_one_text_delivery_without_chart() -> None:
+    captured = []
+
+    def opener(request, timeout):
+        captured.append((request.full_url, json.loads(request.data.decode("utf-8")), timeout))
+        return FakeTelegramResponse()
+
+    result = send_telegram_notification(
+        "<b>BUY | APP</b>",
+        settings=TelegramSettings(bot_token="SECRET_TOKEN", chat_id="-100", timeout_seconds=4),
+        opener=opener,
+    )
+
+    assert result.sent is True
+    assert len(captured) == 1
+    assert captured[0][0].endswith("/sendMessage")
+
+
 def test_position_opened_message_contains_trade_plan() -> None:
     result = SimpleNamespace(
         ticker="NVDA",
@@ -314,19 +354,13 @@ def test_telegram_settings_can_opt_in_to_legacy_env(monkeypatch) -> None:
 
 
 def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
-    sent_messages = []
-    sent_charts = []
+    sent_notifications = []
 
-    def fake_send(message: str, **_kwargs):
-        sent_messages.append(message)
+    def fake_send(message: str, **kwargs):
+        sent_notifications.append((message, kwargs))
         return TelegramSendResult(True, "sent")
 
-    def fake_send_chart(chart_ref, *, ticker, dashboard_url, **_kwargs):
-        sent_charts.append((chart_ref, ticker, dashboard_url))
-        return TelegramSendResult(True, "sent")
-
-    monkeypatch.setattr(ui_agent, "send_telegram_message", fake_send)
-    monkeypatch.setattr(ui_agent, "send_telegram_chart_photo", fake_send_chart)
+    monkeypatch.setattr(ui_agent, "send_telegram_notification", fake_send)
     settings = Settings(
         url="https://market-lens-scanner-fb63.onrender.com/?v=latest",
         email="test@example.com",
@@ -389,11 +423,13 @@ def test_agent_sends_telegram_only_for_new_buy(monkeypatch, tmp_path) -> None:
         timestamp="2026-06-22T10:30:00",
     )
 
-    assert len(sent_messages) == 1
-    assert "BUY | BUY" in sent_messages[0]
-    assert "BUY" in sent_messages[0]
-    assert "WATCH" not in sent_messages[0]
-    assert sent_charts == [("agent_results/charts/buy.png", "BUY", "https://market-lens-scanner-fb63.onrender.com/agent")]
+    assert len(sent_notifications) == 1
+    message, kwargs = sent_notifications[0]
+    assert "BUY | BUY" in message
+    assert "WATCH" not in message
+    assert kwargs["chart_ref"] == "agent_results/charts/buy.png"
+    assert kwargs["ticker"] == "BUY"
+    assert kwargs["dashboard_url"] == "https://market-lens-scanner-fb63.onrender.com/agent"
 
 
 def test_agent_buy_outbox_defers_notification_until_explicit_delivery(monkeypatch, tmp_path) -> None:
@@ -403,12 +439,7 @@ def test_agent_buy_outbox_defers_notification_until_explicit_delivery(monkeypatc
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 
-    monkeypatch.setattr(ui_agent, "send_telegram_message", fake_send)
-    monkeypatch.setattr(
-        ui_agent,
-        "send_telegram_chart_photo",
-        lambda *_args, **_kwargs: TelegramSendResult(False, "no_photo"),
-    )
+    monkeypatch.setattr(ui_agent, "send_telegram_notification", fake_send)
     settings = Settings(
         url="https://market-lens-scanner-fb63.onrender.com/?v=latest",
         email="test@example.com",
@@ -458,7 +489,7 @@ def test_agent_buy_outbox_defers_notification_until_explicit_delivery(monkeypatc
     assert outbox.exists()
     assert sent_messages == []
     outcomes = ui_agent.send_buy_notification_outbox(outbox)
-    assert [outcome.status for outcome in outcomes] == ["sent", "no_photo"]
+    assert [outcome.status for outcome in outcomes] == ["sent"]
     assert len(sent_messages) == 1
 
 
@@ -695,19 +726,13 @@ def test_stop_moved_to_entry_message_contains_breakeven_update() -> None:
 
 
 def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_path) -> None:
-    sent_messages = []
-    sent_charts = []
+    sent_notifications = []
 
-    def fake_send(message: str, **_kwargs):
-        sent_messages.append(message)
+    def fake_send(message: str, **kwargs):
+        sent_notifications.append((message, kwargs))
         return TelegramSendResult(True, "sent")
 
-    def fake_send_chart(chart_ref, *, ticker, dashboard_url, **_kwargs):
-        sent_charts.append((chart_ref, ticker, dashboard_url))
-        return TelegramSendResult(True, "sent")
-
-    monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
-    monkeypatch.setattr(position_monitor, "send_telegram_chart_photo", fake_send_chart)
+    monkeypatch.setattr(position_monitor, "send_telegram_notification", fake_send)
     settings = position_monitor.MonitorSettings(
         excel_path=tmp_path / "tracker.xlsx",
         run_dir=tmp_path / "agent_results",
@@ -736,11 +761,14 @@ def test_position_monitor_sends_telegram_for_position_events(monkeypatch, tmp_pa
         timestamp="2026-06-22T15:32:00+00:00",
     )
 
-    assert len(sent_messages) == 1
-    assert "STOP | POSITION CLOSED" in sent_messages[0]
-    assert "MSFT" in sent_messages[0]
-    assert "-$15.00" in sent_messages[0]
-    assert sent_charts == [("agent_results/charts/msft.png", "MSFT", "https://example.com/agent")]
+    assert len(sent_notifications) == 1
+    message, kwargs = sent_notifications[0]
+    assert "STOP | POSITION CLOSED" in message
+    assert "MSFT" in message
+    assert "-$15.00" in message
+    assert kwargs["chart_ref"] == "agent_results/charts/msft.png"
+    assert kwargs["ticker"] == "MSFT"
+    assert kwargs["dashboard_url"] == "https://example.com/agent"
 
 
 def test_position_event_dedupe_key_is_stable_across_monitor_runs() -> None:
@@ -790,6 +818,7 @@ def test_position_monitor_sends_stop_to_entry_notification_after_tp1(monkeypatch
         return TelegramSendResult(True, "sent")
 
     monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
+    monkeypatch.setattr(position_monitor, "send_telegram_notification", fake_send)
     settings = position_monitor.MonitorSettings(
         excel_path=tmp_path / "tracker.xlsx",
         run_dir=tmp_path / "agent_results",
@@ -834,12 +863,7 @@ def test_monitor_notification_outbox_defers_sending_until_explicit_delivery(monk
         sent_messages.append(message)
         return TelegramSendResult(True, "sent")
 
-    monkeypatch.setattr(position_monitor, "send_telegram_message", fake_send)
-    monkeypatch.setattr(
-        position_monitor,
-        "send_telegram_chart_photo",
-        lambda *_args, **_kwargs: TelegramSendResult(False, "no_photo"),
-    )
+    monkeypatch.setattr(position_monitor, "send_telegram_notification", fake_send)
     settings = position_monitor.MonitorSettings(
         excel_path=tmp_path / "tracker.xlsx",
         run_dir=tmp_path / "agent_results",
@@ -872,7 +896,7 @@ def test_monitor_notification_outbox_defers_sending_until_explicit_delivery(monk
     assert outbox.exists()
     assert sent_messages == []
     outcomes = position_monitor.send_notification_outbox(outbox)
-    assert [outcome.status for outcome in outcomes] == ["sent", "no_photo"]
+    assert [outcome.status for outcome in outcomes] == ["sent"]
     assert len(sent_messages) == 1
     assert "STOP | POSITION CLOSED" in sent_messages[0]
 

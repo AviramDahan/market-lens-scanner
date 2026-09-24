@@ -23,8 +23,8 @@ from app.telegram_notifications import (
     dashboard_url_from_env,
     format_position_event_message,
     format_stop_moved_to_entry_message,
-    send_telegram_chart_photo,
     send_telegram_message,
+    send_telegram_notification,
 )
 from app.workbook_retention import compact_setup_watchlist
 
@@ -335,23 +335,16 @@ def send_position_event_notifications(
             dashboard_url=settings.dashboard_url,
         )
         dedupe_key = position_event_dedupe_key(position, event)
-        outcome = send_telegram_message(message, dedupe_key=dedupe_key)
+        outcome = send_telegram_notification(
+            message,
+            chart_ref=position.get("chart_url"),
+            ticker=event.ticker,
+            dashboard_url=settings.dashboard_url,
+            dedupe_key=dedupe_key,
+        )
         outcomes.append(outcome)
         if outcome.sent:
             print(f"Telegram position-event notification sent for {event.ticker}:{event.action}.")
-            chart_outcome = send_telegram_chart_photo(
-                position.get("chart_url"),
-                ticker=event.ticker,
-                dashboard_url=settings.dashboard_url,
-                dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
-            )
-            outcomes.append(chart_outcome)
-            if chart_outcome.sent:
-                print(f"Telegram position-event chart sent for {event.ticker}:{event.action}.")
-            elif chart_outcome.status == "duplicate":
-                print(f"Telegram position-event chart duplicate skipped for {event.ticker}:{event.action}.")
-            elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
-                print(f"Telegram position-event chart skipped for {event.ticker}:{event.action}: {chart_outcome.reason}")
         elif outcome.status == "duplicate":
             print(f"Telegram position-event duplicate skipped for {event.ticker}:{event.action}.")
         elif outcome.status != "not_configured":

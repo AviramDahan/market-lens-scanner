@@ -65,8 +65,7 @@ from app.telegram_notifications import (
     build_telegram_dedupe_key,
     dashboard_url_from_env,
     format_position_attention_message,
-    send_telegram_chart_photo,
-    send_telegram_message,
+    send_telegram_notification,
     telegram_configured,
 )
 from app.trading_clock import session_status
@@ -1148,12 +1147,12 @@ def send_position_attention_alert(position: dict, alert: dict, source_time: str)
         _attention_position_identity(position),
         alert.get("threshold"),
     )
-    message_result = send_telegram_message(message, dedupe_key=dedupe_key)
-    chart_result = send_telegram_chart_photo(
-        position.get("chart_url") or position.get("screenshot_url") or "",
+    message_result = send_telegram_notification(
+        message,
+        chart_ref=position.get("chart_url") or position.get("screenshot_url") or "",
         ticker=alert.get("ticker") or position.get("ticker"),
         dashboard_url=dashboard_url,
-        dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
+        dedupe_key=dedupe_key,
     )
     if message_result.sent:
         _POSITION_ATTENTION_ALERT_AT[key] = now
@@ -1162,7 +1161,7 @@ def send_position_attention_alert(position: dict, alert: dict, source_time: str)
         "sent": bool(message_result.sent),
         "status": message_result.status,
         "message_status": message_result.status,
-        "chart_status": chart_result.status,
+        "chart_status": message_result.status,
         "reason": alert.get("reason", ""),
     }
 

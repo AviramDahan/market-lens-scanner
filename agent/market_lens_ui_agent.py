@@ -48,8 +48,7 @@ from app.telegram_notifications import (
     format_position_opened_message,
     format_qualified_capital_blocked_message,
     format_qualified_setup_message,
-    send_telegram_chart_photo,
-    send_telegram_message,
+    send_telegram_notification,
 )
 from app.trade_outcomes import backfill_trade_outcomes
 from app.workbook_retention import compact_setup_watchlist
@@ -1643,23 +1642,16 @@ def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
         dedupe_key = record["dedupe_key"]
         notification_type = record.get("notification_type", "BUY_SIMULATED")
         log_label = "qualified setup" if notification_type in {"QUALIFIED_CAPITAL_BLOCKED", "QUALIFIED_SETUP"} else "position-open"
-        outcome = send_telegram_message(record["message"], dedupe_key=dedupe_key)
+        outcome = send_telegram_notification(
+            record["message"],
+            chart_ref=record.get("chart_ref"),
+            ticker=ticker,
+            dashboard_url=record.get("dashboard_url", ""),
+            dedupe_key=dedupe_key,
+        )
         outcomes.append(outcome)
         if outcome.sent:
             log(f"Telegram {log_label} notification sent for {ticker}.")
-            chart_outcome = send_telegram_chart_photo(
-                record.get("chart_ref"),
-                ticker=ticker,
-                dashboard_url=record.get("dashboard_url", ""),
-                dedupe_key=build_telegram_dedupe_key(dedupe_key, "chart"),
-            )
-            outcomes.append(chart_outcome)
-            if chart_outcome.sent:
-                log(f"Telegram {log_label} chart sent for {ticker}.")
-            elif chart_outcome.status == "duplicate":
-                log(f"Telegram {log_label} chart duplicate skipped for {ticker}.")
-            elif chart_outcome.status not in {"no_photo", "not_configured", "not_found"}:
-                log(f"Telegram {log_label} chart skipped for {ticker}: {chart_outcome.reason}")
         elif outcome.status == "duplicate":
             log(f"Telegram {log_label} duplicate skipped for {ticker}.")
         elif outcome.status != "not_configured":

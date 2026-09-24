@@ -29,6 +29,9 @@ class TelegramSendResult:
     reason: str = ""
 
 
+TELEGRAM_PHOTO_CAPTION_LIMIT = 1024
+
+
 def load_telegram_settings() -> TelegramSettings:
     allow_legacy_env = _env_bool("MARKET_LENS_TELEGRAM_ALLOW_LEGACY_ENV", False)
     bot_token = os.getenv("MARKET_LENS_TELEGRAM_BOT_TOKEN", "").strip()
@@ -163,6 +166,44 @@ def send_telegram_chart_photo(
     ticker_text = str(ticker or "").upper()
     caption = f"<b>{_escape(ticker_text)} chart</b>" if ticker_text else "<b>Position chart</b>"
     return send_telegram_photo(source, caption=caption, settings=settings, opener=opener, dedupe_key=dedupe_key)
+
+
+def send_telegram_notification(
+    text: str,
+    *,
+    chart_ref: Any = "",
+    ticker: Any = "",
+    dashboard_url: str = "",
+    settings: TelegramSettings | None = None,
+    opener: Callable[..., Any] = urlopen,
+    dedupe_key: str = "",
+) -> TelegramSendResult:
+    """Deliver one Telegram message, embedding the chart when it is safe.
+
+    Telegram treats a text message followed by a chart photo as two messages
+    and therefore two phone notifications. A chart with the full alert as its
+    caption preserves the same information in a single delivery. Text-only is
+    the conservative fallback when the chart is unavailable, rejected, or the
+    alert exceeds Telegram's photo-caption limit.
+    """
+    source = chart_photo_source(chart_ref, dashboard_url)
+    if source and len(text) <= TELEGRAM_PHOTO_CAPTION_LIMIT:
+        photo_outcome = send_telegram_photo(
+            source,
+            caption=text,
+            settings=settings,
+            opener=opener,
+            dedupe_key=dedupe_key,
+        )
+        if photo_outcome.sent or photo_outcome.status == "duplicate":
+            return photo_outcome
+
+    return send_telegram_message(
+        text,
+        settings=settings,
+        opener=opener,
+        dedupe_key=dedupe_key,
+    )
 
 
 def chart_photo_source(chart_ref: Any, dashboard_url: str = "") -> str:
