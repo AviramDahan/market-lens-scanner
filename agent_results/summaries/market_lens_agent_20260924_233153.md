@@ -1,0 +1,333 @@
+Market Lens Agent Update
+
+Date: 2026-09-24T23:35:47
+Run status: PARTIAL_OK
+Login status: open access
+Scan status: completed: 135 results; 3 unavailable
+Tickers scanned: META MSFT CRWD TMO AMD VLO ANET JNJ IOT AAPL NVDA GILD MRK DHR TSM AMGN MU NWSA VZ XOM ROKU T PSKY ISRG ASML TXN ABT ALNY OMC TTWO CHTR TMUS AMAT AVGO ORCL LYV IBM AEP BRK-B AMZN SYK OKE AMT AXP BLK CAT CB DE CCI COST CL D DUK EL EMR EOG ETN KO LIN LMT GE GD HON ICE JPM MA MCD PG PSA NOC NKE SBUX MDLZ MPC NEE PEP PSX SLB WELL C CME SRE WFC TGT TSLA UNP XEL LRCX SMCI CVX APP PFE MRVL ABBV GOOGL MDT INTC KLAC PANW BKR LNG NOW CRM COP ADSK ADBE NFLX WMB LLY QCOM HAL V KMI BSX OXY RTX UNH BAC EQIX GS O PH TJX PLD AIG SO UPS MS URI SCHW WMT HD BA EXC LOW
+Valid setups found: 80
+Market regime: NEUTRAL (0.52) [HEALTHY] - Market regime is mixed; use lower exposure and higher net R/R. Data quality: All market-regime inputs use the latest completed session.
+Actions taken: APP:HOLD, C:HOLD, CME:HOLD, INTC:HOLD, LRCX:WATCH, KLAC:WATCH, WMB:WATCH, SMCI:WATCH, SLB:WATCH, KO:SKIP, JNJ:WATCH, MS:SKIP, DE:SKIP, CVX:WATCH, QCOM:WATCH, LLY:WATCH, PANW:WATCH, URI:SKIP, WELL:SKIP, HAL:WATCH, BAC:SKIP, ALNY:WATCH, EQIX:SKIP, V:SKIP, PFE:WATCH, GS:SKIP, MRVL:WATCH, O:SKIP, IOT:WATCH, BKR:WATCH, KMI:WATCH, PH:SKIP, OMC:WATCH, BSX:WATCH, LNG:WATCH, AEP:SKIP, TJX:SKIP, AIG:SKIP, NWSA:WATCH, PLD:SKIP, SCHW:SKIP, PG:SKIP, SO:SKIP, LIN:SKIP, TTWO:WATCH, BRK-B:SKIP, NOW:WATCH, ABBV:WATCH, WMT:SKIP, SRE:SKIP, HD:SKIP, PSA:SKIP, OXY:WATCH, CRM:WATCH, WFC:SKIP, NOC:SKIP, AMZN:SKIP, TGT:SKIP, GOOGL:WATCH, NKE:SKIP, RTX:SKIP, VZ:WATCH, COP:WATCH, UPS:SKIP, EXC:SKIP, ADSK:WATCH, BA:SKIP, UNH:WATCH, LMT:SKIP, ADBE:WATCH, LOW:SKIP, SBUX:SKIP, NFLX:WATCH, CHTR:WATCH, MDT:WATCH, TMUS:WATCH, MDLZ:SKIP, GE:SKIP, CCI:SKIP, AMAT:WATCH, COST:SKIP, META:SKIP, MSFT:SKIP, CRWD:SKIP, TMO:SKIP, AMD:SKIP, VLO:SKIP, ANET:SKIP, AAPL:SKIP, NVDA:SKIP, GILD:SKIP, MRK:SKIP, DHR:SKIP, TSM:SKIP, AMGN:SKIP, MU:SKIP, XOM:SKIP, ROKU:SKIP, T:SKIP, PSKY:SKIP, ISRG:SKIP, ASML:SKIP, TXN:SKIP, ABT:SKIP, AVGO:SKIP, ORCL:SKIP, LYV:SKIP, IBM:SKIP, SYK:SKIP, OKE:SKIP, AMT:SKIP, AXP:SKIP, BLK:SKIP, CAT:SKIP, CB:SKIP, CL:SKIP, D:SKIP, DUK:SKIP, EL:SKIP, EMR:SKIP, EOG:SKIP, ETN:SKIP, GD:SKIP, HON:SKIP, ICE:SKIP, JPM:SKIP, MA:SKIP, MCD:SKIP, MPC:SKIP, NEE:SKIP, PEP:SKIP, PSX:SKIP, TSLA:SKIP, UNP:SKIP, XEL:SKIP
+New simulated buys: None
+Watch ready setups: None
+Positions on watch: LRCX, KLAC, WMB, SMCI, SLB, JNJ, CVX, QCOM, LLY, PANW, HAL, ALNY, PFE, MRVL, IOT, BKR, KMI, OMC, BSX, LNG, NWSA, TTWO, NOW, ABBV, OXY, CRM, GOOGL, VZ, COP, ADSK, UNH, ADBE, NFLX, CHTR, MDT, TMUS, AMAT
+Positions closed: None
+Cash remaining: 80653.87 USD
+Current exposure: 20463.69 USD
+Remaining available budget: 79536.31 USD
+Total open risk: 491.76 USD
+Excel updated: agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+Screenshot saved: agent_results/screenshots/market_lens_agent_20260924_233153.png
+Decision JSONL saved: agent_results/decisions/market_lens_agent_20260924_233153.jsonl
+Runtime metrics saved: agent_results/runtime/market_lens_agent_20260924_233153.json
+Daily summary saved: agent_results/summaries/daily_summary_2026-09-24.json
+Weekly summary saved: agent_results/summaries/weekly_summary_2026-W39.json
+Errors: None
+Agent feedback:
+- META: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Communication Services - Strong (77/100); XLC sector regime is strong: 8.3% 3m return, 2.8% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 777.59 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Communication Services, Mega Cap Tech, Rates-sensitive Growth | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- MSFT: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 497.93 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Mega Cap Tech, Rates-sensitive Growth, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- CRWD: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 259.67 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: High Beta Growth, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- TMO: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 678.39 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- AMD: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 629.26 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, High Beta Growth, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- VLO: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Energy - Neutral (65/100); XLE sector regime is neutral: 17.0% 3m return, 11.5% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 382.86 | Market: NEUTRAL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Energy | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+- ANET: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 205.70 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- JNJ: WATCH - WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
+  Warnings: Stop-loss cooldown active after 2026-09-22T13:36:26; 1 trading days remaining.; Neutral pilot not used: Neutral pilot only opens during the regular market session. Net R/R is below the neutral pilot floor (1.65 < 2.00).; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; Gross R/R is valid, but Net R/R 1.65 failed minimum 2.20 after slippage/spread adjustment.
+- IOT: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.10.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- AAPL: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 335.92 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Mega Cap Tech, Rates-sensitive Growth, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- NVDA: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 224.58 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, High Beta Growth, Mega Cap Tech, Rates-sensitive Growth, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- GILD: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 149.69 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- MRK: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 147.98 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- DHR: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 223.77 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- TSM: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Semiconductors - Strong (68/100); SMH sector regime is strong: -1.8% 3m return, -7.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 451.15 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, Semiconductors | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- AMGN: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 406.04 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- MU: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.; Earnings blackout active.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Semiconductors - Strong (68/100); SMH sector regime is strong: -1.8% 3m return, -7.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 1080.53 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, Semiconductors | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- NWSA: WATCH - WATCH: NEUTRAL market requires setup score (0.36 < 0.55).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by Communication Services sector exposure cap (351 -> 249 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.36 < 0.45). Net R/R is below the neutral pilot floor (1.39 < 2.00). Entry confirmation has not passed.
+- VZ: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.45.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- XOM: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Energy - Neutral (65/100); XLE sector regime is neutral: 17.0% 3m return, 11.5% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 162.14 | Market: NEUTRAL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Energy | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+- ROKU: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Communication Services - Strong (77/100); XLC sector regime is strong: 8.3% 3m return, 2.8% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 153.33 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Communication Services | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- T: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Communication Services - Strong (77/100); XLC sector regime is strong: 8.3% 3m return, 2.8% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 25.45 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Communication Services | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- PSKY: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Communication Services - Strong (77/100); XLC sector regime is strong: 8.3% 3m return, 2.8% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 10.18 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Communication Services | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- ISRG: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 399.52 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- ASML: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Semiconductors - Strong (68/100); SMH sector regime is strong: -1.8% 3m return, -7.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 1722.50 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, Semiconductors | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- TXN: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 270.65 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- ABT: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 101.07 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- ALNY: WATCH - WATCH: NEUTRAL market requires setup score (0.41 < 0.55).
+  Warnings: Target distance is aggressive versus daily ATR.; VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (40 -> 15 shares).
+- OMC: WATCH - WATCH: NEUTRAL market requires setup score (0.37 < 0.55).
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by Communication Services sector exposure cap (133 -> 95 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.37 < 0.45). Net R/R is below the neutral pilot floor (1.87 < 2.00). Entry confirmation has not passed.
+- TTWO: WATCH - WATCH: NEUTRAL market requires setup score (0.35 < 0.55).
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (49 -> 31 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.35 < 0.45). Net R/R is below the neutral pilot floor (1.99 < 2.00). Entry confirmation has not passed.
+- CHTR: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.75.
+  Warnings: Target distance is aggressive versus daily ATR.; Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- TMUS: WATCH - WATCH: NEUTRAL market requires setup score (0.27 < 0.55).
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by Communication Services sector exposure cap (60 -> 43 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.27 < 0.45). Net R/R is below the neutral pilot floor (1.54 < 2.00). Entry confirmation has not passed.
+- AMAT: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.95 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.33.
+- AVGO: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 350.36 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, Mega Cap Tech, Rates-sensitive Growth, Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- ORCL: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.; Stop-loss cooldown active after 2026-09-24T13:33:56; 3 trading days remaining.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 139.54 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- LYV: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Communication Services - Strong (77/100); XLC sector regime is strong: 8.3% 3m return, 2.8% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 171.06 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Communication Services | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- IBM: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 227.06 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Technology | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- AEP: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.16.
+  Warnings: Target distance is aggressive versus daily ATR.; VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- BRK-B: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.88.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- AMZN: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.17.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- SYK: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Healthcare - Strong (77/100); XLV sector regime is strong: 9.6% 3m return, 4.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 269.75 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: Defensive, Healthcare | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00.
+- OKE: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Energy - Neutral (65/100); XLE sector regime is neutral: 17.0% 3m return, 11.5% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 91.18 | Market: NEUTRAL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Energy | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+- AMT: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Utilities / Real Assets - Weak (5/100); XLU sector regime is weak: -13.5% 3m return, -19.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 167.26 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Utilities / Real Assets | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- AXP: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 305.66 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Financials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- BLK: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 1073.45 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Financials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- CAT: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Weak (12/100); XLI sector regime is weak: -8.1% 3m return, -13.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 805.25 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Industrials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- CB: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 334.84 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Financials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- DE: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.76.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- CCI: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.54.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- COST: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.48.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Earnings blackout active.
+- CL: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Consumer - Weak (18/100); XLY sector regime is weak: -2.5% 3m return, -8.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 85.32 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Consumer, Consumer Cyclical | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- D: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Utilities / Real Assets - Weak (5/100); XLU sector regime is weak: -13.5% 3m return, -19.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 60.40 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Utilities / Real Assets | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- DUK: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Utilities / Real Assets - Weak (5/100); XLU sector regime is weak: -13.5% 3m return, -19.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 113.23 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Utilities / Real Assets | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- EL: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Consumer - Weak (18/100); XLY sector regime is weak: -2.5% 3m return, -8.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 95.37 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Consumer, Consumer Cyclical | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- EMR: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Weak (12/100); XLI sector regime is weak: -8.1% 3m return, -13.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 156.14 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Industrials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- EOG: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Energy - Neutral (65/100); XLE sector regime is neutral: 17.0% 3m return, 11.5% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 142.86 | Market: NEUTRAL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Energy | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+- ETN: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Weak (12/100); XLI sector regime is weak: -8.1% 3m return, -13.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 440.00 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Industrials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- KO: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.92.
+- LIN: SKIP - SKIP: Materials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.88.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- LMT: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.45.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- GE: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.10.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- GD: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Weak (12/100); XLI sector regime is weak: -8.1% 3m return, -13.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 336.29 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Industrials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- HON: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Weak (12/100); XLI sector regime is weak: -8.1% 3m return, -13.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 211.79 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Industrials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- ICE: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 156.93 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Financials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- JPM: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 338.56 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Financials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- MA: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 566.08 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Financials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- MCD: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Consumer - Weak (18/100); XLY sector regime is weak: -2.5% 3m return, -8.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 237.02 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Consumer, Consumer Cyclical | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- PG: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.05.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- PSA: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.80.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- NOC: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.13.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- NKE: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 4.91.
+  Warnings: Target distance is extended versus daily ATR.; Earnings blackout active.
+- SBUX: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.88.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- MDLZ: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 0.98.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- MPC: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Energy - Neutral (65/100); XLE sector regime is neutral: 17.0% 3m return, 11.5% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 390.95 | Market: NEUTRAL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Energy | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+- NEE: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Utilities / Real Assets - Weak (5/100); XLU sector regime is weak: -13.5% 3m return, -19.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 75.62 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Utilities / Real Assets | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- PEP: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Consumer - Weak (18/100); XLY sector regime is weak: -2.5% 3m return, -8.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 128.15 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Consumer, Consumer Cyclical | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- PSX: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Energy - Neutral (65/100); XLE sector regime is neutral: 17.0% 3m return, 11.5% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 255.87 | Market: NEUTRAL; Sector regime: NEUTRAL; Net R/R: 0.00; Factors: Energy | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00.
+- SLB: WATCH - WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (194 -> 180 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Entry confirmation has not passed.
+- WELL: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.50.
+- C: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: Liquidity Trap Buy Zone; score 0.42; R/R 1.85x; price 132.10 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 1.56; Factors: Financials | Agent action: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+- CME: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Financials - Weak (23/100); XLF sector regime is weak: 2.2% 3m return, -3.3% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.35; R/R 1.65x; price 268.91 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 1.23; Factors: Financials | Agent action: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+- SRE: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.12.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- WFC: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.34.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- TGT: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.22.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- TSLA: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Consumer - Weak (18/100); XLY sector regime is weak: -2.5% 3m return, -8.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 377.94 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Consumer, Consumer Cyclical, High Beta Growth, Mega Cap Tech, Rates-sensitive Growth | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- UNP: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Industrials - Weak (12/100); XLI sector regime is weak: -8.1% 3m return, -13.6% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 274.07 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Industrials | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- XEL: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Utilities / Real Assets - Weak (5/100); XLU sector regime is weak: -13.5% 3m return, -19.0% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 69.56 | Market: NEUTRAL; Sector regime: WEAK; Net R/R: 0.00; Factors: Utilities / Real Assets | Agent action: SKIP - SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00.
+- LRCX: WATCH - WATCH: Neutral market requires stronger normalized quality (42.86/100).
+  Warnings: Neutral pilot not used: Neutral pilot only opens during the regular market session.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; Gross R/R is valid, but Net R/R 2.07 failed minimum 2.20 after slippage/spread adjustment.
+- SMCI: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.60 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
+- CVX: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.47.
+- APP: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Communication Services - Strong (77/100); XLC sector regime is strong: 8.3% 3m return, 2.8% vs SPY | Setup: Fib 61.8 Confluence Buy Zone; score 0.44; R/R 10.52x; price 312.47 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 6.84; Factors: Communication Services | Agent action: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+- PFE: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
+- MRVL: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.20 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.91.
+- ABBV: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.31 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.88.
+- GOOGL: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.16.
+- MDT: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- INTC: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+  Warnings: Target ATR feasibility unavailable.; Entry confirmation data unavailable; blocking auto-buy.
+  Context: Smart Universe: broad liquid US universe, diversified by sector | Sector: Technology - Strong (76/100); XLK sector regime is strong: 5.6% 3m return, 0.1% vs SPY | Setup: No Trade; score 0.00; R/R 0.00x; price 127.39 | Market: NEUTRAL; Sector regime: STRONG; Net R/R: 0.00; Factors: AI / Semiconductors, Technology | Agent action: HOLD - HOLD: Existing simulated position remains open. NEUTRAL regime recorded.
+- KLAC: WATCH - WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
+  Warnings: Target distance is aggressive versus daily ATR.; Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (53 -> 16 shares).
+- PANW: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.06.
+- BKR: WATCH - WATCH: NEUTRAL market requires setup score (0.38 < 0.55).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup score is below the neutral pilot floor (0.38 < 0.45). Entry confirmation has not passed.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- LNG: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.22 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.89.
+- NOW: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.66.
+- CRM: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.61 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.26.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- COP: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.14.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- ADSK: WATCH - WATCH: NEUTRAL market requires setup score (0.29 < 0.55).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (47 -> 26 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.29 < 0.45). Entry confirmation has not passed.
+- ADBE: WATCH - WATCH: NEUTRAL market requires setup score (0.29 < 0.55).
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (41 -> 17 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.29 < 0.45). Net R/R is below the neutral pilot floor (1.39 < 2.00). Entry confirmation has not passed.
+- NFLX: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.28.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- WMB: WATCH - WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Entry confirmation has not passed.; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- LLY: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.28.
+- QCOM: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- HAL: WATCH - WATCH: NEUTRAL market requires setup score (0.42 < 0.55).
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by trade risk budget cap (305 -> 235 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup score is below the neutral pilot floor (0.42 < 0.45). Net R/R is below the neutral pilot floor (1.63 < 2.00). Entry confirmation has not passed.
+- V: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.67.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- KMI: WATCH - WATCH: NEUTRAL market requires setup score (0.38 < 0.55).
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.; Position size reduced by max position allocation cap (320 -> 319 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Neutral pilot requires a STRONG sector regime. Setup score is below the neutral pilot floor (0.38 < 0.45). Net R/R is below the neutral pilot floor (1.90 < 2.00). Entry confirmation has not passed.
+- BSX: WATCH - WATCH: NEUTRAL market requires setup score (0.37 < 0.55).
+  Warnings: Position size reduced by trade risk budget cap (223 -> 104 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.37 < 0.45).; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.
+- OXY: WATCH - WATCH: Technical setup detected, but weighted risk/reward 1.91 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.18.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- RTX: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.37.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- UNH: WATCH - WATCH: NEUTRAL market requires setup score (0.29 < 0.55).
+  Warnings: Position size reduced by trade risk budget cap (26 -> 25 shares).; Neutral pilot not used: Neutral pilot only opens during the regular market session. Setup score is below the neutral pilot floor (0.29 < 0.45). Net R/R is below the neutral pilot floor (1.94 < 2.00).; WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation.; WATCH: Neutral market requires stronger normalized quality (44.62/100).
+- BAC: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.90.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- EQIX: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.98.
+- GS: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.82.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- O: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.30.
+  Warnings: Target distance is aggressive versus daily ATR.; VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- PH: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.50.
+- TJX: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.52.
+- PLD: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.29.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- AIG: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.02.
+  Warnings: Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- SO: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.62.
+  Warnings: Target distance is aggressive versus daily ATR.; VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- UPS: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.27.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- MS: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.79.
+- URI: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.08.
+- SCHW: SKIP - SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.23.
+- WMT: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.30.
+  Warnings: Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- HD: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.45.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- BA: SKIP - SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.99.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- EXC: SKIP - SKIP: Utilities / Real Assets sector regime is weak (5/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.13.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
+- LOW: SKIP - SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.19.
+  Warnings: VWAP reclaim requires completed close above VWAP proxy with hold/follow-through.; No completed candle in the last 3 candles confirmed entry while the setup stayed relevant.
