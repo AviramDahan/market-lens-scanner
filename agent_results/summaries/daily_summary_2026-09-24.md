@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-24
-Total scans: 27
-Tickers scanned: 3633
+Total scans: 28
+Tickers scanned: 3767
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 842
-WATCH_REVIEW unique tickers: 57
+WATCH_REVIEW: 871
+WATCH_REVIEW unique tickers: 58
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 842
-SKIP: 2668
-NO_TRADE: 1878
+WATCH: 871
+SKIP: 2769
+NO_TRADE: 1964
 Realized PnL: -386.86
-Unrealized PnL: 884.87
-Portfolio value: 101089.83
-Daily recorded-equity change (%): -0.1918
+Unrealized PnL: 874.54
+Portfolio value: 101079.5
+Daily recorded-equity change (%): -0.202
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-23
-Cumulative recorded-equity change (%): 1.0898
+Cumulative recorded-equity change (%): 1.0795
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AIG
@@ -27,10 +27,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 13
+- FIB_STOP_075_ATR: 15
 - FIB_STOP_100_ATR: 4
 - FIB_STRUCTURE_STOP: 6
-- TREND_PULLBACK_RECLAIM: 30
+- TREND_PULLBACK_RECLAIM: 33
 
 Top rejected candidates:
 - QBTS: SKIP score=0.5663 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
