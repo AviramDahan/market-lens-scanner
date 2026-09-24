@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-24
-Total scans: 22
-Tickers scanned: 2962
+Total scans: 23
+Tickers scanned: 3096
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 707
+WATCH_REVIEW: 734
 WATCH_REVIEW unique tickers: 57
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 707
-SKIP: 2152
-NO_TRADE: 1425
+WATCH: 734
+SKIP: 2255
+NO_TRADE: 1518
 Realized PnL: -386.86
-Unrealized PnL: 765.34
-Portfolio value: 100970.3
-Daily recorded-equity change (%): -0.3099
+Unrealized PnL: 913.2
+Portfolio value: 101118.16
+Daily recorded-equity change (%): -0.1639
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-23
-Cumulative recorded-equity change (%): 0.9703
+Cumulative recorded-equity change (%): 1.1182
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: MDLZ
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 1
-- FIB_STOP_100_ATR: 1
-- FIB_STRUCTURE_STOP: 1
-- TREND_PULLBACK_RECLAIM: 10
+- FIB_STOP_075_ATR: 3
+- FIB_STOP_100_ATR: 2
+- FIB_STRUCTURE_STOP: 2
+- TREND_PULLBACK_RECLAIM: 13
 
 Top rejected candidates:
 - QBTS: SKIP score=0.5663 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
