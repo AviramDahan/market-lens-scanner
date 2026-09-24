@@ -8,6 +8,8 @@ dispatches workflows or mutates portfolio state.
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import os
 import time
 from collections.abc import Awaitable, Callable
@@ -56,9 +58,11 @@ class RenderShadowMonitor:
             "last_positions_checked": 0,
             "last_event_count": 0,
             "last_events": [],
+            "event_journal": [],
             "last_warnings": {},
             "total_polls": 0,
             "total_events_detected": 0,
+            "total_unique_events": 0,
             "consecutive_failures": 0,
             "last_error": "",
         }
@@ -78,6 +82,9 @@ class RenderShadowMonitor:
             "regular_session_only": _env_bool(
                 "MARKET_LENS_RENDER_SHADOW_MONITOR_REGULAR_SESSION_ONLY", True
             ),
+            "event_journal_limit": _env_int(
+                "MARKET_LENS_RENDER_SHADOW_MONITOR_EVENT_JOURNAL_LIMIT", 100, 20, 500
+            ),
         }
 
     def start(self, cycle: Cycle) -> bool:
@@ -88,6 +95,7 @@ class RenderShadowMonitor:
                 "interval_seconds": config["interval_seconds"],
                 "timeout_seconds": config["timeout_seconds"],
                 "regular_session_only": config["regular_session_only"],
+                "event_journal_limit": config["event_journal_limit"],
             }
         )
         if not config["enabled"]:
@@ -146,6 +154,7 @@ class RenderShadowMonitor:
 
         events = result.get("events") if isinstance(result.get("events"), list) else []
         warnings = result.get("warnings") if isinstance(result.get("warnings"), dict) else {}
+        unique_added = self._record_events(events, polled_at)
         self._state.update(
             {
                 "status": str(result.get("status") or "ok"),
@@ -159,6 +168,8 @@ class RenderShadowMonitor:
                 "total_polls": int(self._state.get("total_polls") or 0) + 1,
                 "total_events_detected": int(self._state.get("total_events_detected") or 0)
                 + len(events),
+                "total_unique_events": int(self._state.get("total_unique_events") or 0)
+                + unique_added,
                 "consecutive_failures": 0,
                 "last_error": "",
             }
@@ -168,8 +179,42 @@ class RenderShadowMonitor:
     def snapshot(self) -> dict[str, Any]:
         snapshot = dict(self._state)
         snapshot["last_events"] = [dict(item) for item in self._state.get("last_events", [])]
+        snapshot["event_journal"] = [
+            dict(item) for item in self._state.get("event_journal", [])
+        ]
         snapshot["last_warnings"] = dict(self._state.get("last_warnings", {}))
         return snapshot
+
+    def _record_events(self, events: list[Any], polled_at: str) -> int:
+        journal = [dict(item) for item in self._state.get("event_journal", [])]
+        by_id = {str(item.get("event_id") or ""): item for item in journal}
+        unique_added = 0
+        for raw_event in events:
+            if not isinstance(raw_event, dict):
+                continue
+            event = dict(raw_event)
+            event_id = str(event.get("event_id") or _shadow_event_id(event))
+            existing = by_id.get(event_id)
+            if existing is None:
+                existing = {
+                    **event,
+                    "event_id": event_id,
+                    "first_seen_at": polled_at,
+                    "last_seen_at": polled_at,
+                    "detection_count": 1,
+                }
+                journal.append(existing)
+                by_id[event_id] = existing
+                unique_added += 1
+            else:
+                existing.update(event)
+                existing["event_id"] = event_id
+                existing["last_seen_at"] = polled_at
+                existing["detection_count"] = int(existing.get("detection_count") or 0) + 1
+
+        limit = int(self.config()["event_journal_limit"])
+        self._state["event_journal"] = journal[-limit:]
+        return unique_added
 
     async def _loop(self, cycle: Cycle, config: dict[str, Any]) -> None:
         try:
@@ -194,6 +239,19 @@ def _utc_now() -> str:
 
 def _utc_after(seconds: int) -> str:
     return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat(timespec="seconds")
+
+
+def _shadow_event_id(event: dict[str, Any]) -> str:
+    identity = {
+        "position_id": str(event.get("position_id") or ""),
+        "ticker": str(event.get("ticker") or "").upper(),
+        "event_type": str(event.get("event_type") or ""),
+        "threshold": round(float(event.get("threshold") or 0), 4),
+    }
+    digest = hashlib.sha256(
+        json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return f"shadow_{digest[:24]}"
 
 
 render_shadow_monitor = RenderShadowMonitor()

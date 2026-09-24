@@ -50,6 +50,15 @@ def test_shadow_monitor_records_bounded_read_only_evidence() -> None:
     assert snapshot["last_warnings"] == {"BBB": "PriceUnavailable"}
     assert snapshot["total_polls"] == 1
     assert snapshot["total_events_detected"] == 1
+    assert snapshot["total_unique_events"] == 1
+    assert snapshot["event_journal"][0]["detection_count"] == 1
+
+    repeated = asyncio.run(monitor.run_once(cycle, timeout_seconds=5))
+
+    assert repeated["total_events_detected"] == 2
+    assert repeated["total_unique_events"] == 1
+    assert len(repeated["event_journal"]) == 1
+    assert repeated["event_journal"][0]["detection_count"] == 2
 
 
 def test_shadow_monitor_failure_is_contained() -> None:
@@ -103,6 +112,7 @@ def test_render_shadow_cycle_never_dispatches_or_sends_alerts(monkeypatch) -> No
     assert result["status"] == "events_detected"
     assert result["positions_checked"] == 1
     assert result["events"][0]["event_type"] == "TAKE_PARTIAL_PROFIT"
+    assert result["events"][0]["position_id"]
 
 
 def test_render_shadow_cycle_skips_outside_regular_session(monkeypatch) -> None:

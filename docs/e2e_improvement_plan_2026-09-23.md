@@ -314,3 +314,33 @@ Remaining acceptance work:
   provider/runtime behavior before enabling any Render-side dispatch.
 - Keep GitHub Actions as the only portfolio mutation path and preserve the current
   external monitor as fallback until an explicitly approved cutover.
+
+Durable parity evidence (2026-09-24):
+
+- The Render Shadow task now keeps a bounded 100-event journal with a stable event
+  identity, first/last observation time and detection count. Repeated one-minute
+  observations of the same position threshold remain one event rather than creating
+  duplicate records.
+- The existing position-monitor workflow fetches the journal once per monitor run
+  and persists compact daily JSONL evidence under `agent_results/monitor_parity/`.
+  No workflow, schedule, Render instance, datastore or paid resource was added.
+- A Shadow event is first classified `SHADOW_ONLY_PENDING`. It becomes `MATCHED`
+  only when the active monitor produced a persisted notification outbox event for
+  the same trade, ticker, action and threshold. An active event without matching
+  Shadow evidence is `ACTIVE_ONLY`; an unmatched Shadow event expires after a
+  configurable 30-minute observation horizon.
+- Parity collection is fail-open for telemetry only: provider, endpoint or malformed
+  payload failures emit a GitHub warning but can never block the active position
+  monitor, persistence or Telegram delivery.
+- The collector is read-only with respect to the workbook and trading lifecycle. It
+  cannot dispatch workflows, send Telegram messages or mutate a paper position.
+
+Parity acceptance window:
+
+- Collect at least five regular trading sessions before any cutover.
+- Require every persisted TP1, TP2 and stop event to be `MATCHED`, zero duplicate
+  portfolio actions, zero Shadow side effects, stable Render CPU/RAM, and fewer than
+  2% quote failures.
+- Review `persistence_lag_seconds`; the cutover target is at most 90 seconds. During
+  Shadow mode, the 15-minute active fallback can legitimately produce a longer lag
+  and is measured rather than hidden.

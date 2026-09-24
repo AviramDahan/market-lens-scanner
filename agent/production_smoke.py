@@ -51,6 +51,7 @@ class ProductionSmoke:
         self.check("Tracker workbook", self.check_tracker)
         self.check("Read-only ticker scan", self.check_read_only_scan)
         self.check("Position monitor state", self.check_monitor_state)
+        self.check("Render shadow monitor", self.check_render_shadow_monitor)
 
     def check(self, name: str, function) -> None:
         started = time.monotonic()
@@ -135,6 +136,14 @@ class ProductionSmoke:
         )
         return detail
 
+    def check_render_shadow_monitor(self) -> str:
+        payload = self.request_json(
+            "/agent/monitor-shadow-status",
+            attempts=3,
+            timeout=30,
+        )
+        return validate_render_shadow_monitor(payload)
+
     def request_json(
         self,
         path: str,
@@ -218,6 +227,24 @@ def validate_health(payload: dict[str, Any], expected_revision: str = "") -> Non
                 f"Render revision {actual[:12] or 'missing'} does not match expected "
                 f"{expected_revision[:12]}."
             )
+
+
+def validate_render_shadow_monitor(payload: dict[str, Any]) -> str:
+    if payload.get("mode") != "shadow":
+        raise SmokeFailure("Render monitor is not in shadow mode.")
+    if payload.get("side_effects_enabled") is not False:
+        raise SmokeFailure("Render shadow monitor unexpectedly exposes side effects.")
+    if payload.get("enabled") is not True or payload.get("running") is not True:
+        raise SmokeFailure("Render shadow monitor is not enabled and running.")
+    if not isinstance(payload.get("event_journal"), list):
+        raise SmokeFailure("Render shadow event journal is missing.")
+    if int(payload.get("event_journal_limit") or 0) <= 0:
+        raise SmokeFailure("Render shadow event journal limit is invalid.")
+    return (
+        f"status={payload.get('status')}; polls={int(payload.get('total_polls') or 0)}; "
+        f"unique_events={int(payload.get('total_unique_events') or 0)}; "
+        "side_effects=false"
+    )
 
 
 def revisions_match(actual: str, expected: str) -> bool:

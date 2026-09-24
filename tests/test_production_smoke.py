@@ -18,6 +18,7 @@ from agent.production_smoke import (
     validate_decision_jsonl,
     validate_health,
     validate_monitor_state,
+    validate_render_shadow_monitor,
     validate_read_only_scan,
     validate_tracker,
 )
@@ -239,3 +240,27 @@ def test_monitor_validation_is_read_only_and_accepts_off_hours_history() -> None
     with pytest.raises(SmokeFailure, match="failed position"):
         payload["system_health"]["latest_monitor_positions_failed"] = 1
         validate_monitor_state(payload, max_age_minutes=0)
+
+
+def test_render_shadow_smoke_requires_running_read_only_journal() -> None:
+    healthy = {
+        "mode": "shadow",
+        "side_effects_enabled": False,
+        "enabled": True,
+        "running": True,
+        "status": "ok",
+        "total_polls": 12,
+        "total_unique_events": 1,
+        "event_journal_limit": 100,
+        "event_journal": [],
+    }
+
+    assert "side_effects=false" in validate_render_shadow_monitor(healthy)
+
+    unsafe = {**healthy, "side_effects_enabled": True}
+    with pytest.raises(SmokeFailure, match="side effects"):
+        validate_render_shadow_monitor(unsafe)
+
+    stopped = {**healthy, "running": False}
+    with pytest.raises(SmokeFailure, match="not enabled and running"):
+        validate_render_shadow_monitor(stopped)

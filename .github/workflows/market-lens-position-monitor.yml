@@ -118,6 +118,17 @@ jobs:
           MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
         run: python agent/position_monitor.py
 
+      - name: Collect Render shadow parity evidence
+        if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
+        env:
+          MARKET_LENS_PUBLIC_URL: https://market-lens-scanner-fb63.onrender.com
+          MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
+          MARKET_LENS_MONITOR_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          MARKET_LENS_MONITOR_TRIGGER_TICKER: ${{ github.event.inputs.ticker || '' }}
+          MARKET_LENS_MONITOR_TRIGGER_EVENT: ${{ github.event.inputs.event || '' }}
+          MARKET_LENS_MONITOR_TRIGGER_SOURCE: ${{ github.event.inputs.source || 'schedule-or-manual' }}
+        run: python agent/render_shadow_parity.py
+
       - name: Apply Agent media retention
         if: steps.schedule_time.outputs.should_run == 'true' && steps.open_positions.outputs.has_open == 'true'
         env:
@@ -195,6 +206,10 @@ jobs:
           MARKET_LENS_MONITOR_INTERVAL: 1m
           MARKET_LENS_MONITOR_SAVE_NOOP: "false"
           MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
+          MARKET_LENS_MONITOR_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          MARKET_LENS_MONITOR_TRIGGER_TICKER: ${{ github.event.inputs.ticker || '' }}
+          MARKET_LENS_MONITOR_TRIGGER_EVENT: ${{ github.event.inputs.event || '' }}
+          MARKET_LENS_MONITOR_TRIGGER_SOURCE: ${{ github.event.inputs.source || 'schedule-or-manual' }}
           MARKET_LENS_AGENT_MEDIA_RETENTION_ENABLED: "true"
           MARKET_LENS_AGENT_CHART_RETENTION_MAX_FILES: "180"
           MARKET_LENS_AGENT_SCREENSHOT_RETENTION_MAX_FILES: "60"
@@ -216,6 +231,7 @@ jobs:
           run_monitor_pipeline() {
             rm -f "$MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX"
             python agent/position_monitor.py
+            python agent/render_shadow_parity.py
             python agent/cleanup_agent_results.py
             python - <<'PY'
           import json

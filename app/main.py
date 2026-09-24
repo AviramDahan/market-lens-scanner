@@ -871,6 +871,7 @@ async def run_render_shadow_monitor_cycle() -> dict:
         if event:
             payload = live_monitor_event_payload(event)
             payload["observed_at"] = source_time
+            payload["position_id"] = _attention_position_identity(position)
             events.append(payload)
 
     return {
