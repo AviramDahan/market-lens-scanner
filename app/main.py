@@ -1221,18 +1221,19 @@ async def scan_with_charts(
                 ticker, chart_url = future.result()
                 charts[ticker] = chart_url
 
-    for detail in details:
-        saved_setup = save_setup(
-            detail.result,
-            analysis_period=request.analysis_period,
-            chart_url=charts.get(detail.result.ticker),
-            source="auto",
-            user_label=user_label,
-            session_id=request.session_id,
-            user_id=user_id,
-        )
-        if saved_setup:
-            saved.append(saved_setup)
+    if request.persist_setups:
+        for detail in details:
+            saved_setup = save_setup(
+                detail.result,
+                analysis_period=request.analysis_period,
+                chart_url=charts.get(detail.result.ticker),
+                source="auto",
+                user_label=user_label,
+                session_id=request.session_id,
+                user_id=user_id,
+            )
+            if saved_setup:
+                saved.append(saved_setup)
     return {
         "results": [result.model_dump() for result in results],
         "errors": errors,
@@ -1344,4 +1345,7 @@ async def get_smart_universe(
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "revision": os.getenv("RENDER_GIT_COMMIT", "").strip(),
+    }

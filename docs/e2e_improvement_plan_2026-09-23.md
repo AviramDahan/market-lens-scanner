@@ -12,8 +12,8 @@ continuation.
 | 2 | Explicit partial-scan status taxonomy | COMPLETE - APPROVED | Runtime/API/UI status tests and partial-provider simulation |
 | 3 | Workbook update performance | COMPLETE - APPROVED | Output-equivalence test, tracker integrity, measured runtime comparison |
 | 4 | Market-regime freshness and fallback | COMPLETE - APPROVED | stale/missing/provider-session fixtures and conservative behavior verification |
-| 5 | Focused recovery for unavailable tickers | COMPLETE - PENDING OWNER APPROVAL | focused retry, provider normalization, bounded runtime and structured outcomes |
-| 6 | Automated production smoke workflow | NOT STARTED | intentional pass/failure runs with actionable diagnostics |
+| 5 | Focused recovery for unavailable tickers | COMPLETE - APPROVED | focused retry, provider normalization, bounded runtime and structured outcomes |
+| 6 | Automated production smoke workflow | IN PROGRESS | intentional pass/failure runs with actionable diagnostics |
 | 7 | Move suitable live services from Actions to Render | NOT STARTED | parallel shadow run, failover test, cost/runtime comparison |
 
 ## 1. Live price provenance and consistency
@@ -221,6 +221,25 @@ Production QA result (2026-09-24):
 Create a short post-change workflow covering production endpoints, one ticker scan,
 chart rendering, Decision JSON, tracker readability and a no-event monitor check.
 Keep it separate from scheduled scans to avoid unnecessary Actions usage.
+
+Implementation result (2026-09-24):
+
+- Added a separate `Market Lens Production Smoke` workflow. It runs manually or
+  automatically only after `Market Lens Source QA` succeeds on `main`; it has no
+  schedule and therefore does not add recurring idle Actions usage.
+- The workflow has read-only repository permission, an eight-minute hard timeout,
+  concurrency cancellation and a 14-day JSON report artifact.
+- Render `/health` now exposes the deployed commit revision. The smoke waits for the
+  exact source revision before testing, avoiding false passes against an old deploy.
+- The smoke verifies `/health`, `/agent`, `/agent/data`, latest Decision JSONL schema
+  and uniqueness, tracker XLSX readability and required sheets, and latest position
+  monitor status with zero failed positions.
+- It performs one real `MSFT` UI scan with chart generation through a new backwards-
+  compatible `persist_setups=false` request flag. This path cannot save a setup,
+  change portfolio state, dispatch the monitor or send Telegram notifications.
+- Existing UI behavior remains unchanged because `persist_setups` defaults to true.
+  Local QA passed 540 tests, Python compilation, workflow YAML validation and
+  whitespace validation.
 
 ## 7. Move suitable live services from Actions to Render
 

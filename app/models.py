@@ -172,6 +172,7 @@ class ScanRequest(BaseModel):
     user_label: str | None = Field(default=None, max_length=80)
     session_id: str | None = Field(default=None, max_length=80)
     include_charts: bool = True
+    persist_setups: bool = True
 
 
 class ScanResponse(BaseModel):
