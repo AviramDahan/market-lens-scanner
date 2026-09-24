@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 124
-Tickers scanned: 16894
+Total scans: 125
+Tickers scanned: 17028
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3562
+WATCH_REVIEW: 3591
 WATCH_REVIEW unique tickers: 87
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3562
-SKIP: 12832
-NO_TRADE: 9447
+WATCH: 3591
+SKIP: 12933
+NO_TRADE: 9535
 Realized PnL: -86.89
-Unrealized PnL: 931.92
-Portfolio value: 101136.88
+Unrealized PnL: 906.3
+Portfolio value: 101111.26
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.1369
+Cumulative recorded-equity change (%): 1.1113
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -27,11 +27,11 @@ Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: FIB_STOP_075_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 20
-- FIB_STOP_075_ATR: 51
+- FIB_STOP_075_ATR: 53
 - FIB_STOP_100_ATR: 9
 - FIB_STRUCTURE_STOP: 42
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 94
+- TREND_PULLBACK_RECLAIM: 96
 - VWAP_RECLAIM: 4
 
 Top rejected candidates:
