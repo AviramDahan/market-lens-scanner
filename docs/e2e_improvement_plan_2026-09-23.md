@@ -198,6 +198,24 @@ Implementation result (2026-09-24):
   fixtures cover partial recovery, repeated provider failure, alias normalization,
   disabled recovery and deadline preservation.
 
+Production QA result (2026-09-24):
+
+- GitHub Actions run `35957488505` completed successfully in 4m33s on source commit
+  `ddf3d5494`; no authentication, Agent, workbook or persistence step failed.
+- Run `20260924_045343` requested 136 symbols and received 133 unique result cards.
+  Only `ARM`, `MMC` and `RDDT` entered focused recovery; each received two attempts
+  and a provider-specific `DATA_UNAVAILABLE` outcome.
+- Recovery issued four requests (one grouped request plus three singleton requests)
+  and added 3.007 seconds. The full scan took 56.975 seconds, remained far below the
+  30-minute workflow limit and did not rescan any successful symbol.
+- The persisted Decision JSON contains 133 records and 133 unique tickers. The run
+  remained valid `PARTIAL_OK`, workbook updates happened after the valid scan, and
+  no false zero-result or duplicate decision was produced.
+- Production `/health` and `/agent/data` returned `ok`. Manual `/agent` verification
+  showed the canonical status and 133/136 coverage; its recovery tooltip listed the
+  three unavailable symbols and confirmed that focused recovery completed. Browser
+  console inspection found no warnings or errors.
+
 ## 6. Automated production smoke workflow
 
 Create a short post-change workflow covering production endpoints, one ticker scan,
