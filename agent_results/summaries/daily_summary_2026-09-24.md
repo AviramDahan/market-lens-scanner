@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-09-24
-Total scans: 11
-Tickers scanned: 1480
+Total scans: 12
+Tickers scanned: 1613
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 351
+WATCH_REVIEW: 386
 WATCH_REVIEW unique tickers: 42
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 351
-SKIP: 1074
-NO_TRADE: 618
+WATCH: 386
+SKIP: 1167
+NO_TRADE: 668
 Realized PnL: 0.0
 Unrealized PnL: 692.32
 Portfolio value: 101284.13
