@@ -11,8 +11,8 @@ continuation.
 | 1 | Live price provenance and consistency | COMPLETE - APPROVED | API contract, 496 tests, desktop/mobile UI, production smoke |
 | 2 | Explicit partial-scan status taxonomy | COMPLETE - APPROVED | Runtime/API/UI status tests and partial-provider simulation |
 | 3 | Workbook update performance | COMPLETE - APPROVED | Output-equivalence test, tracker integrity, measured runtime comparison |
-| 4 | Market-regime freshness and fallback | COMPLETE - PENDING OWNER APPROVAL | stale/missing/provider-session fixtures and conservative behavior verification |
-| 5 | Focused recovery for unavailable tickers | NOT STARTED | retry/normalization fixtures and bounded runtime validation |
+| 4 | Market-regime freshness and fallback | COMPLETE - APPROVED | stale/missing/provider-session fixtures and conservative behavior verification |
+| 5 | Focused recovery for unavailable tickers | COMPLETE - PENDING OWNER APPROVAL | focused retry, provider normalization, bounded runtime and structured outcomes |
 | 6 | Automated production smoke workflow | NOT STARTED | intentional pass/failure runs with actionable diagnostics |
 | 7 | Move suitable live services from Actions to Render | NOT STARTED | parallel shadow run, failover test, cost/runtime comparison |
 
@@ -180,6 +180,23 @@ Production QA result (2026-09-24):
 Retry only missing result cards after the main batch. Normalize provider symbols and
 record a structured `DATA_UNAVAILABLE` reason after bounded retries. Never restart a
 successful full basket because a few symbols are unavailable.
+
+Implementation result (2026-09-24):
+
+- The normal batched scan remains unchanged. A second phase receives only the final
+  missing-symbol set; successful symbols are never placed in a recovery basket.
+- Provider aliases such as `BRK.B`, `BRK/B` and `BRK-B` share one canonical key.
+- Recovery is bounded to 12 symbols, two rounds, four symbols in the first request
+  and singleton requests in the final round. It stops when fewer than 90 seconds
+  remain in the Agent deadline.
+- A failed recovery request is isolated from the successful main scan. Every initially
+  missing symbol records `RECOVERED` or `DATA_UNAVAILABLE`, attempt count and a bounded
+  provider/failure reason in runtime diagnostics.
+- The dashboard run strip reports recovered count and exposes the recovered or still
+  unavailable symbols through its tooltip. Diagnostic snapshots retain the same data.
+- Local QA passed 527 tests, Python compilation and whitespace validation. Dedicated
+  fixtures cover partial recovery, repeated provider failure, alias normalization,
+  disabled recovery and deadline preservation.
 
 ## 6. Automated production smoke workflow
 

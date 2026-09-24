@@ -684,6 +684,10 @@ def test_write_diagnostic_snapshot_creates_run_file(tmp_path) -> None:
             "trade_ready_setups": 1,
             "action_counts": {"WATCH_READY": 1},
             "market_regime": "BULL",
+            "ticker_recovery": {
+                "recovered_tickers": ["ARM"],
+                "unavailable_tickers": ["MMC"],
+            },
         },
         "decision_diagnostics": {"watch_ready_count": 1},
     }
@@ -694,6 +698,7 @@ def test_write_diagnostic_snapshot_creates_run_file(tmp_path) -> None:
     assert path.name == "diagnostics_run_123.json"
     assert path.exists()
     assert '"watch_ready_count":1' in path.read_text(encoding="utf-8")
+    assert '"recovered_tickers":["ARM"]' in path.read_text(encoding="utf-8")
 
 
 def test_position_attention_flags_near_target_one_before_partial_profit() -> None:

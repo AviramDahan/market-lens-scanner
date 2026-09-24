@@ -71,4 +71,7 @@ def test_run_strip_shows_canonical_status_and_scan_coverage() -> None:
     assert 'id="scanCoverageMeta"' in HTML
     assert 'data.latest_run.run_status || "FAILED"' in JS
     assert '`${received}/${requested} results' in JS
+    assert "data.latest_run.ticker_recovery || {}" in JS
+    assert "recoveredTickers.length" in JS
+    assert "Focused recovery completed; no missing cards recovered" in JS
     assert 'data-status="PARTIAL_OK"' in CSS

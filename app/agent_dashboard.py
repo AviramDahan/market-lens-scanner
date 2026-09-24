@@ -126,6 +126,11 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         for ticker in latest_runtime.get("missing_tickers", [])
         if str(ticker).strip()
     ] if isinstance(latest_runtime.get("missing_tickers"), list) else []
+    ticker_recovery = (
+        latest_runtime.get("ticker_recovery")
+        if isinstance(latest_runtime.get("ticker_recovery"), dict)
+        else {}
+    )
     requested_count = to_int(
         latest_runtime.get("tickers_requested"),
         received_count + max(unavailable_count, len(missing_tickers)),
@@ -248,6 +253,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
             "scan_complete": scan_complete,
             "scan_coverage": scan_coverage,
             "missing_tickers": missing_tickers,
+            "ticker_recovery": ticker_recovery,
         },
         # Keep current-run assets early in the snapshot. The deployed app syncs
         # referenced files lazily, so latest charts should be discovered before
@@ -423,6 +429,7 @@ def write_diagnostic_snapshot(project_root: Path, dashboard: dict[str, Any]) -> 
             "scan_complete": latest_run.get("scan_complete"),
             "scan_coverage": latest_run.get("scan_coverage", {}),
             "missing_tickers": latest_run.get("missing_tickers", []),
+            "ticker_recovery": latest_run.get("ticker_recovery", {}),
         },
         "decision_diagnostics": dashboard.get("decision_diagnostics", {}),
     }

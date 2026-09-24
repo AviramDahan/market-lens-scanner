@@ -54,6 +54,17 @@ def test_scanner_persists_bounded_market_regime_cache() -> None:
     assert '--path "$RESULTS_DIR"' in text
 
 
+def test_scanner_uses_bounded_focused_missing_ticker_recovery() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'MARKET_LENS_AGENT_MISSING_RECOVERY_ENABLED: "true"' in text
+    assert 'MARKET_LENS_AGENT_MISSING_RECOVERY_MAX_TICKERS: "12"' in text
+    assert 'MARKET_LENS_AGENT_MISSING_RECOVERY_ROUNDS: "2"' in text
+    assert 'MARKET_LENS_AGENT_MISSING_RECOVERY_BATCH_SIZE: "4"' in text
+    assert 'MARKET_LENS_AGENT_MISSING_RECOVERY_MIN_REMAINING_SECONDS: "90"' in text
+    assert 'MARKET_LENS_AGENT_MISSING_RECOVERY_PAUSE_MS: "2000"' in text
+
+
 def test_scanner_compacts_large_workbook_before_github_warning_size() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
 

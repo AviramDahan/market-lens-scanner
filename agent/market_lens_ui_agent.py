@@ -166,6 +166,16 @@ def main() -> None:
             log("Running UI scan")
             phase_started = time.monotonic()
             results = run_scan_batches(page, scan_tickers, deadline)
+            initial_missing = missing_scan_tickers(scan_tickers, results)
+            runtime_metrics["initial_result_cards_read"] = len(results)
+            runtime_metrics["initial_missing_tickers"] = initial_missing
+            results, recovery = recover_missing_scan_tickers(
+                page,
+                scan_tickers,
+                results,
+                deadline,
+            )
+            runtime_metrics["ticker_recovery"] = recovery
             mark_runtime_phase(runtime_metrics, "scan_seconds", phase_started)
             log(f"Scan completed: {len(results)} results")
             scan_status = f"completed: {len(results)} results"
@@ -732,7 +742,6 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
     else:
         raise RuntimeError(last_error or "Scan failed")
 
-    page.wait_for_selector('[data-testid="result-card"]', timeout=remaining_ms(deadline, 30_000))
     cards = page.locator('[data-testid="result-card"]')
     extracted: list[dict[str, Any]] = cards.evaluate_all(
         """cards => cards.map(card => {
@@ -769,8 +778,159 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
 
 
 def missing_scan_tickers(tickers: list[str], results: list[SetupResult]) -> list[str]:
-    returned = {result.ticker.strip().upper() for result in results}
-    return sorted({ticker.strip().upper() for ticker in tickers} - returned)
+    returned = {normalize_scan_ticker(result.ticker) for result in results}
+    return sorted({normalize_scan_ticker(ticker) for ticker in tickers} - returned)
+
+
+def normalize_scan_ticker(value: str) -> str:
+    """Use the scanner/provider symbol convention for class-share aliases."""
+    return re.sub(r"[./]", "-", str(value or "").strip().upper())
+
+
+def recover_missing_scan_tickers(
+    page: Page,
+    requested_tickers: list[str],
+    results: list[SetupResult],
+    deadline: float,
+) -> tuple[list[SetupResult], dict[str, Any]]:
+    """Retry only missing cards, with bounded work and per-ticker outcomes."""
+    started = time.monotonic()
+    initial_missing = missing_scan_tickers(requested_tickers, results)
+    diagnostics: dict[str, Any] = {
+        "enabled": env_bool("MARKET_LENS_AGENT_MISSING_RECOVERY_ENABLED", True),
+        "initial_missing_tickers": initial_missing,
+        "attempted_tickers": [],
+        "recovered_tickers": [],
+        "unavailable_tickers": list(initial_missing),
+        "attempts": {},
+        "outcomes": [],
+        "scan_requests": 0,
+        "duration_seconds": 0.0,
+        "skipped_reason": "",
+    }
+    if not initial_missing:
+        diagnostics["duration_seconds"] = round(time.monotonic() - started, 3)
+        return results, diagnostics
+    if not diagnostics["enabled"]:
+        diagnostics["skipped_reason"] = "Focused missing-ticker recovery is disabled."
+        diagnostics["outcomes"] = data_unavailable_outcomes(
+            initial_missing, {}, diagnostics["skipped_reason"]
+        )
+        diagnostics["duration_seconds"] = round(time.monotonic() - started, 3)
+        return results, diagnostics
+
+    max_tickers = max(0, int(os.getenv("MARKET_LENS_AGENT_MISSING_RECOVERY_MAX_TICKERS", "12")))
+    max_rounds = max(1, int(os.getenv("MARKET_LENS_AGENT_MISSING_RECOVERY_ROUNDS", "2")))
+    batch_size = max(1, int(os.getenv("MARKET_LENS_AGENT_MISSING_RECOVERY_BATCH_SIZE", "4")))
+    min_remaining_seconds = max(
+        0, int(os.getenv("MARKET_LENS_AGENT_MISSING_RECOVERY_MIN_REMAINING_SECONDS", "90"))
+    )
+    pause_ms = max(0, int(os.getenv("MARKET_LENS_AGENT_MISSING_RECOVERY_PAUSE_MS", "2000")))
+    selected = initial_missing[:max_tickers] if max_tickers else []
+    deferred = initial_missing[len(selected):]
+    attempts: dict[str, int] = {ticker: 0 for ticker in initial_missing}
+    reasons: dict[str, str] = {
+        ticker: "Recovery ticker cap reached before this symbol was retried."
+        for ticker in deferred
+    }
+    combined = {normalize_scan_ticker(result.ticker): result for result in results}
+
+    stop_for_deadline = False
+    for round_number in range(1, max_rounds + 1):
+        pending = [ticker for ticker in selected if ticker not in combined]
+        if not pending:
+            break
+        round_batch_size = batch_size if round_number == 1 else 1
+        log(
+            f"Focused recovery round {round_number}/{max_rounds}: "
+            f"{len(pending)} missing ticker(s), batch size {round_batch_size}."
+        )
+        for batch in chunked(pending, round_batch_size):
+            if deadline - time.monotonic() < min_remaining_seconds:
+                stop_for_deadline = True
+                for ticker in batch:
+                    reasons[ticker] = "Focused recovery stopped to preserve the Agent run deadline."
+                break
+            normalized_batch = [normalize_scan_ticker(ticker) for ticker in batch]
+            set_scan_basket(page, normalized_batch)
+            diagnostics["scan_requests"] += 1
+            for ticker in batch:
+                attempts[ticker] += 1
+            try:
+                retry_results = run_scan(page, deadline)
+                feedback = bounded_scan_feedback(page)
+                for result in retry_results:
+                    normalized = normalize_scan_ticker(result.ticker)
+                    result.ticker = normalized
+                    if normalized in initial_missing:
+                        combined[normalized] = result
+                for ticker in batch:
+                    if ticker not in combined:
+                        reasons[ticker] = feedback or "No result card returned by the scanner provider."
+            except Exception as exc:
+                reason = f"Focused recovery request failed: {str(exc)[:500]}"
+                for ticker in batch:
+                    reasons[ticker] = reason
+                log(reason)
+        if stop_for_deadline:
+            break
+        if pause_ms and round_number < max_rounds and any(ticker not in combined for ticker in selected):
+            page.wait_for_timeout(remaining_ms(deadline, pause_ms))
+
+    attempted = [ticker for ticker in initial_missing if attempts[ticker] > 0]
+    recovered = [ticker for ticker in initial_missing if ticker in combined]
+    unavailable = [ticker for ticker in initial_missing if ticker not in combined]
+    diagnostics.update({
+        "attempted_tickers": attempted,
+        "recovered_tickers": recovered,
+        "unavailable_tickers": unavailable,
+        "attempts": attempts,
+        "outcomes": [
+            {
+                "ticker": ticker,
+                "status": "RECOVERED" if ticker in combined else "DATA_UNAVAILABLE",
+                "attempts": attempts[ticker],
+                "reason": (
+                    "Result card recovered by focused retry."
+                    if ticker in combined
+                    else reasons.get(ticker, "No result card returned after bounded focused retries.")
+                ),
+            }
+            for ticker in initial_missing
+        ],
+        "duration_seconds": round(time.monotonic() - started, 3),
+        "skipped_reason": (
+            "Focused recovery stopped to preserve the Agent run deadline."
+            if stop_for_deadline
+            else ""
+        ),
+    })
+    log(
+        "Focused recovery complete: "
+        f"attempted={len(attempted)}, recovered={len(recovered)}, unavailable={len(unavailable)}."
+    )
+    return list(combined.values()), diagnostics
+
+
+def bounded_scan_feedback(page: Page) -> str:
+    try:
+        return page.locator("#message").inner_text(timeout=2_000).strip()[:1000]
+    except Exception:
+        return ""
+
+
+def data_unavailable_outcomes(
+    tickers: list[str], attempts: dict[str, int], reason: str
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "ticker": ticker,
+            "status": "DATA_UNAVAILABLE",
+            "attempts": int(attempts.get(ticker, 0)),
+            "reason": reason,
+        }
+        for ticker in tickers
+    ]
 
 
 def run_scan_batches(page: Page, tickers: list[str], deadline: float) -> list[SetupResult]:

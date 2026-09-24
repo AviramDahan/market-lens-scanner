@@ -409,7 +409,20 @@ function renderDashboard(data) {
     ? `${received}/${requested} results${missing ? ` · ${missing} unavailable` : ""}${coverage.estimated ? " · historical estimate" : ""}`
     : `${received} results`;
   const missingTickers = data.latest_run.missing_tickers || [];
-  scanCoverageMeta.title = missingTickers.length ? `Unavailable: ${missingTickers.join(", ")}` : "Complete provider coverage";
+  const recovery = data.latest_run.ticker_recovery || {};
+  const recoveredTickers = recovery.recovered_tickers || [];
+  if (recoveredTickers.length) {
+    scanCoverageMeta.textContent += ` · ${recoveredTickers.length} recovered`;
+  }
+  const recoveryDetail = recoveredTickers.length
+    ? `Focused recovery: ${recoveredTickers.join(", ")}`
+    : recovery.attempted_tickers?.length
+      ? "Focused recovery completed; no missing cards recovered"
+      : "";
+  scanCoverageMeta.title = [
+    missingTickers.length ? `Unavailable: ${missingTickers.join(", ")}` : "Complete provider coverage",
+    recoveryDetail,
+  ].filter(Boolean).join(". ");
   document.getElementById("validSetups").textContent = data.latest_run.valid_setups;
   document.getElementById("tradeReadySetups").textContent = data.latest_run.trade_ready_setups ?? countTradeReady(data.latest_setups);
 
