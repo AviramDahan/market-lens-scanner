@@ -264,3 +264,40 @@ def test_render_shadow_smoke_requires_running_read_only_journal() -> None:
     stopped = {**healthy, "running": False}
     with pytest.raises(SmokeFailure, match="not enabled and running"):
         validate_render_shadow_monitor(stopped)
+
+
+def test_dashboard_snapshot_enrichment_overlays_synced_monitor_heartbeat(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    heartbeat_dir = tmp_path / "position_monitor"
+    heartbeat_dir.mkdir()
+    (heartbeat_dir / "latest_status.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "timestamp": "2026-09-24T14:10:00+00:00",
+                "run_id": "monitor_20260924_141000",
+                "status": "MONITOR_OK",
+                "positions_checked": 4,
+                "positions_failed": 0,
+                "event_count": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", tmp_path)
+    dashboard = {
+        "status": "ok",
+        "latest_run": {},
+        "system_health": {
+            "latest_monitor_at": "2026-09-24T14:00:00+00:00",
+            "latest_monitor_status": "",
+        },
+    }
+
+    enriched = main.enrich_agent_dashboard_snapshot(dashboard)
+
+    assert enriched["system_health"]["latest_monitor_status"] == "MONITOR_OK"
+    assert enriched["system_health"]["latest_monitor_positions_checked"] == 4
+    assert enriched["system_health"]["latest_monitor_event_count"] == 1

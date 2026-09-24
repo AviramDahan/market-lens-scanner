@@ -59,6 +59,31 @@ def test_results_sync_downloads_tracker_and_recent_results(monkeypatch, tmp_path
     assert (tmp_path / "agent_results" / "summaries" / "daily_summary_latest.json").exists()
 
 
+def test_snapshot_sync_also_refreshes_monitor_heartbeat(monkeypatch, tmp_path: Path) -> None:
+    reset_results_sync_cache()
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS_TRIGGER_TOKEN", "token")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_TTL_SECONDS", "0")
+
+    def fake_metadata(_repo, _ref, path):
+        return {"type": "file", "sha": f"sha-{path}"}
+
+    def fake_blob(_repo, sha, path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"downloaded {sha}", encoding="utf-8")
+
+    monkeypatch.setattr(results_sync, "github_file_metadata", fake_metadata)
+    monkeypatch.setattr(results_sync, "download_github_blob_to_path", fake_blob)
+
+    result = results_sync.sync_dashboard_snapshot_if_enabled(tmp_path)
+
+    assert result["downloaded"] is True
+    assert result["monitor_status_downloaded"] is True
+    assert (tmp_path / "agent_results" / "dashboard_snapshot.json").exists()
+    assert (tmp_path / "agent_results" / "position_monitor" / "latest_status.json").exists()
+
+
 def test_results_sync_skips_unchanged_files(monkeypatch, tmp_path: Path) -> None:
     reset_results_sync_cache()
     monkeypatch.setenv("MARKET_LENS_RESULTS_SYNC_ENABLED", "true")

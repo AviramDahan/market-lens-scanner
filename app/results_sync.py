@@ -60,6 +60,23 @@ def sync_dashboard_snapshot_if_enabled(project_root: Path) -> dict[str, Any]:
         result["enabled"] = False
         result["reason"] = f"snapshot sync failed: {exc}"
 
+    monitor_target = "agent_results/position_monitor/latest_status.json"
+    if result["enabled"]:
+        try:
+            monitor_meta = github_file_metadata(repo, ref, monitor_target)
+            monitor_sha = str(monitor_meta.get("sha") or "")
+            download_github_blob_to_path(
+                repo,
+                monitor_sha,
+                project_root / monitor_target,
+            )
+            result["monitor_status_downloaded"] = True
+            result["monitor_status_sha"] = monitor_sha
+        except Exception as exc:
+            # A missing heartbeat must not hide an otherwise valid dashboard snapshot.
+            result["monitor_status_downloaded"] = False
+            result["monitor_status_reason"] = f"monitor status sync failed: {exc}"
+
     _LAST_SNAPSHOT_SYNC_AT = time.time()
     _LAST_SNAPSHOT_SYNC_RESULT = result
     return result

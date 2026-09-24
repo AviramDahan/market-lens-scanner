@@ -25,6 +25,7 @@ from app.agent_dashboard import (
     compute_realized_pnl,
     dashboard_section_payload,
     enrich_latest_run_status,
+    load_monitor_status,
     load_period_summary,
     parse_timestamp,
     sanitize_dashboard_media_urls,
@@ -276,7 +277,42 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
             latest_scan_update=latest_scan_update,
             latest_monitor_update=latest_monitor_update,
         )
+    merge_latest_monitor_status(dashboard)
     return dashboard
+
+
+def merge_latest_monitor_status(dashboard: dict) -> None:
+    """Overlay the independently synced monitor heartbeat onto a scan snapshot."""
+    monitor = load_monitor_status(AGENT_RESULTS_DIR / "position_monitor")
+    if not monitor:
+        return
+    health = dashboard.get("system_health")
+    if not isinstance(health, dict):
+        health = {}
+        dashboard["system_health"] = health
+    monitor_at = parse_timestamp(monitor.get("timestamp"))
+    snapshot_at = parse_timestamp(health.get("latest_monitor_at"))
+    if monitor_at < snapshot_at:
+        return
+    health.update(
+        {
+            "latest_monitor_at": monitor_at.isoformat(),
+            "latest_monitor_run_id": monitor.get("run_id", ""),
+                "latest_monitor_age_minutes": max(
+                    0,
+                    int(
+                        (
+                            datetime.now(timezone.utc).replace(tzinfo=None) - monitor_at
+                        ).total_seconds()
+                        // 60
+                    ),
+                ),
+            "latest_monitor_status": monitor.get("status", ""),
+            "latest_monitor_positions_checked": monitor.get("positions_checked"),
+            "latest_monitor_positions_failed": monitor.get("positions_failed"),
+            "latest_monitor_event_count": monitor.get("event_count"),
+        }
+    )
 
 
 def monitor_agent_dashboard() -> dict:
