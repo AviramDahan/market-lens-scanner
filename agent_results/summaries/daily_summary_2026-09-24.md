@@ -1,41 +1,42 @@
 Daily Performance Summary
 
 Date: 2026-09-24
-Total scans: 29
-Tickers scanned: 3901
+Total scans: 30
+Tickers scanned: 4039
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 893
-WATCH_REVIEW unique tickers: 58
+WATCH_REVIEW: 925
+WATCH_REVIEW unique tickers: 59
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 893
-SKIP: 2877
-NO_TRADE: 2056
+WATCH: 925
+SKIP: 2979
+NO_TRADE: 2130
 Realized PnL: -386.86
-Unrealized PnL: 899.29
-Portfolio value: 101104.25
-Daily recorded-equity change (%): -0.1776
+Unrealized PnL: 905.8
+Portfolio value: 101110.76
+Daily recorded-equity change (%): -0.1712
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-23
-Cumulative recorded-equity change (%): 1.1043
+Cumulative recorded-equity change (%): 1.1108
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AIG
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 17
+- BREAKOUT_CONTINUATION: 2
+- FIB_STOP_075_ATR: 19
 - FIB_STOP_100_ATR: 4
 - FIB_STRUCTURE_STOP: 6
-- TREND_PULLBACK_RECLAIM: 34
+- TREND_PULLBACK_RECLAIM: 38
+- VWAP_RECLAIM: 1
 
 Top rejected candidates:
 - QBTS: SKIP score=0.5663 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
+- LRCX: WATCH score=0.5578 reason=WATCH: Neutral market requires stronger normalized quality (42.72/100).
 - DE: SKIP score=0.543 reason=SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.10.
-- LRCX: WATCH score=0.5428 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - KMI: WATCH score=0.5415 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.98.
 - WMB: WATCH score=0.5366 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - KLAC: WATCH score=0.5346 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
