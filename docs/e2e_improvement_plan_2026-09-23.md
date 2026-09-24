@@ -13,7 +13,7 @@ continuation.
 | 3 | Workbook update performance | COMPLETE - APPROVED | Output-equivalence test, tracker integrity, measured runtime comparison |
 | 4 | Market-regime freshness and fallback | COMPLETE - APPROVED | stale/missing/provider-session fixtures and conservative behavior verification |
 | 5 | Focused recovery for unavailable tickers | COMPLETE - APPROVED | focused retry, provider normalization, bounded runtime and structured outcomes |
-| 6 | Automated production smoke workflow | IN PROGRESS | intentional pass/failure runs with actionable diagnostics |
+| 6 | Automated production smoke workflow | COMPLETE - PENDING OWNER APPROVAL | automatic source-QA chain and verified read-only production contract |
 | 7 | Move suitable live services from Actions to Render | NOT STARTED | parallel shadow run, failover test, cost/runtime comparison |
 
 ## 1. Live price provenance and consistency
@@ -240,6 +240,23 @@ Implementation result (2026-09-24):
 - Existing UI behavior remains unchanged because `persist_setups` defaults to true.
   Local QA passed 540 tests, Python compilation, workflow YAML validation and
   whitespace validation.
+
+Production QA result (2026-09-24):
+
+- Source QA run `35997776639` completed successfully in 1m21s and automatically
+  dispatched Production Smoke run `35997925981`; no manual chaining was required.
+- The smoke matched Render revision `ae766fee3930` before testing and completed in
+  1m04s, including deployment wait, dependency setup and artifact upload.
+- Production `/agent` and `/agent/data` loaded successfully. The latest run was
+  `PARTIAL_OK` with 133 results, and its Decision JSONL contained 133 valid unique
+  records.
+- The 22,094,665-byte tracker opened successfully with all nine worksheets and all
+  required operational sheets.
+- The read-only `MSFT` scan generated a valid 175,347-byte PNG in 17.1 seconds and
+  returned zero persisted setups.
+- The latest position monitor was `MONITOR_OK`: five positions checked, zero failed,
+  zero events and no dispatch attempt. The JSON smoke report was uploaded with a
+  14-day retention period.
 
 ## 7. Move suitable live services from Actions to Render
 
