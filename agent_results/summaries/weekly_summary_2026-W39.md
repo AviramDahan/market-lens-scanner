@@ -1,30 +1,30 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 115
-Tickers scanned: 15675
+Total scans: 116
+Tickers scanned: 15812
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3300
+WATCH_REVIEW: 3335
 WATCH_REVIEW unique tickers: 84
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3300
-SKIP: 11911
-NO_TRADE: 8647
+WATCH: 3335
+SKIP: 12009
+NO_TRADE: 8730
 Realized PnL: -86.89
-Unrealized PnL: 820.72
-Portfolio value: 101025.68
+Unrealized PnL: 764.44
+Portfolio value: 100969.4
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.0257
+Cumulative recorded-equity change (%): 0.9694
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
 Best shadow strategy: BREAKOUT_CONTINUATION
-Worst shadow strategy: FIB_STOP_075_ATR
+Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 20
 - FIB_STOP_075_ATR: 42
@@ -41,10 +41,10 @@ Top rejected candidates:
 - KMI: WATCH score=0.5574 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
 - KLAC: WATCH score=0.5346 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
+- LRCX: WATCH score=0.5325 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - MSFT: WATCH score=0.5299 reason=WATCH: Technical setup detected, but weighted risk/reward 1.72 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
 - WMB: WATCH score=0.5292 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
 - CAT: SKIP score=0.525 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 5.52.
-- DHR: WATCH score=0.5237 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
