@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 153
-Tickers scanned: 20791
+Total scans: 154
+Tickers scanned: 20924
 BUY_SIMULATED: 3
-WATCH_READY: 0
-WATCH_READY unique tickers: 0
-WATCH_REVIEW: 4506
+WATCH_READY: 1
+WATCH_READY unique tickers: 1
+WATCH_REVIEW: 4531
 WATCH_REVIEW unique tickers: 91
-WATCH_READY session split: regular=0, off_hours=0, unknown=0
-WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 4506
-SKIP: 15669
-NO_TRADE: 11381
+WATCH_READY session split: regular=1, off_hours=0, unknown=0
+WATCH_READY conversion: 0 converted / 1 staged
+WATCH: 4531
+SKIP: 15772
+NO_TRADE: 11473
 Realized PnL: -86.89
-Unrealized PnL: 845.64
-Portfolio value: 101050.6
+Unrealized PnL: 888.38
+Portfolio value: 101093.34
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.0506
+Cumulative recorded-equity change (%): 1.0933
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -29,9 +29,9 @@ Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 22
 - FIB_STOP_075_ATR: 64
 - FIB_STOP_100_ATR: 9
-- FIB_STRUCTURE_STOP: 43
+- FIB_STRUCTURE_STOP: 44
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 115
+- TREND_PULLBACK_RECLAIM: 120
 - VWAP_RECLAIM: 6
 
 Top rejected candidates:
@@ -47,4 +47,6 @@ Top rejected candidates:
 - CAT: SKIP score=0.5373 reason=SKIP: Industrials sector regime is weak (15/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.09.
 
 Recommendations:
+- Track WATCH_READY conversion during regular-session confirmation scans.
+- After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
