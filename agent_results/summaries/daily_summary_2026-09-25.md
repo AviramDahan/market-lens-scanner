@@ -1,34 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-25
-Total scans: 23
-Tickers scanned: 3082
-BUY_SIMULATED: 0
+Total scans: 24
+Tickers scanned: 3218
+BUY_SIMULATED: 1
 WATCH_READY: 1
 WATCH_READY unique tickers: 1
-WATCH_REVIEW: 721
+WATCH_REVIEW: 743
 WATCH_REVIEW unique tickers: 56
 WATCH_READY session split: regular=1, off_hours=0, unknown=0
-WATCH_READY conversion: 0 converted / 1 staged
-WATCH: 721
-SKIP: 2268
-NO_TRADE: 1590
+WATCH_READY conversion: 1 converted / 1 staged
+WATCH: 743
+SKIP: 2377
+NO_TRADE: 1686
 Realized PnL: 0.0
-Unrealized PnL: 924.32
-Portfolio value: 101129.28
-Daily recorded-equity change (%): 0.0116
+Unrealized PnL: 933.56
+Portfolio value: 101138.52
+Daily recorded-equity change (%): 0.0207
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-24
-Cumulative recorded-equity change (%): 1.1293
+Cumulative recorded-equity change (%): 1.1385
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: BRK-B
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 5
-- FIB_STRUCTURE_STOP: 5
-- TREND_PULLBACK_RECLAIM: 25
+- FIB_STOP_075_ATR: 6
+- FIB_STRUCTURE_STOP: 6
+- RELATIVE_STRENGTH_LEADER: 1
+- TREND_PULLBACK_RECLAIM: 27
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
@@ -45,5 +46,4 @@ Top rejected candidates:
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
-- After 2-3 full regular-session days, review whether entry confirmation is too restrictive.
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
