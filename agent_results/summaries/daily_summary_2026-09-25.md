@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-25
-Total scans: 29
-Tickers scanned: 3907
+Total scans: 30
+Tickers scanned: 4044
 BUY_SIMULATED: 1
 WATCH_READY: 1
 WATCH_READY unique tickers: 1
-WATCH_REVIEW: 874
+WATCH_REVIEW: 901
 WATCH_REVIEW unique tickers: 61
 WATCH_READY session split: regular=1, off_hours=0, unknown=0
 WATCH_READY conversion: 1 converted / 1 staged
-WATCH: 874
-SKIP: 2913
-NO_TRADE: 2140
+WATCH: 901
+SKIP: 3019
+NO_TRADE: 2210
 Realized PnL: 996.84
-Unrealized PnL: 99.59
-Portfolio value: 101301.39
-Daily recorded-equity change (%): 0.1818
+Unrealized PnL: 92.67
+Portfolio value: 101294.47
+Daily recorded-equity change (%): 0.175
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-24
-Cumulative recorded-equity change (%): 1.3014
+Cumulative recorded-equity change (%): 1.2945
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: BRK-B
@@ -44,7 +44,7 @@ Top rejected candidates:
 - DHR: WATCH score=0.5228 reason=WATCH: Technical setup detected, but weighted risk/reward 1.38 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - XOM: WATCH score=0.5225 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - ASML: WATCH score=0.5189 reason=WATCH: Technical setup detected, but weighted risk/reward 1.36 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.11.
-- HAL: WATCH score=0.5155 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
+- CVX: WATCH score=0.5155 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 
 Recommendations:
 - Track WATCH_READY conversion during regular-session confirmation scans.
