@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 149
-Tickers scanned: 20258
+Total scans: 150
+Tickers scanned: 20392
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 4384
-WATCH_REVIEW unique tickers: 90
+WATCH_REVIEW: 4415
+WATCH_REVIEW unique tickers: 91
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 4384
-SKIP: 15274
-NO_TRADE: 11042
+WATCH: 4415
+SKIP: 15373
+NO_TRADE: 11128
 Realized PnL: -86.89
-Unrealized PnL: 931.68
-Portfolio value: 101136.64
+Unrealized PnL: 933.26
+Portfolio value: 101138.22
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.1366
+Cumulative recorded-equity change (%): 1.1382
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -42,9 +42,9 @@ Top rejected candidates:
 - LRCX: WATCH score=0.5578 reason=WATCH: Neutral market requires stronger normalized quality (42.72/100).
 - KMI: WATCH score=0.5574 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
+- KLAC: WATCH score=0.5544 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - DE: SKIP score=0.543 reason=SKIP: Industrials sector regime is weak (12/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.10.
-- WMB: WATCH score=0.5366 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
-- KLAC: WATCH score=0.5346 reason=WATCH: NEUTRAL market requires setup score (0.53 < 0.55).
+- CAT: SKIP score=0.5371 reason=SKIP: Industrials sector regime is weak (15/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.11.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
