@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 148
-Tickers scanned: 20125
+Total scans: 149
+Tickers scanned: 20258
 BUY_SIMULATED: 3
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 4355
+WATCH_REVIEW: 4384
 WATCH_REVIEW unique tickers: 90
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 4355
-SKIP: 15174
-NO_TRADE: 10957
+WATCH: 4384
+SKIP: 15274
+NO_TRADE: 11042
 Realized PnL: -86.89
-Unrealized PnL: 912.6
-Portfolio value: 101117.56
+Unrealized PnL: 931.68
+Portfolio value: 101136.64
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.1176
+Cumulative recorded-equity change (%): 1.1366
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -35,7 +35,7 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 5
 
 Top rejected candidates:
-- ECHO: SKIP score=0.5769 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
+- ECHO: WATCH score=0.5811 reason=WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.66.
 - JNJ: WATCH score=0.5667 reason=Gross R/R is valid, but Net R/R 1.99 failed minimum 2.50 after slippage/spread adjustment.
 - QBTS: SKIP score=0.5663 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 - SMCI: WATCH score=0.5597 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.17.
