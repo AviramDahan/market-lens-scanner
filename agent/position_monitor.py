@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
 
 from app.execution import EXECUTION_VERSION, position_metadata, sell_fill
 from app.data import fetch_intraday_frame
+from app.trading_clock import NY_TZ, session_bounds
 from app.telegram_notifications import (
     build_telegram_dedupe_key,
     dashboard_url_from_env,
@@ -42,6 +43,9 @@ class MonitorSettings:
     interval: str
     save_noop: bool
     dashboard_url: str
+    extended_hours_targets: bool = True
+    extended_hours_stops: bool = False
+    extended_hours_target_confirmation_bars: int = 2
 
 
 @dataclass
@@ -208,7 +212,19 @@ def load_settings() -> MonitorSettings:
         interval=os.getenv("MARKET_LENS_MONITOR_INTERVAL", "1m"),
         save_noop=os.getenv("MARKET_LENS_MONITOR_SAVE_NOOP", "false").lower() in {"1", "true", "yes"},
         dashboard_url=dashboard_url_from_env(os.getenv("MARKET_LENS_URL", "")),
+        extended_hours_targets=env_bool("MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGETS", True),
+        extended_hours_stops=env_bool("MARKET_LENS_MONITOR_EXTENDED_HOURS_STOPS", False),
+        extended_hours_target_confirmation_bars=max(
+            1, min(5, int(os.getenv("MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGET_CONFIRMATION_BARS", "2")))
+        ),
     )
+
+
+def env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def notification_outbox_path() -> Path | None:
@@ -444,7 +460,13 @@ def monitor_position(
         if frame_cache is not None and ticker in frame_cache:
             frame = frame_cache[ticker]
         else:
-            frame = fetch_intraday_frame(ticker, period=settings.period, interval=settings.interval)
+            include_prepost = settings.extended_hours_targets or settings.extended_hours_stops
+            frame = fetch_intraday_frame(
+                ticker,
+                period=settings.period,
+                interval=settings.interval,
+                include_prepost=include_prepost,
+            )
             if frame_cache is not None:
                 frame_cache[ticker] = frame
     except Exception as exc:
@@ -484,9 +506,30 @@ def monitor_position(
         high = float(row["High"])
         low = float(row["Low"])
         close = float(row["Close"])
-        hit_stop = stop > 0 and low <= stop
-        hit_target_2 = target_2 > 0 and high >= target_2
-        hit_target_1 = target_1 > 0 and high >= target_1 and not partial_taken
+        regular_session = is_regular_session_bar(index)
+        stops_allowed = regular_session or settings.extended_hours_stops
+        hit_stop = stops_allowed and stop > 0 and low <= stop
+        hit_target_2 = target_2 > 0 and (
+            (regular_session and high >= target_2)
+            or (
+                not regular_session
+                and settings.extended_hours_targets
+                and extended_hours_target_confirmed(
+                    bars, offset, target_2, settings.extended_hours_target_confirmation_bars
+                )
+            )
+        )
+        hit_target_1 = target_1 > 0 and not partial_taken and (
+            (regular_session and high >= target_1)
+            or (
+                not regular_session
+                and settings.extended_hours_targets
+                and extended_hours_target_confirmed(
+                    bars, offset, target_1, settings.extended_hours_target_confirmation_bars
+                )
+            )
+        )
+        session_note = "" if regular_session else " Extended-hours bar policy applied."
 
         if hit_stop or hit_target_2 or hit_target_1:
             # The event bar is the finest available resolution; never include later bars.
@@ -507,11 +550,20 @@ def monitor_position(
                 close=close,
                 quantity=quantity,
                 currency_rate=currency_rate,
-                note=note,
+                note=note + session_note,
             )
             return MonitorResult(ticker=ticker, status="EVENT", current_price=close, event=event)
 
         if hit_target_2:
+            target_note = (
+                "Target 2 touched by intraday high; closing remaining simulated position."
+                if regular_session
+                else (
+                    "Target 2 confirmed by "
+                    f"{settings.extended_hours_target_confirmation_bars} consecutive completed "
+                    "extended-hours minute closes; closing remaining simulated position."
+                )
+            )
             event = build_event(
                 position,
                 action="TAKE_PROFIT",
@@ -522,12 +574,21 @@ def monitor_position(
                 close=close,
                 quantity=quantity,
                 currency_rate=currency_rate,
-                note="Target 2 touched by intraday high; closing remaining simulated position.",
+                note=target_note,
             )
             return MonitorResult(ticker=ticker, status="EVENT", current_price=close, event=event)
 
         if hit_target_1:
             closed_qty = max(1, quantity // 2)
+            target_note = (
+                "Target 1 touched by intraday high; taking partial profit and moving stop to breakeven."
+                if regular_session
+                else (
+                    "Target 1 confirmed by "
+                    f"{settings.extended_hours_target_confirmation_bars} consecutive completed "
+                    "extended-hours minute closes; taking partial profit and moving stop to breakeven."
+                )
+            )
             event = build_event(
                 position,
                 action="TAKE_PARTIAL_PROFIT",
@@ -538,12 +599,53 @@ def monitor_position(
                 close=close,
                 quantity=closed_qty,
                 currency_rate=currency_rate,
-                note="Target 1 touched by intraday high; taking partial profit and moving stop to breakeven.",
+                note=target_note,
             )
             return MonitorResult(ticker=ticker, status="EVENT", current_price=close, event=event)
 
     update_position_excursion(position, bars)
     return MonitorResult(ticker=ticker, status="HOLD", current_price=latest_close)
+
+
+def is_regular_session_bar(value: Any) -> bool:
+    """Return whether a provider bar starts inside the NYSE regular session."""
+    try:
+        moment = value.to_pydatetime() if hasattr(value, "to_pydatetime") else value
+        if not isinstance(moment, datetime) or moment.tzinfo is None:
+            return False
+        local_day = moment.astimezone(NY_TZ).date()
+        bounds = session_bounds(local_day)
+    except Exception:
+        return False
+    utc_moment = moment.astimezone(timezone.utc)
+    return bool(bounds and bounds[0] <= utc_moment < bounds[1])
+
+
+def extended_hours_target_confirmed(
+    bars: Any,
+    offset: int,
+    target: float,
+    required_bars: int,
+) -> bool:
+    """Reject isolated extended-hours prints by requiring consecutive closes."""
+    start = offset - required_bars + 1
+    if start < 0:
+        return False
+    window = bars.iloc[start:offset + 1]
+    if len(window) != required_bars:
+        return False
+    if any(is_regular_session_bar(stamp) for stamp in window.index):
+        return False
+    closes = window["Close"].astype(float)
+    if not bool((closes >= target).all()):
+        return False
+    stamps = [stamp.to_pydatetime() if hasattr(stamp, "to_pydatetime") else stamp for stamp in window.index]
+    return all(
+        isinstance(left, datetime)
+        and isinstance(right, datetime)
+        and 0 < (right - left).total_seconds() <= 5 * 60
+        for left, right in zip(stamps, stamps[1:])
+    )
 
 
 def build_event(

@@ -32,6 +32,16 @@ Optional values:
 - `MARKET_LENS_MONITOR_PERIOD=5d`
 - `MARKET_LENS_MONITOR_INTERVAL=1m`
 - `MARKET_LENS_MONITOR_SAVE_NOOP=false`
+- `MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGETS=true`
+- `MARKET_LENS_MONITOR_EXTENDED_HOURS_STOPS=false`
+- `MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGET_CONFIRMATION_BARS=2`
+
+The monitor loads pre-market and after-hours bars when either extended-hours
+policy is enabled. By default, simulated resting profit targets may fill after
+confirmed extended-hours one-minute closes, while stop-loss exits remain restricted
+to regular NYSE-session bars. Extended-hours targets require two consecutive
+completed one-minute closes at or above the target to reject isolated bad
+prints. New entries remain regular-session only.
 
 When `MARKET_LENS_UNIVERSE=smart-universe`, the agent selects the dynamic Smart
 Universe through the UI. The app builds the broad source universe from S&P 500,

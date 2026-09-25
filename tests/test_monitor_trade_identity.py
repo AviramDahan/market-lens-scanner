@@ -113,6 +113,59 @@ def test_window_does_not_infer_new_stop_order_inside_tp1_candle(monkeypatch, tmp
     assert p["quantity"] == 13
 
 
+def test_extended_hours_target_executes_but_stop_remains_regular_only(monkeypatch, tmp_path):
+    frame = pd.DataFrame(
+        {"High": [181, 182], "Low": [140, 140], "Close": [181, 181.5]},
+        index=pd.to_datetime([
+            "2026-09-08T12:00:00Z",  # 08:00 New York
+            "2026-09-08T12:01:00Z",
+        ]),
+    )
+    fetch_kwargs = {}
+
+    def fetch(*args, **kwargs):
+        fetch_kwargs.update(kwargs)
+        return frame
+
+    monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", fetch)
+    result = monitor_position(position(), settings=settings(tmp_path), since=None, currency_rate=1)
+
+    assert fetch_kwargs["include_prepost"] is True
+    assert result.event is not None
+    assert result.event.action == "TAKE_PROFIT"
+    assert result.event.trigger_price == 180.62
+    assert "2 consecutive completed extended-hours minute closes" in result.event.note
+
+
+def test_isolated_extended_hours_target_print_is_ignored(monkeypatch, tmp_path):
+    frame = pd.DataFrame(
+        {"High": [190, 170], "Low": [149, 160], "Close": [150, 165]},
+        index=pd.to_datetime(["2026-09-08T12:00:00Z", "2026-09-08T12:01:00Z"]),
+    )
+    monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
+
+    result = monitor_position(position(), settings=settings(tmp_path), since=None, currency_rate=1)
+
+    assert result.status == "HOLD"
+    assert result.event is None
+
+
+def test_extended_hours_events_can_be_disabled(monkeypatch, tmp_path):
+    frame = pd.DataFrame(
+        {"High": [181], "Low": [140], "Close": [180]},
+        index=pd.to_datetime(["2026-09-08T12:00:00Z"]),
+    )
+    monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
+    policy = settings(tmp_path)
+    policy.extended_hours_targets = False
+    policy.extended_hours_stops = False
+
+    result = monitor_position(position(), settings=policy, since=None, currency_rate=1)
+
+    assert result.status == "HOLD"
+    assert result.event is None
+
+
 def test_previous_trade_stop_bar_cannot_close_reentry(monkeypatch, tmp_path):
     frame = pd.DataFrame({"High": [146.94, 151, 152], "Low": [146.365, 150, 151],
                           "Close": [146.365, 150.5, 151.5]},

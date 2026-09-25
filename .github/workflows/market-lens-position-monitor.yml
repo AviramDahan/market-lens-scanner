@@ -115,6 +115,9 @@ jobs:
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
           MARKET_LENS_MONITOR_SAVE_NOOP: "false"
+          MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGETS: "true"
+          MARKET_LENS_MONITOR_EXTENDED_HOURS_STOPS: "false"
+          MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGET_CONFIRMATION_BARS: "2"
           MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
         run: python agent/position_monitor.py
 
@@ -205,6 +208,9 @@ jobs:
           MARKET_LENS_MONITOR_PERIOD: 5d
           MARKET_LENS_MONITOR_INTERVAL: 1m
           MARKET_LENS_MONITOR_SAVE_NOOP: "false"
+          MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGETS: "true"
+          MARKET_LENS_MONITOR_EXTENDED_HOURS_STOPS: "false"
+          MARKET_LENS_MONITOR_EXTENDED_HOURS_TARGET_CONFIRMATION_BARS: "2"
           MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: ${{ runner.temp }}/market-lens-monitor-notifications.json
           MARKET_LENS_MONITOR_WORKFLOW_RUN_ID: ${{ github.run_id }}
           MARKET_LENS_MONITOR_TRIGGER_TICKER: ${{ github.event.inputs.ticker || '' }}
