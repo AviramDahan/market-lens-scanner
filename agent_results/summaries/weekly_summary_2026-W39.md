@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-21
-Total scans: 162
-Tickers scanned: 22011
+Total scans: 163
+Tickers scanned: 22150
 BUY_SIMULATED: 4
 WATCH_READY: 1
 WATCH_READY unique tickers: 1
-WATCH_REVIEW: 4732
+WATCH_REVIEW: 4761
 WATCH_REVIEW unique tickers: 91
 WATCH_READY session split: regular=1, off_hours=0, unknown=0
 WATCH_READY conversion: 1 converted / 1 staged
-WATCH: 4732
-SKIP: 16623
-NO_TRADE: 12213
+WATCH: 4761
+SKIP: 16729
+NO_TRADE: 12290
 Realized PnL: 909.95
-Unrealized PnL: 89.84
-Portfolio value: 101291.64
+Unrealized PnL: 99.59
+Portfolio value: 101301.39
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.2916
+Cumulative recorded-equity change (%): 1.3014
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: AMZN
@@ -27,11 +27,11 @@ Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 23
-- FIB_STOP_075_ATR: 72
+- FIB_STOP_075_ATR: 73
 - FIB_STOP_100_ATR: 12
 - FIB_STRUCTURE_STOP: 54
 - RELATIVE_STRENGTH_LEADER: 2
-- TREND_PULLBACK_RECLAIM: 141
+- TREND_PULLBACK_RECLAIM: 142
 - VWAP_RECLAIM: 6
 
 Top rejected candidates:
@@ -39,7 +39,7 @@ Top rejected candidates:
 - JNJ: WATCH score=0.5667 reason=Gross R/R is valid, but Net R/R 1.99 failed minimum 2.50 after slippage/spread adjustment.
 - QBTS: SKIP score=0.5663 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 - SMCI: WATCH score=0.5597 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.17.
-- LRCX: WATCH score=0.5582 reason=WATCH: Technical setup detected, but weighted risk/reward 1.77 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.29.
+- LRCX: WATCH score=0.5594 reason=WATCH: Technical setup detected, but weighted risk/reward 1.73 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.26.
 - KMI: WATCH score=0.5574 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - QCOM: WATCH score=0.5553 reason=WATCH: Technical setup detected, but weighted risk/reward 1.49 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
 - KLAC: WATCH score=0.5544 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
