@@ -1,0 +1,101 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 25.159,
+  "errors": [],
+  "finished_at": "2026-09-26T00:20:31",
+  "initial_missing_tickers": [
+    "ARM",
+    "MMC"
+  ],
+  "initial_result_cards_read": 141,
+  "login_seconds": 0.015,
+  "login_status": "open access",
+  "missing_tickers": [
+    "ARM",
+    "MMC"
+  ],
+  "open_app_seconds": 0.294,
+  "result_cards_read": 141,
+  "run_id": "20260926_001717",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 98.6,
+    "missing": 2,
+    "missing_tickers": [
+      "ARM",
+      "MMC"
+    ],
+    "received": 141,
+    "requested": 143
+  },
+  "scan_seconds": 69.177,
+  "scan_status": "completed: 141 results; 2 unavailable",
+  "screenshot_seconds": 0.049,
+  "started_at": "2026-09-26T00:17:17",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "ARM",
+      "MMC"
+    ],
+    "attempts": {
+      "ARM": 2,
+      "MMC": 2
+    },
+    "duration_seconds": 3.143,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "ARM",
+      "MMC"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "ARM: ARM: only 159 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "ARM"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMC: MMC: no data returned for interval=1d",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMC"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 3,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "ARM",
+      "MMC"
+    ]
+  },
+  "tickers_requested": 143,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 193.4,
+  "universe": "smart-universe",
+  "url": "http://127.0.0.1:8000/?v=agent",
+  "valid_setups": 75,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for ARM, MMC."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 2.107,
+    "candidate_evaluation_seconds": 49.019,
+    "chart_retention_seconds": 17.424,
+    "load_and_schema_seconds": 4.014,
+    "market_context_seconds": 7.518,
+    "notification_seconds": 0.0,
+    "outcome_backfill_seconds": 0.015,
+    "performance_summary_seconds": 5.979,
+    "portfolio_and_decision_write_seconds": 0.033,
+    "portfolio_state_seconds": 0.002,
+    "save_seconds": 7.387,
+    "trade_analytics_seconds": 0.01,
+    "update_log_and_retention_seconds": 0.679
+  },
+  "workbook_update_seconds": 94.19
+}
