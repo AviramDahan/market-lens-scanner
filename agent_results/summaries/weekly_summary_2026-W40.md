@@ -1,31 +1,32 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 14
-Tickers scanned: 1897
+Total scans: 15
+Tickers scanned: 2026
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 380
-WATCH_REVIEW unique tickers: 45
+WATCH_REVIEW: 402
+WATCH_REVIEW unique tickers: 46
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 380
-SKIP: 1461
-NO_TRADE: 1022
+WATCH: 402
+SKIP: 1564
+NO_TRADE: 1114
 Realized PnL: 0.0
-Unrealized PnL: 84.36
-Portfolio value: 101286.16
+Unrealized PnL: -21.68
+Portfolio value: 101180.12
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.2862
+Cumulative recorded-equity change (%): 1.1801
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
-Worst ticker: TSM
+Worst ticker: ABBV
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
+- FIB_STOP_075_ATR: 1
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -38,7 +39,7 @@ Top rejected candidates:
 - HAL: WATCH score=0.5165 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - CVX: WATCH score=0.5152 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - XOM: WATCH score=0.5115 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
-- TSM: WATCH score=0.499 reason=WATCH: Technical setup detected, but weighted risk/reward 1.18 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.82.
+- TSM: WATCH score=0.5008 reason=WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.92.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
