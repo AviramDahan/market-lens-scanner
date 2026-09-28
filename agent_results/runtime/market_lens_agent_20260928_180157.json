@@ -1,0 +1,114 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 31.427,
+  "errors": [],
+  "finished_at": "2026-09-28T18:05:50",
+  "initial_missing_tickers": [
+    "ARM",
+    "GRAL",
+    "MMC"
+  ],
+  "initial_result_cards_read": 129,
+  "login_seconds": 0.018,
+  "login_status": "open access",
+  "missing_tickers": [
+    "ARM",
+    "GRAL",
+    "MMC"
+  ],
+  "open_app_seconds": 0.171,
+  "result_cards_read": 129,
+  "run_id": "20260928_180157",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 97.73,
+    "missing": 3,
+    "missing_tickers": [
+      "ARM",
+      "GRAL",
+      "MMC"
+    ],
+    "received": 129,
+    "requested": 132
+  },
+  "scan_seconds": 74.246,
+  "scan_status": "completed: 129 results; 3 unavailable",
+  "screenshot_seconds": 0.06,
+  "started_at": "2026-09-28T18:01:57",
+  "target_tickers": 150,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "ARM",
+      "GRAL",
+      "MMC"
+    ],
+    "attempts": {
+      "ARM": 2,
+      "GRAL": 2,
+      "MMC": 2
+    },
+    "duration_seconds": 3.702,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "ARM",
+      "GRAL",
+      "MMC"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "ARM: ARM: only 160 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "ARM"
+      },
+      {
+        "attempts": 2,
+        "reason": "GRAL: GRAL: only 121 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "GRAL"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMC: MMC: no data returned for interval=1d",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMC"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 4,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "ARM",
+      "GRAL",
+      "MMC"
+    ]
+  },
+  "tickers_requested": 132,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 232.755,
+  "universe": "smart-universe",
+  "url": "http://127.0.0.1:8000/?v=agent",
+  "valid_setups": 42,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for ARM, GRAL, MMC."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 2.588,
+    "candidate_evaluation_seconds": 76.191,
+    "chart_retention_seconds": 20.401,
+    "load_and_schema_seconds": 5.176,
+    "market_context_seconds": 9.429,
+    "notification_seconds": 0.0,
+    "outcome_backfill_seconds": 0.018,
+    "performance_summary_seconds": 1.371,
+    "portfolio_and_decision_write_seconds": 0.044,
+    "portfolio_state_seconds": 0.003,
+    "save_seconds": 8.916,
+    "trade_analytics_seconds": 0.013,
+    "update_log_and_retention_seconds": 0.913
+  },
+  "workbook_update_seconds": 125.065
+}
