@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 1381,
-  "SKIP_count": 1872,
+  "NO_TRADE_count": 1469,
+  "SKIP_count": 1974,
   "SL_hits": 0,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -43,35 +43,35 @@
   "WATCH_READY_unique_regular_session_count": 0,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_REVIEW_count": 472,
+  "WATCH_REVIEW_count": 495,
   "WATCH_REVIEW_unique_count": 47,
-  "WATCH_count": 472,
+  "WATCH_count": 495,
   "average_R": null,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.4373,
-    "FIB_STOP_075_ATR": 0.4576,
-    "FIB_STOP_100_ATR": 0.4415,
-    "FIB_STRUCTURE_STOP": 0.4365,
-    "RELATIVE_STRENGTH_LEADER": 0.3853,
-    "STOP_RECLAIM_REENTRY": 0.3414,
-    "TREND_PULLBACK_RECLAIM": 0.4153,
-    "VWAP_RECLAIM": 0.4406
+    "BREAKOUT_CONTINUATION": 0.4421,
+    "FIB_STOP_075_ATR": 0.4598,
+    "FIB_STOP_100_ATR": 0.4438,
+    "FIB_STRUCTURE_STOP": 0.4385,
+    "RELATIVE_STRENGTH_LEADER": 0.3882,
+    "STOP_RECLAIM_REENTRY": 0.346,
+    "TREND_PULLBACK_RECLAIM": 0.4191,
+    "VWAP_RECLAIM": 0.4444
   },
   "average_confidence_by_shadow_strategy_version": {
-    "BREAKOUT_CONTINUATION@shadow_v2": 0.4373,
-    "FIB_STOP_075_ATR@shadow_v2": 0.4576,
-    "FIB_STOP_100_ATR@shadow_v2": 0.4415,
-    "FIB_STRUCTURE_STOP@shadow_v2": 0.4365,
-    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3853,
-    "STOP_RECLAIM_REENTRY@shadow_v2": 0.3414,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.4153,
-    "VWAP_RECLAIM@shadow_v2": 0.4406
+    "BREAKOUT_CONTINUATION@shadow_v2": 0.4421,
+    "FIB_STOP_075_ATR@shadow_v2": 0.4598,
+    "FIB_STOP_100_ATR@shadow_v2": 0.4438,
+    "FIB_STRUCTURE_STOP@shadow_v2": 0.4385,
+    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3882,
+    "STOP_RECLAIM_REENTRY@shadow_v2": 0.346,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.4191,
+    "VWAP_RECLAIM@shadow_v2": 0.4444
   },
   "average_loser": null,
   "average_loser_R": null,
-  "average_rr_to_target_1": 0.4833,
-  "average_rr_to_target_2": 1.9373,
-  "average_setup_score": 0.1604,
+  "average_rr_to_target_1": 0.4747,
+  "average_rr_to_target_2": 1.895,
+  "average_setup_score": 0.1584,
   "average_winner": null,
   "average_winner_R": null,
   "best_sector": "Communication Services",
@@ -79,7 +79,7 @@
   "best_shadow_strategy": "INSUFFICIENT_OUTCOMES",
   "best_ticker": "APP",
   "capital_measurement_cohorts": {
-    "DYNAMIC_CAPITAL_FIELDS_PRESENT": 2416
+    "DYNAMIC_CAPITAL_FIELDS_PRESENT": 2545
   },
   "common_false_positives": [],
   "common_missed_opportunities": [
@@ -130,11 +130,43 @@
       "strategy": "FIB_STOP_075_ATR",
       "ticker": "INTC",
       "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "INTC",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 0.75 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_075_ATR",
+      "ticker": "INTC",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 0.75 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_075_ATR",
+      "ticker": "SYK",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 1.00 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_100_ATR",
+      "ticker": "SYK",
+      "would_buy": true
     }
   ],
-  "cumulative_return_pct": 1.1835,
+  "cumulative_return_pct": 1.1654,
   "daily_return_basis": "recorded_equity_calendar_day_v1",
-  "daily_return_pct": -0.1095,
+  "daily_return_pct": -0.1274,
   "daily_return_reference_date": "2026-09-27",
   "daily_return_reference_equity": 101294.47,
   "daily_return_status": "RECORDED_EQUITY_CHANGE",
@@ -192,20 +224,20 @@
     "decision_trade_id": {
       "coverage_pct": 0.0,
       "populated": 0,
-      "total": 2416
+      "total": 2545
     }
   },
   "data_quality_issues": [
     {
-      "count": 677,
+      "count": 701,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 380,
+      "count": 394,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 175,
+      "count": 185,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -217,7 +249,7 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 85,
+      "count": 88,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -225,11 +257,11 @@
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 39,
+      "count": 40,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 36,
+      "count": 38,
       "name": "Earnings blackout active."
     },
     {
@@ -239,8 +271,8 @@
   ],
   "date": "2026-09-28",
   "decision_cohorts": {
-    "EXISTING_POSITION": 72,
-    "QUALIFIED_PROFESSIONAL_SCORE_V1": 2344
+    "EXISTING_POSITION": 76,
+    "QUALIFIED_PROFESSIONAL_SCORE_V1": 2469
   },
   "errors_retries_timeouts": [],
   "exit_event_metrics": {
@@ -256,15 +288,15 @@
   "median_R": null,
   "most_common_rejection_reasons": [
     {
-      "count": 641,
+      "count": 690,
       "name": "SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00."
     },
     {
-      "count": 569,
+      "count": 601,
       "name": "SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00."
     },
     {
-      "count": 158,
+      "count": 162,
       "name": "SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00."
     },
     {
@@ -284,7 +316,7 @@
       "name": "SKIP: Utilities / Real Assets sector regime is weak (6/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.17."
     },
     {
-      "count": 15,
+      "count": 16,
       "name": "WATCH: NEUTRAL market requires setup score (0.33 < 0.55)."
     },
     {
@@ -292,21 +324,21 @@
       "name": "WATCH: NEUTRAL market requires setup score (0.50 < 0.55)."
     },
     {
-      "count": 12,
-      "name": "WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.29."
+      "count": 13,
+      "name": "WATCH: NEUTRAL market requires setup score (0.51 < 0.55)."
     }
   ],
   "most_common_warnings": [
     {
-      "count": 677,
+      "count": 701,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 380,
+      "count": 394,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
-      "count": 175,
+      "count": 185,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -318,7 +350,7 @@
       "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
     },
     {
-      "count": 85,
+      "count": 88,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     },
     {
@@ -326,11 +358,11 @@
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 39,
+      "count": 40,
       "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
-      "count": 36,
+      "count": 38,
       "name": "Earnings blackout active."
     },
     {
@@ -361,7 +393,37 @@
       "positive_rate_1d_pct": null,
       "positive_rate_3d_pct": null,
       "positive_rate_5d_pct": null,
-      "signals": 2
+      "signals": 3
+    },
+    "FIB_STOP_100_ATR": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
+    },
+    "FIB_STRUCTURE_STOP": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
     },
     "TREND_PULLBACK_RECLAIM": {
       "average_return_10d_pct": null,
@@ -413,11 +475,11 @@
         "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
       },
       {
-        "count": 85,
+        "count": 88,
         "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked."
       },
       {
-        "count": 39,
+        "count": 40,
         "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
       },
       {
@@ -429,7 +491,7 @@
         "name": "WATCH: Entry confirmation failed - VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
       },
       {
-        "count": 15,
+        "count": 16,
         "name": "WATCH: NEUTRAL market requires setup score (0.33 < 0.55)."
       },
       {
@@ -438,20 +500,20 @@
       },
       {
         "count": 13,
+        "name": "WATCH: NEUTRAL market requires setup score (0.51 < 0.55)."
+      },
+      {
+        "count": 13,
+        "name": "WATCH: NEUTRAL market requires setup score (0.47 < 0.55)."
+      },
+      {
+        "count": 13,
         "name": "WATCH: NEUTRAL market requires setup score (0.34 < 0.55)."
-      },
-      {
-        "count": 13,
-        "name": "WATCH: Neutral sector requires a cleaner setup score."
-      },
-      {
-        "count": 13,
-        "name": "WATCH: NEUTRAL market requires setup score (0.31 < 0.55)."
       }
     ],
     "note": "Blockers can overlap; empty lists do not prove eligibility. Full reasons are retained.",
-    "observations_without_recorded_blockers": 2184,
-    "rejected_observations": 2344,
+    "observations_without_recorded_blockers": 2304,
+    "rejected_observations": 2469,
     "unique_rejected_tickers": 142
   },
   "runtime_metrics": {
@@ -473,23 +535,24 @@
       "agent_results/decisions/market_lens_agent_20260928_150156.jsonl",
       "agent_results/decisions/market_lens_agent_20260928_153208.jsonl",
       "agent_results/decisions/market_lens_agent_20260928_160142.jsonl",
-      "agent_results/decisions/market_lens_agent_20260928_163143.jsonl"
+      "agent_results/decisions/market_lens_agent_20260928_163143.jsonl",
+      "agent_results/decisions/market_lens_agent_20260928_170149.jsonl"
     ],
-    "records": 2416,
-    "run_id": "20260928_163143"
+    "records": 2545,
+    "run_id": "20260928_170149"
   },
   "setup_candidate_metrics": {
     "active_policy": "FIRST_MATCH_LEGACY",
     "alternative_ranked_first_count": 12,
     "candidate_count_by_setup_type": {
-      "Breakout + Retest": 282,
-      "Fib 61.8 Confluence Buy Zone": 315,
+      "Breakout + Retest": 303,
+      "Fib 61.8 Confluence Buy Zone": 326,
       "Liquidity Trap Buy Zone": 61,
-      "Swing Low + Volume Support Buy Zone": 194,
+      "Swing Low + Volume Support Buy Zone": 206,
       "VWAP Reclaim Setup": 394
     },
-    "records_with_candidates": 1035,
-    "records_with_multiple_candidates": 189,
+    "records_with_candidates": 1076,
+    "records_with_multiple_candidates": 192,
     "shadow_only": true
   },
   "shadow_outcome_measurement": {
@@ -511,7 +574,37 @@
       "positive_rate_1d_pct": null,
       "positive_rate_3d_pct": null,
       "positive_rate_5d_pct": null,
-      "signals": 2
+      "signals": 3
+    },
+    "FIB_STOP_100_ATR": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
+    },
+    "FIB_STRUCTURE_STOP": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
     },
     "TREND_PULLBACK_RECLAIM": {
       "average_return_10d_pct": null,
@@ -558,7 +651,37 @@
       "positive_rate_1d_pct": null,
       "positive_rate_3d_pct": null,
       "positive_rate_5d_pct": null,
-      "signals": 2
+      "signals": 3
+    },
+    "FIB_STOP_100_ATR@shadow_v2": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
+    },
+    "FIB_STRUCTURE_STOP@shadow_v2": {
+      "average_return_10d_pct": null,
+      "average_return_1d_pct": null,
+      "average_return_3d_pct": null,
+      "average_return_5d_pct": null,
+      "matured_10d": 0,
+      "matured_1d": 0,
+      "matured_3d": 0,
+      "matured_5d": 0,
+      "positive_rate_10d_pct": null,
+      "positive_rate_1d_pct": null,
+      "positive_rate_3d_pct": null,
+      "positive_rate_5d_pct": null,
+      "signals": 1
     },
     "TREND_PULLBACK_RECLAIM@shadow_v2": {
       "average_return_10d_pct": null,
@@ -722,6 +845,38 @@
       "strategy": "FIB_STOP_075_ATR",
       "ticker": "INTC",
       "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "INTC",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 0.75 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_075_ATR",
+      "ticker": "INTC",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 0.75 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_075_ATR",
+      "ticker": "SYK",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 1.00 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_100_ATR",
+      "ticker": "SYK",
+      "would_buy": true
     }
   ],
   "shadow_strategies_top_candidates": [
@@ -775,45 +930,49 @@
     },
     {
       "active_final_action": "WATCH",
-      "confidence": 0.9,
-      "reason": "Relative strength leader: shadow buy blocked because fresh completed entry confirmation passed.",
-      "strategy": "RELATIVE_STRENGTH_LEADER",
-      "ticker": "DK",
-      "would_buy": false
+      "confidence": 1.0,
+      "reason": "Trend pullback reclaim: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "TREND_PULLBACK_RECLAIM",
+      "ticker": "INTC",
+      "would_buy": true
     },
     {
       "active_final_action": "WATCH",
-      "confidence": 0.9,
-      "reason": "Relative strength leader: shadow buy blocked because fresh completed entry confirmation passed.",
-      "strategy": "RELATIVE_STRENGTH_LEADER",
-      "ticker": "ISRG",
-      "would_buy": false
-    },
-    {
-      "active_final_action": "WATCH",
-      "confidence": 0.8889,
-      "reason": "Fib stop at 0.75 ATR: shadow buy blocked because fresh completed entry confirmation passed.",
+      "confidence": 1.0,
+      "reason": "Fib stop at 0.75 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
       "strategy": "FIB_STOP_075_ATR",
-      "ticker": "LRCX",
-      "would_buy": false
+      "ticker": "INTC",
+      "would_buy": true
     },
     {
       "active_final_action": "WATCH",
-      "confidence": 0.8889,
-      "reason": "Fib stop at 1.00 ATR: shadow buy blocked because fresh completed entry confirmation passed.",
+      "confidence": 1.0,
+      "reason": "Fib stop at 0.75 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
+      "strategy": "FIB_STOP_075_ATR",
+      "ticker": "SYK",
+      "would_buy": true
+    },
+    {
+      "active_final_action": "WATCH",
+      "confidence": 1.0,
+      "reason": "Fib stop at 1.00 ATR: all shadow conditions passed. Logged only; active decision unchanged.",
       "strategy": "FIB_STOP_100_ATR",
-      "ticker": "LRCX",
-      "would_buy": false
+      "ticker": "SYK",
+      "would_buy": true
     }
   ],
   "shadow_strategies_would_buy_count_by_strategy": {
-    "FIB_STOP_075_ATR": 3,
-    "TREND_PULLBACK_RECLAIM": 1,
+    "FIB_STOP_075_ATR": 6,
+    "FIB_STOP_100_ATR": 1,
+    "FIB_STRUCTURE_STOP": 1,
+    "TREND_PULLBACK_RECLAIM": 2,
     "VWAP_RECLAIM": 2
   },
   "shadow_strategies_would_buy_count_by_strategy_version": {
-    "FIB_STOP_075_ATR@shadow_v2": 3,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 1,
+    "FIB_STOP_075_ATR@shadow_v2": 6,
+    "FIB_STOP_100_ATR@shadow_v2": 1,
+    "FIB_STRUCTURE_STOP@shadow_v2": 1,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 2,
     "VWAP_RECLAIM@shadow_v2": 2
   },
   "summary_type": "daily",
@@ -883,22 +1042,22 @@
     },
     {
       "final_action": "WATCH",
-      "net_rr": 0.9182,
-      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.92.",
-      "setup_score": 0.5008,
-      "ticker": "TSM"
+      "net_rr": 1.0359,
+      "reason": "WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.04.",
+      "setup_score": 0.5043,
+      "ticker": "ABBV"
     }
   ],
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 0,
-  "total_portfolio_value": 101183.52,
-  "total_result_cards_read": 2416,
-  "total_scans": 18,
-  "total_tickers_scanned": 2416,
+  "total_portfolio_value": 101165.44,
+  "total_result_cards_read": 2545,
+  "total_scans": 19,
+  "total_tickers_scanned": 2545,
   "total_trading_days": null,
   "trade_metric_source": "COMPLETED_TRADE_LIFECYCLE",
-  "unrealized_pnl": -18.28,
+  "unrealized_pnl": -36.36,
   "week_end": null,
   "week_start": null,
   "win_rate": null,
