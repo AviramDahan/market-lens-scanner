@@ -1,31 +1,33 @@
 Daily Performance Summary
 
 Date: 2026-09-29
-Total scans: 17
-Tickers scanned: 2168
+Total scans: 18
+Tickers scanned: 2298
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 466
-WATCH_REVIEW unique tickers: 45
+WATCH_REVIEW: 495
+WATCH_REVIEW unique tickers: 46
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 466
-SKIP: 1636
-NO_TRADE: 1020
-Realized PnL: -146.92
-Unrealized PnL: -103.75
-Portfolio value: 100951.13
-Daily recorded-equity change (%): -0.0858
+WATCH: 495
+SKIP: 1735
+NO_TRADE: 1108
+Realized PnL: -206.84
+Unrealized PnL: -99.02
+Portfolio value: 100895.94
+Daily recorded-equity change (%): -0.1404
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-28
-Cumulative recorded-equity change (%): 0.9511
+Cumulative recorded-equity change (%): 0.8959
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ABBV
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
+- FIB_STOP_075_ATR: 2
+- TREND_PULLBACK_RECLAIM: 1
 
 Top rejected candidates:
 - LRCX: WATCH score=0.5745 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.34.
@@ -40,4 +42,4 @@ Top rejected candidates:
 - XOM: SKIP score=0.4938 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
-- Keep collecting shadow data; no strategy changes are recommended from this sample alone.
+- Review shadow would-buy candidates that active gates skipped before changing thresholds.
