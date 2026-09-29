@@ -1,30 +1,30 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 31
-Tickers scanned: 4079
+Total scans: 32
+Tickers scanned: 4214
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 802
-WATCH_REVIEW unique tickers: 51
+WATCH_REVIEW: 835
+WATCH_REVIEW unique tickers: 52
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 802
-SKIP: 3153
-NO_TRADE: 2300
+WATCH: 835
+SKIP: 3251
+NO_TRADE: 2354
 Realized PnL: 0.0
-Unrealized PnL: 92.67
-Portfolio value: 101294.47
+Unrealized PnL: -164.02
+Portfolio value: 101037.78
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 1.2945
+Cumulative recorded-equity change (%): 1.0378
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: BRK-B
-Best shadow strategy: FIB_STOP_075_ATR
-Worst shadow strategy: FIB_STRUCTURE_STOP
+Best shadow strategy: VWAP_RECLAIM
+Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
 - FIB_STOP_075_ATR: 17
@@ -39,11 +39,11 @@ Top rejected candidates:
 - KLAC: WATCH score=0.5441 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - CAT: SKIP score=0.5433 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.08.
 - LLY: WATCH score=0.5381 reason=WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.21.
+- RMBS: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.
 - HAL: WATCH score=0.5181 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - ASML: WATCH score=0.518 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.23.
 - CVX: WATCH score=0.5152 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - XOM: WATCH score=0.5115 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
-- ABBV: WATCH score=0.5052 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.07.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
