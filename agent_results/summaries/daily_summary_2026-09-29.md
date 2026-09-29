@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-09-29
-Total scans: 25
-Tickers scanned: 3191
+Total scans: 26
+Tickers scanned: 3318
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 659
+WATCH_REVIEW: 679
 WATCH_REVIEW unique tickers: 47
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 659
-SKIP: 2450
-NO_TRADE: 1740
+WATCH: 679
+SKIP: 2555
+NO_TRADE: 1833
 Realized PnL: -206.84
-Unrealized PnL: -86.9
-Portfolio value: 100908.06
-Daily recorded-equity change (%): -0.1284
+Unrealized PnL: -77.52
+Portfolio value: 100917.44
+Daily recorded-equity change (%): -0.1191
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-28
-Cumulative recorded-equity change (%): 0.9081
+Cumulative recorded-equity change (%): 0.9174
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ABBV
@@ -30,7 +30,7 @@ Shadow would-buy counts:
 - FIB_STOP_075_ATR: 12
 - FIB_STOP_100_ATR: 4
 - FIB_STRUCTURE_STOP: 3
-- TREND_PULLBACK_RECLAIM: 7
+- TREND_PULLBACK_RECLAIM: 8
 
 Top rejected candidates:
 - LRCX: WATCH score=0.5745 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.34.
