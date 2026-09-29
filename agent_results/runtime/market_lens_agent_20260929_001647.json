@@ -1,0 +1,140 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 37.17,
+  "errors": [],
+  "finished_at": "2026-09-29T00:20:23",
+  "initial_missing_tickers": [
+    "ARM",
+    "HTFL",
+    "MMC",
+    "RDDT",
+    "SAIL"
+  ],
+  "initial_result_cards_read": 133,
+  "login_seconds": 0.021,
+  "login_status": "open access",
+  "missing_tickers": [
+    "ARM",
+    "HTFL",
+    "MMC",
+    "RDDT",
+    "SAIL"
+  ],
+  "open_app_seconds": 0.141,
+  "result_cards_read": 133,
+  "run_id": "20260929_001647",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 96.38,
+    "missing": 5,
+    "missing_tickers": [
+      "ARM",
+      "HTFL",
+      "MMC",
+      "RDDT",
+      "SAIL"
+    ],
+    "received": 133,
+    "requested": 138
+  },
+  "scan_seconds": 71.821,
+  "scan_status": "completed: 133 results; 5 unavailable",
+  "screenshot_seconds": 0.06,
+  "started_at": "2026-09-29T00:16:47",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "ARM",
+      "HTFL",
+      "MMC",
+      "RDDT",
+      "SAIL"
+    ],
+    "attempts": {
+      "ARM": 2,
+      "HTFL": 2,
+      "MMC": 2,
+      "RDDT": 2,
+      "SAIL": 2
+    },
+    "duration_seconds": 4.01,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "ARM",
+      "HTFL",
+      "MMC",
+      "RDDT",
+      "SAIL"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "ARM: ARM: only 159 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "ARM"
+      },
+      {
+        "attempts": 2,
+        "reason": "HTFL: HTFL: only 59 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "HTFL"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMC: MMC: no data returned for interval=1d",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMC"
+      },
+      {
+        "attempts": 2,
+        "reason": "RDDT: RDDT: only 132 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "RDDT"
+      },
+      {
+        "attempts": 2,
+        "reason": "SAIL: SAIL: only 85 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "SAIL"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 7,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "ARM",
+      "HTFL",
+      "MMC",
+      "RDDT",
+      "SAIL"
+    ]
+  },
+  "tickers_requested": 138,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 215.755,
+  "universe": "smart-universe",
+  "url": "http://127.0.0.1:8000/?v=agent",
+  "valid_setups": 59,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for ARM, HTFL, MMC, RDDT, SAIL."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 6.383,
+    "candidate_evaluation_seconds": 49.478,
+    "chart_retention_seconds": 25.163,
+    "load_and_schema_seconds": 6.54,
+    "market_context_seconds": 6.469,
+    "notification_seconds": 0.0,
+    "outcome_backfill_seconds": 0.021,
+    "performance_summary_seconds": 1.177,
+    "portfolio_and_decision_write_seconds": 0.04,
+    "portfolio_state_seconds": 0.004,
+    "save_seconds": 9.153,
+    "trade_analytics_seconds": 0.014,
+    "update_log_and_retention_seconds": 1.136
+  },
+  "workbook_update_seconds": 105.583
+}
