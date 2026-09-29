@@ -1,32 +1,33 @@
 Daily Performance Summary
 
 Date: 2026-09-29
-Total scans: 19
-Tickers scanned: 2428
+Total scans: 20
+Tickers scanned: 2556
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 523
+WATCH_REVIEW: 548
 WATCH_REVIEW unique tickers: 47
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 523
-SKIP: 1835
-NO_TRADE: 1196
+WATCH: 548
+SKIP: 1936
+NO_TRADE: 1286
 Realized PnL: -206.84
-Unrealized PnL: -110.46
-Portfolio value: 100884.5
-Daily recorded-equity change (%): -0.1517
+Unrealized PnL: -139.52
+Portfolio value: 100855.44
+Daily recorded-equity change (%): -0.1805
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-28
-Cumulative recorded-equity change (%): 0.8845
+Cumulative recorded-equity change (%): 0.8554
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: ABBV
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 4
+- BREAKOUT_CONTINUATION: 2
+- FIB_STOP_075_ATR: 5
 - TREND_PULLBACK_RECLAIM: 3
 
 Top rejected candidates:
