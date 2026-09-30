@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 80
-Tickers scanned: 10295
+Total scans: 81
+Tickers scanned: 10422
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2107
-WATCH_REVIEW unique tickers: 59
+WATCH_REVIEW: 2132
+WATCH_REVIEW unique tickers: 60
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2107
-SKIP: 7936
-NO_TRADE: 5487
+WATCH: 2132
+SKIP: 8036
+NO_TRADE: 5569
 Realized PnL: -206.84
-Unrealized PnL: -123.66
-Portfolio value: 100871.3
+Unrealized PnL: -188.18
+Portfolio value: 100806.78
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8713
+Cumulative recorded-equity change (%): 0.8068
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: BRK-B
@@ -30,8 +30,8 @@ Shadow would-buy counts:
 - FIB_STOP_075_ATR: 37
 - FIB_STOP_100_ATR: 10
 - FIB_STRUCTURE_STOP: 10
-- TREND_PULLBACK_RECLAIM: 28
-- VWAP_RECLAIM: 2
+- TREND_PULLBACK_RECLAIM: 29
+- VWAP_RECLAIM: 3
 
 Top rejected candidates:
 - LRCX: WATCH score=0.5988 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
