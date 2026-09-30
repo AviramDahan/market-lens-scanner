@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-09-30
-Total scans: 24
-Tickers scanned: 3046
+Total scans: 25
+Tickers scanned: 3175
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 657
+WATCH_REVIEW: 682
 WATCH_REVIEW unique tickers: 47
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 657
-SKIP: 2341
-NO_TRADE: 1612
+WATCH: 682
+SKIP: 2443
+NO_TRADE: 1699
 Realized PnL: 0.0
-Unrealized PnL: -195.22
-Portfolio value: 100799.74
-Daily recorded-equity change (%): -0.0758
+Unrealized PnL: -182.44
+Portfolio value: 100812.52
+Daily recorded-equity change (%): -0.0631
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-29
-Cumulative recorded-equity change (%): 0.7997
+Cumulative recorded-equity change (%): 0.8125
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: TJX
 Worst ticker: BRK-B
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 3
-- FIB_STRUCTURE_STOP: 3
-- TREND_PULLBACK_RECLAIM: 8
+- BREAKOUT_CONTINUATION: 6
+- FIB_STOP_075_ATR: 5
+- FIB_STRUCTURE_STOP: 4
+- TREND_PULLBACK_RECLAIM: 9
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
