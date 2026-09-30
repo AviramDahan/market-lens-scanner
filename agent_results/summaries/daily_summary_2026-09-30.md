@@ -1,37 +1,39 @@
 Daily Performance Summary
 
 Date: 2026-09-30
-Total scans: 21
-Tickers scanned: 2654
+Total scans: 22
+Tickers scanned: 2785
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 576
-WATCH_REVIEW unique tickers: 45
+WATCH_REVIEW: 604
+WATCH_REVIEW unique tickers: 46
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 576
-SKIP: 2036
-NO_TRADE: 1343
+WATCH: 604
+SKIP: 2137
+NO_TRADE: 1434
 Realized PnL: 0.0
-Unrealized PnL: -146.24
-Portfolio value: 100848.72
-Daily recorded-equity change (%): -0.0273
+Unrealized PnL: -151.04
+Portfolio value: 100843.92
+Daily recorded-equity change (%): -0.032
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-29
-Cumulative recorded-equity change (%): 0.8487
+Cumulative recorded-equity change (%): 0.8439
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: TJX
 Worst ticker: BRK-B
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 1
-- TREND_PULLBACK_RECLAIM: 6
+- BREAKOUT_CONTINUATION: 2
+- FIB_STOP_075_ATR: 1
+- FIB_STRUCTURE_STOP: 1
+- TREND_PULLBACK_RECLAIM: 7
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
-- LLY: WATCH score=0.5656 reason=WATCH: Technical setup detected, but weighted risk/reward 1.48 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.12.
+- LLY: WATCH score=0.5667 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - LRCX: WATCH score=0.555 reason=WATCH: Technical setup detected, but weighted risk/reward 1.67 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.15.
 - DE: SKIP score=0.5546 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.40.
 - RMBS: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.
