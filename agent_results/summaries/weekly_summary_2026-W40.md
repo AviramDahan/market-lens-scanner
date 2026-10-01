@@ -1,29 +1,29 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 98
-Tickers scanned: 12572
+Total scans: 99
+Tickers scanned: 12698
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2504
-WATCH_REVIEW unique tickers: 64
+WATCH_REVIEW: 2529
+WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2504
-SKIP: 9780
-NO_TRADE: 6928
+WATCH: 2529
+SKIP: 9879
+NO_TRADE: 6992
 Realized PnL: -206.84
-Unrealized PnL: -228.82
-Portfolio value: 100766.14
+Unrealized PnL: -118.74
+Portfolio value: 100876.22
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.7661
+Cumulative recorded-equity change (%): 0.8762
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: BRK-B
-Best shadow strategy: FIB_STOP_075_ATR
+Best shadow strategy: FIB_STOP_100_ATR
 Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 13
@@ -36,7 +36,7 @@ Shadow would-buy counts:
 Top rejected candidates:
 - LRCX: WATCH score=0.5988 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 - DE: SKIP score=0.5758 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.48.
-- LLY: WATCH score=0.5667 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
+- LLY: WATCH score=0.5674 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
 - KLAC: WATCH score=0.5441 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - CAT: SKIP score=0.5433 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.08.
 - RMBS: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.
