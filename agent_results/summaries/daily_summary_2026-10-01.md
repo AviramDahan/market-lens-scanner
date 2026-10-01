@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-01
-Total scans: 25
-Tickers scanned: 3101
+Total scans: 26
+Tickers scanned: 3225
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 446
+WATCH_REVIEW: 459
 WATCH_REVIEW unique tickers: 37
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 446
-SKIP: 2616
-NO_TRADE: 1833
+WATCH: 459
+SKIP: 2726
+NO_TRADE: 1922
 Realized PnL: -344.84
-Unrealized PnL: 103.9
-Portfolio value: 100754.02
-Daily recorded-equity change (%): -0.012
+Unrealized PnL: 116.8
+Portfolio value: 100766.92
+Daily recorded-equity change (%): 0.0008
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-30
-Cumulative recorded-equity change (%): 0.754
+Cumulative recorded-equity change (%): 0.7669
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: SYK
 Worst ticker: PH
@@ -27,9 +27,9 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 14
-- FIB_STOP_100_ATR: 7
-- FIB_STRUCTURE_STOP: 7
+- FIB_STOP_075_ATR: 16
+- FIB_STOP_100_ATR: 8
+- FIB_STRUCTURE_STOP: 9
 - TREND_PULLBACK_RECLAIM: 6
 
 Top rejected candidates:
