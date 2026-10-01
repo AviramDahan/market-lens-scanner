@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-01
-Total scans: 23
-Tickers scanned: 2853
+Total scans: 24
+Tickers scanned: 2977
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 419
+WATCH_REVIEW: 433
 WATCH_REVIEW unique tickers: 37
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 419
-SKIP: 2397
-NO_TRADE: 1656
+WATCH: 433
+SKIP: 2506
+NO_TRADE: 1743
 Realized PnL: -344.84
-Unrealized PnL: 100.8
-Portfolio value: 100750.92
-Daily recorded-equity change (%): -0.0151
+Unrealized PnL: 107.1
+Portfolio value: 100757.22
+Daily recorded-equity change (%): -0.0089
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-30
-Cumulative recorded-equity change (%): 0.7509
+Cumulative recorded-equity change (%): 0.7572
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: BBIO
 Worst ticker: PH
@@ -27,9 +27,9 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 10
-- FIB_STOP_100_ATR: 5
-- FIB_STRUCTURE_STOP: 4
+- FIB_STOP_075_ATR: 12
+- FIB_STOP_100_ATR: 6
+- FIB_STRUCTURE_STOP: 5
 - TREND_PULLBACK_RECLAIM: 5
 
 Top rejected candidates:
