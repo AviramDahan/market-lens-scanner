@@ -1,33 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-10-01
-Total scans: 17
-Tickers scanned: 2110
+Total scans: 18
+Tickers scanned: 2234
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 300
-WATCH_REVIEW unique tickers: 35
+WATCH_REVIEW: 322
+WATCH_REVIEW unique tickers: 36
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 300
-SKIP: 1779
-NO_TRADE: 1127
+WATCH: 322
+SKIP: 1880
+NO_TRADE: 1213
 Realized PnL: -344.84
-Unrealized PnL: 110.8
-Portfolio value: 100760.92
-Daily recorded-equity change (%): -0.0052
+Unrealized PnL: 124.1
+Portfolio value: 100774.22
+Daily recorded-equity change (%): 0.008
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-09-30
-Cumulative recorded-equity change (%): 0.7609
+Cumulative recorded-equity change (%): 0.7742
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: BBIO
 Worst ticker: MSFT
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 1
-- FIB_STOP_100_ATR: 1
+- FIB_STOP_075_ATR: 3
+- FIB_STOP_100_ATR: 3
+- FIB_STRUCTURE_STOP: 2
+- TREND_PULLBACK_RECLAIM: 1
 
 Top rejected candidates:
 - LLY: WATCH score=0.5674 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
