@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 122
-Tickers scanned: 15549
+Total scans: 123
+Tickers scanned: 15673
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2937
+WATCH_REVIEW: 2950
 WATCH_REVIEW unique tickers: 67
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2937
-SKIP: 12286
-NO_TRADE: 8671
+WATCH: 2950
+SKIP: 12396
+NO_TRADE: 8761
 Realized PnL: -551.68
-Unrealized PnL: 107.1
-Portfolio value: 100757.22
+Unrealized PnL: 103.9
+Portfolio value: 100754.02
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.7572
+Cumulative recorded-equity change (%): 0.754
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: BRK-B
@@ -27,19 +27,19 @@ Best shadow strategy: VWAP_RECLAIM
 Worst shadow strategy: FIB_STRUCTURE_STOP
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 14
-- FIB_STOP_075_ATR: 60
-- FIB_STOP_100_ATR: 18
-- FIB_STRUCTURE_STOP: 26
-- TREND_PULLBACK_RECLAIM: 42
+- FIB_STOP_075_ATR: 62
+- FIB_STOP_100_ATR: 19
+- FIB_STRUCTURE_STOP: 28
+- TREND_PULLBACK_RECLAIM: 43
 - VWAP_RECLAIM: 3
 
 Top rejected candidates:
 - LRCX: WATCH score=0.5988 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 - DE: SKIP score=0.5758 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.48.
 - LLY: WATCH score=0.5674 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
+- PFE: SKIP score=0.5493 reason=SKIP: Healthcare sector regime is weak (28/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.15.
 - KLAC: WATCH score=0.5441 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - CAT: SKIP score=0.5433 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.08.
-- PFE: SKIP score=0.531 reason=SKIP: Healthcare sector regime is weak (28/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.74.
 - RMBS: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.
 - HAL: WATCH score=0.5181 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - ASML: WATCH score=0.518 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.23.
