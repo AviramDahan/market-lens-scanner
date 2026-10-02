@@ -62,5 +62,32 @@ activate the override, or authorize an active policy change.
 
 ## Deployment
 
-The branch must be deployed before new runtime observations can accumulate. No merge
-or deployment is part of this implementation without explicit approval.
+The measurement is deployed through PR #6, followed by the observation-filter fix
+in PR #7. Its observations are committed to `main`. The reminder below remains a
+separate, unmerged change until explicitly approved for release.
+
+## One-time Telegram review reminder
+
+The separate `market-lens-weak-sector-review.yml` workflow checks the reminder at
+07:00 UTC daily. On 2026-10-13 this is 10:00 Asia/Jerusalem. A delayed run sends
+at its first execution after the due time. It does not inspect market hours,
+signal count, or `review_ready` before sending.
+
+The job fetches the latest committed observation JSONL from `origin/main`, runs
+`python agent/weak_sector_override_summary.py` in a temporary directory, and sends
+the requested review message with the collection period, eligibility counts,
+outcome status, and main rejection reasons. If the summary fails, it sends a
+failure notice instead. It uses the same Telegram bot and chat secrets as the
+existing Agent notifications. A forum topic can be selected with the optional
+`MARKET_LENS_TELEGRAM_REVIEW_THREAD_ID` repository secret; no topic secret is
+currently configured in the repository.
+
+A stable delivery key is stored in `agent_results/telegram_notifications.jsonl`
+on `main` through the existing receipt persister. The workflow shares the
+`market-lens-repo-writes` concurrency group with the scanner and monitor, and
+checks the latest committed receipt before sending. A failed Telegram response
+does not produce a receipt, so the next scheduled run retries. A successful
+Telegram response followed by a process crash before the receipt push has an
+unavoidable ambiguous state because Telegram's sendMessage API has no idempotency
+key; the workflow fails visibly and the next run may repeat that one message.
+The reminder never changes trading decisions or the portfolio.
