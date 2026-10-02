@@ -58,6 +58,7 @@ def send_telegram_message(
     settings: TelegramSettings | None = None,
     opener: Callable[..., Any] = urlopen,
     dedupe_key: str = "",
+    message_thread_id: int | None = None,
 ) -> TelegramSendResult:
     current = settings or load_telegram_settings()
     if not current.enabled:
@@ -73,6 +74,8 @@ def send_telegram_message(
         "parse_mode": "HTML",
         "disable_web_page_preview": True,
     }
+    if message_thread_id is not None:
+        payload["message_thread_id"] = message_thread_id
     request = Request(
         f"https://api.telegram.org/bot{current.bot_token}/sendMessage",
         data=json.dumps(payload).encode("utf-8"),
