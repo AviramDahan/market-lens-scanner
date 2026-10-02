@@ -10,7 +10,7 @@ def test_monitor_workflow_is_valid_yaml_and_has_scheduled_fallback() -> None:
     payload = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
     triggers = payload.get("on") or payload.get(True)
 
-    assert triggers["schedule"] == [{"cron": "*/15 13-21 * * 1-5"}]
+    assert triggers["schedule"] == [{"cron": "7,22,37,52 13-21 * * 1-5"}]
     assert "workflow_dispatch" in triggers
 
 
@@ -34,7 +34,7 @@ def test_monitor_collects_shadow_parity_without_adding_a_new_schedule() -> None:
     assert text.count("python agent/render_shadow_parity.py") == 2
     assert "MARKET_LENS_MONITOR_TRIGGER_SOURCE" in text
     assert "MARKET_LENS_MONITOR_WORKFLOW_RUN_ID" in text
-    assert text.count('cron: "*/15 13-21 * * 1-5"') == 1
+    assert text.count('cron: "7,22,37,52 13-21 * * 1-5"') == 1
 
 
 def test_monitor_conflict_path_recalculates_instead_of_overlaying_stale_portfolio() -> None:

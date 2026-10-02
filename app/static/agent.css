@@ -1194,6 +1194,29 @@ td {
   gap: 12px;
 }
 
+.position-execution-health {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.execution-health-chip {
+  display: inline-grid;
+  gap: 2px;
+  min-width: 132px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.execution-health-chip b { color: var(--ink); font-size: 12px; }
+.execution-health-chip small { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.execution-health-chip.good { border-color: #a9d8b8; background: #f2fbf5; }
+.execution-health-chip.attention { border-color: #e8b5b5; background: #fff5f5; }
+.execution-health-chip.neutral { background: #f8fafc; }
+
 .position-mini-card {
   display: grid;
   gap: 14px;

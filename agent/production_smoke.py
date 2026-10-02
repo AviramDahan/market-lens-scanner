@@ -357,20 +357,33 @@ def validate_monitor_state(payload: dict[str, Any], *, max_age_minutes: int) -> 
     health = payload.get("system_health")
     if not isinstance(health, dict):
         raise SmokeFailure("Dashboard system_health is missing.")
+    price_status = str(health.get("price_sensor_status") or "")
+    execution_status = str(health.get("execution_sensor_status") or "")
+    persistence_status = str(health.get("executor_persistence_status") or "")
+    accepted_price = {"CURRENT", "NOT_REQUIRED_NO_OPEN_POSITIONS", "NOT_DUE_OUTSIDE_REGULAR_SESSION"}
+    accepted_execution = {"CURRENT", "NOT_REQUIRED_NO_OPEN_POSITIONS", "NOT_DUE_OUTSIDE_REGULAR_SESSION"}
+    if price_status not in accepted_price:
+        raise SmokeFailure(f"Read-only price sensor status is {price_status or 'missing'}.")
+    if execution_status not in accepted_execution:
+        raise SmokeFailure(f"Active TP/SL sensor status is {execution_status or 'missing'}.")
+    if persistence_status == "STALE":
+        raise SmokeFailure("A successful TP/SL dispatch has no matching persisted executor result.")
     status = str(health.get("latest_monitor_status") or "")
-    if status != "MONITOR_OK":
-        raise SmokeFailure(f"Latest position monitor status is {status or 'missing'}.")
     failures = int(health.get("latest_monitor_positions_failed") or 0)
     if failures:
         raise SmokeFailure(f"Latest position monitor has {failures} failed position(s).")
-    age = health.get("latest_monitor_age_minutes")
+    age = health.get("execution_sensor_check_age_minutes")
     if max_age_minutes > 0 and age is not None and int(age) > max_age_minutes:
         raise SmokeFailure(
-            f"Latest position monitor is stale: {age} minutes (maximum {max_age_minutes})."
+            f"Active TP/SL sensor is stale: {age} minutes (maximum {max_age_minutes})."
         )
     events = int(health.get("latest_monitor_event_count") or 0)
     checked = int(health.get("latest_monitor_positions_checked") or 0)
-    return f"status={status}; checked={checked}; events={events}; dispatch_attempted=false"
+    return (
+        f"price={price_status}; execution={execution_status}; "
+        f"persistence={persistence_status}; executor={status or 'historical-none'}; "
+        f"checked={checked}; events={events}"
+    )
 
 
 def env_int(name: str, default: int) -> int:

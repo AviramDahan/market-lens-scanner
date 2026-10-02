@@ -1,6 +1,6 @@
 import json
 from types import SimpleNamespace
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 import pytest
@@ -46,6 +46,62 @@ def book():
 
 def settings(tmp_path):
     return MonitorSettings(tmp_path / "unused.xlsx", tmp_path, "5d", "1m", False, "")
+
+
+class FakeClock:
+    def __init__(self, value: datetime) -> None:
+        self.value = value
+
+    def now(self) -> datetime:
+        return self.value
+
+    def advance(self, **kwargs) -> None:
+        self.value += timedelta(**kwargs)
+
+
+def test_fake_clock_price_window_persists_tp1_then_tp2_once(monkeypatch, tmp_path):
+    clock = FakeClock(datetime(2026, 9, 8, 14, 15, tzinfo=timezone.utc))
+    frame = pd.DataFrame(
+        {"High": [160.0, 182.0], "Low": [155.0, 175.0], "Close": [159.0, 181.0]},
+        index=pd.to_datetime(["2026-09-08T14:11:00Z", "2026-09-08T14:12:00Z"]),
+    )
+    monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
+    wb, p = book(), position()
+    positions = {"CHTR": p}
+
+    first, notifications = process_position_window(
+        wb,
+        positions,
+        p,
+        settings=settings(tmp_path),
+        since=None,
+        currency_rate=1,
+        timestamp=clock.now().isoformat(),
+        run_id="fake-clock-first",
+    )
+    assert [item.event.action for item in first] == ["TAKE_PARTIAL_PROFIT", "TAKE_PROFIT"]
+    assert [item.event.quantity for item in first] == [13, 13]
+    assert positions == {}
+    assert len(notifications) == 2
+    assert wb["Trade Log"].max_row == 3
+    assert wb["Position Events"].max_row == 3
+
+    clock.advance(minutes=1)
+    stale_retry = position()
+    replay, replay_notifications = process_position_window(
+        wb,
+        {"CHTR": stale_retry},
+        stale_retry,
+        settings=settings(tmp_path),
+        since=datetime(2026, 9, 8, 14, 12, tzinfo=timezone.utc),
+        currency_rate=1,
+        timestamp=clock.now().isoformat(),
+        run_id="fake-clock-retry",
+    )
+    assert replay[0].status == "NO_NEW_BARS"
+    assert replay_notifications == []
+    assert wb["Trade Log"].max_row == 3
+    assert wb["Position Events"].max_row == 3
 
 
 @pytest.mark.parametrize("terminal,high,low,expected_price", [

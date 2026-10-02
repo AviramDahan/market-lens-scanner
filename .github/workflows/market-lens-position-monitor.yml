@@ -3,7 +3,7 @@ name: Market Lens Position Monitor
 on:
   schedule:
     # Low-frequency fallback. The New York guard below narrows this to 09:45-16:00.
-    - cron: "*/15 13-21 * * 1-5"
+    - cron: "7,22,37,52 13-21 * * 1-5"
   workflow_dispatch:
     inputs:
       force:

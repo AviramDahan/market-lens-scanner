@@ -432,6 +432,7 @@ function renderDashboard(data) {
   renderWatchReadyPanel(data.decision_diagnostics || {});
   renderEquity(data.equity_curve, data.summary);
   renderPositionsOverview(data.open_positions);
+  renderPositionExecutionHealth(data.system_health || {}, data.open_positions || []);
   renderPositionAttention(data.position_attention || data.open_positions || []);
   renderPositionTimeline(data.position_timeline || []);
   renderPositions(data.open_positions);
@@ -1954,6 +1955,39 @@ function renderPositionsOverview(positions, liveUpdatedAt = "") {
       `;
     })
     .join("");
+}
+
+function renderPositionExecutionHealth(health, positions) {
+  const container = document.getElementById("positionExecutionHealth");
+  if (!container) return;
+  const openCount = Array.isArray(positions) ? positions.length : 0;
+  if (!openCount) {
+    container.innerHTML = '<span class="execution-health-chip neutral"><b>No monitoring due</b><small>No open positions</small></span>';
+    return;
+  }
+  const items = [
+    {
+      label: "Price feed",
+      status: health.price_sensor_status || health.live_monitor_freshness_status || "UNKNOWN",
+      detail: health.price_sensor_last_poll_at ? formatDate(health.price_sensor_last_poll_at) : "No poll evidence",
+    },
+    {
+      label: "TP/SL trigger",
+      status: health.execution_sensor_status || "NOT_OBSERVED",
+      detail: health.execution_sensor_last_check_at ? formatDate(health.execution_sensor_last_check_at) : "No active check evidence",
+    },
+    {
+      label: "Portfolio update",
+      status: health.executor_persistence_status || "NOT_TRIGGERED",
+      detail: health.executor_persistence_last_at ? formatDate(health.executor_persistence_last_at) : "No dispatch awaiting persistence",
+    },
+  ];
+  const goodStatuses = new Set(["CURRENT", "CONFIRMED", "NOT_TRIGGERED", "NOT_DUE_OUTSIDE_REGULAR_SESSION"]);
+  container.innerHTML = items.map((item) => {
+    const normalized = String(item.status || "UNKNOWN").toUpperCase();
+    const tone = goodStatuses.has(normalized) ? "good" : normalized.startsWith("NOT_REQUIRED") ? "neutral" : "attention";
+    return `<span class="execution-health-chip ${tone}" title="${escapeHtml(item.detail)}"><b>${escapeHtml(item.label)}</b><small>${escapeHtml(normalized.replaceAll("_", " "))}</small></span>`;
+  }).join("");
 }
 
 function renderPositions(positions, liveUpdatedAt = "") {
