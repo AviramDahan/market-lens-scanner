@@ -175,6 +175,26 @@ def test_summary_reports_zero_and_reasons_without_loosening() -> None:
     assert "Qualifying signals: 0" in markdown
 
 
+def test_no_trade_observation_is_not_persisted_or_counted(tmp_path: Path) -> None:
+    no_trade = decision()
+    no_trade["setup_type"] = "No Trade"
+    no_trade["initial_action"] = "SKIP"
+    no_trade["final_action"] = "SKIP"
+    output = tmp_path / "observations.jsonl"
+
+    persisted = persist_first_observations([no_trade], output)
+    historical = evaluate_weak_sector_override_v1(no_trade)
+    historical.pop("applicable")
+    summary = build_measurement_summary([historical])
+
+    assert persisted["considered"] == 0
+    assert persisted["added"] == 0
+    assert output.exists() is False
+    assert summary["observation_count"] == 1
+    assert summary["applicable_observation_count"] == 0
+    assert summary["qualifying_signal_count"] == 0
+
+
 def test_strong_control_requires_same_explicit_gates() -> None:
     result = evaluate_weak_sector_override_v1(decision(ticker="CTRL", sector="STRONG"))
 
