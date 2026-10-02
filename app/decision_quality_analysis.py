@@ -374,6 +374,8 @@ def simulate_fixed_plan(signal: dict[str, Any], bars: Any) -> dict[str, Any]:
     realized = 0.0
     events = []
     active_stop = stop
+    highest_price = entry_fill
+    lowest_price = entry_fill
     for index, row in frame.iterrows():
         high = float(row["High"])
         low = float(row["Low"])
@@ -382,6 +384,10 @@ def simulate_fixed_plan(signal: dict[str, Any], bars: Any) -> dict[str, Any]:
         hit_t2 = high >= target_2
         hit_t1 = not partial and high >= target_1
         if hit_stop:
+            # The replay policy is stop-first inside an ambiguous bar. Do not
+            # count a later unknown high/low as excursion after the exit.
+            highest_price = max(highest_price, open_price)
+            lowest_price = min(lowest_price, open_price, active_stop)
             fill, details = sell_fill(position, "EXIT_STOP", active_stop, open_price)
             realized += remaining * (fill - entry_fill)
             events.append(
@@ -390,6 +396,8 @@ def simulate_fixed_plan(signal: dict[str, Any], bars: Any) -> dict[str, Any]:
             remaining = 0.0
             break
         if hit_t2:
+            highest_price = max(highest_price, target_2)
+            lowest_price = min(lowest_price, open_price)
             fill, details = sell_fill(position, "TAKE_PROFIT", target_2)
             realized += remaining * (fill - entry_fill)
             events.append(
@@ -398,6 +406,8 @@ def simulate_fixed_plan(signal: dict[str, Any], bars: Any) -> dict[str, Any]:
             remaining = 0.0
             break
         if hit_t1:
+            highest_price = max(highest_price, high)
+            lowest_price = min(lowest_price, low)
             fill, details = sell_fill(position, "TAKE_PARTIAL_PROFIT", target_1)
             realized += 0.5 * (fill - entry_fill)
             remaining = 0.5
@@ -410,6 +420,9 @@ def simulate_fixed_plan(signal: dict[str, Any], bars: Any) -> dict[str, Any]:
                     "fill": fill,
                 }
             )
+        else:
+            highest_price = max(highest_price, high)
+            lowest_price = min(lowest_price, low)
 
     last_close = float(frame["Close"].iloc[-1])
     risk_per_share = entry_fill - sell_fill(position, "EXIT_STOP", stop)[0]
@@ -428,6 +441,12 @@ def simulate_fixed_plan(signal: dict[str, Any], bars: Any) -> dict[str, Any]:
         if risk_per_share > 0
         else None,
         "marked_r": round(marked_pnl / risk_per_share, 4)
+        if risk_per_share > 0
+        else None,
+        "mfe_r": round((highest_price - entry_fill) / risk_per_share, 4)
+        if risk_per_share > 0
+        else None,
+        "mae_r": round((entry_fill - lowest_price) / risk_per_share, 4)
         if risk_per_share > 0
         else None,
         "remaining_fraction": remaining,

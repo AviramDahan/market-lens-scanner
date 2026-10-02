@@ -51,6 +51,10 @@ from app.telegram_notifications import (
     send_telegram_notification,
 )
 from app.trade_outcomes import backfill_trade_outcomes
+from app.weak_sector_override import (
+    evaluate_weak_sector_override_v1,
+    persist_first_observations,
+)
 from app.workbook_retention import compact_setup_watchlist
 
 
@@ -1304,6 +1308,7 @@ def update_workbook(
             capture_position_exit_plan(decision_json, open_positions[result.ticker])
         decision_json["active_strategy"] = "QUALIFIED_SELECTION_V1"
         decision_json["shadow_strategies"] = evaluate_shadow_strategies(result, decision_json)
+        decision_json["weak_sector_override_v1"] = evaluate_weak_sector_override_v1(decision_json)
         result.selection_context = build_selection_context(
             result,
             decision,
@@ -1376,6 +1381,17 @@ def update_workbook(
     phase_started = time.monotonic()
     write_open_positions(wb, open_positions)
     write_decision_jsonl(decision_path, decision_records)
+    try:
+        experiment_path = RUN_DIR / "experiments" / "weak_sector_override_v1_observations.jsonl"
+        experiment_write = persist_first_observations(decision_records, experiment_path)
+        log(
+            "WEAK_SECTOR_OVERRIDE_V1 measurement: "
+            f"added={experiment_write['added']} signals={experiment_write['signals_added']} "
+            f"controls={experiment_write['controls_added']}"
+        )
+    except Exception as exc:
+        # Measurement must never interrupt or mutate active paper-trading state.
+        log(f"WEAK_SECTOR_OVERRIDE_V1 measurement skipped safely: {exc}")
     mark_runtime_phase(workbook_phase_seconds, "portfolio_and_decision_write_seconds", phase_started)
     exposure = sum(pos["exposure_ils"] for pos in open_positions.values())
     open_risk = sum(pos["risk_ils"] for pos in open_positions.values())
