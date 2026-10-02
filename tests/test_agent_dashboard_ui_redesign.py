@@ -67,6 +67,17 @@ def test_open_positions_explain_live_quote_provenance() -> None:
     assert ".position-price-meta" in CSS
 
 
+def test_open_positions_distinguish_price_trigger_and_persistence_health() -> None:
+    assert 'id="positionExecutionHealth"' in HTML
+    assert "function renderPositionExecutionHealth" in JS
+    assert 'label: "Price feed"' in JS
+    assert 'label: "TP/SL trigger"' in JS
+    assert 'label: "Portfolio update"' in JS
+    assert "execution_sensor_status" in JS
+    assert "executor_persistence_status" in JS
+    assert ".position-execution-health" in CSS
+
+
 def test_run_strip_shows_canonical_status_and_scan_coverage() -> None:
     assert 'id="scanCoverageMeta"' in HTML
     assert 'data.latest_run.run_status || "FAILED"' in JS

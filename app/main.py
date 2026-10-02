@@ -36,6 +36,7 @@ from app.auth import auth_is_configured, auth_is_open, get_current_user_required
 from app.charts import write_scan_chart
 from app.config import load_config
 from app.data import fetch_intraday_frame
+from app.execution_monitor_status import execution_monitor_status
 from app.models import MonitorTriggerRequest, SaveSetupRequest, ScanRequest, ScanResponse
 from app.monitor_trigger import (
     detect_live_monitor_event,
@@ -162,11 +163,16 @@ def current_agent_dashboard() -> dict:
             if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
                 asset_sync_status = sync_dashboard_snapshot_assets_if_enabled(PROJECT_ROOT, dashboard)
                 dashboard = enrich_agent_dashboard_snapshot(dashboard)
+                merge_live_monitor_health(dashboard)
+                merge_execution_monitor_health(dashboard)
                 dashboard["results_sync"] = {**sync_status, "asset_sync": asset_sync_status}
                 return dashboard
         except Exception:
             pass
-    return cached_agent_dashboard()
+    dashboard = cached_agent_dashboard()
+    merge_live_monitor_health(dashboard)
+    merge_execution_monitor_health(dashboard)
+    return dashboard
 
 
 def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
@@ -280,6 +286,178 @@ def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:
     return dashboard
 
 
+def merge_live_monitor_health(dashboard: dict) -> None:
+    """Overlay read-only Render price-sensor evidence onto monitor health."""
+    health = dashboard.get("system_health")
+    if not isinstance(health, dict):
+        health = {}
+        dashboard["system_health"] = health
+    positions = dashboard.get("open_positions") if isinstance(dashboard.get("open_positions"), list) else []
+    snapshot = render_shadow_monitor.snapshot()
+    session = session_status()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    last_poll_at = parse_timestamp(snapshot.get("last_poll_at"))
+    poll_age = (
+        max(0, int((now - last_poll_at).total_seconds() // 60))
+        if last_poll_at != datetime.min
+        else None
+    )
+    interval_seconds = max(30, int(snapshot.get("interval_seconds") or 60))
+    freshness_limit_minutes = max(3, (interval_seconds * 3 + 59) // 60)
+    monitoring_due = bool(positions) and bool(session.get("regular_session_open"))
+    enabled = snapshot.get("enabled") is True
+    running = snapshot.get("running") is True
+    consecutive_failures = int(snapshot.get("consecutive_failures") or 0)
+    checked = int(snapshot.get("last_positions_checked") or 0)
+    sensor_status = str(snapshot.get("status") or "unknown")
+
+    if not positions:
+        freshness_status = "NOT_REQUIRED_NO_OPEN_POSITIONS"
+    elif not enabled:
+        freshness_status = "DISABLED"
+    elif not running:
+        freshness_status = "STOPPED"
+    elif not monitoring_due:
+        freshness_status = "NOT_DUE_OUTSIDE_REGULAR_SESSION"
+    elif poll_age is None or poll_age > freshness_limit_minutes:
+        freshness_status = "STALE"
+    elif sensor_status == "error" or consecutive_failures:
+        freshness_status = "DEGRADED"
+    elif checked < len(positions):
+        freshness_status = "PARTIAL"
+    else:
+        freshness_status = "CURRENT"
+
+    live_attention = monitoring_due and freshness_status in {
+        "DISABLED",
+        "STOPPED",
+        "STALE",
+        "DEGRADED",
+        "PARTIAL",
+    }
+    notes = list(health.get("notes") or [])
+    notes = [note for note in notes if not str(note).startswith("Live monitor sensor:")]
+    if live_attention:
+        notes.append(
+            f"Live monitor sensor: {freshness_status}; "
+            f"checked {checked}/{len(positions)} open positions."
+        )
+        health["status"] = "attention"
+    elif not notes:
+        health["status"] = "ok"
+    health.update(
+        {
+            "price_sensor_mode": snapshot.get("mode", ""),
+            "price_sensor_side_effects_enabled": snapshot.get("side_effects_enabled"),
+            "price_sensor_status": freshness_status,
+            "price_sensor_last_poll_at": snapshot.get("last_poll_at", ""),
+            "price_sensor_poll_age_minutes": poll_age,
+            "price_sensor_positions_checked": checked,
+            "live_monitor_mode": snapshot.get("mode", ""),
+            "live_monitor_side_effects_enabled": snapshot.get("side_effects_enabled"),
+            "live_monitor_enabled": enabled,
+            "live_monitor_running": running,
+            "live_monitor_status": sensor_status,
+            "live_monitor_freshness_status": freshness_status,
+            "live_monitor_monitoring_due": monitoring_due,
+            "live_monitor_last_poll_at": snapshot.get("last_poll_at", ""),
+            "live_monitor_poll_age_minutes": poll_age,
+            "live_monitor_freshness_limit_minutes": freshness_limit_minutes,
+            "live_monitor_positions_expected": len(positions),
+            "live_monitor_positions_checked": checked,
+            "live_monitor_warning_count": len(snapshot.get("last_warnings") or {}),
+            "live_monitor_consecutive_failures": consecutive_failures,
+            "live_monitor_last_error": snapshot.get("last_error", ""),
+            "live_monitor_session_phase": session.get("phase", "UNKNOWN"),
+            "notes": notes,
+        }
+    )
+
+
+def merge_execution_monitor_health(dashboard: dict) -> None:
+    """Expose active sensor, dispatch, and persistence as distinct evidence."""
+    health = dashboard.get("system_health")
+    if not isinstance(health, dict):
+        health = {}
+        dashboard["system_health"] = health
+    positions = dashboard.get("open_positions") if isinstance(dashboard.get("open_positions"), list) else []
+    session = session_status()
+    snapshot = execution_monitor_status.snapshot()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    last_check = parse_timestamp(snapshot.get("last_check_at"))
+    check_age = (
+        max(0, int((now - last_check).total_seconds() // 60))
+        if last_check != datetime.min
+        else None
+    )
+    freshness_limit = max(
+        2,
+        int(os.getenv("MARKET_LENS_ACTIVE_MONITOR_FRESHNESS_MINUTES", "3") or 3),
+    )
+    due = bool(positions) and bool(session.get("regular_session_open"))
+    configured = monitor_trigger_configured()
+    last_status = str(snapshot.get("last_status") or "never_called")
+    if not positions:
+        execution_status = "NOT_REQUIRED_NO_OPEN_POSITIONS"
+    elif not due:
+        execution_status = "NOT_DUE_OUTSIDE_REGULAR_SESSION"
+    elif not configured:
+        execution_status = "NOT_CONFIGURED"
+    elif check_age is None:
+        execution_status = "NOT_OBSERVED"
+    elif check_age > freshness_limit:
+        execution_status = "STALE"
+    elif int(snapshot.get("consecutive_failures") or 0) > 0:
+        execution_status = "DEGRADED"
+    elif int(snapshot.get("last_warning_count") or 0) > 0:
+        execution_status = "DEGRADED"
+    elif int(snapshot.get("last_positions_checked") or 0) < len(positions):
+        execution_status = "PARTIAL"
+    else:
+        execution_status = "CURRENT"
+
+    dispatch_at = parse_timestamp(snapshot.get("last_dispatch_succeeded_at"))
+    persisted_at = parse_timestamp(health.get("latest_monitor_at"))
+    if dispatch_at == datetime.min:
+        persistence_status = "NOT_TRIGGERED"
+    elif persisted_at >= dispatch_at:
+        persistence_status = "CONFIRMED"
+    else:
+        dispatch_age = max(0, int((now - dispatch_at).total_seconds() // 60))
+        persistence_status = "STALE" if dispatch_age > 10 else "PENDING"
+
+    notes = [
+        note for note in list(health.get("notes") or [])
+        if not str(note).startswith("Active TP/SL sensor:")
+    ]
+    if due and execution_status != "CURRENT":
+        notes.append(
+            f"Active TP/SL sensor: {execution_status}; "
+            f"checked {int(snapshot.get('last_positions_checked') or 0)}/{len(positions)} positions."
+        )
+        health["status"] = "attention"
+    if persistence_status == "STALE":
+        notes.append("Active TP/SL dispatch has no matching persisted executor heartbeat.")
+        health["status"] = "attention"
+    health.update(
+        {
+            "execution_sensor_status": execution_status,
+            "execution_sensor_last_check_at": snapshot.get("last_check_at", ""),
+            "execution_sensor_check_age_minutes": check_age,
+            "execution_sensor_freshness_limit_minutes": freshness_limit,
+            "execution_sensor_last_result": last_status,
+            "execution_sensor_positions_expected": len(positions),
+            "execution_sensor_positions_checked": snapshot.get("last_positions_checked", 0),
+            "execution_sensor_event_count": snapshot.get("last_event_count", 0),
+            "execution_sensor_trigger_configured": configured,
+            "execution_sensor_last_dispatch_at": snapshot.get("last_dispatch_succeeded_at", ""),
+            "execution_sensor_last_dispatch_ticker": snapshot.get("last_dispatch_ticker", ""),
+            "execution_sensor_last_dispatch_event": snapshot.get("last_dispatch_event", ""),
+            "executor_persistence_status": persistence_status,
+            "executor_persistence_last_at": health.get("latest_monitor_at", ""),
+            "notes": notes,
+        }
+    )
 def merge_latest_monitor_status(dashboard: dict) -> None:
     """Overlay the independently synced monitor heartbeat onto a scan snapshot."""
     monitor = load_monitor_status(AGENT_RESULTS_DIR / "position_monitor")
@@ -701,6 +879,25 @@ async def trigger_position_monitor(request: MonitorTriggerRequest) -> dict:
     }
 
 
+def monitor_live_response(payload: dict, compact: bool) -> dict | PlainTextResponse:
+    """Record active-sensor evidence before returning a cron response."""
+    execution_monitor_status.record_check(
+        status=str(payload.get("status") or "unknown"),
+        positions_expected=int(payload.get("open_positions") or 0),
+        positions_checked=int(payload.get("positions_checked") or 0),
+        event_count=len(payload.get("detected_events") or []),
+        warning_count=len(payload.get("warnings") or {}),
+        reason=str(payload.get("reason") or ""),
+    )
+    return compact_cron_response(payload, compact)
+
+
+@app.get("/agent/monitor-execution-status")
+async def monitor_execution_status() -> dict:
+    """Return non-sensitive evidence for the side-effecting TP/SL path."""
+    return execution_monitor_status.snapshot()
+
+
 @app.get("/agent/monitor-live")
 @app.post("/agent/monitor-live")
 async def monitor_live_positions(
@@ -712,7 +909,7 @@ async def monitor_live_positions(
     trigger_configured = monitor_trigger_configured()
     dashboard = monitor_agent_dashboard()
     if dashboard.get("status") != "ok":
-        return compact_cron_response({
+        return monitor_live_response({
             "status": "skipped",
             "triggered": False,
             "trigger_configured": trigger_configured,
@@ -722,7 +919,7 @@ async def monitor_live_positions(
 
     positions = dashboard.get("open_positions", [])
     if not positions:
-        return compact_cron_response({
+        return monitor_live_response({
             "status": "skipped",
             "triggered": False,
             "trigger_configured": trigger_configured,
@@ -785,7 +982,7 @@ async def monitor_live_positions(
             dispatchable_event = event
 
     if not detected_events:
-        return compact_cron_response({
+        return monitor_live_response({
             "status": "ok",
             "triggered": False,
             "trigger_configured": trigger_configured,
@@ -799,7 +996,7 @@ async def monitor_live_positions(
         }, compact)
 
     if not trigger_configured:
-        return compact_cron_response({
+        return monitor_live_response({
             "status": "not_configured",
             "triggered": False,
             "trigger_configured": False,
@@ -813,7 +1010,7 @@ async def monitor_live_positions(
         }, compact)
 
     if dispatchable_event is None:
-        return compact_cron_response({
+        return monitor_live_response({
             "status": "rate_limited",
             "triggered": False,
             "trigger_configured": True,
@@ -830,9 +1027,29 @@ async def monitor_live_positions(
     try:
         dispatch = await dispatch_position_monitor(dispatchable_event, source="agent-server-live-monitor")
     except Exception as exc:
+        execution_monitor_status.record_check(
+            status="dispatch_failed",
+            positions_expected=len(positions),
+            positions_checked=len(checked),
+            event_count=len(detected_events),
+            warning_count=len(warnings),
+            reason="GitHub position-monitor dispatch failed.",
+            error=type(exc).__name__,
+        )
+        execution_monitor_status.record_dispatch(
+            ticker=dispatchable_event.ticker,
+            event_type=dispatchable_event.event_type,
+            succeeded=False,
+            error=type(exc).__name__,
+        )
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    return compact_cron_response({
+    execution_monitor_status.record_dispatch(
+        ticker=dispatchable_event.ticker,
+        event_type=dispatchable_event.event_type,
+        succeeded=True,
+    )
+    return monitor_live_response({
         "status": "triggered",
         "triggered": True,
         "trigger_configured": True,

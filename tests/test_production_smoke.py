@@ -226,6 +226,9 @@ def test_read_only_scan_and_chart_contracts() -> None:
 def test_monitor_validation_is_read_only_and_accepts_off_hours_history() -> None:
     payload = {
         "system_health": {
+            "price_sensor_status": "NOT_DUE_OUTSIDE_REGULAR_SESSION",
+            "execution_sensor_status": "NOT_DUE_OUTSIDE_REGULAR_SESSION",
+            "executor_persistence_status": "NOT_TRIGGERED",
             "latest_monitor_status": "MONITOR_OK",
             "latest_monitor_positions_checked": 5,
             "latest_monitor_positions_failed": 0,
@@ -234,12 +237,35 @@ def test_monitor_validation_is_read_only_and_accepts_off_hours_history() -> None
         }
     }
     detail = validate_monitor_state(payload, max_age_minutes=0)
-    assert "dispatch_attempted=false" in detail
+    assert "persistence=NOT_TRIGGERED" in detail
     assert "events=0" in detail
 
     with pytest.raises(SmokeFailure, match="failed position"):
         payload["system_health"]["latest_monitor_positions_failed"] = 1
         validate_monitor_state(payload, max_age_minutes=0)
+
+
+def test_monitor_validation_rejects_shadow_only_and_unpersisted_dispatch() -> None:
+    payload = {
+        "system_health": {
+            "price_sensor_status": "CURRENT",
+            "execution_sensor_status": "NOT_OBSERVED",
+            "executor_persistence_status": "NOT_TRIGGERED",
+            "latest_monitor_positions_failed": 0,
+        }
+    }
+    with pytest.raises(SmokeFailure, match="Active TP/SL sensor"):
+        validate_monitor_state(payload, max_age_minutes=3)
+
+    payload["system_health"].update(
+        {
+            "execution_sensor_status": "CURRENT",
+            "execution_sensor_check_age_minutes": 1,
+            "executor_persistence_status": "STALE",
+        }
+    )
+    with pytest.raises(SmokeFailure, match="persisted executor"):
+        validate_monitor_state(payload, max_age_minutes=3)
 
 
 def test_render_shadow_smoke_requires_running_read_only_journal() -> None:
