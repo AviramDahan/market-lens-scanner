@@ -1,7 +1,7 @@
 {
   "BUY_SIMULATED_count": 0,
-  "NO_TRADE_count": 10554,
-  "SKIP_count": 15074,
+  "NO_TRADE_count": 10635,
+  "SKIP_count": 15181,
   "SL_hits": 3,
   "TP1_hits": 0,
   "TP2_hits": 0,
@@ -43,35 +43,35 @@
   "WATCH_READY_unique_regular_session_count": 0,
   "WATCH_READY_unique_unknown_session_count": 0,
   "WATCH_READY_unknown_session_count": 0,
-  "WATCH_REVIEW_count": 3323,
+  "WATCH_REVIEW_count": 3337,
   "WATCH_REVIEW_unique_count": 70,
-  "WATCH_count": 3323,
+  "WATCH_count": 3337,
   "average_R": -0.9998,
   "average_confidence_by_shadow_strategy": {
-    "BREAKOUT_CONTINUATION": 0.4343,
-    "FIB_STOP_075_ATR": 0.457,
-    "FIB_STOP_100_ATR": 0.4391,
-    "FIB_STRUCTURE_STOP": 0.4323,
-    "RELATIVE_STRENGTH_LEADER": 0.3793,
-    "STOP_RECLAIM_REENTRY": 0.3365,
-    "TREND_PULLBACK_RECLAIM": 0.4069,
-    "VWAP_RECLAIM": 0.4362
+    "BREAKOUT_CONTINUATION": 0.4348,
+    "FIB_STOP_075_ATR": 0.4572,
+    "FIB_STOP_100_ATR": 0.4393,
+    "FIB_STRUCTURE_STOP": 0.4326,
+    "RELATIVE_STRENGTH_LEADER": 0.3796,
+    "STOP_RECLAIM_REENTRY": 0.337,
+    "TREND_PULLBACK_RECLAIM": 0.4074,
+    "VWAP_RECLAIM": 0.4366
   },
   "average_confidence_by_shadow_strategy_version": {
-    "BREAKOUT_CONTINUATION@shadow_v2": 0.4343,
-    "FIB_STOP_075_ATR@shadow_v2": 0.457,
-    "FIB_STOP_100_ATR@shadow_v2": 0.4391,
-    "FIB_STRUCTURE_STOP@shadow_v2": 0.4323,
-    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3793,
-    "STOP_RECLAIM_REENTRY@shadow_v2": 0.3365,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.4069,
-    "VWAP_RECLAIM@shadow_v2": 0.4362
+    "BREAKOUT_CONTINUATION@shadow_v2": 0.4348,
+    "FIB_STOP_075_ATR@shadow_v2": 0.4572,
+    "FIB_STOP_100_ATR@shadow_v2": 0.4393,
+    "FIB_STRUCTURE_STOP@shadow_v2": 0.4326,
+    "RELATIVE_STRENGTH_LEADER@shadow_v2": 0.3796,
+    "STOP_RECLAIM_REENTRY@shadow_v2": 0.337,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 0.4074,
+    "VWAP_RECLAIM@shadow_v2": 0.4366
   },
   "average_loser": -183.8933,
   "average_loser_R": -0.9998,
-  "average_rr_to_target_1": 0.5058,
-  "average_rr_to_target_2": 1.944,
-  "average_setup_score": 0.1594,
+  "average_rr_to_target_1": 0.5052,
+  "average_rr_to_target_2": 1.9398,
+  "average_setup_score": 0.1592,
   "average_winner": null,
   "average_winner_R": null,
   "best_sector": "Materials",
@@ -79,7 +79,7 @@
   "best_shadow_strategy": "FIB_STOP_100_ATR",
   "best_ticker": "APP",
   "capital_measurement_cohorts": {
-    "DYNAMIC_CAPITAL_FIELDS_PRESENT": 18749
+    "DYNAMIC_CAPITAL_FIELDS_PRESENT": 18871
   },
   "common_false_positives": [],
   "common_missed_opportunities": [
@@ -164,7 +164,7 @@
       "would_buy": true
     }
   ],
-  "cumulative_return_pct": 0.7351,
+  "cumulative_return_pct": 0.7303,
   "daily_return_basis": null,
   "daily_return_pct": null,
   "daily_return_reference_date": null,
@@ -224,16 +224,16 @@
     "decision_trade_id": {
       "coverage_pct": 0.0,
       "populated": 0,
-      "total": 18749
+      "total": 18871
     }
   },
   "data_quality_issues": [
     {
-      "count": 5642,
+      "count": 5672,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 2459,
+      "count": 2481,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -241,7 +241,7 @@
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 1416,
+      "count": 1424,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -261,18 +261,18 @@
       "name": "IWM uses last-known-good completed-session data (0 session(s) old): completed-session freshness is STALE_SESSION"
     },
     {
-      "count": 469,
+      "count": 470,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 422,
+      "count": 426,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     }
   ],
   "date": null,
   "decision_cohorts": {
-    "EXISTING_POSITION": 352,
-    "QUALIFIED_PROFESSIONAL_SCORE_V1": 18397
+    "EXISTING_POSITION": 353,
+    "QUALIFIED_PROFESSIONAL_SCORE_V1": 18518
   },
   "errors_retries_timeouts": [],
   "exit_event_metrics": {
@@ -288,15 +288,15 @@
   "median_R": -0.9998,
   "most_common_rejection_reasons": [
     {
-      "count": 5766,
+      "count": 5820,
       "name": "SKIP: No Trade result. Market regime NEUTRAL; sector WEAK; net R/R 0.00."
     },
     {
-      "count": 3486,
+      "count": 3502,
       "name": "SKIP: No Trade result. Market regime NEUTRAL; sector STRONG; net R/R 0.00."
     },
     {
-      "count": 1197,
+      "count": 1207,
       "name": "SKIP: No Trade result. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.00."
     },
     {
@@ -316,25 +316,25 @@
       "name": "WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation."
     },
     {
-      "count": 52,
+      "count": 53,
       "name": "WATCH: NEUTRAL market requires setup score (0.37 < 0.55)."
+    },
+    {
+      "count": 50,
+      "name": "WATCH: NEUTRAL market requires setup score (0.35 < 0.55)."
     },
     {
       "count": 49,
       "name": "WATCH: NEUTRAL market requires setup score (0.30 < 0.55)."
-    },
-    {
-      "count": 49,
-      "name": "WATCH: NEUTRAL market requires setup score (0.35 < 0.55)."
     }
   ],
   "most_common_warnings": [
     {
-      "count": 5642,
+      "count": 5672,
       "name": "No completed candle in the last 3 candles confirmed entry while the setup stayed relevant."
     },
     {
-      "count": 2459,
+      "count": 2481,
       "name": "Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked"
     },
     {
@@ -342,7 +342,7 @@
       "name": "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
     },
     {
-      "count": 1416,
+      "count": 1424,
       "name": "Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
     },
     {
@@ -362,11 +362,11 @@
       "name": "IWM uses last-known-good completed-session data (0 session(s) old): completed-session freshness is STALE_SESSION"
     },
     {
-      "count": 469,
+      "count": 470,
       "name": "Target distance is aggressive versus daily ATR."
     },
     {
-      "count": 422,
+      "count": 426,
       "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; "
     }
   ],
@@ -477,38 +477,38 @@
   "performance_by_shadow_strategy": {
     "BREAKOUT_CONTINUATION": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.3316,
-      "average_return_3d_pct": 1.9482,
+      "average_return_1d_pct": 0.2149,
+      "average_return_3d_pct": 1.8371,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 8,
       "matured_3d": 4,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 37.5,
+      "positive_rate_1d_pct": 25.0,
       "positive_rate_3d_pct": 75.0,
       "positive_rate_5d_pct": null,
       "signals": 8
     },
     "FIB_STOP_075_ATR": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.1824,
-      "average_return_3d_pct": 2.619,
+      "average_return_1d_pct": 0.2992,
+      "average_return_3d_pct": 2.5171,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 16,
       "matured_3d": 8,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 50.0,
+      "positive_rate_1d_pct": 43.75,
       "positive_rate_3d_pct": 62.5,
       "positive_rate_5d_pct": null,
       "signals": 17
     },
     "FIB_STOP_100_ATR": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.5211,
-      "average_return_3d_pct": 2.1254,
+      "average_return_1d_pct": 0.6465,
+      "average_return_3d_pct": 2.3473,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 6,
@@ -522,8 +522,8 @@
     },
     "FIB_STRUCTURE_STOP": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": -0.8291,
-      "average_return_3d_pct": -1.8833,
+      "average_return_1d_pct": -0.6242,
+      "average_return_3d_pct": -1.701,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 10,
@@ -537,18 +537,18 @@
     },
     "TREND_PULLBACK_RECLAIM": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.2294,
-      "average_return_3d_pct": 0.5235,
+      "average_return_1d_pct": 0.2207,
+      "average_return_3d_pct": 0.3937,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 15,
       "matured_3d": 8,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 53.33,
+      "positive_rate_1d_pct": 46.67,
       "positive_rate_3d_pct": 50.0,
       "positive_rate_5d_pct": null,
-      "signals": 16
+      "signals": 17
     },
     "VWAP_RECLAIM": {
       "average_return_10d_pct": null,
@@ -615,15 +615,15 @@
         "name": "WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation."
       },
       {
-        "count": 422,
+        "count": 426,
         "name": "WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked."
       },
       {
-        "count": 282,
+        "count": 283,
         "name": "WATCH: Entry confirmation failed - Breakout/retest confirmation requires completed close above trigger, held retest, and no falling candle."
       },
       {
-        "count": 182,
+        "count": 185,
         "name": "WATCH: Neutral sector requires a cleaner setup score."
       },
       {
@@ -647,13 +647,13 @@
         "name": "WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation."
       },
       {
-        "count": 55,
+        "count": 56,
         "name": "WATCH: NEUTRAL market requires setup score (0.37 < 0.55)."
       }
     ],
     "note": "Blockers can overlap; empty lists do not prove eligibility. Full reasons are retained.",
-    "observations_without_recorded_blockers": 17400,
-    "rejected_observations": 18397,
+    "observations_without_recorded_blockers": 17515,
+    "rejected_observations": 18518,
     "unique_rejected_tickers": 158
   },
   "runtime_metrics": {
@@ -724,7 +724,7 @@
       "agent_results/decisions/archive/market_lens_agent_20260929_233153.jsonl.6c1db2f044d29b1c4a3d135111164eb4dd3d62ec4eecb024f4858125912bf9ce.gz",
       "agent_results/decisions/archive/market_lens_agent_20260930_001639.jsonl.af68313231d758fbd4f7deac2721c9b5e5b0ad9b450107b5ff401c470b7c42e6.gz",
       "agent_results/decisions/archive/market_lens_agent_20260930_013142.jsonl.5d7ca80f112ad15af664708817cf044dbbc649b4a96fe4ce1ba07992eb65d5a3.gz",
-      "agent_results/decisions/market_lens_agent_20260930_023159.jsonl",
+      "agent_results/decisions/archive/market_lens_agent_20260930_023159.jsonl.94053ad0d066b8082575382fa13b1ad8e916bfe3d92b34ddef7e1c249bd44c85.gz",
       "agent_results/decisions/market_lens_agent_20260930_033145.jsonl",
       "agent_results/decisions/market_lens_agent_20260930_043152.jsonl",
       "agent_results/decisions/market_lens_agent_20260930_053133.jsonl",
@@ -805,23 +805,24 @@
       "agent_results/decisions/market_lens_agent_20261002_131137.jsonl",
       "agent_results/decisions/market_lens_agent_20261002_133653.jsonl",
       "agent_results/decisions/market_lens_agent_20261002_134643.jsonl",
-      "agent_results/decisions/market_lens_agent_20261002_140145.jsonl"
+      "agent_results/decisions/market_lens_agent_20261002_140145.jsonl",
+      "agent_results/decisions/market_lens_agent_20261002_143135.jsonl"
     ],
-    "records": 18749,
-    "run_id": "20261002_140145"
+    "records": 18871,
+    "run_id": "20261002_143135"
   },
   "setup_candidate_metrics": {
     "active_policy": "FIRST_MATCH_LEGACY",
     "alternative_ranked_first_count": 320,
     "candidate_count_by_setup_type": {
-      "Breakout + Retest": 2506,
-      "Fib 61.8 Confluence Buy Zone": 1815,
+      "Breakout + Retest": 2522,
+      "Fib 61.8 Confluence Buy Zone": 1830,
       "Liquidity Trap Buy Zone": 687,
-      "Swing Low + Volume Support Buy Zone": 1368,
+      "Swing Low + Volume Support Buy Zone": 1382,
       "VWAP Reclaim Setup": 3137
     },
-    "records_with_candidates": 8195,
-    "records_with_multiple_candidates": 1194,
+    "records_with_candidates": 8236,
+    "records_with_multiple_candidates": 1197,
     "shadow_only": true
   },
   "shadow_outcome_measurement": {
@@ -832,38 +833,38 @@
   "shadow_outcome_metrics_by_strategy": {
     "BREAKOUT_CONTINUATION": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.3316,
-      "average_return_3d_pct": 1.9482,
+      "average_return_1d_pct": 0.2149,
+      "average_return_3d_pct": 1.8371,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 8,
       "matured_3d": 4,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 37.5,
+      "positive_rate_1d_pct": 25.0,
       "positive_rate_3d_pct": 75.0,
       "positive_rate_5d_pct": null,
       "signals": 8
     },
     "FIB_STOP_075_ATR": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.1824,
-      "average_return_3d_pct": 2.619,
+      "average_return_1d_pct": 0.2992,
+      "average_return_3d_pct": 2.5171,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 16,
       "matured_3d": 8,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 50.0,
+      "positive_rate_1d_pct": 43.75,
       "positive_rate_3d_pct": 62.5,
       "positive_rate_5d_pct": null,
       "signals": 17
     },
     "FIB_STOP_100_ATR": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.5211,
-      "average_return_3d_pct": 2.1254,
+      "average_return_1d_pct": 0.6465,
+      "average_return_3d_pct": 2.3473,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 6,
@@ -877,8 +878,8 @@
     },
     "FIB_STRUCTURE_STOP": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": -0.8291,
-      "average_return_3d_pct": -1.8833,
+      "average_return_1d_pct": -0.6242,
+      "average_return_3d_pct": -1.701,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 10,
@@ -892,18 +893,18 @@
     },
     "TREND_PULLBACK_RECLAIM": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.2294,
-      "average_return_3d_pct": 0.5235,
+      "average_return_1d_pct": 0.2207,
+      "average_return_3d_pct": 0.3937,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 15,
       "matured_3d": 8,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 53.33,
+      "positive_rate_1d_pct": 46.67,
       "positive_rate_3d_pct": 50.0,
       "positive_rate_5d_pct": null,
-      "signals": 16
+      "signals": 17
     },
     "VWAP_RECLAIM": {
       "average_return_10d_pct": null,
@@ -924,38 +925,38 @@
   "shadow_outcome_metrics_by_strategy_version": {
     "BREAKOUT_CONTINUATION@shadow_v2": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.3316,
-      "average_return_3d_pct": 1.9482,
+      "average_return_1d_pct": 0.2149,
+      "average_return_3d_pct": 1.8371,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 8,
       "matured_3d": 4,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 37.5,
+      "positive_rate_1d_pct": 25.0,
       "positive_rate_3d_pct": 75.0,
       "positive_rate_5d_pct": null,
       "signals": 8
     },
     "FIB_STOP_075_ATR@shadow_v2": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.1824,
-      "average_return_3d_pct": 2.619,
+      "average_return_1d_pct": 0.2992,
+      "average_return_3d_pct": 2.5171,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 16,
       "matured_3d": 8,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 50.0,
+      "positive_rate_1d_pct": 43.75,
       "positive_rate_3d_pct": 62.5,
       "positive_rate_5d_pct": null,
       "signals": 17
     },
     "FIB_STOP_100_ATR@shadow_v2": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.5211,
-      "average_return_3d_pct": 2.1254,
+      "average_return_1d_pct": 0.6465,
+      "average_return_3d_pct": 2.3473,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 6,
@@ -969,8 +970,8 @@
     },
     "FIB_STRUCTURE_STOP@shadow_v2": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": -0.8291,
-      "average_return_3d_pct": -1.8833,
+      "average_return_1d_pct": -0.6242,
+      "average_return_3d_pct": -1.701,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 10,
@@ -984,18 +985,18 @@
     },
     "TREND_PULLBACK_RECLAIM@shadow_v2": {
       "average_return_10d_pct": null,
-      "average_return_1d_pct": 0.2294,
-      "average_return_3d_pct": 0.5235,
+      "average_return_1d_pct": 0.2207,
+      "average_return_3d_pct": 0.3937,
       "average_return_5d_pct": null,
       "matured_10d": 0,
       "matured_1d": 15,
       "matured_3d": 8,
       "matured_5d": 0,
       "positive_rate_10d_pct": null,
-      "positive_rate_1d_pct": 53.33,
+      "positive_rate_1d_pct": 46.67,
       "positive_rate_3d_pct": 50.0,
       "positive_rate_5d_pct": null,
-      "signals": 16
+      "signals": 17
     },
     "VWAP_RECLAIM@shadow_v2": {
       "average_return_10d_pct": null,
@@ -1265,7 +1266,7 @@
     "FIB_STOP_075_ATR": 68,
     "FIB_STOP_100_ATR": 22,
     "FIB_STRUCTURE_STOP": 32,
-    "TREND_PULLBACK_RECLAIM": 47,
+    "TREND_PULLBACK_RECLAIM": 48,
     "VWAP_RECLAIM": 3
   },
   "shadow_strategies_would_buy_count_by_strategy_version": {
@@ -1273,7 +1274,7 @@
     "FIB_STOP_075_ATR@shadow_v2": 68,
     "FIB_STOP_100_ATR@shadow_v2": 22,
     "FIB_STRUCTURE_STOP@shadow_v2": 32,
-    "TREND_PULLBACK_RECLAIM@shadow_v2": 47,
+    "TREND_PULLBACK_RECLAIM@shadow_v2": 48,
     "VWAP_RECLAIM@shadow_v2": 3
   },
   "summary_type": "weekly",
@@ -1294,9 +1295,9 @@
     },
     {
       "final_action": "SKIP",
-      "net_rr": 1.5372,
-      "reason": "SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.54.",
-      "setup_score": 0.5704,
+      "net_rr": 1.7277,
+      "reason": "SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.73.",
+      "setup_score": 0.5741,
       "ticker": "URI"
     },
     {
@@ -1352,18 +1353,18 @@
   "total_BUY_SIMULATED": 0,
   "total_WATCH_READY": 0,
   "total_closed_trades": 3,
-  "total_portfolio_value": 100735.12,
-  "total_result_cards_read": 18749,
-  "total_scans": 148,
-  "total_tickers_scanned": 18749,
+  "total_portfolio_value": 100730.32,
+  "total_result_cards_read": 18871,
+  "total_scans": 149,
+  "total_tickers_scanned": 18871,
   "total_trading_days": 5,
   "trade_metric_source": "COMPLETED_TRADE_LIFECYCLE",
-  "unrealized_pnl": 85.0,
+  "unrealized_pnl": 80.2,
   "week_end": "2026-10-04",
   "week_start": "2026-09-28",
   "win_rate": 0.0,
   "worst_sector": "Semiconductors",
   "worst_setup_type": "Liquidity Trap Buy Zone",
   "worst_shadow_strategy": "FIB_STRUCTURE_STOP",
-  "worst_ticker": "BRK-B"
+  "worst_ticker": "KO"
 }

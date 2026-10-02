@@ -1,28 +1,28 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 148
-Tickers scanned: 18749
+Total scans: 149
+Tickers scanned: 18871
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3323
+WATCH_REVIEW: 3337
 WATCH_REVIEW unique tickers: 70
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3323
-SKIP: 15074
-NO_TRADE: 10554
+WATCH: 3337
+SKIP: 15181
+NO_TRADE: 10635
 Realized PnL: -551.68
-Unrealized PnL: 85.0
-Portfolio value: 100735.12
+Unrealized PnL: 80.2
+Portfolio value: 100730.32
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.7351
+Cumulative recorded-equity change (%): 0.7303
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
-Worst ticker: BRK-B
+Worst ticker: KO
 Best shadow strategy: FIB_STOP_100_ATR
 Worst shadow strategy: FIB_STRUCTURE_STOP
 Shadow would-buy counts:
@@ -30,13 +30,13 @@ Shadow would-buy counts:
 - FIB_STOP_075_ATR: 68
 - FIB_STOP_100_ATR: 22
 - FIB_STRUCTURE_STOP: 32
-- TREND_PULLBACK_RECLAIM: 47
+- TREND_PULLBACK_RECLAIM: 48
 - VWAP_RECLAIM: 3
 
 Top rejected candidates:
 - LRCX: WATCH score=0.5988 reason=WATCH: Technical setup detected, but weighted risk/reward 1.74 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 - DE: SKIP score=0.5758 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.48.
-- URI: SKIP score=0.5704 reason=SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.54.
+- URI: SKIP score=0.5741 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.73.
 - LLY: WATCH score=0.5674 reason=WATCH: Technical setup detected, but weighted risk/reward 1.53 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
 - TSLA: SKIP score=0.5639 reason=SKIP: Consumer sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.78.
 - PFE: SKIP score=0.5544 reason=SKIP: Healthcare sector regime is weak (28/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.73.
