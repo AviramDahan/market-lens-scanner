@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-02
-Total scans: 30
-Tickers scanned: 3671
+Total scans: 31
+Tickers scanned: 3793
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 410
-WATCH_REVIEW unique tickers: 29
+WATCH_REVIEW: 423
+WATCH_REVIEW unique tickers: 30
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 410
-SKIP: 3231
-NO_TRADE: 2310
+WATCH: 423
+SKIP: 3339
+NO_TRADE: 2375
 Realized PnL: 0.0
-Unrealized PnL: 84.3
-Portfolio value: 100734.42
-Daily recorded-equity change (%): -0.0235
+Unrealized PnL: 87.9
+Portfolio value: 100738.02
+Daily recorded-equity change (%): -0.0199
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-01
-Cumulative recorded-equity change (%): 0.7344
+Cumulative recorded-equity change (%): 0.738
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
@@ -27,9 +27,9 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 18
-- FIB_STRUCTURE_STOP: 10
-- TREND_PULLBACK_RECLAIM: 9
+- FIB_STOP_075_ATR: 20
+- FIB_STRUCTURE_STOP: 11
+- TREND_PULLBACK_RECLAIM: 11
 
 Top rejected candidates:
 - URI: SKIP score=0.5877 reason=SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.25.
