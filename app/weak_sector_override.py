@@ -386,6 +386,7 @@ def evaluate_weak_sector_override_v1(record: dict[str, Any]) -> dict[str, Any]:
         "setup_type": setup_type,
         "entry_path": path,
         "cohort": "WEAK_SIGNAL" if sector == "WEAK" else "STRONG_CONTROL" if sector == "STRONG" else "OUT_OF_SCOPE",
+        "applicable": applicable,
         "status": status,
         "signal_eligible": signal_eligible,
         "control_eligible": control_eligible,
@@ -478,7 +479,7 @@ def persist_first_observations(
     considered = [
         item
         for item in evaluated
-        if item["cohort"] != "OUT_OF_SCOPE" and item["session_group"] == "REGULAR"
+        if item["applicable"] is True
     ]
     added = []
     for item in considered:
@@ -565,8 +566,9 @@ def build_measurement_summary(
     observations: list[dict[str, Any]], bars_by_ticker: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     bars_by_ticker = bars_by_ticker or {}
-    signals = [item for item in observations if item.get("signal_eligible") is True]
-    all_controls = [item for item in observations if item.get("control_eligible") is True]
+    applicable_observations = [item for item in observations if _observation_applicable(item)]
+    signals = [item for item in applicable_observations if item.get("signal_eligible") is True]
+    all_controls = [item for item in applicable_observations if item.get("control_eligible") is True]
     strata = {
         json.dumps(item.get("comparison_stratum") or {}, sort_keys=True)
         for item in signals
@@ -596,7 +598,7 @@ def build_measurement_summary(
     control_rows = [item for item in outcome_rows if item.get("control_eligible") is True]
     ineligible = Counter(
         reason
-        for item in observations
+        for item in applicable_observations
         if item.get("cohort") == "WEAK_SIGNAL" and not item.get("signal_eligible")
         for reason in item.get("ineligibility_reasons") or [item.get("status") or "UNKNOWN"]
     )
@@ -631,6 +633,7 @@ def build_measurement_summary(
             "comparison": "All eligible STRONG-sector controls with the same setup, market regime and pre-recorded setup-score bucket.",
         },
         "observation_count": len(observations),
+        "applicable_observation_count": len(applicable_observations),
         "qualifying_signal_count": len(signals),
         "matched_control_count": len(controls),
         "weak_ineligibility_reasons": dict(ineligible.most_common()),
@@ -647,6 +650,19 @@ def build_measurement_summary(
         "signals": signal_rows,
         "controls": control_rows,
     }
+
+
+def _observation_applicable(item: dict[str, Any]) -> bool:
+    """Accept explicit current evidence and conservatively infer legacy v1 rows."""
+    if item.get("applicable") is not None:
+        return item.get("applicable") is True
+    setup_type = str(item.get("setup_type") or "").strip()
+    return bool(
+        setup_type
+        and setup_type.lower() != "no trade"
+        and str(item.get("session_group") or "").upper() == "REGULAR"
+        and str(item.get("cohort") or "") in {"WEAK_SIGNAL", "STRONG_CONTROL"}
+    )
 
 
 def measurement_summary_markdown(summary: dict[str, Any]) -> str:
