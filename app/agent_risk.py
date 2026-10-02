@@ -784,6 +784,7 @@ def evaluate_agent_candidate(
             if neutral_pilot["eligible"]
             else run_context.market_regime.min_setup_score
         ),
+        "minimum_primary_net_rr_required": config.minimum_primary_net_rr,
         "market_regime_indicators": run_context.market_regime.indicators,
         "market_session_phase": market_session["phase"],
         "market_session_timestamp": market_session["timestamp"],
