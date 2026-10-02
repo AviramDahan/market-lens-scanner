@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-09-28
-Total scans: 151
-Tickers scanned: 19113
+Total scans: 152
+Tickers scanned: 19234
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3360
+WATCH_REVIEW: 3372
 WATCH_REVIEW unique tickers: 70
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3360
-SKIP: 15398
-NO_TRADE: 10808
+WATCH: 3372
+SKIP: 15506
+NO_TRADE: 10892
 Realized PnL: -551.68
-Unrealized PnL: 72.4
-Portfolio value: 100722.52
+Unrealized PnL: 70.6
+Portfolio value: 100720.72
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.7225
+Cumulative recorded-equity change (%): 0.7207
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: APP
 Worst ticker: KO
@@ -43,7 +43,7 @@ Top rejected candidates:
 - KLAC: WATCH score=0.5441 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - CAT: SKIP score=0.5433 reason=SKIP: Industrials sector regime is weak (14/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.08.
 - RMBS: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.93 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.35.
-- HAL: WATCH score=0.5181 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
+- LIN: SKIP score=0.528 reason=SKIP: Materials sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.19.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
