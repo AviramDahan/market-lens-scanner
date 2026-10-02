@@ -1,34 +1,34 @@
 Daily Performance Summary
 
 Date: 2026-10-02
-Total scans: 24
-Tickers scanned: 2939
+Total scans: 25
+Tickers scanned: 3061
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 346
+WATCH_REVIEW: 358
 WATCH_REVIEW unique tickers: 29
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 346
-SKIP: 2569
-NO_TRADE: 1786
+WATCH: 358
+SKIP: 2678
+NO_TRADE: 1869
 Realized PnL: 0.0
-Unrealized PnL: 93.3
-Portfolio value: 100743.42
-Daily recorded-equity change (%): -0.0146
+Unrealized PnL: 102.1
+Portfolio value: 100752.22
+Daily recorded-equity change (%): -0.0059
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-01
-Cumulative recorded-equity change (%): 0.7434
+Cumulative recorded-equity change (%): 0.7522
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 2
-- FIB_STOP_075_ATR: 8
-- FIB_STRUCTURE_STOP: 5
+- BREAKOUT_CONTINUATION: 3
+- FIB_STOP_075_ATR: 10
+- FIB_STRUCTURE_STOP: 6
 - TREND_PULLBACK_RECLAIM: 5
 
 Top rejected candidates:
@@ -41,7 +41,7 @@ Top rejected candidates:
 - NVDA: WATCH score=0.4824 reason=WATCH: Technical setup detected, but weighted risk/reward 1.57 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.
 - AR: WATCH score=0.475 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - ANET: WATCH score=0.4732 reason=WATCH: Technical setup detected, but weighted risk/reward 1.31 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.94.
-- ISRG: SKIP score=0.4583 reason=SKIP: Healthcare sector regime is weak (24/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.26.
+- ISRG: SKIP score=0.4594 reason=SKIP: Healthcare sector regime is weak (25/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.28.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
