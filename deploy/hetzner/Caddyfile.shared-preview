@@ -1,0 +1,19 @@
+{$PUBLIC_API_HOST} {
+    encode zstd gzip
+    reverse_proxy api:8000
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+    }
+}
+
+market-lens.2.28.100.77.sslip.io {
+    encode zstd gzip
+    @writes method POST PUT PATCH DELETE
+    respond @writes "Market Lens Hetzner preview is read-only" 503
+    reverse_proxy market-lens-runtime-web:8000
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+    }
+}

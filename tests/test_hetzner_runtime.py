@@ -74,3 +74,37 @@ def test_scanner_cannot_notify_if_persistence_fails(tmp_path, monkeypatch):
 
     with pytest.raises(RuntimeError, match="push failed"):
         runtime.execute("scanner")
+
+
+def test_scanner_rejects_missing_or_failed_scan_record(tmp_path, monkeypatch):
+    runtime_dir = tmp_path / "runtime"
+    runtime_dir.mkdir()
+    monkeypatch.setattr(runtime, "REPO", tmp_path)
+
+    with pytest.raises(RuntimeError, match="Expected one new scanner record"):
+        runtime.latest_scan_record(set())
+
+    (runtime_dir / "market_lens_agent_20261003_120000.json").write_text(
+        json.dumps({"run_status": "AUTH_FAILED", "result_cards_read": 0})
+    )
+    (tmp_path / "agent_results").mkdir()
+    runtime_dir.rename(tmp_path / "agent_results/runtime")
+    with pytest.raises(RuntimeError, match="successful, nonempty scan"):
+        runtime.latest_scan_record(set())
+
+
+def test_monitor_event_without_tracker_change_is_not_persisted(tmp_path, monkeypatch):
+    monkeypatch.setattr(runtime, "REPO", tmp_path)
+    monkeypatch.setattr(runtime, "STATE", tmp_path / "state")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"unchanged")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    heartbeat = runtime.STATE / "monitor/latest_status.json"
+    heartbeat.parent.mkdir(parents=True)
+    heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 1}))
+    monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
+    monkeypatch.setattr(runtime, "worker", lambda *args, **kwargs: None)
+    monkeypatch.setattr(runtime, "persist", lambda *_: pytest.fail("Unsaved event persisted"))
+
+    with pytest.raises(RuntimeError, match="without a saved portfolio change"):
+        runtime.execute("monitor")

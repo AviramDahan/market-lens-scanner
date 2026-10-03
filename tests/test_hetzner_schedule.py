@@ -62,3 +62,12 @@ def test_runtime_compose_does_not_publish_worker_or_auto_start_it():
     assert "worker" in worker["profiles"]
     assert "ports" not in worker
     assert worker["restart"] == "no"
+
+
+def test_shared_caddy_preview_preserves_existing_route_and_blocks_writes():
+    config = (ROOT / "deploy/hetzner/Caddyfile.shared-preview").read_text()
+    assert "{$PUBLIC_API_HOST}" in config
+    assert "reverse_proxy api:8000" in config
+    assert "market-lens.2.28.100.77.sslip.io" in config
+    assert "respond @writes" in config
+    assert "reverse_proxy market-lens-runtime-web:8000" in config

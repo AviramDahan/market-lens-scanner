@@ -96,3 +96,59 @@ The GitHub repository remains the code and historical backup destination, not
 the runtime database. Supabase, market-data providers, and Telegram remain
 external services where used. No strategy or risk-rule change is part of this
 migration.
+
+## 2026-10-03: read-only public preview
+
+The free hostname `https://market-lens.2.28.100.77.sslip.io` resolves to the
+Hetzner server. It is **not** the production cutover. The shared Caddy proxy
+routes this hostname to `market-lens-runtime-web` and rejects POST, PUT,
+PATCH, and DELETE with HTTP 503. Its original AI Trader route is preserved.
+The Caddy source is `deploy/hetzner/Caddyfile.shared-preview`; the host copy is
+`/opt/ai-trader-staging/deploy/Caddyfile`. Before applying the preview, the
+original Caddyfile was saved to
+`/home/trader/market-lens-backups/ai-trader-Caddyfile-before-market-lens-2026-10-03`.
+The bind-mounted container file was read-only and still referred to the old
+inode after a host-side copy, so the active Caddy configuration was reloaded
+from a validated temporary copy. A container recreation will read the updated
+host path. Public HTTPS GETs for `/health`, `/agent`, and `/agent/data`
+returned 200; a POST to `/agent/trigger-scan` returned 503. All AI Trader
+containers remained healthy. The dashboard is a read-only preview of a GitHub
+snapshot, not a live portfolio feed.
+
+The host also has a shallow clone at `/home/trader/market-lens-runtime`, a
+read-only runtime web service at loopback port 18082, and a worker image with
+Chromium. The web service and worker share the same bind-mounted tracker and
+results; the worker has no automatic restart. The runtime image was built
+without embedding the tracker/results in its Docker context. The host has a
+repo-scoped GitHub write deploy key, but only a dry-run push was tested. The
+writer remains **disabled** through both host flags in
+`/home/trader/.config/market-lens/host.env`; no timer is installed or enabled.
+The runtime credentials are placeholders, and no Telegram token is installed.
+
+### Required cutover gates
+
+1. Test a full smart-universe scan against an isolated workbook copy; compare
+   duration, result cards, failures, and memory usage with the current Actions
+   path. Run synthetic TP1/TP2/SL tests in isolation. A weekend no-op monitor
+   check is not live-session proof.
+2. Install the current paper-only credentials and Telegram destination as
+   owner-readable host secrets without logging their values. Rotate any bot
+   token previously exposed in chat. Verify login without screenshots showing
+   credentials.
+3. Confirm all old scanner and monitor triggers (cron-job.org, GitHub Actions
+   schedules/dispatches, and Render live dispatch) have stopped. Keep the
+   separate one-time weak-sector reminder active until its October 13 receipt
+   exists, or migrate it with an atomic receipt check. Never enable two writers.
+4. Refresh the runtime checkout from the latest `main`, take and verify a new
+   tracker/results backup, compare its revision with the built images, and set
+   the two host flags only after old writers are confirmed off. Install/enable
+   `market-lens.timer` and watch the first scanner and monitor runs. Require
+   actual GitHub backup commits, monitor heartbeat and portfolio persistence,
+   and Telegram receipts before treating the new path as live.
+5. Keep Render and the old Actions configuration available as rollback while
+   validating a regular-session position check. Never restore an old workbook
+   over newer trades: pause the writer, reconcile GitHub/local versions, and
+   use a fresh snapshot before switching back.
+
+Until all gates pass, `https://market-lens-scanner-fb63.onrender.com/` remains
+the active app. The sslip.io address is an infrastructure preview only.
