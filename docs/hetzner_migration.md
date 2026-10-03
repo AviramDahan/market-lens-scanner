@@ -19,8 +19,17 @@ now mounts that cache in tmpfs. After the fix, `/health`, `/agent`, and
 `/agent/data` returned HTTP 200, the container was healthy at about 139 MiB
 idle memory, and the existing AI Trader services remained healthy. This is
 only a web-startup smoke test, not scanner/monitor or peak-load validation.
-The initial Docker build sent a 535 MB context; reduce that before frequent
-rebuilds without changing the Render image's input set.
+The initial Docker build sent a 535 MB context. A staging-specific Dockerfile
+and ignore file reduced the next build context to about 270 kB without changing
+the Render image's input set.
+
+`deploy/hetzner/compose.observation.yaml` is a separate one-shot scanner test.
+It joins only the staging web network, copies the image's frozen tracker into
+tmpfs, runs three explicitly chosen tickers, and writes results/outbox only in
+tmpfs. It has no Telegram credentials, GitHub push, production tracker mount,
+or restart policy. It tests Chromium and the UI scan path, not live trading,
+portfolio persistence, or scheduled execution. Do not run it against the
+public production app or mistake its output for live positions.
 
 Before starting it, check host memory, disk, existing Docker services, and
 port 18081. Build off market hours. Validate `/health`, `/agent`, and
