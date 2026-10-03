@@ -1404,7 +1404,10 @@ def build_system_health(
 
 
 def load_monitor_status(position_monitor_dir: Path) -> dict[str, Any]:
-    path = position_monitor_dir / "latest_status.json"
+    path = Path(
+        os.getenv("MARKET_LENS_MONITOR_HEARTBEAT_PATH")
+        or position_monitor_dir / "latest_status.json"
+    )
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
