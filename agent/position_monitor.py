@@ -277,7 +277,10 @@ def write_monitor_heartbeat(
     health: dict[str, Any],
     event_count: int,
 ) -> Path:
-    path = settings.run_dir / "position_monitor" / "latest_status.json"
+    path = Path(
+        os.getenv("MARKET_LENS_MONITOR_HEARTBEAT_PATH")
+        or settings.run_dir / "position_monitor" / "latest_status.json"
+    )
     payload = {
         "schema_version": 1,
         "timestamp": timestamp,

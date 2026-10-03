@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY pyproject.toml .
+COPY app/ app/
+RUN pip install --no-cache-dir -e . && python -m playwright install --with-deps chromium
+
+COPY agent/ agent/
+COPY agent_tracker/ agent_tracker/
+COPY config.yaml config.yaml
+COPY deploy/hetzner/run_observation_scan.sh /usr/local/bin/run-observation-scan
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
+CMD ["sh", "/usr/local/bin/run-observation-scan"]

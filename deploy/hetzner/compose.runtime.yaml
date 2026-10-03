@@ -1,0 +1,93 @@
+name: market-lens-runtime
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/hetzner/Dockerfile.web.runtime
+      args:
+        SOURCE_REVISION: ${MARKET_LENS_SOURCE_REVISION:-unknown}
+    ports:
+      - "127.0.0.1:18082:8000"
+    networks:
+      default: {}
+      ingress:
+        aliases:
+          - market-lens-runtime-web
+    environment:
+      PORT: "8000"
+      MARKET_LENS_AUTH_MODE: open
+      MARKET_LENS_RENDER_SHADOW_MONITOR_ENABLED: "false"
+      MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED: "false"
+      MARKET_LENS_RESULTS_SYNC_ENABLED: "false"
+      MARKET_LENS_DASHBOARD_ASSET_SYNC_ENABLED: "false"
+      MARKET_LENS_MONITOR_HEARTBEAT_PATH: /app/runtime/monitor/latest_status.json
+    volumes:
+      - /home/trader/market-lens-runtime/agent_tracker:/app/agent_tracker:ro
+      - /home/trader/market-lens-runtime/agent_results:/app/agent_results:ro
+      - /home/trader/market-lens-runtime-state:/app/runtime:ro
+    read_only: true
+    tmpfs:
+      - /app/data:size=64m
+      - /app/charts:size=64m
+      - /app/.yfinance-cache:size=64m
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    cpus: "0.75"
+    pids_limit: 128
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 40s
+
+  worker:
+    profiles: [worker]
+    build:
+      context: ../..
+      dockerfile: deploy/hetzner/Dockerfile.runtime
+      args:
+        SOURCE_REVISION: ${MARKET_LENS_SOURCE_REVISION:-unknown}
+    env_file:
+      - ./runtime.defaults.env
+      - /home/trader/.config/market-lens/runtime.env
+    environment:
+      MARKET_LENS_URL: http://web:8000/
+      MARKET_LENS_PUBLIC_URL: https://market-lens.2.28.100.77.sslip.io
+      MPLCONFIGDIR: /tmp/matplotlib
+      XDG_CACHE_HOME: /tmp/.cache
+      MARKET_LENS_EXCEL_PATH: /app/agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
+      MARKET_LENS_RUN_DIR: /app/agent_results
+      MARKET_LENS_REGIME_CACHE_PATH: /app/agent_results/regime/market_regime_lkg.json
+      MARKET_LENS_MONITOR_HEARTBEAT_PATH: /app/runtime/monitor/latest_status.json
+      MARKET_LENS_AGENT_NOTIFICATION_OUTBOX: /app/runtime/outbox/scanner.json
+      MARKET_LENS_MONITOR_NOTIFICATION_OUTBOX: /app/runtime/outbox/monitor.json
+    volumes:
+      - /home/trader/market-lens-runtime/agent_tracker:/app/agent_tracker:rw
+      - /home/trader/market-lens-runtime/agent_results:/app/agent_results:rw
+      - /home/trader/market-lens-runtime-state:/app/runtime:rw
+    read_only: true
+    tmpfs:
+      - /app/data:size=64m
+      - /app/charts:size=128m
+      - /app/.yfinance-cache:size=64m
+      - /tmp:size=256m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2500m
+    cpus: "2.5"
+    pids_limit: 256
+    restart: "no"
+
+networks:
+  ingress:
+    external: true
+    name: ai-trader-cloud_egress

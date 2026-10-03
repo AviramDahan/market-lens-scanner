@@ -90,6 +90,27 @@ def test_successful_no_event_monitor_writes_dashboard_heartbeat(tmp_path):
     assert payload["event_count"] == 0
 
 
+def test_external_heartbeat_keeps_no_event_status_out_of_result_repo(tmp_path, monkeypatch):
+    from agent.position_monitor import MonitorSettings, write_monitor_heartbeat
+
+    external = tmp_path / "runtime" / "latest_status.json"
+    results = tmp_path / "agent_results"
+    monkeypatch.setenv("MARKET_LENS_MONITOR_HEARTBEAT_PATH", str(external))
+    settings = MonitorSettings(tmp_path / "tracker.xlsx", results, "5d", "1m", False, "")
+
+    written = write_monitor_heartbeat(
+        settings,
+        run_id="20261003_120000",
+        timestamp="2026-10-03T12:00:00+00:00",
+        health={"status": "MONITOR_OK", "positions_checked": 1},
+        event_count=0,
+    )
+
+    assert written == external
+    assert not (results / "position_monitor" / "latest_status.json").exists()
+    assert load_monitor_status(results / "position_monitor")["positions_checked"] == 1
+
+
 def test_system_health_reports_latest_monitor_evaluation_not_only_trade_event(tmp_path):
     tracker = tmp_path / "tracker.xlsx"
     tracker.write_bytes(b"fixture")

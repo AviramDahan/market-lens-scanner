@@ -1,0 +1,40 @@
+name: market-lens-staging
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/hetzner/Dockerfile.staging
+    ports:
+      - "127.0.0.1:18081:8000"
+    volumes:
+      - /home/trader/market-lens-staging-data/agent_tracker:/app/agent_tracker:ro
+      - /home/trader/market-lens-staging-data/agent_results:/app/agent_results:ro
+    environment:
+      PORT: "8000"
+      MARKET_LENS_RENDER_SHADOW_MONITOR_ENABLED: "false"
+      MARKET_LENS_DASHBOARD_SNAPSHOT_SYNC_ENABLED: "false"
+      MARKET_LENS_RESULTS_SYNC_ENABLED: "false"
+      MARKET_LENS_DASHBOARD_ASSET_SYNC_ENABLED: "false"
+    read_only: true
+    tmpfs:
+      - /app/data:size=64m
+      - /app/charts:size=64m
+      - /app/.yfinance-cache:size=64m
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    cpus: "0.75"
+    pids_limit: 128
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 40s

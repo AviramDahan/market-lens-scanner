@@ -1,0 +1,29 @@
+name: market-lens-observation
+
+services:
+  scanner:
+    build:
+      context: ../..
+      dockerfile: deploy/hetzner/Dockerfile.observation
+    networks:
+      - staging_web
+    environment:
+      MPLCONFIGDIR: /tmp/matplotlib
+      XDG_CACHE_HOME: /tmp/.cache
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m
+      - /app/data:size=64m
+      - /app/charts:size=64m
+      - /app/.yfinance-cache:size=64m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+    cpus: "1.5"
+    pids_limit: 256
+    restart: "no"
+
+networks:
+  staging_web:
+    external: true
+    name: market-lens-staging_default
