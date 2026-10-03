@@ -6,6 +6,9 @@ RUN pip install --no-cache-dir -e .
 
 FROM python:3.11-slim
 WORKDIR /app
+ARG SOURCE_REVISION=unknown
+LABEL org.opencontainers.image.revision=$SOURCE_REVISION
+ENV RENDER_GIT_COMMIT=$SOURCE_REVISION
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY app/ app/

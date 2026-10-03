@@ -5,6 +5,8 @@ services:
     build:
       context: ../..
       dockerfile: deploy/hetzner/Dockerfile.web.runtime
+      args:
+        SOURCE_REVISION: ${MARKET_LENS_SOURCE_REVISION:-unknown}
     ports:
       - "127.0.0.1:18082:8000"
     networks:
@@ -52,12 +54,16 @@ services:
     build:
       context: ../..
       dockerfile: deploy/hetzner/Dockerfile.runtime
+      args:
+        SOURCE_REVISION: ${MARKET_LENS_SOURCE_REVISION:-unknown}
     env_file:
       - ./runtime.defaults.env
       - /home/trader/.config/market-lens/runtime.env
     environment:
       MARKET_LENS_URL: http://web:8000/
       MARKET_LENS_PUBLIC_URL: https://market-lens.2.28.100.77.sslip.io
+      MPLCONFIGDIR: /tmp/matplotlib
+      XDG_CACHE_HOME: /tmp/.cache
       MARKET_LENS_EXCEL_PATH: /app/agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx
       MARKET_LENS_RUN_DIR: /app/agent_results
       MARKET_LENS_REGIME_CACHE_PATH: /app/agent_results/regime/market_regime_lkg.json

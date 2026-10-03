@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -42,7 +43,11 @@ def test_monitor_noop_stays_local(tmp_path, monkeypatch):
     heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 0}))
     calls = []
     monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
-    monkeypatch.setattr(runtime, "worker", lambda *args, **kwargs: calls.append(args))
+    def fake_worker(*args, **_kwargs):
+        calls.append(args)
+        os.utime(heartbeat, ns=(heartbeat.stat().st_atime_ns, heartbeat.stat().st_mtime_ns + 1_000_000_000))
+
+    monkeypatch.setattr(runtime, "worker", fake_worker)
     monkeypatch.setattr(runtime, "persist", lambda *_: pytest.fail("No-op monitor persisted"))
     monkeypatch.setattr(runtime, "deliver", lambda *_: pytest.fail("No-op monitor notified"))
 
@@ -103,8 +108,28 @@ def test_monitor_event_without_tracker_change_is_not_persisted(tmp_path, monkeyp
     heartbeat.parent.mkdir(parents=True)
     heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 1}))
     monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
-    monkeypatch.setattr(runtime, "worker", lambda *args, **kwargs: None)
+    def fake_worker(*_args, **_kwargs):
+        os.utime(heartbeat, ns=(heartbeat.stat().st_atime_ns, heartbeat.stat().st_mtime_ns + 1_000_000_000))
+
+    monkeypatch.setattr(runtime, "worker", fake_worker)
     monkeypatch.setattr(runtime, "persist", lambda *_: pytest.fail("Unsaved event persisted"))
 
     with pytest.raises(RuntimeError, match="without a saved portfolio change"):
+        runtime.execute("monitor")
+
+
+def test_monitor_rejects_stale_heartbeat(tmp_path, monkeypatch):
+    monkeypatch.setattr(runtime, "REPO", tmp_path)
+    monkeypatch.setattr(runtime, "STATE", tmp_path / "state")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"unchanged")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    heartbeat = runtime.STATE / "monitor/latest_status.json"
+    heartbeat.parent.mkdir(parents=True)
+    heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 0}))
+    monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
+    monkeypatch.setattr(runtime, "worker", lambda *args, **kwargs: None)
+    monkeypatch.setattr(runtime, "persist", lambda *_: pytest.fail("Stale monitor persisted"))
+
+    with pytest.raises(RuntimeError, match="fresh heartbeat"):
         runtime.execute("monitor")

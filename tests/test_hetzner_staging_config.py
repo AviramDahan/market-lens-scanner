@@ -38,7 +38,10 @@ def test_observation_scan_has_no_live_portfolio_or_notification_access():
     assert scanner["restart"] == "no"
     assert "volumes" not in scanner
     assert "ports" not in scanner
-    assert "environment" not in scanner
+    assert scanner["environment"] == {
+        "MPLCONFIGDIR": "/tmp/matplotlib",
+        "XDG_CACHE_HOME": "/tmp/.cache",
+    }
     assert set(scanner["networks"]) == {"staging_web"}
     script = (ROOT / "deploy/hetzner/run_observation_scan.sh").read_text()
     assert "cp /app/agent_tracker/" in script

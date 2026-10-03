@@ -62,6 +62,8 @@ def test_runtime_compose_does_not_publish_worker_or_auto_start_it():
     assert "worker" in worker["profiles"]
     assert "ports" not in worker
     assert worker["restart"] == "no"
+    assert config["services"]["web"]["build"]["args"]["SOURCE_REVISION"]
+    assert worker["build"]["args"]["SOURCE_REVISION"]
 
 
 def test_shared_caddy_preview_preserves_existing_route_and_blocks_writes():

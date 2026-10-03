@@ -125,6 +125,24 @@ writer remains **disabled** through both host flags in
 `/home/trader/.config/market-lens/host.env`; no timer is installed or enabled.
 The runtime credentials are placeholders, and no Telegram token is installed.
 
+An isolated smart-universe scan on the same host selected 128 fresh tickers
+against a 150-ticker target, read 126 result cards, and finished `PARTIAL_OK`
+without runtime errors. Two missing cards (ARM and MMC) were still unavailable
+after focused recovery. The UI scan took 130.8 seconds; the full run, including
+universe construction and workbook/summary work, took 261.331 seconds. This
+was a Saturday test against a temporary workbook with positions cleared and
+no notification or GitHub write credentials. The 150-ticker target was not
+reached because the current universe supplied only 128 eligible candidates,
+not because the host timed out. The host had about 5.2 GiB available memory
+and 49 GiB free disk afterward; AI Trader containers remained healthy.
+The read-only container emitted Matplotlib/fontconfig cache warnings; writable
+tmpfs cache paths were configured afterward and still need a worker recheck.
+
+Build both runtime images with `MARKET_LENS_SOURCE_REVISION` set to the exact
+checkout commit; `/health` and image labels then expose that revision for
+deployment verification. The host-side `deployed_revision` must match the
+built code before either writer is enabled.
+
 ### Required cutover gates
 
 1. Test a full smart-universe scan against an isolated workbook copy; compare

@@ -7,6 +7,9 @@ services:
       dockerfile: deploy/hetzner/Dockerfile.observation
     networks:
       - staging_web
+    environment:
+      MPLCONFIGDIR: /tmp/matplotlib
+      XDG_CACHE_HOME: /tmp/.cache
     read_only: true
     tmpfs:
       - /tmp:size=512m
