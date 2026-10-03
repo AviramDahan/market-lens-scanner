@@ -213,3 +213,12 @@ writer flags, and public-write Caddy route were rolled back; the legacy
 scanner and monitor workflows were re-enabled. The worker now requests a
 512 MiB `/dev/shm` for Chromium. Repeated isolated browser navigation and a
 full scanner run are required before any further cutover attempt.
+
+The later isolated full scanner revealed the interaction: a disk-backed
+`/tmp` consistently crashed Chromium's Compositor while loading the main UI;
+memory-backed `/tmp` opened it. The old 256 MiB tmpfs was too small for XLSX
+serialization, so the worker now uses a 1 GiB `/tmp` tmpfs plus 512 MiB
+`/dev/shm`. A complete sandboxed run on 2026-10-03 selected 130 tickers,
+read 128 cards, wrote the Decision JSON and a valid copied XLSX, and ended
+`PARTIAL_OK` in 372 seconds. It had no production tracker, Telegram, or push
+access. This is isolated proof, not yet a successful live writer cutover.
