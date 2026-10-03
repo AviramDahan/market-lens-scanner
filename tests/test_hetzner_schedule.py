@@ -56,6 +56,8 @@ def test_runtime_compose_does_not_publish_worker_or_auto_start_it():
     web = config["services"]["web"]
     worker = config["services"]["worker"]
     assert web["ports"] == ["127.0.0.1:18082:8000"]
+    assert web["build"]["dockerfile"] == "deploy/hetzner/Dockerfile.web.runtime"
+    assert "agent_results" in (ROOT / "deploy/hetzner/Dockerfile.web.runtime.dockerignore").read_text()
     assert all(mount.endswith(":ro") for mount in web["volumes"])
     assert "worker" in worker["profiles"]
     assert "ports" not in worker

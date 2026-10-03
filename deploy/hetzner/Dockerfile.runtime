@@ -8,5 +8,6 @@ RUN pip install --no-cache-dir -e . && python -m playwright install --with-deps 
 COPY agent/ agent/
 COPY config.yaml config.yaml
 COPY deploy/hetzner/postprocess.py deploy/hetzner/postprocess.py
+COPY deploy/hetzner/smoke_worker.py deploy/hetzner/smoke_worker.py
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright

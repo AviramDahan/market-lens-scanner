@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: ../..
-      dockerfile: deploy/hetzner/Dockerfile.staging
+      dockerfile: deploy/hetzner/Dockerfile.web.runtime
     ports:
       - "127.0.0.1:18082:8000"
     networks:
