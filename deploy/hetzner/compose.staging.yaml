@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: ../..
-      dockerfile: Dockerfile
+      dockerfile: deploy/hetzner/Dockerfile.staging
     ports:
       - "127.0.0.1:18081:8000"
     environment:

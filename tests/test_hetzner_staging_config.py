@@ -11,6 +11,9 @@ def test_staging_web_is_isolated_and_bounded():
     assert config["name"] == "market-lens-staging"
     assert set(config["services"]) == {"web"}
     web = config["services"]["web"]
+    assert web["build"]["dockerfile"] == "deploy/hetzner/Dockerfile.staging"
+    ignore = ROOT / "deploy/hetzner/Dockerfile.staging.dockerignore"
+    assert ".git" in ignore.read_text().splitlines()
     assert web["ports"] == ["127.0.0.1:18081:8000"]
     assert web["read_only"] is True
     assert web["mem_limit"] == "1g"
