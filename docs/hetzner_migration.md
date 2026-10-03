@@ -8,10 +8,12 @@ These are separate responsibilities and must not be moved in one switch.
 ## Phase 1: isolated web preview
 
 `deploy/hetzner/compose.staging.yaml` runs only the existing API/UI image. It
-binds to loopback port 18081, has no production secrets, does not dispatch
-Actions, and has no host data mounts. SQLite and generated charts are temporary.
-The preview is not a source of portfolio truth and must not be exposed to the
-public or used for trading. It uses a separate Compose project from AI Trader.
+binds to loopback port 18081, has no production secrets, and does not dispatch
+Actions. It mounts a versioned copy of `agent_tracker/` and `agent_results/`
+read-only from `/home/trader/market-lens-staging-data`. SQLite and newly
+generated charts are temporary. The preview is not a source of portfolio truth
+and must not be exposed to the public or used for trading. It uses a separate
+Compose project from AI Trader.
 
 On 2026-10-03, the preview was started on the shared host. The first boot
 failed because yfinance needs a writable cache; the staging-only Compose file
@@ -30,6 +32,12 @@ tmpfs. It has no Telegram credentials, GitHub push, production tracker mount,
 or restart policy. It tests Chromium and the UI scan path, not live trading,
 portfolio persistence, or scheduled execution. Do not run it against the
 public production app or mistake its output for live positions.
+
+The 2026-10-03 observation run returned `COMPLETE`, open-access login, and
+3/3 result cards (AAPL, MSFT, NVDA) in 23.337 seconds total, 3.97 seconds of
+which was the UI scan. It wrote only to a tmpfs copy of the workbook. This
+does not prove that a full smart-universe run, TP/SL execution, remote backup,
+public TLS, or cutover scheduling works.
 
 Before starting it, check host memory, disk, existing Docker services, and
 port 18081. Build off market hours. Validate `/health`, `/agent`, and

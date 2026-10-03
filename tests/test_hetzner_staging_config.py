@@ -19,7 +19,10 @@ def test_staging_web_is_isolated_and_bounded():
     assert web["mem_limit"] == "1g"
     assert float(web["cpus"]) <= 1
     assert any(value.startswith("/app/.yfinance-cache:") for value in web["tmpfs"])
-    assert "volumes" not in web
+    assert web["volumes"] == [
+        "/home/trader/market-lens-staging-data/agent_tracker:/app/agent_tracker:ro",
+        "/home/trader/market-lens-staging-data/agent_results:/app/agent_results:ro",
+    ]
     assert "secrets" not in web
     env = web["environment"]
     assert env["MARKET_LENS_RENDER_SHADOW_MONITOR_ENABLED"] == "false"
