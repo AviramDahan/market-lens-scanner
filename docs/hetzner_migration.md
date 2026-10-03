@@ -39,6 +39,27 @@ which was the UI scan. It wrote only to a tmpfs copy of the workbook. This
 does not prove that a full smart-universe run, TP/SL execution, remote backup,
 public TLS, or cutover scheduling works.
 
+On the same day, a monitor observation used a separate tmpfs copy of the
+current `main` tracker. It checked one open position, reported `MONITOR_OK`,
+wrote a heartbeat, and produced no event/outbox. This was on a Saturday; it
+does not validate live-session TP/SL touches or Telegram delivery.
+
+The current `main` portfolio snapshot at commit
+`45db36b36155827ada539ecfdf775e7a8bb79eeb` was archived on the server as
+`/home/trader/market-lens-backups/portfolio-45db36b36155827ada539ecfdf775e7a8bb79eeb.tar.gz`.
+The gzip archive and embedded XLSX ZIP passed integrity checks. It contains
+2,142 entries and is owner-readable only. The staging web reads an extracted
+copy from `/home/trader/market-lens-staging-data/` through read-only mounts;
+`/health`, `/agent`, and `/agent/data` returned HTTP 200, the dashboard reported
+`status=ok` and one open position, and all existing AI Trader containers stayed
+healthy. This extracted copy is not auto-refreshed and must not be used as a
+live portfolio source.
+
+A repo-scoped GitHub deploy key named `market-lens-hetzner-backup-2026-10` is
+installed on the host at `/home/trader/.ssh/market_lens_deploy`. GitHub's SSH
+host key was verified against its published fingerprint. Repository read and
+`git push --dry-run` succeeded. No real push from the server has occurred.
+
 Before starting it, check host memory, disk, existing Docker services, and
 port 18081. Build off market hours. Validate `/health`, `/agent`, and
 `/agent/data` through SSH port forwarding; compare memory and CPU at idle and
