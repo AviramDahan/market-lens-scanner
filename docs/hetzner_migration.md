@@ -200,3 +200,16 @@ Before another writer switch, create the host directory, test serialization of
 a full copy of the current workbook inside the worker, run the regression
 suite, and repeat the single-writer cutover sequence. Do not treat the healthy
 web preview as proof that the worker can persist a large tracker.
+
+The second attempt used the disk-backed scratch path. A full tracker copy
+serialized and reopened successfully in the worker before cutover, and the
+monitor checked one open position without an event. The subsequent scanner
+failed at `Page.goto` with `Page crashed` before producing any result cards;
+the web still served the page and static assets, and no host/web OOM was
+observed. The failure summary/runtime record were preserved under
+`/home/trader/market-lens-backups/failed-hetzner-ui-crash-20261003_192607`.
+No tracker update or GitHub portfolio commit occurred. The worker timer, host
+writer flags, and public-write Caddy route were rolled back; the legacy
+scanner and monitor workflows were re-enabled. The worker now requests a
+512 MiB `/dev/shm` for Chromium. Repeated isolated browser navigation and a
+full scanner run are required before any further cutover attempt.
