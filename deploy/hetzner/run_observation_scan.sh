@@ -3,6 +3,18 @@ set -eu
 
 # The image's tracker is a frozen copy; this run never touches the live portfolio.
 cp /app/agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx /tmp/observation-tracker.xlsx
+python - <<'PY'
+from openpyxl import load_workbook
+
+path = '/tmp/observation-tracker.xlsx'
+workbook = load_workbook(path)
+for sheet_name in ('Open Positions', 'Setup Watchlist'):
+    sheet = workbook[sheet_name]
+    if sheet.max_row > 1:
+        sheet.delete_rows(2, sheet.max_row - 1)
+workbook.save(path)
+workbook.close()
+PY
 export MARKET_LENS_EXCEL_PATH=/tmp/observation-tracker.xlsx
 export MARKET_LENS_RUN_DIR=/tmp/observation-results
 export MARKET_LENS_AGENT_NOTIFICATION_OUTBOX=/tmp/observation-outbox.json
