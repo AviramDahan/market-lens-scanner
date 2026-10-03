@@ -1,6 +1,25 @@
 # Market Lens
 
-Market Lens is an authenticated web-based swing-trade scanner for US stock
+## Current Deployment (2026-10-03)
+
+The paper-trading app and agent now run on the existing Hetzner host at
+[market-lens.2.28.100.77.sslip.io](https://market-lens.2.28.100.77.sslip.io/).
+The agent dashboard is at [/agent](https://market-lens.2.28.100.77.sslip.io/agent).
+The host's systemd timer runs the scanner and position monitor; successful
+portfolio results are still committed to GitHub for backup and analysis. The
+two legacy GitHub Actions portfolio writers are disabled. The older Render
+site remains available temporarily as rollback, but is not the active writer.
+Its subscription and the obsolete cron-job.org triggers require separate
+account-side cleanup after live-session verification. The one-time October 13
+weak-sector reminder remains on GitHub Actions.
+
+This deployment currently uses open access (`/auth/config` reports
+`mode: open`); do not assume the older Supabase sign-in description below
+applies to the live site. See [Hetzner migration status](docs/hetzner_migration.md)
+for the verified cutover, rollback procedure, and remaining checks. The free
+sslip.io hostname follows the server IP; it is not a permanent owned domain.
+
+Market Lens is a web-based swing-trade scanner for US stock
 tickers. It downloads market data, evaluates objective technical setups, and
 returns ranked results with annotated chart images and a professional trade
 quality assessment.
@@ -10,12 +29,12 @@ Fibonacci retracements, VWAP, EMA, market structure, relative strength,
 risk/reward, liquidity sweeps, market regime, volume confirmation, liquidity
 quality, event risk, and entry/invalidation planning.
 
-Production access is gated by Supabase authentication. Users must sign in before
-they can scan tickers, view global setups, or save personal setups.
+Supabase authentication is supported when configured. The current deployment
+runs in open-access mode while that integration is unavailable.
 
 ## Features
 
-- Authenticated FastAPI web UI for scanning ticker lists
+- FastAPI web UI for scanning ticker lists
 - CLI scanner for terminal use
 - Annotated PNG charts for each ticker
 - Analysis range selector for 3 months, 6 months, 1 year, or 2 years
