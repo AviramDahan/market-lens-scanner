@@ -73,3 +73,12 @@ def test_shared_caddy_preview_preserves_existing_route_and_blocks_writes():
     assert "market-lens.2.28.100.77.sslip.io" in config
     assert "respond @writes" in config
     assert "reverse_proxy market-lens-runtime-web:8000" in config
+
+
+def test_shared_caddy_production_preserves_existing_route_and_allows_app_writes():
+    config = (ROOT / "deploy/hetzner/Caddyfile.shared-production").read_text()
+    assert "{$PUBLIC_API_HOST}" in config
+    assert "reverse_proxy api:8000" in config
+    assert "market-lens.2.28.100.77.sslip.io" in config
+    assert "reverse_proxy market-lens-runtime-web:8000" in config
+    assert "respond @writes" not in config
