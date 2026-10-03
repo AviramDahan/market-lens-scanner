@@ -1,7 +1,51 @@
-# Hetzner migration: staged cutover
+# Hetzner migration: cutover record
 
-Market Lens currently serves the API/UI on Render. GitHub Actions runs the UI
-agent, position monitor, health check, and the one-time weak-sector review.
+## Current status: 2026-10-03
+
+The active paper-portfolio writer is now the Hetzner runtime at
+`https://market-lens.2.28.100.77.sslip.io/`. The host's `market-lens.timer`
+is enabled; the legacy `market-lens-agent.yml` and
+`market-lens-position-monitor.yml` workflows are disabled. The separate
+October 13 weak-sector review workflow remains active. The web and worker
+images, `/health` revision, and host `deployed_revision` all matched
+`193c5c2d913bea4c6847bf916f56ca3bc4d23277` at cutover. The runtime
+checkout advanced to `2e6e178c3393e06a91b01a9da5cf01755d03d9a2`
+after the first successful server-side scanner commit.
+
+Before the switch, a verified backup was saved as
+`/home/trader/market-lens-backups/portfolio-before-final-cutover-20261003_195509.tar.gz`.
+The first host monitor checked one open position with `MONITOR_OK` and zero
+events; it did not change or commit the workbook. The first host scanner
+selected 130 tickers, read 128 result cards, and finished `PARTIAL_OK`
+(ARM and MMC had no cards) in 406.521 seconds, including 139.716 seconds of
+UI scanning. It wrote 128 Decision JSONL records, a valid XLSX, and the
+dashboard snapshot, then pushed commit `2e6e178` to GitHub. Its Telegram
+outbox was clear. A second verified backup was saved as
+`/home/trader/market-lens-backups/portfolio-after-first-hetzner-scan-20261003_195710.tar.gz`.
+No test trade or Telegram notification was generated.
+
+Public HTTPS `/health`, `/agent`, and `/agent/data` returned 200 from both
+the host and an external Windows client. Browser checks at desktop and mobile
+widths loaded the dashboard, fetched `/agent/data` with 200, and displayed
+Open Positions. The shared Caddy route for the other app was preserved.
+`/auth/config` currently reports `mode: open` and `enabled: false`.
+
+**Still to verify during an actual regular session:** a fresh TP1/TP2/SL
+event, portfolio persistence after that event, Telegram delivery and receipt,
+and several automatic timer-triggered scans/monitor checks. The Saturday
+zero-event monitor proves only the no-op path. Render remains accessible as a
+rollback service and may still incur charges. Old cron-job.org jobs still need
+account-side disabling; with their target Actions workflows disabled, they
+cannot become a second portfolio writer. Do not delete Render or the GitHub
+history until the live-session checks pass. Retain all backups.
+
+The sections below record the staged plan and earlier failed attempts. Their
+preview/disabled statements describe the historical state, not today's active
+deployment.
+
+Market Lens previously served the API/UI on Render. GitHub Actions ran the UI
+agent and position monitor, and still hosts ancillary checks and the one-time
+weak-sector review.
 The paper portfolio workbook and `agent_results/` are committed to GitHub.
 These are separate responsibilities and must not be moved in one switch.
 
@@ -97,7 +141,7 @@ the runtime database. Supabase, market-data providers, and Telegram remain
 external services where used. No strategy or risk-rule change is part of this
 migration.
 
-## 2026-10-03: read-only public preview
+## 2026-10-03: read-only public preview (historical)
 
 The free hostname `https://market-lens.2.28.100.77.sslip.io` resolves to the
 Hetzner server. It is **not** the production cutover. The shared Caddy proxy
@@ -168,8 +212,8 @@ built code before either writer is enabled.
    over newer trades: pause the writer, reconcile GitHub/local versions, and
    use a fresh snapshot before switching back.
 
-Until all gates pass, `https://market-lens-scanner-fb63.onrender.com/` remains
-the active app. The sslip.io address is an infrastructure preview only.
+At that stage, `https://market-lens-scanner-fb63.onrender.com/` remained the
+active app and the sslip.io address was an infrastructure preview only.
 
 ## First cutover attempt: rolled back
 
