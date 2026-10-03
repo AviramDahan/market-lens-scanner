@@ -13,6 +13,15 @@ Actions, and has no host data mounts. SQLite and generated charts are temporary.
 The preview is not a source of portfolio truth and must not be exposed to the
 public or used for trading. It uses a separate Compose project from AI Trader.
 
+On 2026-10-03, the preview was started on the shared host. The first boot
+failed because yfinance needs a writable cache; the staging-only Compose file
+now mounts that cache in tmpfs. After the fix, `/health`, `/agent`, and
+`/agent/data` returned HTTP 200, the container was healthy at about 139 MiB
+idle memory, and the existing AI Trader services remained healthy. This is
+only a web-startup smoke test, not scanner/monitor or peak-load validation.
+The initial Docker build sent a 535 MB context; reduce that before frequent
+rebuilds without changing the Render image's input set.
+
 Before starting it, check host memory, disk, existing Docker services, and
 port 18081. Build off market hours. Validate `/health`, `/agent`, and
 `/agent/data` through SSH port forwarding; compare memory and CPU at idle and

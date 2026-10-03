@@ -17,6 +17,7 @@ services:
     tmpfs:
       - /app/data:size=64m
       - /app/charts:size=64m
+      - /app/.yfinance-cache:size=64m
       - /tmp:size=64m
     security_opt:
       - no-new-privileges:true
