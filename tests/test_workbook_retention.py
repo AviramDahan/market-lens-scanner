@@ -1,3 +1,7 @@
+from pathlib import Path
+import zipfile
+
+import pytest
 from openpyxl import Workbook, load_workbook
 
 from app.workbook_retention import (
@@ -5,6 +9,7 @@ from app.workbook_retention import (
     DEFAULT_WATCHLIST_MAX_ROWS,
     compact_setup_watchlist,
     enforce_tracker_size,
+    save_workbook_atomically,
 )
 
 
@@ -71,5 +76,52 @@ def test_enforce_tracker_size_rewrites_and_keeps_latest_rows(tmp_path) -> None:
             "T6",
             "T7",
         ]
+    finally:
+        loaded.close()
+
+
+def test_atomic_save_keeps_previous_tracker_when_serialization_fails(tmp_path) -> None:
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"previous valid tracker")
+
+    class FailingWorkbook:
+        def save(self, path: Path) -> None:
+            path.write_bytes(b"partial workbook")
+            raise OSError(28, "No space left on device")
+
+    with pytest.raises(OSError, match="No space left"):
+        save_workbook_atomically(FailingWorkbook(), tracker)
+
+    assert tracker.read_bytes() == b"previous valid tracker"
+    assert list(tmp_path.glob("*.tmp.xlsx")) == []
+
+
+def test_atomic_save_rejects_corrupt_zip_without_replacing_tracker(tmp_path) -> None:
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"previous valid tracker")
+
+    class CorruptWorkbook:
+        def save(self, path: Path) -> None:
+            path.write_bytes(b"not an XLSX archive")
+
+    with pytest.raises(zipfile.BadZipFile):
+        save_workbook_atomically(CorruptWorkbook(), tracker)
+
+    assert tracker.read_bytes() == b"previous valid tracker"
+
+
+def test_atomic_save_writes_valid_tracker(tmp_path) -> None:
+    tracker = tmp_path / "tracker.xlsx"
+    workbook = Workbook()
+    workbook.active["A1"] = "before"
+    workbook.save(tracker)
+    workbook.active["A1"] = "after"
+
+    save_workbook_atomically(workbook, tracker)
+    workbook.close()
+
+    loaded = load_workbook(tracker, read_only=True)
+    try:
+        assert loaded.active["A1"].value == "after"
     finally:
         loaded.close()

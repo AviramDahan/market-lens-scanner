@@ -74,12 +74,12 @@ services:
       - /home/trader/market-lens-runtime/agent_tracker:/app/agent_tracker:rw
       - /home/trader/market-lens-runtime/agent_results:/app/agent_results:rw
       - /home/trader/market-lens-runtime-state:/app/runtime:rw
+      - /home/trader/market-lens-runtime-state/tmp:/tmp:rw
     read_only: true
     tmpfs:
       - /app/data:size=64m
       - /app/charts:size=128m
       - /app/.yfinance-cache:size=64m
-      - /tmp:size=256m
     security_opt:
       - no-new-privileges:true
     mem_limit: 2500m
