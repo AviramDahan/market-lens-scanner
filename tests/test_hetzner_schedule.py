@@ -63,8 +63,8 @@ def test_runtime_compose_does_not_publish_worker_or_auto_start_it():
     assert "ports" not in worker
     assert worker["restart"] == "no"
     assert worker["shm_size"] == "512m"
-    assert "/home/trader/market-lens-runtime-state/tmp:/tmp:rw" in worker["volumes"]
-    assert not any(mount.startswith("/tmp:") for mount in worker["tmpfs"])
+    assert "/tmp:size=1024m" in worker["tmpfs"]
+    assert not any(volume.split(":")[1] == "/tmp" for volume in worker["volumes"])
     assert config["services"]["web"]["build"]["args"]["SOURCE_REVISION"]
     assert worker["build"]["args"]["SOURCE_REVISION"]
 

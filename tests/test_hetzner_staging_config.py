@@ -49,3 +49,11 @@ def test_observation_scan_has_no_live_portfolio_or_notification_access():
     assert "MARKET_LENS_AGENT_NOTIFICATION_OUTBOX=/tmp/observation-outbox.json" in script
     assert "send_buy_notifications" not in script
     assert "git push" not in script
+
+
+def test_runtime_worker_chromium_scratch_is_memory_backed():
+    config = yaml.safe_load((ROOT / "deploy/hetzner/compose.runtime.yaml").read_text())
+    worker = config["services"]["worker"]
+    assert worker["shm_size"] == "512m"
+    assert "/tmp:size=1024m" in worker["tmpfs"]
+    assert not any(volume.split(":")[1] == "/tmp" for volume in worker["volumes"])
