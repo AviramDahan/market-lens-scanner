@@ -170,3 +170,33 @@ built code before either writer is enabled.
 
 Until all gates pass, `https://market-lens-scanner-fb63.onrender.com/` remains
 the active app. The sslip.io address is an infrastructure preview only.
+
+## First cutover attempt: rolled back
+
+On 2026-10-03, the legacy scanner and monitor workflows were disabled after a
+verified, versioned backup and an idle-writer check. The Hetzner monitor
+evaluated one open position (`MONITOR_OK`, zero events) without changing the
+portfolio. The first live Hetzner scanner selected 130 tickers and read 128
+result cards, but workbook serialization failed with `IO_ENOSPC`: the worker's
+256 MiB `/tmp` tmpfs was too small for openpyxl's temporary worksheet XML.
+The partially written local tracker was only about 8 KiB. **No portfolio
+commit, Telegram notification, or trade was pushed by that failed scan.**
+
+The timer and host writer flags were turned off; Caddy was returned to the
+read-only preview route. The full failed local state was archived as
+`/home/trader/market-lens-backups/failed-hetzner-cutover-20261003_185943.tar.gz`,
+with the untracked chart/decision/screenshot files preserved separately under
+`/home/trader/market-lens-backups/failed-hetzner-cutover-files-20261003_185943`.
+Only files changed by that failed run were restored from the unchanged GitHub
+`main` commit. The tracker SHA-256 again matched GitHub, its XLSX ZIP passed
+integrity testing, and the runtime checkout became clean. The two legacy
+writer workflows were re-enabled; the separate October 13 reminder stayed
+active. This is a rollback, not a completed migration.
+
+The follow-up fix binds the worker's `/tmp` to a dedicated disk-backed
+directory under `/home/trader/market-lens-runtime-state/tmp`, and makes normal
+scanner and monitor workbook saves atomic with XLSX integrity validation.
+Before another writer switch, create the host directory, test serialization of
+a full copy of the current workbook inside the worker, run the regression
+suite, and repeat the single-writer cutover sequence. Do not treat the healthy
+web preview as proof that the worker can persist a large tracker.

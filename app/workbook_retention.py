@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import uuid
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +10,22 @@ from typing import Any
 DEFAULT_WATCHLIST_MAX_ROWS = 20_000
 DEFAULT_TRACKER_REWRITE_BYTES = 50_000_000
 DEFAULT_TRACKER_HARD_LIMIT_BYTES = 90_000_000
+
+
+def save_workbook_atomically(workbook: Any, tracker_path: Path) -> None:
+    """Keep the last valid portfolio if workbook serialization fails."""
+    temporary_path = tracker_path.with_name(
+        f".{tracker_path.stem}.{uuid.uuid4().hex}.tmp.xlsx"
+    )
+    try:
+        workbook.save(temporary_path)
+        with zipfile.ZipFile(temporary_path) as archive:
+            damaged_member = archive.testzip()
+            if damaged_member is not None:
+                raise RuntimeError("Serialized tracker contains a damaged ZIP member")
+        os.replace(temporary_path, tracker_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 
 def compact_setup_watchlist(

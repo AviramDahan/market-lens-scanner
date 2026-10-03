@@ -55,7 +55,7 @@ from app.weak_sector_override import (
     evaluate_weak_sector_override_v1,
     persist_first_observations,
 )
-from app.workbook_retention import compact_setup_watchlist
+from app.workbook_retention import compact_setup_watchlist, save_workbook_atomically
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1466,7 +1466,7 @@ def update_workbook(
     mark_runtime_phase(workbook_phase_seconds, "update_log_and_retention_seconds", phase_started)
     phase_started = time.monotonic()
     try:
-        wb.save(settings.excel_path)
+        save_workbook_atomically(wb, settings.excel_path)
     finally:
         wb.close()
     mark_runtime_phase(workbook_phase_seconds, "save_seconds", phase_started)

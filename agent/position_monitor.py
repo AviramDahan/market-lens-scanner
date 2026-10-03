@@ -27,7 +27,7 @@ from app.telegram_notifications import (
     send_telegram_message,
     send_telegram_notification,
 )
-from app.workbook_retention import compact_setup_watchlist
+from app.workbook_retention import compact_setup_watchlist, save_workbook_atomically
 
 
 DEFAULT_TRACKER = ROOT / "agent_tracker" / "market_lens_agent_portfolio_budget_100k.xlsx"
@@ -164,7 +164,7 @@ def main() -> None:
                 f"removed {retention['rows_removed']} old rows; "
                 f"kept {retention['rows_after']}."
             )
-        wb.save(settings.excel_path)
+        save_workbook_atomically(wb, settings.excel_path)
         if events:
             if notification_outbox_path() is not None:
                 outbox = write_notification_outbox(
