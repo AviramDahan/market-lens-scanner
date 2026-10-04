@@ -27,6 +27,7 @@ COMPOSE = REPO / "deploy/hetzner/compose.runtime.yaml"
 TRACKER = REPO / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
 GENERATED = ("agent_tracker", "agent_results")
 CODE_PATHS = ("app", "agent", "pyproject.toml", "config.yaml")
+HOST_ONLY_AGENT_FILES = {"agent/ops_health_check.py"}
 SUCCESS_STATUSES = {"COMPLETE", "PARTIAL_OK"}
 
 
@@ -76,7 +77,10 @@ def require_live_preflight() -> None:
     deployed = (STATE / "deployed_revision").read_text(encoding="utf-8").strip()
     if not deployed:
         raise RuntimeError("Deployed code revision is missing")
-    changed_code = output("git", "diff", "--name-only", deployed, "HEAD", "--", *CODE_PATHS)
+    changed_code = "\n".join(
+        path for path in output("git", "diff", "--name-only", deployed, "HEAD", "--", *CODE_PATHS).splitlines()
+        if path not in HOST_ONLY_AGENT_FILES
+    )
     if changed_code:
         raise RuntimeError(f"Code changed since deployed image: {changed_code}")
 

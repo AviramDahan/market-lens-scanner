@@ -19,6 +19,37 @@ def test_legacy_writer_must_be_disabled(monkeypatch):
         runtime.require_live_preflight()
 
 
+@pytest.mark.parametrize("changed,blocked", [
+    ("agent/ops_health_check.py", False),
+    ("agent/ops_health_check.py\nagent/position_monitor.py", True),
+])
+def test_host_only_checker_does_not_require_worker_rebuild(tmp_path, monkeypatch, changed, blocked):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    (tmp_path / "deployed_revision").write_text("old-revision")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"fixture")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    monkeypatch.setattr(runtime, "run", lambda *_args, **_kwargs: None)
+
+    def git_output(*args, **_kwargs):
+        if args[1] == "status":
+            return ""
+        if args[1] == "rev-parse":
+            return "same-revision"
+        if args[1] == "diff":
+            return changed
+        raise AssertionError(args)
+
+    monkeypatch.setattr(runtime, "output", git_output)
+    if blocked:
+        with pytest.raises(RuntimeError, match="agent/position_monitor.py"):
+            runtime.require_live_preflight()
+    else:
+        runtime.require_live_preflight()
+
+
 def test_pending_notification_blocks_next_trade_run(tmp_path, monkeypatch):
     monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
