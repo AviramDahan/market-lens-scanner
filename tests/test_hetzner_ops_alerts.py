@@ -97,6 +97,7 @@ def test_degraded_monitor_reports_issue_without_mutating_portfolio(tmp_path, mon
 
 @pytest.mark.parametrize("failure,event", [
     (RuntimeError("scan failed"), "RUN_FAILED"),
+    (ValueError("malformed monitor heartbeat"), "RUN_FAILED"),
     (run_runtime.RuntimeDeliveryFailure("delivery failed"), "TRADE_ALERT_DELIVERY_FAILED"),
 ])
 def test_runtime_failure_routes_one_operations_alert(monkeypatch, failure, event):

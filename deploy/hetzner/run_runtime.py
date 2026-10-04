@@ -126,7 +126,7 @@ def deliver(kind: str) -> None:
     script = "agent/send_buy_notifications.py" if kind == "scanner" else "agent/send_monitor_notifications.py"
     try:
         worker(["python", script, f"/app/runtime/outbox/{kind}.json"], timeout=120)
-    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired, RuntimeError) as exc:
+    except Exception as exc:
         raise RuntimeDeliveryFailure("Post-persistence trade alert delivery failed") from exc
     receipts = "agent_results/telegram_notifications.jsonl"
     run("git", "add", "--", receipts)
@@ -185,7 +185,7 @@ def main() -> None:
 def cli() -> int:
     try:
         main()
-    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired, RuntimeError) as exc:
+    except Exception as exc:
         kind = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in {"scanner", "monitor"} else "scanner"
         event = "TRADE_ALERT_DELIVERY_FAILED" if isinstance(exc, RuntimeDeliveryFailure) else "RUN_FAILED"
         report_runtime_alert(kind, event)
