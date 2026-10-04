@@ -10,6 +10,11 @@ import sys
 import uuid
 from pathlib import Path
 
+if __package__:
+    from .notify_ops import send_runtime_alert
+else:
+    from notify_ops import send_runtime_alert
+
 try:
     import fcntl
 except ImportError:  # Tests also run on Windows; the deployed host is Linux.
@@ -23,6 +28,18 @@ TRACKER = REPO / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
 GENERATED = ("agent_tracker", "agent_results")
 CODE_PATHS = ("app", "agent", "pyproject.toml", "config.yaml")
 SUCCESS_STATUSES = {"COMPLETE", "PARTIAL_OK"}
+
+
+class RuntimeDeliveryFailure(RuntimeError):
+    """A persisted portfolio event could not reach the trade Telegram group."""
+
+
+def report_runtime_alert(kind: str, event: str) -> None:
+    try:
+        status = send_runtime_alert(kind, event)
+    except Exception:
+        status = "failed"
+    print(f"Operations alert: {status}", file=sys.stderr)
 
 
 def run(*args: str, cwd: Path = REPO, timeout: int = 60) -> subprocess.CompletedProcess[str]:
@@ -107,7 +124,10 @@ def deliver(kind: str) -> None:
     if not outbox.exists():
         return
     script = "agent/send_buy_notifications.py" if kind == "scanner" else "agent/send_monitor_notifications.py"
-    worker(["python", script, f"/app/runtime/outbox/{kind}.json"], timeout=120)
+    try:
+        worker(["python", script, f"/app/runtime/outbox/{kind}.json"], timeout=120)
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired, RuntimeError) as exc:
+        raise RuntimeDeliveryFailure("Post-persistence trade alert delivery failed") from exc
     receipts = "agent_results/telegram_notifications.jsonl"
     run("git", "add", "--", receipts)
     if subprocess.run(("git", "diff", "--cached", "--quiet"), cwd=REPO).returncode:
@@ -134,6 +154,8 @@ def execute(kind: str) -> None:
         heartbeat = json.loads(heartbeat_path.read_text(encoding="utf-8"))
         if heartbeat.get("status") not in {"MONITOR_OK", "MONITOR_DEGRADED"}:
             raise RuntimeError("Monitor heartbeat did not confirm a successful evaluation")
+        if heartbeat["status"] == "MONITOR_DEGRADED":
+            report_runtime_alert("monitor", "MONITOR_DEGRADED")
         if file_hash(TRACKER) == tracker_before:
             if heartbeat.get("event_count"):
                 raise RuntimeError("Monitor reported an event without a saved portfolio change")
@@ -160,9 +182,17 @@ def main() -> None:
         execute(args.kind)
 
 
-if __name__ == "__main__":
+def cli() -> int:
     try:
         main()
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired, RuntimeError) as exc:
+        kind = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in {"scanner", "monitor"} else "scanner"
+        event = "TRADE_ALERT_DELIVERY_FAILED" if isinstance(exc, RuntimeDeliveryFailure) else "RUN_FAILED"
+        report_runtime_alert(kind, event)
         print(f"Market Lens runtime failed: {exc}", file=sys.stderr)
-        raise SystemExit(1) from None
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(cli())
