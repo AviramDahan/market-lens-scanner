@@ -24,3 +24,15 @@ between checks can take until the next check to be reported. GitHub Actions
 failures before the Python check starts are visible in Actions but cannot be
 reported by this script. Repeated failed checks may generate repeated alerts;
 the messages are intentionally isolated from trading notifications.
+
+The Hetzner single-writer runner also sends a direct operations alert after a
+scanner or monitor run fails, when the monitor reports `MONITOR_DEGRADED`, or
+when a persisted BUY/TP/SL notification cannot be delivered. It uses the bot
+token from the host runtime environment and the operations group ID from
+`runtime.defaults.env` (or a host override). Each event type is limited to one
+message per hour; only a successful Telegram response records a receipt.
+Alert text excludes exception details and credentials. The trade group remains
+the destination for successful BUY/TP/SL events. The host alerts are best effort:
+loss of network/Telegram/host power can prevent delivery; the periodic workflow
+provides a separate backstop. The live host runner must have the bot token in
+its runtime environment for direct alerts to work.
