@@ -1,34 +1,34 @@
 Daily Performance Summary
 
 Date: 2026-10-05
-Total scans: 14
-Tickers scanned: 1815
+Total scans: 15
+Tickers scanned: 1942
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 259
+WATCH_REVIEW: 275
 WATCH_REVIEW unique tickers: 27
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 259
-SKIP: 1542
-NO_TRADE: 915
+WATCH: 275
+SKIP: 1652
+NO_TRADE: 1011
 Realized PnL: 0.0
-Unrealized PnL: 122.2
-Portfolio value: 100772.32
+Unrealized PnL: 113.1
+Portfolio value: 100763.22
 Daily recorded-equity change (%): None
 Daily return status: MISSING_PRIOR_DAY_EQUITY
 Daily reference date: 2026-10-04
-Cumulative recorded-equity change (%): 0.7723
+Cumulative recorded-equity change (%): 0.7632
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: UNH
 Worst ticker: KO
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 1
-- FIB_STRUCTURE_STOP: 1
-- TREND_PULLBACK_RECLAIM: 3
+- FIB_STOP_075_ATR: 3
+- FIB_STRUCTURE_STOP: 2
+- TREND_PULLBACK_RECLAIM: 5
 
 Top rejected candidates:
 - LIN: SKIP score=0.5847 reason=SKIP: Materials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.37.
