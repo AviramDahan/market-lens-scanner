@@ -9,7 +9,9 @@ from fastapi.testclient import TestClient
 from openpyxl import Workbook
 
 import app.main as main
+from agent import production_smoke
 from agent.production_smoke import (
+    ProductionSmoke,
     SmokeFailure,
     decision_jsonl_url,
     revisions_match,
@@ -17,6 +19,7 @@ from agent.production_smoke import (
     validate_dashboard,
     validate_decision_jsonl,
     validate_health,
+    validate_host_monitor_source,
     validate_monitor_state,
     validate_render_shadow_monitor,
     validate_read_only_scan,
@@ -290,6 +293,48 @@ def test_render_shadow_smoke_requires_running_read_only_journal() -> None:
     stopped = {**healthy, "running": False}
     with pytest.raises(SmokeFailure, match="not enabled and running"):
         validate_render_shadow_monitor(stopped)
+
+
+def test_host_smoke_requires_active_writer_not_legacy_sensor() -> None:
+    payload = {"system_health": {
+        "execution_sensor_source": "host_writer",
+        "price_sensor_mode": "host_writer",
+        "executor_persistence_status": "NOT_TRIGGERED",
+    }}
+    assert "source=host_writer" in validate_host_monitor_source(payload)
+    payload["system_health"]["execution_sensor_source"] = "github_actions"
+    with pytest.raises(SmokeFailure, match="host position writer"):
+        validate_host_monitor_source(payload)
+    payload["system_health"]["execution_sensor_source"] = "host_writer"
+    payload["system_health"]["executor_persistence_status"] = "PENDING"
+    with pytest.raises(SmokeFailure, match="persistence receipt"):
+        validate_host_monitor_source(payload)
+    payload["system_health"]["executor_persistence_status"] = ""
+    with pytest.raises(SmokeFailure, match="missing or invalid"):
+        validate_host_monitor_source(payload)
+
+
+def test_host_smoke_rechecks_transient_stale_heartbeat(monkeypatch) -> None:
+    smoke = ProductionSmoke()
+    smoke.monitor_wait_seconds = 1
+    smoke.monitor_max_age_minutes = 3
+    smoke.dashboard = {"system_health": {
+        "price_sensor_status": "STALE",
+        "execution_sensor_status": "STALE",
+    }}
+    fresh = {"system_health": {
+        "price_sensor_status": "CURRENT",
+        "execution_sensor_status": "CURRENT",
+        "execution_sensor_source": "host_writer",
+        "price_sensor_mode": "host_writer",
+        "executor_persistence_status": "NOT_TRIGGERED",
+        "latest_monitor_status": "MONITOR_OK",
+        "latest_monitor_positions_checked": 1,
+        "latest_monitor_positions_failed": 0,
+    }}
+    monkeypatch.setattr(production_smoke.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(smoke, "request_json", lambda path, **_kwargs: fresh)
+    assert "execution=CURRENT" in smoke.check_monitor_state()
 
 
 def test_dashboard_snapshot_enrichment_overlays_synced_monitor_heartbeat(
