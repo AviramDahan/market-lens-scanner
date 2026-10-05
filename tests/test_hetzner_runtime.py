@@ -171,6 +171,8 @@ def test_monitor_receipt_requires_persistence_and_delivery(tmp_path, monkeypatch
     heartbeat = runtime.STATE / "monitor/latest_status.json"
     heartbeat.parent.mkdir(parents=True)
     heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 0}))
+    outbox = runtime.STATE / "outbox/monitor.json"
+    outbox.parent.mkdir()
     monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
 
     def fake_worker(command, **_kwargs):
@@ -179,6 +181,7 @@ def test_monitor_receipt_requires_persistence_and_delivery(tmp_path, monkeypatch
                 "run_id": "monitor-test", "status": "MONITOR_OK", "event_count": 1,
             }))
             tracker.write_bytes(b"tp1-saved")
+            outbox.write_text("{}")
 
     def fake_deliver(_kind):
         assert not (runtime.STATE / "monitor/latest_persisted.json").exists()
@@ -199,6 +202,31 @@ def test_monitor_receipt_requires_persistence_and_delivery(tmp_path, monkeypatch
             "run_id": "monitor-test", "event_count": 1,
             "status": "PERSISTED_AND_DELIVERED",
         }
+
+
+def test_monitor_event_without_outbox_cannot_claim_delivery(tmp_path, monkeypatch):
+    monkeypatch.setattr(runtime, "REPO", tmp_path)
+    monkeypatch.setattr(runtime, "STATE", tmp_path / "state")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"before")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    heartbeat = runtime.STATE / "monitor/latest_status.json"
+    heartbeat.parent.mkdir(parents=True)
+    heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 0}))
+    monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
+
+    def fake_worker(command, **_kwargs):
+        if command == ["python", "agent/position_monitor.py"]:
+            heartbeat.write_text(json.dumps({
+                "run_id": "monitor-test", "status": "MONITOR_OK", "event_count": 1,
+            }))
+            tracker.write_bytes(b"tp1-saved")
+
+    monkeypatch.setattr(runtime, "worker", fake_worker)
+    monkeypatch.setattr(runtime, "persist", lambda *_: pytest.fail("Missing outbox persisted"))
+    with pytest.raises(RuntimeError, match="no notification outbox"):
+        runtime.execute("monitor")
+    assert not (runtime.STATE / "monitor/latest_persisted.json").exists()
 
 
 def test_monitor_rejects_stale_heartbeat(tmp_path, monkeypatch):

@@ -186,6 +186,8 @@ def execute(kind: str) -> None:
                 raise RuntimeError("Monitor reported an event without a saved portfolio change")
             print("Monitor evaluated positions with no portfolio event; heartbeat kept local")
             return
+        if heartbeat.get("event_count") and not (STATE / "outbox/monitor.json").is_file():
+            raise RuntimeError("Monitor event has no notification outbox; delivery cannot be confirmed")
     worker(["python", "deploy/hetzner/postprocess.py"], timeout=180)
     persisted = persist(kind)
     if kind == "monitor" and heartbeat.get("event_count") and not persisted:
