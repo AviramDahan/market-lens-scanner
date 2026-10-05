@@ -33,7 +33,7 @@ STAGE_COMPOSE = REPO / "deploy/hetzner/compose.stage.yaml"
 TRACKER = REPO / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
 GENERATED = ("agent_tracker", "agent_results")
 CODE_PATHS = ("app", "agent", "pyproject.toml", "config.yaml")
-HOST_ONLY_AGENT_FILES = {"agent/ops_health_check.py"}
+HOST_ONLY_AGENT_FILES = {"agent/ops_health_check.py", "agent/production_smoke.py"}
 SUCCESS_STATUSES = {"COMPLETE", "PARTIAL_OK"}
 
 

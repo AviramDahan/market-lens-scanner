@@ -16,6 +16,9 @@ def test_production_smoke_workflow_is_bounded_and_read_only() -> None:
     assert "workflow_run" in text
     assert "python agent/production_smoke.py" in text
     assert "MARKET_LENS_SMOKE_EXPECTED_REVISION" in text
+    assert "https://market-lens.2.28.100.77.sslip.io" in text
+    assert "MARKET_LENS_SMOKE_DEPLOYMENT_MODE: host" in text
+    assert "MARKET_LENS_SMOKE_MONITOR_WAIT_SECONDS" in text
     assert "MARKET_LENS_EMAIL" not in text
     assert "MARKET_LENS_PASSWORD" not in text
     assert "TELEGRAM" not in text

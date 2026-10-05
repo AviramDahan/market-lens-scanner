@@ -31,12 +31,16 @@ class ProductionSmoke:
     def __init__(self) -> None:
         self.base_url = os.getenv(
             "MARKET_LENS_SMOKE_URL",
-            "https://market-lens-scanner-fb63.onrender.com",
+            "https://market-lens.2.28.100.77.sslip.io",
         ).rstrip("/")
+        self.deployment_mode = os.getenv("MARKET_LENS_SMOKE_DEPLOYMENT_MODE", "host").strip().lower()
+        if self.deployment_mode not in {"host", "render"}:
+            raise ValueError("Unsupported production smoke deployment mode")
         self.ticker = os.getenv("MARKET_LENS_SMOKE_TICKER", "MSFT").strip().upper()
         self.expected_revision = os.getenv("MARKET_LENS_SMOKE_EXPECTED_REVISION", "").strip()
         self.deploy_wait_seconds = env_int("MARKET_LENS_SMOKE_DEPLOY_WAIT_SECONDS", 360)
         self.monitor_max_age_minutes = env_int("MARKET_LENS_SMOKE_MONITOR_MAX_AGE_MINUTES", 30)
+        self.monitor_wait_seconds = env_int("MARKET_LENS_SMOKE_MONITOR_WAIT_SECONDS", 0)
         self.report_path = Path(
             os.getenv("MARKET_LENS_SMOKE_REPORT_PATH", "production-smoke-report.json")
         )
@@ -44,14 +48,18 @@ class ProductionSmoke:
         self.dashboard: dict[str, Any] = {}
 
     def run(self) -> None:
-        self.check("Render deployment", self.wait_for_deployment)
+        self.check("Host deployment" if self.deployment_mode == "host" else "Render deployment",
+                   self.wait_for_deployment)
         self.check("Agent HTML", self.check_agent_html)
         self.check("Dashboard contract", self.check_dashboard)
         self.check("Decision JSONL", self.check_decision_jsonl)
         self.check("Tracker workbook", self.check_tracker)
         self.check("Read-only ticker scan", self.check_read_only_scan)
         self.check("Position monitor state", self.check_monitor_state)
-        self.check("Render shadow monitor", self.check_render_shadow_monitor)
+        if self.deployment_mode == "host":
+            self.check("Host monitor source", self.check_host_monitor_source)
+        else:
+            self.check("Render shadow monitor", self.check_render_shadow_monitor)
 
     def check(self, name: str, function) -> None:
         started = time.monotonic()
@@ -80,7 +88,7 @@ class ProductionSmoke:
                 last_detail = str(exc)
                 if time.monotonic() >= deadline:
                     raise SmokeFailure(
-                        f"Render did not expose the expected healthy revision within "
+                        f"Production did not expose the expected healthy revision within "
                         f"{self.deploy_wait_seconds}s: {last_detail}"
                     ) from exc
                 time.sleep(10)
@@ -130,11 +138,24 @@ class ProductionSmoke:
         return f"ticker={self.ticker}; chart_bytes={len(chart)}; persisted=0"
 
     def check_monitor_state(self) -> str:
-        detail = validate_monitor_state(
-            self.dashboard,
-            max_age_minutes=self.monitor_max_age_minutes,
-        )
-        return detail
+        deadline = time.monotonic() + max(0, self.monitor_wait_seconds)
+        while True:
+            try:
+                detail = validate_monitor_state(
+                    self.dashboard,
+                    max_age_minutes=self.monitor_max_age_minutes,
+                )
+                if self.deployment_mode == "host":
+                    validate_host_monitor_source(self.dashboard)
+                return detail
+            except SmokeFailure:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(min(10, max(0, deadline - time.monotonic())))
+                self.dashboard = self.request_json("/agent/data", attempts=1, timeout=60)
+
+    def check_host_monitor_source(self) -> str:
+        return validate_host_monitor_source(self.dashboard)
 
     def check_render_shadow_monitor(self) -> str:
         payload = self.request_json(
@@ -224,9 +245,25 @@ def validate_health(payload: dict[str, Any], expected_revision: str = "") -> Non
         actual = str(payload.get("revision") or "").strip()
         if not actual or not revisions_match(actual, expected_revision):
             raise SmokeFailure(
-                f"Render revision {actual[:12] or 'missing'} does not match expected "
+                f"Deployed revision {actual[:12] or 'missing'} does not match expected "
                 f"{expected_revision[:12]}."
             )
+
+
+def validate_host_monitor_source(payload: dict[str, Any]) -> str:
+    health = payload.get("system_health")
+    if not isinstance(health, dict):
+        raise SmokeFailure("Dashboard system_health is missing.")
+    if health.get("execution_sensor_source") != "host_writer":
+        raise SmokeFailure("Dashboard is not observing the host position writer.")
+    if health.get("price_sensor_mode") != "host_writer":
+        raise SmokeFailure("Dashboard price sensor is not using the host writer.")
+    persistence = health.get("executor_persistence_status")
+    if persistence == "PENDING":
+        raise SmokeFailure("Host position event has no confirmed persistence receipt yet.")
+    if persistence not in {"NOT_TRIGGERED", "CONFIRMED"}:
+        raise SmokeFailure("Host position persistence status is missing or invalid.")
+    return "source=host_writer; persistence=" + str(persistence)
 
 
 def validate_render_shadow_monitor(payload: dict[str, Any]) -> str:

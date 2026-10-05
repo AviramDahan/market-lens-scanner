@@ -33,7 +33,9 @@ def test_worker_uses_service_docker_group_without_sudo(monkeypatch):
 
 @pytest.mark.parametrize("changed,blocked", [
     ("agent/ops_health_check.py", False),
+    ("agent/production_smoke.py", False),
     ("agent/ops_health_check.py\nagent/position_monitor.py", True),
+    ("agent/production_smoke.py\nagent/position_monitor.py", True),
 ])
 def test_host_only_checker_does_not_require_worker_rebuild(tmp_path, monkeypatch, changed, blocked):
     monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
