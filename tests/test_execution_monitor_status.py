@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
@@ -51,6 +52,51 @@ def test_shadow_health_cannot_hide_unobserved_active_sensor(monkeypatch) -> None
     main.merge_execution_monitor_health(dashboard)
     assert dashboard["system_health"]["execution_sensor_status"] == "NOT_OBSERVED"
     assert dashboard["system_health"]["status"] == "attention"
+
+
+def test_host_health_uses_current_persisted_monitor_heartbeat(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("MARKET_LENS_HOST_MONITOR_ENABLED", "true")
+    heartbeat_path = tmp_path / "latest_status.json"
+    receipt_path = tmp_path / "latest_persisted.json"
+    monkeypatch.setenv("MARKET_LENS_MONITOR_HEARTBEAT_PATH", str(heartbeat_path))
+    monkeypatch.setenv("MARKET_LENS_HOST_MONITOR_PERSISTED_PATH", str(receipt_path))
+    monkeypatch.setattr(main, "session_status", lambda: {"regular_session_open": True})
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    heartbeat_path.write_text(json.dumps({
+        "schema_version": 1,
+        "timestamp": now.isoformat(),
+        "run_id": "monitor-1",
+        "status": "MONITOR_OK",
+        "positions_checked": 1,
+        "positions_failed": 0,
+        "event_count": 1,
+    }))
+    dashboard = {
+        "system_health": {"status": "attention", "notes": ["Live monitor sensor: DISABLED"]},
+        "open_positions": [{"ticker": "CME"}],
+    }
+    assert main.merge_host_monitor_health(dashboard) is True
+    health = dashboard["system_health"]
+    assert health["execution_sensor_status"] == "CURRENT"
+    assert health["executor_persistence_status"] == "PENDING"
+    assert health["status"] == "attention"
+
+    receipt_path.write_text(json.dumps({"run_id": "monitor-1", "status": "PERSISTED_AND_DELIVERED"}))
+    main.merge_host_monitor_health(dashboard)
+    assert health["executor_persistence_status"] == "CONFIRMED"
+    assert health["status"] == "ok"
+
+    heartbeat_path.write_text(json.dumps({
+        "schema_version": 1,
+        "timestamp": (now - timedelta(minutes=5)).isoformat(),
+        "run_id": "monitor-2",
+        "status": "MONITOR_OK",
+        "positions_checked": 1,
+        "event_count": 0,
+    }))
+    main.merge_host_monitor_health(dashboard)
+    assert health["execution_sensor_status"] == "STALE"
+    assert health["status"] == "attention"
 
 
 def test_no_event_endpoint_records_active_sensor_without_executor_claim(monkeypatch, tmp_path) -> None:

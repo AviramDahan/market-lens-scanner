@@ -1,5 +1,5 @@
 [Unit]
-Description=Market Lens paper agent minute scheduler
+Description=Market Lens isolated paper scanner schedule
 After=network-online.target docker.service
 Wants=network-online.target
 
@@ -9,7 +9,6 @@ User=trader
 SupplementaryGroups=docker
 EnvironmentFile=/home/trader/.config/market-lens/host.env
 WorkingDirectory=/home/trader/market-lens-runtime
-ExecStart=/usr/bin/python3 /home/trader/market-lens-runtime/deploy/hetzner/schedule.py --kind monitor
+ExecStart=/usr/bin/python3 /home/trader/market-lens-runtime/deploy/hetzner/schedule.py --kind scanner
 TimeoutStartSec=3000
 NoNewPrivileges=true
-

@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import yaml
 
+from deploy.hetzner import schedule
 from deploy.hetzner.schedule import due_jobs
 
 
@@ -16,6 +18,22 @@ def at_utc(value):
 def test_regular_session_monitor_precedes_scanner():
     # 2026-10-05 09:45 New York (EDT).
     assert due_jobs(at_utc("2026-10-05T13:45:00")) == ["monitor", "scanner"]
+
+
+def test_separate_schedule_services_dispatch_only_their_job(monkeypatch):
+    calls = []
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setattr(schedule, "due_jobs", lambda _now: ["monitor", "scanner"])
+    monkeypatch.setattr(schedule, "subprocess", SimpleNamespace(
+        run=lambda args, check: calls.append((args[-1], check))
+    ))
+    monkeypatch.setattr(schedule.sys, "argv", ["schedule.py", "--kind", "monitor"])
+    schedule.main()
+    assert calls == [("monitor", True)]
+    calls.clear()
+    monkeypatch.setattr(schedule.sys, "argv", ["schedule.py", "--kind", "scanner"])
+    schedule.main()
+    assert calls == [("scanner", True)]
 
 
 def test_monitor_boundaries_and_after_hours_scans():

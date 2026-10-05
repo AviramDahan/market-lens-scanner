@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Market Lens isolated paper scanner schedule every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+Persistent=true
+Unit=market-lens-scanner.service
+
+[Install]
+WantedBy=timers.target
