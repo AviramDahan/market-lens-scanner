@@ -5,15 +5,20 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
+import time
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 if __package__:
     from .notify_ops import send_runtime_alert
+    from .staged_scanner import ScannerStage, compact_failed_stage, prepare_stage, promote_stage
 else:
     from notify_ops import send_runtime_alert
+    from staged_scanner import ScannerStage, compact_failed_stage, prepare_stage, promote_stage
 
 try:
     import fcntl
@@ -24,6 +29,7 @@ except ImportError:  # Tests also run on Windows; the deployed host is Linux.
 REPO = Path("/home/trader/market-lens-runtime")
 STATE = Path("/home/trader/market-lens-runtime-state")
 COMPOSE = REPO / "deploy/hetzner/compose.runtime.yaml"
+STAGE_COMPOSE = REPO / "deploy/hetzner/compose.stage.yaml"
 TRACKER = REPO / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
 GENERATED = ("agent_tracker", "agent_results")
 CODE_PATHS = ("app", "agent", "pyproject.toml", "config.yaml")
@@ -35,6 +41,10 @@ class RuntimeDeliveryFailure(RuntimeError):
     """A persisted portfolio event could not reach the trade Telegram group."""
 
 
+class ScannerSnapshotStale(RuntimeError):
+    """A monitor event changed the portfolio while a scanner was running."""
+
+
 def report_runtime_alert(kind: str, event: str) -> None:
     try:
         status = send_runtime_alert(kind, event)
@@ -43,8 +53,9 @@ def report_runtime_alert(kind: str, event: str) -> None:
     print(f"Operations alert: {status}", file=sys.stderr)
 
 
-def run(*args: str, cwd: Path = REPO, timeout: int = 60) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(args, cwd=cwd, check=True, text=True, timeout=timeout)
+def run(*args: str, cwd: Path = REPO, timeout: int = 60,
+        env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(args, cwd=cwd, check=True, text=True, timeout=timeout, env=env)
 
 
 def output(*args: str, cwd: Path = REPO) -> str:
@@ -85,22 +96,32 @@ def require_live_preflight() -> None:
         raise RuntimeError(f"Code changed since deployed image: {changed_code}")
 
 
-def worker(command: list[str], *, timeout: int) -> None:
+def worker(command: list[str], *, timeout: int, stage: ScannerStage | None = None) -> None:
     container_name = f"market-lens-worker-{uuid.uuid4().hex[:12]}"
+    compose_files = ["-f", str(COMPOSE)]
+    env = None
+    if stage is not None:
+        compose_files += ["-f", str(STAGE_COMPOSE)]
+        env = os.environ.copy()
+        env.update({
+            "MARKET_LENS_STAGE_TRACKER_DIR": str(stage.tracker),
+            "MARKET_LENS_STAGE_RESULTS_DIR": str(stage.results),
+            "MARKET_LENS_STAGE_RUNTIME_DIR": str(stage.runtime),
+        })
     args = [
-        "docker", "compose", "-f", str(COMPOSE), "run", "--rm",
+        "docker", "compose", *compose_files, "run", "--rm",
         "--name", container_name, "worker", *command,
     ]
     try:
-        run(*args, timeout=timeout)
+        run(*args, timeout=timeout, env=env)
     except subprocess.TimeoutExpired:
         subprocess.run(("docker", "stop", "--time", "15", container_name),
                        check=False, timeout=35)
         raise RuntimeError(f"Worker timed out after {timeout} seconds") from None
 
 
-def latest_scan_record(previous: set[Path]) -> dict:
-    runtime = REPO / "agent_results/runtime"
+def latest_scan_record(previous: set[Path], results: Path | None = None) -> dict:
+    runtime = (results or REPO / "agent_results") / "runtime"
     created = set(runtime.glob("market_lens_agent_*.json")) - previous
     if len(created) != 1:
         raise RuntimeError(f"Expected one new scanner record, got {len(created)}")
@@ -166,9 +187,71 @@ def execute(kind: str) -> None:
             print("Monitor evaluated positions with no portfolio event; heartbeat kept local")
             return
     worker(["python", "deploy/hetzner/postprocess.py"], timeout=180)
-    if persist(kind):
+    persisted = persist(kind)
+    if kind == "monitor" and heartbeat.get("event_count") and not persisted:
+        raise RuntimeError("Monitor changed the portfolio but no persisted commit was produced")
+    if persisted:
         deliver(kind)
+        if kind == "monitor" and heartbeat.get("event_count"):
+            receipt = STATE / "monitor/latest_persisted.json"
+            temporary = receipt.with_suffix(".tmp")
+            temporary.write_text(json.dumps({
+                "run_id": heartbeat.get("run_id"),
+                "event_count": heartbeat["event_count"],
+                "status": "PERSISTED_AND_DELIVERED",
+            }), encoding="utf-8")
+            temporary.replace(receipt)
     print(f"{kind} completed and persisted")
+
+
+@contextmanager
+def writer_lock(timeout: float = 60):
+    STATE.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + timeout
+    with (STATE / "writer.lock").open("w") as lock:
+        while True:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError("Portfolio writer lock timed out") from None
+                time.sleep(0.25)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
+def execute_staged_scanner() -> None:
+    with writer_lock():
+        require_live_preflight()
+        stage = prepare_stage(REPO, STATE, file_hash(TRACKER))
+        previous = set((stage.results / "runtime").glob("market_lens_agent_*.json"))
+    print(f"Scanner stage prepared: {stage.root.name}")
+    try:
+        worker(["python", "agent/market_lens_ui_agent.py"], timeout=1500, stage=stage)
+        record = latest_scan_record(previous, results=stage.results)
+        print(f"Staged scanner status={record['run_status']} cards={record['result_cards_read']}")
+
+        with writer_lock():
+            require_live_preflight()
+            if file_hash(TRACKER) != stage.original_tracker_hash:
+                raise ScannerSnapshotStale(
+                    "Portfolio changed during scan; staged decisions were not applied. "
+                    f"Stage retained at {stage.root}"
+                )
+            promote_stage(stage, REPO, STATE)
+            worker(["python", "deploy/hetzner/postprocess.py"], timeout=180)
+            if persist("scanner"):
+                deliver("scanner")
+    except Exception:
+        compact_failed_stage(stage)
+        raise
+    # The staged copy duplicates data already persisted in Git; failed stages remain for diagnosis.
+    if stage.root.resolve().is_relative_to((STATE / "scanner-staging").resolve()):
+        shutil.rmtree(stage.root)
+    print("scanner completed and persisted")
 
 
 def main() -> None:
@@ -177,13 +260,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("kind", choices=("scanner", "monitor"))
     args = parser.parse_args()
-    STATE.mkdir(parents=True, exist_ok=True)
-    with (STATE / "writer.lock").open("w") as lock:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            raise SystemExit("Another Market Lens portfolio writer is active") from None
-        execute(args.kind)
+    if args.kind == "scanner":
+        execute_staged_scanner()
+    else:
+        with writer_lock():
+            execute("monitor")
 
 
 def cli() -> int:
@@ -191,7 +272,9 @@ def cli() -> int:
         main()
     except Exception as exc:
         kind = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in {"scanner", "monitor"} else "scanner"
-        event = "TRADE_ALERT_DELIVERY_FAILED" if isinstance(exc, RuntimeDeliveryFailure) else "RUN_FAILED"
+        event = ("TRADE_ALERT_DELIVERY_FAILED" if isinstance(exc, RuntimeDeliveryFailure)
+                 else "SCANNER_SNAPSHOT_STALE" if isinstance(exc, ScannerSnapshotStale)
+                 else "RUN_FAILED")
         report_runtime_alert(kind, event)
         print(f"Market Lens runtime failed: {exc}", file=sys.stderr)
         return 1

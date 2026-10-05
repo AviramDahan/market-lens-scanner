@@ -1,0 +1,6 @@
+services:
+  worker:
+    volumes:
+      - ${MARKET_LENS_STAGE_TRACKER_DIR:?stage tracker required}:/app/agent_tracker:rw
+      - ${MARKET_LENS_STAGE_RESULTS_DIR:?stage results required}:/app/agent_results:rw
+      - ${MARKET_LENS_STAGE_RUNTIME_DIR:?stage runtime required}:/app/runtime:rw

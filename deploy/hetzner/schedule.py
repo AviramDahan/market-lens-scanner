@@ -4,6 +4,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import os
+import argparse
 from datetime import datetime, time
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -35,10 +36,15 @@ def due_jobs(instant: datetime) -> list[str]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--kind", choices=("monitor", "scanner"))
+    args = parser.parse_args()
     if os.getenv("MARKET_LENS_HETZNER_WRITER_ENABLED") != "true":
         return
     jobs = due_jobs(datetime.now().astimezone())
     for job in jobs:
+        if args.kind and job != args.kind:
+            continue
         subprocess.run([sys.executable, str(RUNNER), job], check=True)
 
 

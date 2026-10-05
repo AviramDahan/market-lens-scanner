@@ -22,6 +22,8 @@ services:
       MARKET_LENS_RESULTS_SYNC_ENABLED: "false"
       MARKET_LENS_DASHBOARD_ASSET_SYNC_ENABLED: "false"
       MARKET_LENS_MONITOR_HEARTBEAT_PATH: /app/runtime/monitor/latest_status.json
+      MARKET_LENS_HOST_MONITOR_ENABLED: "true"
+      MARKET_LENS_HOST_MONITOR_PERSISTED_PATH: /app/runtime/monitor/latest_persisted.json
     volumes:
       - /home/trader/market-lens-runtime/agent_tracker:/app/agent_tracker:ro
       - /home/trader/market-lens-runtime/agent_results:/app/agent_results:ro

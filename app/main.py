@@ -163,16 +163,88 @@ def current_agent_dashboard() -> dict:
             if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
                 asset_sync_status = sync_dashboard_snapshot_assets_if_enabled(PROJECT_ROOT, dashboard)
                 dashboard = enrich_agent_dashboard_snapshot(dashboard)
-                merge_live_monitor_health(dashboard)
-                merge_execution_monitor_health(dashboard)
+                if not merge_host_monitor_health(dashboard):
+                    merge_live_monitor_health(dashboard)
+                    merge_execution_monitor_health(dashboard)
                 dashboard["results_sync"] = {**sync_status, "asset_sync": asset_sync_status}
                 return dashboard
         except Exception:
             pass
     dashboard = cached_agent_dashboard()
-    merge_live_monitor_health(dashboard)
-    merge_execution_monitor_health(dashboard)
+    if not merge_host_monitor_health(dashboard):
+        merge_live_monitor_health(dashboard)
+        merge_execution_monitor_health(dashboard)
     return dashboard
+
+
+def merge_host_monitor_health(dashboard: dict) -> bool:
+    """Use the active Hetzner writer heartbeat instead of retired GitHub sensors."""
+    if os.getenv("MARKET_LENS_HOST_MONITOR_ENABLED", "false").lower() != "true":
+        return False
+    health = dashboard.setdefault("system_health", {})
+    positions = dashboard.get("open_positions") or []
+    due = bool(positions) and bool(session_status().get("regular_session_open"))
+    heartbeat = load_monitor_status(AGENT_RESULTS_DIR / "position_monitor")
+    checked = int(heartbeat.get("positions_checked") or 0)
+    failed = int(heartbeat.get("positions_failed") or 0)
+    heartbeat_at = parse_timestamp(heartbeat.get("timestamp"))
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    age_seconds = max(0, (now - heartbeat_at).total_seconds()) if heartbeat else None
+    if not positions:
+        status = "NOT_REQUIRED_NO_OPEN_POSITIONS"
+    elif not due:
+        status = "NOT_DUE_OUTSIDE_REGULAR_SESSION"
+    elif not heartbeat:
+        status = "NOT_OBSERVED"
+    elif age_seconds is None or age_seconds > 150:
+        status = "STALE"
+    elif heartbeat.get("status") != "MONITOR_OK" or failed:
+        status = "DEGRADED"
+    elif checked < len(positions):
+        status = "PARTIAL"
+    else:
+        status = "CURRENT"
+
+    event_count = int(heartbeat.get("event_count") or 0)
+    persistence = "NOT_TRIGGERED"
+    if event_count:
+        receipt_path = os.getenv("MARKET_LENS_HOST_MONITOR_PERSISTED_PATH", "")
+        try:
+            receipt = json.loads(Path(receipt_path).read_text(encoding="utf-8")) if receipt_path else {}
+        except (OSError, ValueError):
+            receipt = {}
+        persistence = "CONFIRMED" if receipt.get("run_id") == heartbeat.get("run_id") else "PENDING"
+
+    notes = [note for note in health.get("notes") or [] if not str(note).startswith(
+        ("Live monitor sensor:", "Active TP/SL sensor:", "Host position monitor:",
+         "Host position event has no confirmed persistence receipt")
+    )]
+    if due and status != "CURRENT":
+        notes.append(f"Host position monitor: {status}; checked {checked}/{len(positions)} open positions.")
+    if persistence == "PENDING":
+        notes.append("Host position event has no confirmed persistence receipt yet.")
+    health["status"] = "attention" if notes else "ok"
+    health.update({
+        "notes": notes,
+        "latest_monitor_at": heartbeat_at.isoformat() if heartbeat else "",
+        "latest_monitor_run_id": heartbeat.get("run_id", ""),
+        "latest_monitor_age_minutes": int(age_seconds // 60) if age_seconds is not None else None,
+        "latest_monitor_status": heartbeat.get("status", ""),
+        "latest_monitor_positions_checked": checked,
+        "latest_monitor_positions_failed": failed,
+        "latest_monitor_event_count": event_count,
+        "price_sensor_mode": "host_writer",
+        "price_sensor_status": status,
+        "price_sensor_last_poll_at": heartbeat.get("timestamp", ""),
+        "execution_sensor_source": "host_writer",
+        "execution_sensor_status": status,
+        "execution_sensor_last_check_at": heartbeat.get("timestamp", ""),
+        "execution_sensor_positions_expected": len(positions),
+        "execution_sensor_positions_checked": checked,
+        "executor_persistence_status": persistence,
+        "executor_persistence_last_at": heartbeat.get("timestamp", "") if persistence == "CONFIRMED" else "",
+    })
+    return True
 
 
 def enrich_agent_dashboard_snapshot(dashboard: dict) -> dict:

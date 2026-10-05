@@ -161,6 +161,46 @@ def test_monitor_event_without_tracker_change_is_not_persisted(tmp_path, monkeyp
         runtime.execute("monitor")
 
 
+@pytest.mark.parametrize("delivery_fails", [False, True])
+def test_monitor_receipt_requires_persistence_and_delivery(tmp_path, monkeypatch, delivery_fails):
+    monkeypatch.setattr(runtime, "REPO", tmp_path)
+    monkeypatch.setattr(runtime, "STATE", tmp_path / "state")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"before")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    heartbeat = runtime.STATE / "monitor/latest_status.json"
+    heartbeat.parent.mkdir(parents=True)
+    heartbeat.write_text(json.dumps({"status": "MONITOR_OK", "event_count": 0}))
+    monkeypatch.setattr(runtime, "require_live_preflight", lambda: None)
+
+    def fake_worker(command, **_kwargs):
+        if command == ["python", "agent/position_monitor.py"]:
+            heartbeat.write_text(json.dumps({
+                "run_id": "monitor-test", "status": "MONITOR_OK", "event_count": 1,
+            }))
+            tracker.write_bytes(b"tp1-saved")
+
+    def fake_deliver(_kind):
+        assert not (runtime.STATE / "monitor/latest_persisted.json").exists()
+        if delivery_fails:
+            raise runtime.RuntimeDeliveryFailure("delivery failed")
+
+    monkeypatch.setattr(runtime, "worker", fake_worker)
+    monkeypatch.setattr(runtime, "persist", lambda *_: True)
+    monkeypatch.setattr(runtime, "deliver", fake_deliver)
+    if delivery_fails:
+        with pytest.raises(runtime.RuntimeDeliveryFailure):
+            runtime.execute("monitor")
+        assert not (runtime.STATE / "monitor/latest_persisted.json").exists()
+    else:
+        runtime.execute("monitor")
+        receipt = json.loads((runtime.STATE / "monitor/latest_persisted.json").read_text())
+        assert receipt == {
+            "run_id": "monitor-test", "event_count": 1,
+            "status": "PERSISTED_AND_DELIVERED",
+        }
+
+
 def test_monitor_rejects_stale_heartbeat(tmp_path, monkeypatch):
     monkeypatch.setattr(runtime, "REPO", tmp_path)
     monkeypatch.setattr(runtime, "STATE", tmp_path / "state")
