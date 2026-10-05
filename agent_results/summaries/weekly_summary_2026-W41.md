@@ -1,32 +1,34 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 13
-Tickers scanned: 1686
+Total scans: 14
+Tickers scanned: 1815
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 240
+WATCH_REVIEW: 259
 WATCH_REVIEW unique tickers: 27
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 240
-SKIP: 1433
-NO_TRADE: 823
+WATCH: 259
+SKIP: 1542
+NO_TRADE: 915
 Realized PnL: 0.0
-Unrealized PnL: 120.9
-Portfolio value: 100771.02
+Unrealized PnL: 122.2
+Portfolio value: 100772.32
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.771
+Cumulative recorded-equity change (%): 0.7723
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: UNH
 Worst ticker: KO
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- TREND_PULLBACK_RECLAIM: 1
+- FIB_STOP_075_ATR: 1
+- FIB_STRUCTURE_STOP: 1
+- TREND_PULLBACK_RECLAIM: 3
 
 Top rejected candidates:
 - LIN: SKIP score=0.5847 reason=SKIP: Materials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.37.
@@ -36,8 +38,8 @@ Top rejected candidates:
 - AR: WATCH score=0.473 reason=WATCH: NEUTRAL market requires setup score (0.47 < 0.55).
 - NVDA: WATCH score=0.4709 reason=WATCH: Technical setup detected, but weighted risk/reward 1.12 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.78.
 - INTC: WATCH score=0.4649 reason=WATCH: Technical setup detected, but weighted risk/reward 1.47 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.13.
+- WMB: WATCH score=0.4625 reason=WATCH: NEUTRAL market requires setup score (0.46 < 0.55).
 - COST: SKIP score=0.4598 reason=SKIP: Consumer sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.53.
-- WMB: WATCH score=0.4521 reason=WATCH: NEUTRAL market requires setup score (0.45 < 0.55).
 - LRCX: WATCH score=0.4498 reason=WATCH: Technical setup detected, but weighted risk/reward 1.58 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.14.
 
 Recommendations:
