@@ -1,4 +1,5 @@
 import json
+import os
 from contextlib import nullcontext
 from pathlib import Path
 
@@ -42,6 +43,28 @@ def test_staged_results_are_invisible_until_promotion(tmp_path):
     assert (repo / "agent_results/runtime/run.json").is_file()
     assert (repo / "agent_results/summaries/existing.md").read_text() == "historical result"
     assert (state / "outbox/scanner.json").is_file()
+
+
+def test_failed_promotion_restores_live_files(tmp_path, monkeypatch):
+    repo, state, tracker = fixture_repo(tmp_path)
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker))
+    (stage.tracker / tracker.name).write_bytes(b"new-portfolio")
+    (stage.results / "summaries/existing.md").write_text("new summary")
+    real_replace = os.replace
+    failed = False
+
+    def fail_tracker_once(source, target):
+        nonlocal failed
+        if Path(target) == tracker and not failed:
+            failed = True
+            raise OSError("simulated promotion interruption")
+        return real_replace(source, target)
+
+    monkeypatch.setattr("deploy.hetzner.staged_scanner.os.replace", fail_tracker_once)
+    with pytest.raises(OSError, match="promotion interruption"):
+        promote_stage(stage, repo, state)
+    assert tracker.read_bytes() == b"original-portfolio"
+    assert (repo / "agent_results/summaries/existing.md").read_text() == "historical result"
 
 
 def test_stale_scanner_cannot_overwrite_monitor_event(tmp_path, monkeypatch):
