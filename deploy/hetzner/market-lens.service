@@ -6,6 +6,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 User=trader
+SupplementaryGroups=docker
 EnvironmentFile=/home/trader/.config/market-lens/host.env
 WorkingDirectory=/home/trader/market-lens-runtime
 ExecStart=/usr/bin/python3 /home/trader/market-lens-runtime/deploy/hetzner/schedule.py

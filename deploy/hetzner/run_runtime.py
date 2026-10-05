@@ -88,13 +88,13 @@ def require_live_preflight() -> None:
 def worker(command: list[str], *, timeout: int) -> None:
     container_name = f"market-lens-worker-{uuid.uuid4().hex[:12]}"
     args = [
-        "sudo", "-n", "docker", "compose", "-f", str(COMPOSE), "run", "--rm",
+        "docker", "compose", "-f", str(COMPOSE), "run", "--rm",
         "--name", container_name, "worker", *command,
     ]
     try:
         run(*args, timeout=timeout)
     except subprocess.TimeoutExpired:
-        subprocess.run(("sudo", "-n", "docker", "stop", "--time", "15", container_name),
+        subprocess.run(("docker", "stop", "--time", "15", container_name),
                        check=False, timeout=35)
         raise RuntimeError(f"Worker timed out after {timeout} seconds") from None
 
