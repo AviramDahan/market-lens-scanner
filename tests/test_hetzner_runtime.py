@@ -19,6 +19,18 @@ def test_legacy_writer_must_be_disabled(monkeypatch):
         runtime.require_live_preflight()
 
 
+def test_worker_uses_service_docker_group_without_sudo(monkeypatch):
+    commands = []
+    monkeypatch.setattr(runtime, "run", lambda *args, **kwargs: commands.append((args, kwargs)))
+
+    runtime.worker(["python", "-c", "pass"], timeout=30)
+
+    args, kwargs = commands[0]
+    assert args[0:4] == ("docker", "compose", "-f", str(runtime.COMPOSE))
+    assert args[-4:] == ("worker", "python", "-c", "pass")
+    assert kwargs["timeout"] == 30
+
+
 @pytest.mark.parametrize("changed,blocked", [
     ("agent/ops_health_check.py", False),
     ("agent/ops_health_check.py\nagent/position_monitor.py", True),
