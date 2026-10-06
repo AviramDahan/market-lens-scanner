@@ -1,0 +1,126 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 69.435,
+  "errors": [],
+  "finished_at": "2026-10-06T14:38:25",
+  "initial_missing_tickers": [
+    "AMZN",
+    "ARM",
+    "COP",
+    "MMC"
+  ],
+  "initial_result_cards_read": 128,
+  "login_seconds": 0.053,
+  "login_status": "open access",
+  "missing_tickers": [
+    "ARM",
+    "COP",
+    "MMC"
+  ],
+  "open_app_seconds": 0.299,
+  "result_cards_read": 129,
+  "run_id": "20261006_143012",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 97.73,
+    "missing": 3,
+    "missing_tickers": [
+      "ARM",
+      "COP",
+      "MMC"
+    ],
+    "received": 129,
+    "requested": 132
+  },
+  "scan_seconds": 188.836,
+  "scan_status": "completed: 129 results; 3 unavailable",
+  "screenshot_seconds": 0.181,
+  "started_at": "2026-10-06T14:30:12",
+  "target_tickers": 150,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "AMZN",
+      "ARM",
+      "COP",
+      "MMC"
+    ],
+    "attempts": {
+      "AMZN": 1,
+      "ARM": 2,
+      "COP": 2,
+      "MMC": 2
+    },
+    "duration_seconds": 5.538,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "AMZN",
+      "ARM",
+      "COP",
+      "MMC"
+    ],
+    "outcomes": [
+      {
+        "attempts": 1,
+        "reason": "Result card recovered by focused retry.",
+        "status": "RECOVERED",
+        "ticker": "AMZN"
+      },
+      {
+        "attempts": 2,
+        "reason": "ARM: ARM: only 161 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "ARM"
+      },
+      {
+        "attempts": 2,
+        "reason": "COP: COP: only 1 rows for interval=1d, need at least 50",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "COP"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMC: MMC: no data returned for interval=1d",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMC"
+      }
+    ],
+    "recovered_tickers": [
+      "AMZN"
+    ],
+    "scan_requests": 4,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "ARM",
+      "COP",
+      "MMC"
+    ]
+  },
+  "tickers_requested": 132,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 493.46,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 25,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for ARM, COP, MMC."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 8.871,
+    "candidate_evaluation_seconds": 138.005,
+    "chart_retention_seconds": 30.494,
+    "load_and_schema_seconds": 13.412,
+    "market_context_seconds": 12.973,
+    "notification_seconds": 0.0,
+    "outcome_backfill_seconds": 0.044,
+    "performance_summary_seconds": 8.312,
+    "portfolio_and_decision_write_seconds": 0.19,
+    "portfolio_state_seconds": 0.019,
+    "save_seconds": 17.894,
+    "trade_analytics_seconds": 0.029,
+    "update_log_and_retention_seconds": 1.993
+  },
+  "workbook_update_seconds": 232.24
+}
