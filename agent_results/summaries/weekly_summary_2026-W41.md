@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 44
-Tickers scanned: 5684
+Total scans: 45
+Tickers scanned: 5814
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1043
+WATCH_REVIEW: 1063
 WATCH_REVIEW unique tickers: 47
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1043
-SKIP: 4597
-NO_TRADE: 3028
+WATCH: 1063
+SKIP: 4706
+NO_TRADE: 3121
 Realized PnL: 0.0
-Unrealized PnL: 153.0
-Portfolio value: 100803.12
+Unrealized PnL: 162.4
+Portfolio value: 100812.52
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8031
+Cumulative recorded-equity change (%): 0.8125
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
 Best shadow strategy: FIB_STRUCTURE_STOP
-Worst shadow strategy: TREND_PULLBACK_RECLAIM
+Worst shadow strategy: FIB_STOP_075_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 6
-- FIB_STOP_075_ATR: 18
+- FIB_STOP_075_ATR: 19
 - FIB_STRUCTURE_STOP: 2
 - TREND_PULLBACK_RECLAIM: 14
 
@@ -37,11 +37,11 @@ Top rejected candidates:
 - DE: SKIP score=0.5104 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.10.
 - FROG: WATCH score=0.5037 reason=WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 - GOOGL: SKIP score=0.4964 reason=SKIP: Communication Services sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.30.
+- INTC: WATCH score=0.495 reason=WATCH: Technical setup detected, but weighted risk/reward 1.52 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.15.
 - ANET: WATCH score=0.4914 reason=WATCH: Technical setup detected, but weighted risk/reward 1.35 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.97.
 - NVDA: WATCH score=0.4873 reason=WATCH: Technical setup detected, but weighted risk/reward 1.17 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.81.
 - GOOG: SKIP score=0.4842 reason=SKIP: Communication Services sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.27.
 - ISRG: WATCH score=0.4818 reason=WATCH: Technical setup detected, but weighted risk/reward 1.62 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.13.
-- HAL: WATCH score=0.475 reason=WATCH: NEUTRAL market requires setup score (0.47 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
