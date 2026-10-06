@@ -1,40 +1,41 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 48
-Tickers scanned: 6201
+Total scans: 49
+Tickers scanned: 6330
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1121
-WATCH_REVIEW unique tickers: 48
+WATCH_REVIEW: 1143
+WATCH_REVIEW unique tickers: 49
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1121
-SKIP: 5032
-NO_TRADE: 3420
+WATCH: 1143
+SKIP: 5138
+NO_TRADE: 3515
 Realized PnL: 0.0
-Unrealized PnL: 161.3
-Portfolio value: 100811.42
+Unrealized PnL: 157.6
+Portfolio value: 100807.72
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8114
+Cumulative recorded-equity change (%): 0.8077
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
 Best shadow strategy: TREND_PULLBACK_RECLAIM
 Worst shadow strategy: FIB_STOP_075_ATR
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 8
-- FIB_STOP_075_ATR: 23
+- BREAKOUT_CONTINUATION: 10
+- FIB_STOP_075_ATR: 25
+- FIB_STOP_100_ATR: 1
 - FIB_STRUCTURE_STOP: 4
-- TREND_PULLBACK_RECLAIM: 18
+- TREND_PULLBACK_RECLAIM: 19
 
 Top rejected candidates:
 - LIN: SKIP score=0.5847 reason=SKIP: Materials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.37.
 - ABBV: WATCH score=0.5138 reason=WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.83.
-- FROG: WATCH score=0.5109 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.80.
+- FROG: WATCH score=0.5113 reason=WATCH: Technical setup detected, but weighted risk/reward 1.14 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.82.
 - DE: SKIP score=0.5104 reason=SKIP: Industrials sector regime is weak (16/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.10.
 - INTC: WATCH score=0.5051 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.39.
 - GOOGL: SKIP score=0.4964 reason=SKIP: Communication Services sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.30.
