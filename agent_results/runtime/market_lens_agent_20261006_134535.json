@@ -1,0 +1,127 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 62.303,
+  "errors": [],
+  "finished_at": "2026-10-06T13:52:31",
+  "initial_missing_tickers": [
+    "ARM",
+    "GD",
+    "MMC",
+    "UPS"
+  ],
+  "initial_result_cards_read": 133,
+  "login_seconds": 0.054,
+  "login_status": "open access",
+  "missing_tickers": [
+    "ARM",
+    "GD",
+    "MMC",
+    "UPS"
+  ],
+  "open_app_seconds": 0.254,
+  "result_cards_read": 133,
+  "run_id": "20261006_134535",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 97.08,
+    "missing": 4,
+    "missing_tickers": [
+      "ARM",
+      "GD",
+      "MMC",
+      "UPS"
+    ],
+    "received": 133,
+    "requested": 137
+  },
+  "scan_seconds": 102.99,
+  "scan_status": "completed: 133 results; 4 unavailable",
+  "screenshot_seconds": 0.16,
+  "started_at": "2026-10-06T13:45:35",
+  "target_tickers": 150,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "ARM",
+      "GD",
+      "MMC",
+      "UPS"
+    ],
+    "attempts": {
+      "ARM": 2,
+      "GD": 2,
+      "MMC": 2,
+      "UPS": 2
+    },
+    "duration_seconds": 5.102,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "ARM",
+      "GD",
+      "MMC",
+      "UPS"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "ARM: ARM: only 161 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "ARM"
+      },
+      {
+        "attempts": 2,
+        "reason": "GD: GD: only 1 rows for interval=1d, need at least 50",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "GD"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMC: MMC: no data returned for interval=1d",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMC"
+      },
+      {
+        "attempts": 2,
+        "reason": "UPS: UPS: only 1 rows for interval=1d, need at least 50",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "UPS"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 5,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "ARM",
+      "GD",
+      "MMC",
+      "UPS"
+    ]
+  },
+  "tickers_requested": 137,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 416.287,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 29,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for ARM, GD, MMC, UPS."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 10.944,
+    "candidate_evaluation_seconds": 155.33,
+    "chart_retention_seconds": 24.125,
+    "load_and_schema_seconds": 14.147,
+    "market_context_seconds": 14.968,
+    "notification_seconds": 0.001,
+    "outcome_backfill_seconds": 0.051,
+    "performance_summary_seconds": 7.835,
+    "portfolio_and_decision_write_seconds": 0.26,
+    "portfolio_state_seconds": 0.007,
+    "save_seconds": 18.098,
+    "trade_analytics_seconds": 0.04,
+    "update_log_and_retention_seconds": 2.299
+  },
+  "workbook_update_seconds": 248.107
+}
