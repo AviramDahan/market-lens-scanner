@@ -1,33 +1,33 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 46
-Tickers scanned: 5943
+Total scans: 47
+Tickers scanned: 6072
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1079
-WATCH_REVIEW unique tickers: 47
+WATCH_REVIEW: 1099
+WATCH_REVIEW unique tickers: 48
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1079
-SKIP: 4818
-NO_TRADE: 3225
+WATCH: 1099
+SKIP: 4926
+NO_TRADE: 3322
 Realized PnL: 0.0
-Unrealized PnL: 177.7
-Portfolio value: 100827.82
+Unrealized PnL: 165.4
+Portfolio value: 100815.52
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8278
+Cumulative recorded-equity change (%): 0.8155
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
 Best shadow strategy: FIB_STRUCTURE_STOP
 Worst shadow strategy: FIB_STOP_075_ATR
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 6
-- FIB_STOP_075_ATR: 20
+- BREAKOUT_CONTINUATION: 7
+- FIB_STOP_075_ATR: 21
 - FIB_STRUCTURE_STOP: 3
 - TREND_PULLBACK_RECLAIM: 16
 
