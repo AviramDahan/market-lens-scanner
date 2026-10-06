@@ -1,36 +1,36 @@
 Daily Performance Summary
 
 Date: 2026-10-06
-Total scans: 27
-Tickers scanned: 3504
+Total scans: 28
+Tickers scanned: 3631
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 658
+WATCH_REVIEW: 683
 WATCH_REVIEW unique tickers: 40
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 658
-SKIP: 2819
-NO_TRADE: 2065
+WATCH: 683
+SKIP: 2920
+NO_TRADE: 2156
 Realized PnL: 0.0
-Unrealized PnL: 161.6
-Portfolio value: 100811.72
-Daily recorded-equity change (%): 0.0043
+Unrealized PnL: 163.6
+Portfolio value: 100813.72
+Daily recorded-equity change (%): 0.0062
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-05
-Cumulative recorded-equity change (%): 0.8117
+Cumulative recorded-equity change (%): 0.8137
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 12
-- FIB_STOP_075_ATR: 26
-- FIB_STOP_100_ATR: 5
+- BREAKOUT_CONTINUATION: 13
+- FIB_STOP_075_ATR: 30
+- FIB_STOP_100_ATR: 6
 - FIB_STRUCTURE_STOP: 4
-- TREND_PULLBACK_RECLAIM: 12
+- TREND_PULLBACK_RECLAIM: 14
 
 Top rejected candidates:
 - INTC: WATCH score=0.5497 reason=WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.34.
