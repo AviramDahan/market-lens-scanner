@@ -1,18 +1,18 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 76
-Tickers scanned: 9732
+Total scans: 77
+Tickers scanned: 9858
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1872
+WATCH_REVIEW: 1894
 WATCH_REVIEW unique tickers: 52
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1872
-SKIP: 7784
-NO_TRADE: 5328
+WATCH: 1894
+SKIP: 7887
+NO_TRADE: 5423
 Realized PnL: 0.0
 Unrealized PnL: 180.0
 Portfolio value: 100830.12
@@ -23,7 +23,7 @@ Cumulative recorded-equity change (%): 0.8301
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: KO
-Best shadow strategy: BREAKOUT_CONTINUATION
+Best shadow strategy: TREND_PULLBACK_RECLAIM
 Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 21
@@ -36,7 +36,7 @@ Top rejected candidates:
 - LIN: SKIP score=0.5847 reason=SKIP: Materials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.37.
 - URI: SKIP score=0.5686 reason=SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.05.
 - INTC: WATCH score=0.5497 reason=WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.34.
-- FROG: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.21 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.88.
+- FROG: WATCH score=0.5417 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 - WMT: SKIP score=0.5169 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.55.
 - ABBV: WATCH score=0.5138 reason=WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.83.
 - DE: SKIP score=0.5125 reason=SKIP: Industrials sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.31.

@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-07
-Total scans: 15
-Tickers scanned: 1875
+Total scans: 16
+Tickers scanned: 2001
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 427
+WATCH_REVIEW: 449
 WATCH_REVIEW unique tickers: 40
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 427
-SKIP: 1433
-NO_TRADE: 863
+WATCH: 449
+SKIP: 1536
+NO_TRADE: 958
 Realized PnL: 0.0
 Unrealized PnL: 180.0
 Portfolio value: 100830.12
@@ -29,10 +29,10 @@ Shadow would-buy counts:
 
 Top rejected candidates:
 - URI: SKIP score=0.5686 reason=SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.05.
+- FROG: WATCH score=0.5417 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 - WMT: SKIP score=0.5169 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.55.
 - ABBV: WATCH score=0.5138 reason=WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.83.
 - DE: SKIP score=0.5125 reason=SKIP: Industrials sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.31.
-- FROG: WATCH score=0.5037 reason=WATCH: Technical setup detected, but weighted risk/reward 1.34 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.00.
 - WMB: WATCH score=0.49 reason=WATCH: Technical setup detected, but weighted risk/reward 1.78 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.42.
 - TSLA: SKIP score=0.4858 reason=SKIP: Consumer sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 0.95.
 - V: SKIP score=0.4838 reason=SKIP: Financials sector regime is weak (19/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.45.
