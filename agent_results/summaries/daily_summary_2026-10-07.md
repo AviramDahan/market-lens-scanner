@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-07
-Total scans: 30
-Tickers scanned: 3760
+Total scans: 31
+Tickers scanned: 3886
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 706
-WATCH_REVIEW unique tickers: 44
+WATCH_REVIEW: 731
+WATCH_REVIEW unique tickers: 45
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 706
-SKIP: 3024
-NO_TRADE: 2231
+WATCH: 731
+SKIP: 3124
+NO_TRADE: 2295
 Realized PnL: 0.0
 Unrealized PnL: 159.7
 Portfolio value: 100809.82
@@ -21,7 +21,7 @@ Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-06
 Cumulative recorded-equity change (%): 0.8098
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
-Best ticker: NEE
+Best ticker: IONS
 Worst ticker: ABBV
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
