@@ -1,36 +1,36 @@
 Daily Performance Summary
 
 Date: 2026-10-07
-Total scans: 26
-Tickers scanned: 3260
+Total scans: 27
+Tickers scanned: 3385
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 627
+WATCH_REVIEW: 645
 WATCH_REVIEW unique tickers: 44
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 627
-SKIP: 2607
-NO_TRADE: 1906
+WATCH: 645
+SKIP: 2713
+NO_TRADE: 1996
 Realized PnL: 0.0
-Unrealized PnL: 153.0
-Portfolio value: 100803.12
-Daily recorded-equity change (%): -0.0058
+Unrealized PnL: 159.1
+Portfolio value: 100809.22
+Daily recorded-equity change (%): 0.0003
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-06
-Cumulative recorded-equity change (%): 0.8031
+Cumulative recorded-equity change (%): 0.8092
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
-Worst ticker: NVDA
+Worst ticker: ABBV
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
-- FIB_STOP_075_ATR: 11
+- FIB_STOP_075_ATR: 13
 - FIB_STOP_100_ATR: 2
 - FIB_STRUCTURE_STOP: 3
-- TREND_PULLBACK_RECLAIM: 11
+- TREND_PULLBACK_RECLAIM: 12
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
