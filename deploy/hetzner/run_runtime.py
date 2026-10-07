@@ -35,6 +35,7 @@ GENERATED = ("agent_tracker", "agent_results")
 CODE_PATHS = ("app", "agent", "pyproject.toml", "config.yaml")
 HOST_ONLY_AGENT_FILES = {"agent/ops_health_check.py", "agent/production_smoke.py"}
 SUCCESS_STATUSES = {"COMPLETE", "PARTIAL_OK"}
+PUSH_RETRY_DELAYS = (2, 5)
 
 
 class RuntimeDeliveryFailure(RuntimeError):
@@ -131,6 +132,20 @@ def latest_scan_record(previous: set[Path], results: Path | None = None) -> dict
     return record
 
 
+def push_backup() -> None:
+    # A rejected push must not be treated as persistence, even when the commit exists locally.
+    for attempt in range(len(PUSH_RETRY_DELAYS) + 1):
+        try:
+            run("git", "push", "origin", "HEAD:main", timeout=90)
+            return
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            if attempt == len(PUSH_RETRY_DELAYS):
+                raise
+            print(f"GitHub backup push failed; retrying ({attempt + 1}/{len(PUSH_RETRY_DELAYS) + 1})",
+                  file=sys.stderr)
+            time.sleep(PUSH_RETRY_DELAYS[attempt])
+
+
 def persist(kind: str) -> bool:
     run("git", "add", "--", *GENERATED)
     if subprocess.run(("git", "diff", "--cached", "--quiet"), cwd=REPO).returncode == 0:
@@ -140,7 +155,7 @@ def persist(kind: str) -> bool:
     run("git", "-c", "user.name=market-lens-agent", "-c",
         "user.email=market-lens-agent@users.noreply.github.com", "commit", "-m",
         f"Update Market Lens {kind} on Hetzner [skip render]")
-    run("git", "push", "origin", "HEAD:main", timeout=300)
+    push_backup()
     return True
 
 
@@ -159,7 +174,7 @@ def deliver(kind: str) -> None:
         run("git", "-c", "user.name=market-lens-agent", "-c",
             "user.email=market-lens-agent@users.noreply.github.com", "commit", "-m",
             "Persist Market Lens Telegram receipts [skip render]")
-        run("git", "push", "origin", "HEAD:main", timeout=300)
+        push_backup()
 
 
 def execute(kind: str) -> None:

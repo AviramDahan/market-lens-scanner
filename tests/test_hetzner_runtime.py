@@ -1,9 +1,48 @@
 import json
 import os
+import subprocess
 
 import pytest
 
 from deploy.hetzner import run_runtime as runtime
+
+
+def test_push_backup_retries_transient_rejection(monkeypatch):
+    attempts = []
+    delays = []
+
+    def fake_run(*args, **kwargs):
+        attempts.append((args, kwargs))
+        if len(attempts) == 1:
+            raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(runtime, "run", fake_run)
+    monkeypatch.setattr(runtime.time, "sleep", delays.append)
+
+    runtime.push_backup()
+
+    assert len(attempts) == 2
+    assert all(args == ("git", "push", "origin", "HEAD:main") for args, _ in attempts)
+    assert all(kwargs["timeout"] == 90 for _, kwargs in attempts)
+    assert delays == [2]
+
+
+def test_push_backup_fails_closed_after_bounded_retries(monkeypatch):
+    attempts = []
+    delays = []
+
+    def reject(*args, **_kwargs):
+        attempts.append(args)
+        raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(runtime, "run", reject)
+    monkeypatch.setattr(runtime.time, "sleep", delays.append)
+
+    with pytest.raises(subprocess.CalledProcessError):
+        runtime.push_backup()
+
+    assert len(attempts) == 3
+    assert delays == [2, 5]
 
 
 def test_writer_is_disabled_by_default(monkeypatch):
