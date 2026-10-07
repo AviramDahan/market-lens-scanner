@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-07
-Total scans: 29
-Tickers scanned: 3635
+Total scans: 30
+Tickers scanned: 3760
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 682
+WATCH_REVIEW: 706
 WATCH_REVIEW unique tickers: 44
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 682
-SKIP: 2924
-NO_TRADE: 2166
+WATCH: 706
+SKIP: 3024
+NO_TRADE: 2231
 Realized PnL: 0.0
-Unrealized PnL: 160.9
-Portfolio value: 100811.02
-Daily recorded-equity change (%): 0.0021
+Unrealized PnL: 159.7
+Portfolio value: 100809.82
+Daily recorded-equity change (%): 0.0009
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-06
-Cumulative recorded-equity change (%): 0.811
+Cumulative recorded-equity change (%): 0.8098
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: ABBV
