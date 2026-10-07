@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-07
-Total scans: 21
-Tickers scanned: 2631
+Total scans: 22
+Tickers scanned: 2757
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 543
+WATCH_REVIEW: 559
 WATCH_REVIEW unique tickers: 43
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 543
-SKIP: 2067
-NO_TRADE: 1433
+WATCH: 559
+SKIP: 2176
+NO_TRADE: 1529
 Realized PnL: 0.0
-Unrealized PnL: 148.4
-Portfolio value: 100798.52
-Daily recorded-equity change (%): -0.0103
+Unrealized PnL: 161.4
+Portfolio value: 100811.52
+Daily recorded-equity change (%): 0.0026
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-06
-Cumulative recorded-equity change (%): 0.7985
+Cumulative recorded-equity change (%): 0.8115
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: NEE
 Worst ticker: NVDA
@@ -27,7 +27,7 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
-- FIB_STOP_075_ATR: 6
+- FIB_STOP_075_ATR: 8
 - FIB_STOP_100_ATR: 2
 - FIB_STRUCTURE_STOP: 3
 - TREND_PULLBACK_RECLAIM: 5
@@ -37,7 +37,7 @@ Top rejected candidates:
 - URI: SKIP score=0.5686 reason=SKIP: Industrials sector regime is weak (17/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.05.
 - INTC: WATCH score=0.5491 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.41.
 - FROG: WATCH score=0.5435 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
-- WMT: SKIP score=0.5306 reason=SKIP: Consumer sector regime is weak (19/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.01.
+- WMT: SKIP score=0.5398 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.93.
 - ABBV: WATCH score=0.5138 reason=WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.83.
 - DE: SKIP score=0.5125 reason=SKIP: Industrials sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.31.
 - WMB: WATCH score=0.4976 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
