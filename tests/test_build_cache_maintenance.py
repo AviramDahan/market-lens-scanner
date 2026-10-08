@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -103,11 +103,11 @@ def test_weekly_timer_is_bounded_and_does_not_touch_trade_timers():
     deploy = Path(__file__).resolve().parents[1] / "deploy/hetzner"
     timer = (deploy / "market-lens-build-cache.timer").read_text()
     service = (deploy / "market-lens-build-cache.service").read_text()
-    assert "Thu *-*-* 23:00:00 UTC" in timer
-    assert "Thu *-*-* 23:15:00 UTC" in timer
+    assert "Thu *-*-* 16:45:00 America/New_York" in timer
+    assert "Thu *-*-* 16:55:00 America/New_York" in timer
     for month, day in ((1, 8), (7, 9)):
-        for minute in (0, 15):
-            local = datetime(2026, month, day, 23, minute, tzinfo=timezone.utc).astimezone(NY)
+        for minute in (45, 55):
+            local = datetime(2026, month, day, 16, minute, tzinfo=NY)
             assert local.strftime("%H:%M") not in WEEKDAY_SCANS
     assert "build_cache_maintenance.py" in service
     assert "SupplementaryGroups=docker" in service
