@@ -1,30 +1,30 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 96
-Tickers scanned: 12247
+Total scans: 97
+Tickers scanned: 12373
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2280
+WATCH_REVIEW: 2305
 WATCH_REVIEW unique tickers: 54
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2280
-SKIP: 9871
-NO_TRADE: 7042
+WATCH: 2305
+SKIP: 9971
+NO_TRADE: 7106
 Realized PnL: 0.0
-Unrealized PnL: 158.8
-Portfolio value: 100808.92
+Unrealized PnL: 159.7
+Portfolio value: 100809.82
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8089
+Cumulative recorded-equity change (%): 0.8098
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: KO
 Best shadow strategy: BREAKOUT_CONTINUATION
-Worst shadow strategy: VWAP_RECLAIM
+Worst shadow strategy: FIB_STOP_100_ATR
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 23
 - FIB_STOP_075_ATR: 67
