@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+from collections import namedtuple
 
 import pytest
 
@@ -103,7 +104,7 @@ def test_host_only_checker_does_not_require_worker_rebuild(tmp_path, monkeypatch
         runtime.require_live_preflight()
 
 
-def test_pending_notification_blocks_next_trade_run(tmp_path, monkeypatch):
+def test_unpersisted_notification_blocks_next_trade_run(tmp_path, monkeypatch):
     monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
     monkeypatch.setattr(runtime, "STATE", tmp_path)
@@ -112,8 +113,105 @@ def test_pending_notification_blocks_next_trade_run(tmp_path, monkeypatch):
     monkeypatch.setattr(runtime, "TRACKER", tracker)
     (tmp_path / "outbox").mkdir()
     (tmp_path / "outbox/scanner.json").write_text("{}")
-    with pytest.raises(RuntimeError, match="undelivered"):
+    monkeypatch.setattr(runtime, "output", lambda *_args: " M agent_tracker/tracker.xlsx")
+    with pytest.raises(RuntimeError, match="unpersisted"):
         runtime.require_live_preflight()
+
+
+def test_preflight_retries_local_backup_then_delivers_pending_alert(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"fixture")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    (tmp_path / "deployed_revision").write_text("deployed")
+    (tmp_path / "outbox").mkdir()
+    (tmp_path / "outbox/scanner.json").write_text("{}")
+    calls = []
+    backed_up = False
+
+    def fake_output(*args):
+        if args[1] == "status":
+            return ""
+        if args[1] == "rev-parse":
+            return "local" if args[2] == "HEAD" else ("local" if backed_up else "remote")
+        if args[1] == "merge-base":
+            return "remote"
+        if args[1] == "diff":
+            return ""
+        raise AssertionError(args)
+
+    def fake_push():
+        nonlocal backed_up
+        calls.append("push")
+        backed_up = True
+
+    monkeypatch.setattr(runtime, "output", fake_output)
+    monkeypatch.setattr(runtime, "run", lambda *args, **_kwargs: calls.append(args))
+    monkeypatch.setattr(runtime, "push_backup", fake_push)
+    monkeypatch.setattr(runtime, "deliver", lambda kind: calls.append(f"deliver:{kind}"))
+
+    runtime.require_live_preflight()
+    assert calls.index("push") < calls.index("deliver:scanner")
+
+
+def test_preflight_retries_receipt_only_state_without_resending(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"fixture")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    (tmp_path / "deployed_revision").write_text("deployed")
+    calls = []
+
+    def fake_output(*args):
+        if args[1] == "status":
+            return " M agent_results/telegram_notifications.jsonl" if "receipts" not in calls else ""
+        if args[1] == "rev-parse":
+            return "same"
+        if args[1] == "diff":
+            return ""
+        raise AssertionError(args)
+
+    monkeypatch.setattr(runtime, "output", fake_output)
+    monkeypatch.setattr(runtime, "run", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(runtime, "persist_notification_receipts", lambda: calls.append("receipts"))
+    monkeypatch.setattr(runtime, "deliver", lambda *_args: pytest.fail("No pending outbox"))
+
+    runtime.require_live_preflight()
+    assert calls == ["receipts"]
+
+
+def test_diverged_backup_never_dispatches_pending_alert(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.write_bytes(b"fixture")
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    (tmp_path / "outbox").mkdir()
+    (tmp_path / "outbox/monitor.json").write_text("{}")
+
+    def fake_output(*args):
+        return {"status": "", "rev-parse": "local" if args[2] == "HEAD" else "remote",
+                "merge-base": "older"}[args[1]]
+
+    monkeypatch.setattr(runtime, "output", fake_output)
+    monkeypatch.setattr(runtime, "run", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(runtime, "deliver", lambda *_args: pytest.fail("Diverged history delivered alert"))
+    with pytest.raises(RuntimeError, match="diverged"):
+        runtime.require_live_preflight()
+
+
+def test_low_disk_warns_without_deleting_or_blocking(monkeypatch):
+    Usage = namedtuple("Usage", "total used free")
+    monkeypatch.setattr(runtime.shutil, "disk_usage", lambda *_args: Usage(75, 65, 10 * 1024 ** 3))
+    alerts = []
+    monkeypatch.setattr(runtime, "report_runtime_alert", lambda *args: alerts.append(args))
+    runtime.check_disk_capacity()
+    assert alerts == [("scanner", "DISK_LOW")]
 
 
 def test_monitor_noop_stays_local(tmp_path, monkeypatch):

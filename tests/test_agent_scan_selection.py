@@ -64,6 +64,36 @@ def test_off_hours_discovery_can_expand_fresh_target(monkeypatch, tmp_path) -> N
     assert tickers == candidates[:8]
 
 
+def test_weekly_history_failure_is_deferred_only_after_two_runs(monkeypatch, tmp_path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    now = datetime(2026, 10, 8, 12, 0)
+    def write(run_id: str, ticker: str, reason: str) -> None:
+        (runtime / f"market_lens_agent_{run_id}.json").write_text(json.dumps({
+            "finished_at": "2026-10-08T11:00:00",
+            "ticker_recovery": {"outcomes": [{
+                "ticker": ticker, "status": "DATA_UNAVAILABLE", "reason": reason,
+            }]},
+        }))
+
+    write("20261008_110000", "ARM", "only 161 rows for interval=1wk, need at least 200")
+    write("20261008_113000", "FPS", "no data returned for interval=1d")
+    assert agent.recent_insufficient_history_tickers(runtime, now=now) == set()
+    write("20261008_114000", "ARM", "only 161 rows for interval=1wk, need at least 200")
+    assert agent.recent_insufficient_history_tickers(runtime, now=now) == {"ARM"}
+    assert agent.recent_insufficient_history_tickers(runtime, now=datetime(2026, 10, 16, 12, 0)) == set()
+
+
+def test_history_defer_does_not_remove_open_position_carry_forward(monkeypatch, tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_TARGET", "2")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "4")
+    monkeypatch.setenv("MARKET_LENS_AGENT_UNIVERSE_MAX_POOL", "4")
+    monkeypatch.setattr(agent, "fetch_smart_universe_tickers", lambda *_args: ["ARM", "AAA", "BBB"])
+    monkeypatch.setattr(agent, "recent_insufficient_history_tickers", lambda: {"ARM"})
+    assert agent.build_agent_scan_tickers(settings, ["ARM"], []) == ["AAA", "BBB", "ARM"]
+
+
 def test_smart_universe_fetch_supplements_short_payload_from_curated_universe(monkeypatch, tmp_path) -> None:
     settings = make_settings(tmp_path)
     payload = {"companies": [{"ticker": "AAA"}, {"ticker": "BBB"}], "ranked": [{"ticker": "AAA"}]}

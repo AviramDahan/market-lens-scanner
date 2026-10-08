@@ -8,7 +8,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, time as datetime_time, timedelta
+from datetime import datetime, time as datetime_time, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode, urljoin
@@ -567,6 +567,9 @@ def build_agent_scan_tickers(
     pool_count = int(os.getenv("MARKET_LENS_AGENT_UNIVERSE_POOL", "100"))
     hard_excluded = set(carry_forward_tickers)
     soft_excluded = set(skipped_tickers)
+    history_unavailable = recent_insufficient_history_tickers()
+    if history_unavailable:
+        log("Temporarily deferred for insufficient weekly history: " + " ".join(sorted(history_unavailable)))
     max_pool_count = max(
         pool_count,
         target_count,
@@ -586,6 +589,7 @@ def build_agent_scan_tickers(
     if not candidates:
         return []
 
+    candidates = [ticker for ticker in candidates if ticker not in history_unavailable]
     base_tickers = [ticker for ticker in candidates if ticker not in hard_excluded and ticker not in soft_excluded][
         :target_count
     ]
@@ -630,6 +634,33 @@ def build_agent_scan_tickers(
     if len(base_tickers) < target_count:
         log(f"Smart agent universe warning: only {len(base_tickers)} fresh tickers available after exclusions.")
     return final_tickers
+
+
+def recent_insufficient_history_tickers(
+    runtime_dir: Path | None = None, now: datetime | None = None,
+) -> set[str]:
+    """Defer twice-confirmed weekly-history failures, and retry them after seven days."""
+    directory = runtime_dir or RUNTIME_DIR
+    moment = now or datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    failures: dict[str, list[datetime]] = {}
+    for path in sorted(directory.glob("market_lens_agent_*.json"), reverse=True)[:120]:
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+            finished = datetime.fromisoformat(str(record.get("finished_at", "")))
+            if finished.tzinfo is None:
+                finished = finished.replace(tzinfo=timezone.utc)
+            if not timedelta(0) <= moment - finished <= timedelta(days=7):
+                continue
+            for outcome in (record.get("ticker_recovery") or {}).get("outcomes", []):
+                ticker = str(outcome.get("ticker") or "").upper()
+                reason = str(outcome.get("reason") or "").lower()
+                if ticker and outcome.get("status") == "DATA_UNAVAILABLE" and "interval=1wk" in reason and "need at least 200" in reason:
+                    failures.setdefault(ticker, []).append(finished)
+        except (OSError, ValueError, TypeError, AttributeError):
+            continue
+    return {ticker for ticker, observations in failures.items() if len(observations) >= 2}
 
 
 def agent_target_count() -> int:
