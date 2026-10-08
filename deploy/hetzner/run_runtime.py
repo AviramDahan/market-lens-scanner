@@ -71,6 +71,22 @@ def file_hash(path: Path) -> str:
     return digest.hexdigest()
 
 
+def check_disk_capacity() -> None:
+    try:
+        free_gb = shutil.disk_usage(REPO).free / (1024 ** 3)
+    except OSError as exc:
+        print(f"Unable to inspect runtime disk capacity: {exc.__class__.__name__}", file=sys.stderr)
+        return
+    try:
+        minimum_gb = max(1.0, float(os.getenv("MARKET_LENS_MIN_FREE_GB", "12")))
+    except ValueError:
+        minimum_gb = 12.0
+    if free_gb < minimum_gb:
+        print(f"Runtime disk low: {free_gb:.1f} GiB free (threshold {minimum_gb:.1f} GiB)",
+              file=sys.stderr)
+        report_runtime_alert("scanner", "DISK_LOW")
+
+
 def require_live_preflight() -> None:
     if os.getenv("MARKET_LENS_HETZNER_WRITER_ENABLED") != "true":
         raise RuntimeError("Hetzner writer is disabled")
@@ -78,12 +94,23 @@ def require_live_preflight() -> None:
         raise RuntimeError("Legacy scanner/monitor writers have not been disabled")
     if not TRACKER.is_file():
         raise RuntimeError("Paper tracker is missing")
-    if any((STATE / "outbox" / f"{kind}.json").exists() for kind in ("scanner", "monitor")):
-        raise RuntimeError("An undelivered notification outbox needs reconciliation")
-    if output("git", "status", "--porcelain"):
+    status = output("git", "status", "--porcelain")
+    if any(line[3:] != "agent_results/telegram_notifications.jsonl"
+           for line in status.splitlines()):
         raise RuntimeError("Runtime checkout has unpersisted changes")
     run("git", "fetch", "origin", "main", timeout=300)
-    run("git", "merge", "--ff-only", "origin/main", timeout=60)
+    local = output("git", "rev-parse", "HEAD")
+    remote = output("git", "rev-parse", "origin/main")
+    if local != remote:
+        common = output("git", "merge-base", "HEAD", "origin/main")
+        if common == remote:
+            # The previous run committed data locally but exhausted push retries.
+            push_backup()
+            run("git", "fetch", "origin", "main", timeout=300)
+        elif common == local:
+            run("git", "merge", "--ff-only", "origin/main", timeout=60)
+        else:
+            raise RuntimeError("Runtime and GitHub histories diverged; manual reconciliation required")
     if output("git", "rev-parse", "HEAD") != output("git", "rev-parse", "origin/main"):
         raise RuntimeError("Local portfolio commits are not backed up to main")
     deployed = (STATE / "deployed_revision").read_text(encoding="utf-8").strip()
@@ -95,6 +122,14 @@ def require_live_preflight() -> None:
     )
     if changed_code:
         raise RuntimeError(f"Code changed since deployed image: {changed_code}")
+    if status:
+        persist_notification_receipts()
+    for kind in ("scanner", "monitor"):
+        if (STATE / "outbox" / f"{kind}.json").exists():
+            deliver(kind)
+    if output("git", "status", "--porcelain"):
+        raise RuntimeError("Runtime checkout has unpersisted changes after recovery")
+    check_disk_capacity()
 
 
 def worker(command: list[str], *, timeout: int, stage: ScannerStage | None = None) -> None:
@@ -168,6 +203,10 @@ def deliver(kind: str) -> None:
         worker(["python", script, f"/app/runtime/outbox/{kind}.json"], timeout=120)
     except Exception as exc:
         raise RuntimeDeliveryFailure("Post-persistence trade alert delivery failed") from exc
+    persist_notification_receipts()
+
+
+def persist_notification_receipts() -> None:
     receipts = "agent_results/telegram_notifications.jsonl"
     run("git", "add", "--", receipts)
     if subprocess.run(("git", "diff", "--cached", "--quiet"), cwd=REPO).returncode:

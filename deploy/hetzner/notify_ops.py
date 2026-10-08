@@ -20,7 +20,7 @@ RUNTIME_ENV = Path("/home/trader/.config/market-lens/runtime.env")
 HOST_ENV = Path("/home/trader/.config/market-lens/host.env")
 DEFAULT_ENV = REPO / "deploy/hetzner/runtime.defaults.env"
 ALLOWED_COMPONENTS = {"scanner", "monitor"}
-ALLOWED_EVENTS = {"RUN_FAILED", "MONITOR_DEGRADED", "TRADE_ALERT_DELIVERY_FAILED"}
+ALLOWED_EVENTS = {"RUN_FAILED", "MONITOR_DEGRADED", "TRADE_ALERT_DELIVERY_FAILED", "DISK_LOW"}
 
 
 def env_value(name: str) -> str:

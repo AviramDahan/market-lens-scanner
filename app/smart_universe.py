@@ -171,7 +171,7 @@ def build_smart_universe(
     source_parts = list(_LAST_SOURCE_PARTS)
     source_urls = list(_LAST_SOURCE_URLS)
     sector_health = build_sector_health(analysis_period)
-    base = candidate_pool(source_universe, sector_health)
+    base = candidate_pool(source_universe, sector_health, requested=limit)
     benchmarks = fetch_benchmark_frames(analysis_period)
     candidates: list[SmartCandidate] = []
     errors: dict[str, str] = {}
@@ -463,6 +463,8 @@ def merge_universe_source(
     if not source:
         return
     for ticker, item in source.items():
+        # Some upstream holdings files still publish the pre-2026 Marsh symbol.
+        ticker = "MRSH" if ticker == "MMC" else ticker
         sector = normalize_sector(item.get("sector", ""))
         name = clean_company_name(item.get("name", "")) or ticker
         if not ticker or sector not in SECTOR_ETFS:
@@ -842,6 +844,7 @@ def sector_health_from_frame(
 def candidate_pool(
     source_universe: dict[str, str],
     sector_health: dict[str, dict[str, Any]],
+    requested: int = DEFAULT_LIMIT,
 ) -> dict[str, str]:
     grouped: dict[str, list[str]] = {}
     for ticker, sector in source_universe.items():
@@ -850,11 +853,17 @@ def candidate_pool(
     selected: dict[str, str] = {}
     today_key = time.strftime("%Y%m%d")
     curated = curated_universe()
+    healthy_sectors = sum(
+        sector_health.get(sector, fallback_sector_health(sector, SECTOR_ETFS.get(sector, "SPY")))["label"] != "Weak"
+        for sector in grouped
+    ) or 1
+    # A larger request widens the source rotation, not the quality/sector filters.
+    per_sector_target = min(120, max(MAX_SOURCE_PER_SECTOR, math.ceil(requested * 3 / healthy_sectors)))
     for sector, tickers in sorted(grouped.items()):
         health = sector_health.get(sector, fallback_sector_health(sector, SECTOR_ETFS.get(sector, "SPY")))
         if health["label"] == "Weak":
             continue
-        quota = MAX_SOURCE_PER_SECTOR if health["label"] == "Strong" else max(8, MAX_SOURCE_PER_SECTOR // 2)
+        quota = per_sector_target if health["label"] == "Strong" else max(8, per_sector_target // 2)
         ranked = sorted(tickers, key=lambda ticker: (ticker not in curated, rotation_key(ticker, today_key)))
         for ticker in ranked[:quota]:
             selected[ticker] = sector
