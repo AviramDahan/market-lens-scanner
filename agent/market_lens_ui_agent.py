@@ -706,6 +706,9 @@ def fetch_smart_universe_tickers(settings: Settings, limit: int) -> list[str]:
         log(f"Smart Universe API fetch failed; using local fallback: {exc}")
         return local_smart_universe_tickers(settings, limit)
 
+    if payload.get("fallback"):
+        reason = (payload.get("errors") or {}).get("fallback") or "source calculation unavailable"
+        log(f"Smart Universe API returned curated fallback: {reason}")
     tickers = tickers_from_smart_payload(payload)
     if (
         len(tickers) < limit

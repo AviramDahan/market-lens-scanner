@@ -117,6 +117,30 @@ def test_smart_universe_fetch_supplements_short_payload_from_curated_universe(mo
     assert tickers == ["AAA", "BBB", "CCC", "DDD", "EEE"]
 
 
+def test_api_curated_fallback_is_visible_in_agent_log(monkeypatch, tmp_path, capsys) -> None:
+    settings = make_settings(tmp_path)
+    payload = {
+        "fallback": True,
+        "errors": {"fallback": "Smart Universe fallback used: TimeoutError"},
+        "companies": [{"ticker": "AAA"}],
+    }
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps(payload).encode("utf-8")
+
+    monkeypatch.setattr(agent, "urlopen", lambda *_args, **_kwargs: FakeResponse())
+    monkeypatch.setenv("MARKET_LENS_AGENT_SUPPLEMENT_CURATED_UNIVERSE", "false")
+    assert agent.fetch_smart_universe_tickers(settings, 35) == ["AAA"]
+    assert "curated fallback" in capsys.readouterr().out.lower()
+
+
 def test_read_recent_near_miss_tickers_ignores_ordinary_skip_and_no_trade(monkeypatch, tmp_path) -> None:
     tracker = tmp_path / "tracker.xlsx"
     wb = Workbook()

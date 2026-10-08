@@ -1740,7 +1740,7 @@ async def get_smart_universe(
     max_per_sector: int = Query(default=5, ge=1, le=20),
     analysis_period: str = Query(default="6mo", pattern="^(3mo|6mo|1y|2y)$"),
 ) -> dict:
-    timeout_seconds = float(os.getenv("MARKET_LENS_SMART_UNIVERSE_TIMEOUT_SECONDS", "25"))
+    timeout_seconds = float(os.getenv("MARKET_LENS_SMART_UNIVERSE_TIMEOUT_SECONDS", "70"))
     try:
         return await asyncio.wait_for(
             asyncio.to_thread(
