@@ -1,30 +1,30 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 109
-Tickers scanned: 14171
+Total scans: 110
+Tickers scanned: 14351
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2851
-WATCH_REVIEW unique tickers: 97
+WATCH_REVIEW: 2904
+WATCH_REVIEW unique tickers: 109
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2851
-SKIP: 11211
-NO_TRADE: 7993
+WATCH: 2904
+SKIP: 11337
+NO_TRADE: 8118
 Realized PnL: 0.0
-Unrealized PnL: 159.7
-Portfolio value: 100809.82
+Unrealized PnL: 180.4
+Portfolio value: 100830.52
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8098
+Cumulative recorded-equity change (%): 0.8305
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: KO
 Best shadow strategy: BREAKOUT_CONTINUATION
-Worst shadow strategy: FIB_STOP_100_ATR
+Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 23
 - FIB_STOP_075_ATR: 67
@@ -42,8 +42,8 @@ Top rejected candidates:
 - WMB: WATCH score=0.5232 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.25.
 - ABBV: WATCH score=0.5138 reason=WATCH: Technical setup detected, but weighted risk/reward 1.23 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.83.
 - DE: SKIP score=0.5125 reason=SKIP: Industrials sector regime is weak (18/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.31.
+- CRDO: WATCH score=0.5043 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.38.
 - ANET: WATCH score=0.5013 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.79.
-- GOOGL: SKIP score=0.4964 reason=SKIP: Communication Services sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.30.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
