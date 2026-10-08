@@ -1,35 +1,36 @@
 Daily Performance Summary
 
 Date: 2026-10-08
-Total scans: 28
-Tickers scanned: 4515
+Total scans: 29
+Tickers scanned: 4695
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1180
-WATCH_REVIEW unique tickers: 112
+WATCH_REVIEW: 1221
+WATCH_REVIEW unique tickers: 113
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1180
-SKIP: 3305
-NO_TRADE: 2697
+WATCH: 1221
+SKIP: 3441
+NO_TRADE: 2824
 Realized PnL: 0.0
-Unrealized PnL: 208.54
-Portfolio value: 100858.66
-Daily recorded-equity change (%): 0.0484
+Unrealized PnL: 188.6
+Portfolio value: 100838.72
+Daily recorded-equity change (%): 0.0287
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-07
-Cumulative recorded-equity change (%): 0.8587
+Cumulative recorded-equity change (%): 0.8387
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: PG
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 11
-- FIB_STOP_075_ATR: 30
-- FIB_STRUCTURE_STOP: 11
-- TREND_PULLBACK_RECLAIM: 46
+- BREAKOUT_CONTINUATION: 14
+- FIB_STOP_075_ATR: 35
+- FIB_STOP_100_ATR: 1
+- FIB_STRUCTURE_STOP: 13
+- TREND_PULLBACK_RECLAIM: 48
 
 Top rejected candidates:
 - LIN: SKIP score=0.5538 reason=SKIP: Materials sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.01.
