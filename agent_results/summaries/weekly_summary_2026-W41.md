@@ -1,18 +1,18 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 105
-Tickers scanned: 13451
+Total scans: 106
+Tickers scanned: 13631
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2567
+WATCH_REVIEW: 2638
 WATCH_REVIEW unique tickers: 97
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2567
-SKIP: 10779
-NO_TRADE: 7641
+WATCH: 2638
+SKIP: 10887
+NO_TRADE: 7729
 Realized PnL: 0.0
 Unrealized PnL: 159.7
 Portfolio value: 100809.82
