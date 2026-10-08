@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import sys
@@ -912,6 +913,21 @@ def test_smart_universe_endpoint_returns_fallback_on_error(monkeypatch) -> None:
     assert payload["fallback"] is True
     assert payload["count"] > 0
     assert payload["companies"]
+
+
+def test_smart_universe_cold_start_uses_longer_default_budget(monkeypatch) -> None:
+    monkeypatch.delenv("MARKET_LENS_SMART_UNIVERSE_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setattr(main, "build_smart_universe", lambda **_kwargs: {"count": 1})
+    original_wait_for = asyncio.wait_for
+    observed = []
+
+    async def capture_wait_for(task, timeout):
+        observed.append(timeout)
+        return await original_wait_for(task, timeout)
+
+    monkeypatch.setattr(main.asyncio, "wait_for", capture_wait_for)
+    assert asyncio.run(main.get_smart_universe(limit=35, max_per_sector=5, analysis_period="6mo")) == {"count": 1}
+    assert observed == [70.0]
 
 
 def test_snapshot_enrichment_refreshes_stale_setup_selection_diagnostics(monkeypatch, tmp_path) -> None:
