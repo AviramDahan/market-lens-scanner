@@ -1,0 +1,13 @@
+[Unit]
+Description=Bound unused Docker build cache on the shared Market Lens host
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=trader
+SupplementaryGroups=docker
+WorkingDirectory=/home/trader/market-lens-runtime
+ExecStart=/usr/bin/python3 /home/trader/market-lens-runtime/deploy/hetzner/build_cache_maintenance.py
+TimeoutStartSec=720
+NoNewPrivileges=true

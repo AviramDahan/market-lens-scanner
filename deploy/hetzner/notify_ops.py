@@ -19,8 +19,9 @@ STATE = Path("/home/trader/market-lens-runtime-state")
 RUNTIME_ENV = Path("/home/trader/.config/market-lens/runtime.env")
 HOST_ENV = Path("/home/trader/.config/market-lens/host.env")
 DEFAULT_ENV = REPO / "deploy/hetzner/runtime.defaults.env"
-ALLOWED_COMPONENTS = {"scanner", "monitor"}
-ALLOWED_EVENTS = {"RUN_FAILED", "MONITOR_DEGRADED", "TRADE_ALERT_DELIVERY_FAILED", "DISK_LOW"}
+ALLOWED_COMPONENTS = {"scanner", "monitor", "maintenance"}
+ALLOWED_EVENTS = {"RUN_FAILED", "MONITOR_DEGRADED", "TRADE_ALERT_DELIVERY_FAILED", "DISK_LOW",
+                  "MAINTENANCE_FAILED", "MAINTENANCE_INEFFECTIVE"}
 
 
 def env_value(name: str) -> str:
@@ -72,11 +73,16 @@ def send_runtime_alert(
         except (ValueError, KeyError, TypeError):
             pass
 
+        detail = (
+            "Build-cache maintenance needs review. Check the host service journal and free disk space."
+            if component == "maintenance" else
+            "Paper portfolio execution needs review. Check the host service journal "
+            "and the latest Agent dashboard. No trade details or credentials are included."
+        )
         message = (
             f"<b>Market Lens | {escape(component.upper())} {escape(event)}</b>\n"
             f"Time: {moment.astimezone(timezone.utc):%Y-%m-%d %H:%M} UTC\n"
-            "Paper portfolio execution needs review. Check the host service journal "
-            "and the latest Agent dashboard. No trade details or credentials are included."
+            f"{detail}"
         )
         request = Request(
             f"https://api.telegram.org/bot{token}/sendMessage",
