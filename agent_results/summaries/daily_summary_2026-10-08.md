@@ -1,38 +1,40 @@
 Daily Performance Summary
 
 Date: 2026-10-08
-Total scans: 23
-Tickers scanned: 3615
+Total scans: 24
+Tickers scanned: 3795
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 950
-WATCH_REVIEW unique tickers: 104
+WATCH_REVIEW: 996
+WATCH_REVIEW unique tickers: 111
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 950
-SKIP: 2642
-NO_TRADE: 2080
+WATCH: 996
+SKIP: 2775
+NO_TRADE: 2203
 Realized PnL: 0.0
-Unrealized PnL: 220.2
-Portfolio value: 100870.32
-Daily recorded-equity change (%): 0.06
+Unrealized PnL: 236.7
+Portfolio value: 100886.82
+Daily recorded-equity change (%): 0.0764
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-07
-Cumulative recorded-equity change (%): 0.8703
+Cumulative recorded-equity change (%): 0.8868
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
-Worst ticker: ABBV
+Worst ticker: AIG
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 16
-- FIB_STRUCTURE_STOP: 2
-- TREND_PULLBACK_RECLAIM: 23
+- BREAKOUT_CONTINUATION: 7
+- FIB_STOP_075_ATR: 19
+- FIB_STRUCTURE_STOP: 4
+- TREND_PULLBACK_RECLAIM: 28
 
 Top rejected candidates:
 - FROG: WATCH score=0.53 reason=WATCH: Technical setup detected, but weighted risk/reward 1.21 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.88.
 - WMB: WATCH score=0.5232 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.25.
+- KO: SKIP score=0.518 reason=SKIP: Consumer sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.63.
 - ABBV: SKIP score=0.5151 reason=SKIP: Healthcare sector regime is weak (27/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.84.
 - OXY: WATCH score=0.5126 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - DOCU: WATCH score=0.5126 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.20.
@@ -40,7 +42,6 @@ Top rejected candidates:
 - WMT: SKIP score=0.5065 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.54.
 - CSCO: WATCH score=0.5051 reason=WATCH: Technical setup detected, but weighted risk/reward 1.88 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.43.
 - CRDO: WATCH score=0.5043 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.38.
-- ANET: WATCH score=0.5013 reason=WATCH: Technical setup detected, but weighted risk/reward 1.10 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.79.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
