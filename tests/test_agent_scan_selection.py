@@ -23,7 +23,7 @@ def make_settings(tmp_path):
     )
 
 
-def test_agent_scan_selection_preserves_carry_forward_when_total_cap_applies(monkeypatch, tmp_path) -> None:
+def test_agent_scan_selection_preserves_carry_forward_when_total_cap_applies(monkeypatch, tmp_path, capsys) -> None:
     settings = make_settings(tmp_path)
     candidates = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "WATCH1", "NEAR1", "SKIP1"]
 
@@ -44,6 +44,7 @@ def test_agent_scan_selection_preserves_carry_forward_when_total_cap_applies(mon
     assert "NEAR1" in tickers
     assert "SKIP1" not in tickers
     assert len(tickers) == len(set(tickers))
+    assert "4 base scan tickers + 2 carry-forward tickers" in capsys.readouterr().out
 
 
 def test_off_hours_discovery_can_expand_fresh_target(monkeypatch, tmp_path) -> None:
@@ -82,6 +83,21 @@ def test_weekly_history_failure_is_deferred_only_after_two_runs(monkeypatch, tmp
     write("20261008_114000", "ARM", "only 161 rows for interval=1wk, need at least 200")
     assert agent.recent_insufficient_history_tickers(runtime, now=now) == {"ARM"}
     assert agent.recent_insufficient_history_tickers(runtime, now=datetime(2026, 10, 16, 12, 0)) == set()
+
+
+def test_two_focused_recovery_attempts_defer_after_one_run(tmp_path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    (runtime / "market_lens_agent_20261008_100306.json").write_text(json.dumps({
+        "finished_at": "2026-10-08T10:12:00",
+        "ticker_recovery": {"outcomes": [{
+            "ticker": "FIG", "status": "DATA_UNAVAILABLE", "attempts": 2,
+            "reason": "FIG: only 63 rows for interval=1wk, need at least 200",
+        }]},
+    }))
+    assert agent.recent_insufficient_history_tickers(
+        runtime, now=datetime(2026, 10, 8, 11, 0)
+    ) == {"FIG"}
 
 
 def test_history_defer_does_not_remove_open_position_carry_forward(monkeypatch, tmp_path) -> None:
