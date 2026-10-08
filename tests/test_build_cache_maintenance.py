@@ -1,10 +1,12 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from deploy.hetzner import build_cache_maintenance as maintenance
+from deploy.hetzner.schedule import NY, WEEKDAY_SCANS
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -102,6 +104,10 @@ def test_weekly_timer_is_bounded_and_does_not_touch_trade_timers():
     timer = (deploy / "market-lens-build-cache.timer").read_text()
     service = (deploy / "market-lens-build-cache.service").read_text()
     assert "Thu *-*-* 23:00:00 UTC" in timer
-    assert "Thu *-*-* 23:30:00 UTC" in timer
+    assert "Thu *-*-* 23:15:00 UTC" in timer
+    for month, day in ((1, 8), (7, 9)):
+        for minute in (0, 15):
+            local = datetime(2026, month, day, 23, minute, tzinfo=timezone.utc).astimezone(NY)
+            assert local.strftime("%H:%M") not in WEEKDAY_SCANS
     assert "build_cache_maintenance.py" in service
     assert "SupplementaryGroups=docker" in service
