@@ -118,6 +118,9 @@ def test_existing_summary_command_reads_persisted_observations() -> None:
     assert summary["applicable_observation_count"] == 1
     assert summary["qualifying_signal_count"] == 0
     assert summary["weak_ineligibility_reasons"] == {"FAIL:entry_confirmation": 1}
+    assert summary["data_quality_warnings"]
+    message = review.format_review(rows, summary, now=clock(), latest_run=None)
+    assert "אינו הוכחה שלא היו הזדמנויות" in message
 
 
 def test_failure_notice_is_retried_when_telegram_fails() -> None:
