@@ -60,14 +60,11 @@ class ExtendedHoursQuote:
 def fetch_ticker(ticker: str, analysis_period: str = "6mo") -> TickerData:
     hourly_period = HOURLY_PERIOD_BY_ANALYSIS_PERIOD.get(analysis_period, "60d")
 
-    daily = _fetch_frame(ticker, "1d", analysis_period)
-    daily = _validate_frame(daily, ticker, "1d", MIN_DAILY_ROWS)
+    daily = _fetch_validated_frame(ticker, "1d", analysis_period, MIN_DAILY_ROWS)
 
-    hourly = _fetch_frame(ticker, "1h", hourly_period)
-    hourly = _validate_frame(hourly, ticker, "1h", MIN_HOURLY_ROWS)
+    hourly = _fetch_validated_frame(ticker, "1h", hourly_period, MIN_HOURLY_ROWS)
 
-    weekly = _fetch_frame(ticker, "1wk", WEEKLY_PERIOD)
-    weekly = _validate_frame(weekly, ticker, "1wk", MIN_WEEKLY_ROWS)
+    weekly = _fetch_validated_frame(ticker, "1wk", WEEKLY_PERIOD, MIN_WEEKLY_ROWS)
 
     return TickerData(ticker=ticker, daily=daily, hourly=hourly, weekly=weekly)
 
@@ -78,7 +75,7 @@ def fetch_spy_returns(period: str = "3mo") -> "pd.Series":
 
 
 def fetch_daily_frame(ticker: str, period: str = "6mo") -> pd.DataFrame:
-    return _validate_frame(_fetch_frame(ticker, "1d", period), ticker, "1d", MIN_DAILY_ROWS)
+    return _fetch_validated_frame(ticker, "1d", period, MIN_DAILY_ROWS)
 
 
 def fetch_intraday_frame(
@@ -275,6 +272,23 @@ def _validate_frame(df: pd.DataFrame, ticker: str, interval: str, min_rows: int)
             f"{ticker}: only {len(df)} rows for interval={interval}, need at least {min_rows}"
         )
     return df
+
+
+def _fetch_validated_frame(ticker: str, interval: str, period: str, min_rows: int) -> pd.DataFrame:
+    frame = _fetch_frame(ticker, interval, period)
+    try:
+        return _validate_frame(frame, ticker, interval, min_rows)
+    except ValueError:
+        # A focused scan retry must reach the provider, not replay an inadequate
+        # history for the whole TTL. Do not evict a newer concurrent response.
+        key = (ticker.upper(), interval, period, False)
+        with _CACHE_LOCK:
+            cached = _FRAME_CACHE.get(key)
+            if (cached is not None
+                    and cached[1].attrs.get("provider_fetched_at") == frame.attrs.get("provider_fetched_at")
+                    and cached[1].equals(frame)):
+                _FRAME_CACHE.pop(key, None)
+        raise
 
 
 _CACHE_MISS = object()
