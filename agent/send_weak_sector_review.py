@@ -108,6 +108,8 @@ def format_review(rows: list[dict], summary: dict, *, now: datetime, latest_run:
         limits.append("אין אות כשיר ולכן אי אפשר להעריך את ביצועי ההרחבה.")
     if quality:
         limits.append(f"נתוני שוק חסרים (מספר טיקרים: {len(quality)}); אין להסיק מהם תוצאה סגורה.")
+    if summary.get("data_quality_warnings"):
+        limits.append("חלק ממדידות הסקטור החלש הישנות נעצרו לפני בדיקת גודל פוזיציה ושאר התנאים; אפס אותות כשירים בהן אינו הוכחה שלא היו הזדמנויות.")
     if not summary.get("review_ready"):
         limits.append("ספי המדגם לבחינה עדיין לא הושגו.")
     if not limits:

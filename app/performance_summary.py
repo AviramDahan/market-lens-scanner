@@ -13,6 +13,14 @@ from typing import Any
 from app.trading_clock import session_bounds
 
 
+# These nested diagnostics are retained in JSONL but are not used by summaries.
+# Keeping them for an entire week competes with the workbook for worker memory.
+SUMMARY_UNUSED_FIELDS = frozenset({
+    "market_regime_indicators", "market_regime_freshness_coverage",
+    "weak_sector_override_v1", "selection_candidates", "setup_alert_evidence",
+})
+
+
 def write_performance_summaries(
     *,
     summary_dir: Path,
@@ -117,9 +125,10 @@ def build_period_summary(
     trade_events: list[dict[str, Any]] | None = None,
     completed_trades: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    records, files = collect_records(decision_dir, period=period, target_date=target_date)
+    records, files = collect_records(decision_dir, period=period, target_date=target_date,
+                                     summary_only=True)
     if not records and current_decision_path.exists():
-        records = read_jsonl(current_decision_path)
+        records = read_jsonl(current_decision_path, summary_only=True)
         files = [current_decision_path]
 
     period_trade_events = [
@@ -495,7 +504,8 @@ def realized_pnl_from_events(events: list[dict[str, Any]]) -> float | None:
     return round(sum(values), 2)
 
 
-def collect_records(decision_dir: Path, *, period: str, target_date: date) -> tuple[list[dict[str, Any]], list[Path]]:
+def collect_records(decision_dir: Path, *, period: str, target_date: date,
+                    summary_only: bool = False) -> tuple[list[dict[str, Any]], list[Path]]:
     records: list[dict[str, Any]] = []
     files: list[Path] = []
     # Active files override archived copies of the same run (e.g. outcome backfills).
@@ -523,7 +533,7 @@ def collect_records(decision_dir: Path, *, period: str, target_date: date) -> tu
                 continue
             if period == "weekly" and file_date.isocalendar()[:2] != target_date.isocalendar()[:2]:
                 continue
-        file_records = read_jsonl(path)
+        file_records = read_jsonl(path, summary_only=summary_only)
         selected = [record for record in file_records if in_period(record, period, target_date)]
         if selected:
             files.append(path)
@@ -531,18 +541,32 @@ def collect_records(decision_dir: Path, *, period: str, target_date: date) -> tu
     return records, files
 
 
-def read_jsonl(path: Path) -> list[dict[str, Any]]:
+def read_jsonl(path: Path, *, summary_only: bool = False) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     records = []
-    content = gzip.decompress(path.read_bytes()).decode("utf-8") if path.suffix == ".gz" else path.read_text(encoding="utf-8")
-    for line in content.splitlines():
-        if not line.strip():
-            continue
-        try:
-            records.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8") as source:
+        for line in source:
+            if not line.strip():
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(record, dict):
+                continue
+            if summary_only:
+                record = {key: value for key, value in record.items()
+                          if key not in SUMMARY_UNUSED_FIELDS}
+                # Candidate statistics consume only the setup name and scores.
+                record["setup_candidates"] = [
+                    {key: item[key] for key in
+                     ("setup_type", "shadow_setup_normalized_score", "legacy_score")
+                     if key in item}
+                    for item in record.get("setup_candidates") or [] if isinstance(item, dict)
+                ]
+            records.append(record)
     return records
 
 

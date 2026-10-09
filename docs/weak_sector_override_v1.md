@@ -91,3 +91,23 @@ Telegram response followed by a process crash before the receipt push has an
 unavoidable ambiguous state because Telegram's sendMessage API has no idempotency
 key; the workflow fails visibly and the next run may repeat that one message.
 The reminder never changes trading decisions or the portfolio.
+
+## Measurement correction (2026-10-09)
+
+The active preliminary decision skips a WEAK sector before evaluating sizing.
+Consequently, legacy measurements often could not establish whether the sector
+was the only blocker. Zero eligible signals in that history are not reliable
+evidence of zero opportunities.
+
+`measure_sector_gate_counterfactual` now evaluates the selected setup on copied
+portfolio/context objects. Only the preliminary sector short-circuit is bypassed;
+the full risk engine still receives the actual WEAK context and retains its
+sector blocker, earnings, confirmation, sizing, correlation and exposure checks.
+The active decision and portfolio remain unchanged. Failure produces an explicit
+UNASSESSABLE observation, not a passing signal.
+
+Corrected observations use `measurement_version=sector_gate_counterfactual_v2`.
+The original rows are retained. Summary comparisons count each opportunity once,
+preferring corrected evidence where available, and warn about remaining legacy
+observations. No historical confirmation or executable sizing is invented.
+Existing review requirements and the October 13 reminder remain unchanged.

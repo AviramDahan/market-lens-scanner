@@ -225,3 +225,40 @@ def test_summary_keeps_signal_and_matching_control_outcomes_separate() -> None:
     assert summary["control_results"]["closed"] == 1
     assert summary["portfolio_return_claimed"] is False
     assert summary["signal_results"]["average_mfe_r"] is not None
+
+
+def test_corrected_measurement_preserves_old_rows_and_counts_opportunity_once(tmp_path):
+    from app.weak_sector_override import _seal_observation
+
+    record = decision()
+    old = deepcopy(record)
+    old["initial_action"] = "SKIP"
+    path = tmp_path / "observations.jsonl"
+    persist_first_observations([old], path)
+    corrected = evaluate_weak_sector_override_v1(record)
+    corrected["measurement_version"] = "sector_gate_counterfactual_v2"
+    corrected["active_decision_snapshot"] = {
+        key: old.get(key) for key in ("initial_action", "final_action", "reason")
+    }
+    _seal_observation(corrected)
+    old["weak_sector_override_v1"] = corrected
+    assert persist_first_observations([old], path)["signals_added"] == 1
+    rows = load_observations(path)
+    assert len(rows) == 2
+    assert rows[0]["signal_eligible"] is False
+    assert rows[1]["signal_eligible"] is True
+    summary = build_measurement_summary(rows)
+    assert summary["qualifying_signal_count"] == 1
+    assert summary["applicable_observation_count"] == 1
+    assert summary["measurement_version_counts"] == {
+        "active_path_v1": 1, "sector_gate_counterfactual_v2": 1,
+    }
+
+
+def test_prebuilt_measurement_for_another_ticker_is_not_trusted(tmp_path):
+    record = decision()
+    record["normalized_quality_score"] = 0.0
+    record["weak_sector_override_v1"] = evaluate_weak_sector_override_v1(decision(ticker="OTHER"))
+    path = tmp_path / "observations.jsonl"
+    assert persist_first_observations([record], path)["signals_added"] == 0
+    assert load_observations(path)[0]["ticker"] == "TEST"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.candidate_selection import select_qualified_candidate
 
+import gc
 import json
 import os
 import re
@@ -52,7 +53,7 @@ from app.telegram_notifications import (
 )
 from app.trade_outcomes import backfill_trade_outcomes
 from app.weak_sector_override import (
-    evaluate_weak_sector_override_v1,
+    measure_sector_gate_counterfactual,
     persist_first_observations,
 )
 from app.workbook_retention import compact_setup_watchlist, save_workbook_atomically
@@ -1346,7 +1347,15 @@ def update_workbook(
             capture_position_exit_plan(decision_json, open_positions[result.ticker])
         decision_json["active_strategy"] = "QUALIFIED_SELECTION_V1"
         decision_json["shadow_strategies"] = evaluate_shadow_strategies(result, decision_json)
-        decision_json["weak_sector_override_v1"] = evaluate_weak_sector_override_v1(decision_json)
+        decision_json["weak_sector_override_v1"] = measure_sector_gate_counterfactual(
+            result=result, active_record=decision_json, open_positions=open_positions,
+            cash_available=cash, portfolio_exposure_before=exposure,
+            max_position=max_position, max_total_exposure=max_total_exposure,
+            max_risk=max_risk, base_min_rr=min_rr, currency_rate=currency_rate,
+            sector_map=sector_map, sector_health=sector_health, run_context=run_context,
+            portfolio_open_risk_before=open_risk, recent_stop_events=recent_stop_events,
+            neutral_pilot_trades_today=neutral_pilot_buys_today,
+        )
         result.selection_context = build_selection_context(
             result,
             decision,
@@ -1448,6 +1457,40 @@ def update_workbook(
         errors.append(f"TRADE_ANALYTICS_FAILED: {exc}")
         cash = compute_cash(wb, starting_capital)
     mark_runtime_phase(workbook_phase_seconds, "trade_analytics_seconds", phase_started)
+    phase_started = time.monotonic()
+    append_update_log(
+        wb,
+        timestamp=timestamp,
+        run_id=run_id,
+        tickers=[result.ticker for result in results],
+        valid_setups=sum(1 for result in results if result.setup_type != "No Trade"),
+        decisions=decisions,
+        cash=cash,
+        exposure=exposure,
+        open_risk=open_risk,
+        open_positions=len(open_positions),
+        summary_path=summary_path,
+        screenshot_path=screenshot_path,
+        decision_path=decision_path,
+    )
+    retention = compact_setup_watchlist(wb)
+    if retention["rows_removed"]:
+        print(
+            "Compacted Setup Watchlist: "
+            f"removed {retention['rows_removed']} old rows; "
+            f"kept {retention['rows_after']}."
+        )
+    mark_runtime_phase(workbook_phase_seconds, "update_log_and_retention_seconds", phase_started)
+    phase_started = time.monotonic()
+    try:
+        save_workbook_atomically(wb, settings.excel_path)
+    finally:
+        wb.close()
+    # Openpyxl cells contain cycles; close alone retains the workbook while the
+    # weekly JSONL report is loaded. Release those cells before report assembly.
+    del wb
+    gc.collect()
+    mark_runtime_phase(workbook_phase_seconds, "save_seconds", phase_started)
     performance_summary_paths: dict[str, Path] = {}
     phase_started = time.monotonic()
     try:
@@ -1478,36 +1521,6 @@ def update_workbook(
     except Exception as exc:
         errors.append(f"PERFORMANCE_SUMMARY_FAILED: {exc}")
     mark_runtime_phase(workbook_phase_seconds, "performance_summary_seconds", phase_started)
-    phase_started = time.monotonic()
-    append_update_log(
-        wb,
-        timestamp=timestamp,
-        run_id=run_id,
-        tickers=[result.ticker for result in results],
-        valid_setups=sum(1 for result in results if result.setup_type != "No Trade"),
-        decisions=decisions,
-        cash=cash,
-        exposure=exposure,
-        open_risk=open_risk,
-        open_positions=len(open_positions),
-        summary_path=summary_path,
-        screenshot_path=screenshot_path,
-        decision_path=decision_path,
-    )
-    retention = compact_setup_watchlist(wb)
-    if retention["rows_removed"]:
-        print(
-            "Compacted Setup Watchlist: "
-            f"removed {retention['rows_removed']} old rows; "
-            f"kept {retention['rows_after']}."
-        )
-    mark_runtime_phase(workbook_phase_seconds, "update_log_and_retention_seconds", phase_started)
-    phase_started = time.monotonic()
-    try:
-        save_workbook_atomically(wb, settings.excel_path)
-    finally:
-        wb.close()
-    mark_runtime_phase(workbook_phase_seconds, "save_seconds", phase_started)
     phase_started = time.monotonic()
     outbox_path = buy_notification_outbox_path()
     if outbox_path is not None:
