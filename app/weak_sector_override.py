@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 from collections import Counter, defaultdict
+from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean, median
@@ -22,6 +23,80 @@ REVIEW_REQUIREMENTS = {
     "sectors": 3,
 }
 SECTOR_BLOCKER_TEXT = "Sector regime is WEAK; do not auto-buy weak sector setups."
+COUNTERFACTUAL_MEASUREMENT_VERSION = "sector_gate_counterfactual_v2"
+
+
+def _seal_observation(observation: dict[str, Any]) -> dict[str, Any]:
+    observation.pop("snapshot_sha256", None)
+    observation["snapshot_sha256"] = hashlib.sha256(
+        json.dumps(observation, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
+    return observation
+
+
+def measure_sector_gate_counterfactual(
+    *, result: Any, active_record: dict[str, Any], open_positions: dict[str, Any],
+    cash_available: float, portfolio_exposure_before: float, max_position: float,
+    max_total_exposure: float, max_risk: float, base_min_rr: float, currency_rate: float,
+    sector_map: dict[str, str], sector_health: dict[str, Any], run_context: Any,
+    portfolio_open_risk_before: float, recent_stop_events: dict[str, Any],
+    neutral_pilot_trades_today: int,
+) -> dict[str, Any]:
+    """Measure the selected setup without executing or changing the active decision.
+
+    Only the preliminary sector short-circuit is bypassed. The full risk layer
+    still sees WEAK and retains its sector blocker and every other policy.
+    """
+    if (active_record.get("sector_regime") != "WEAK"
+            or active_record.get("market_session_phase") != "REGULAR"
+            or result.ticker in open_positions
+            or str(result.setup_type).lower() == "no trade"):
+        return evaluate_weak_sector_override_v1(active_record)
+
+    from app.agent_risk import evaluate_agent_candidate
+    from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
+
+    try:
+        preliminary_health = deepcopy(sector_health)
+        sector = sector_map.get(result.ticker, "Unknown")
+        preliminary_health.setdefault(sector, {})["label"] = "Neutral"
+        portfolio = deepcopy(open_positions)
+        context = deepcopy(run_context)
+        base = decide_strategy_candidate(
+            normalize_strategy_candidate(result), open_positions=portfolio,
+            cash=cash_available, exposure=portfolio_exposure_before,
+            currency_rate=currency_rate, max_position=max_position,
+            max_total_exposure=max_total_exposure, max_risk=max_risk,
+            min_rr=base_min_rr, sector_map=sector_map, sector_health=preliminary_health,
+        )
+        measured = evaluate_agent_candidate(
+            timestamp=active_record["timestamp"], result=deepcopy(result),
+            initial_action=base.action, initial_reason=base.feedback,
+            quantity=base.quantity, cash_out=base.cash_out_ils, risk_amount=base.risk_ils,
+            cash_available=cash_available, portfolio_exposure_before=portfolio_exposure_before,
+            open_positions=portfolio, sector_map=sector_map, run_context=context,
+            portfolio_open_risk_before=portfolio_open_risk_before,
+            recent_stop_events=deepcopy(recent_stop_events),
+            neutral_pilot_trades_today=neutral_pilot_trades_today,
+            currency_rate=currency_rate, base_min_rr=base_min_rr,
+        )
+        measured["weighted_net_rr"] = measured.get("net_rr")
+        measured["setup_score_bucket"] = active_record.get("setup_score_bucket")
+        observation = evaluate_weak_sector_override_v1(measured)
+        observation["counterfactual_decision_snapshot"] = observation["active_decision_snapshot"]
+    except Exception as exc:
+        observation = evaluate_weak_sector_override_v1(active_record)
+        observation.update(status="UNASSESSABLE", signal_eligible=False, control_eligible=False)
+        observation["ineligibility_reasons"].append(
+            f"UNASSESSABLE:counterfactual_evaluation:{type(exc).__name__}"
+        )
+    observation["measurement_version"] = COUNTERFACTUAL_MEASUREMENT_VERSION
+    observation["active_decision_snapshot"] = {
+        key: active_record.get(key) for key in ("initial_action", "final_action", "reason")
+    }
+    observation["preliminary_sector_gate_bypassed"] = True
+    observation["risk_sector_gate_retained"] = True
+    return _seal_observation(observation)
 
 
 def _number(value: Any) -> float | None:
@@ -376,6 +451,7 @@ def evaluate_weak_sector_override_v1(record: dict[str, Any]) -> dict[str, Any]:
     observation = {
         "experiment": EXPERIMENT_NAME,
         "version": EXPERIMENT_VERSION,
+        "measurement_version": "active_path_v1",
         "signal_id": signal_id,
         "timestamp": record.get("timestamp"),
         "market_session_timestamp": record.get("market_session_timestamp"),
@@ -445,12 +521,27 @@ def evaluate_weak_sector_override_v1(record: dict[str, Any]) -> dict[str, Any]:
         "active_decision_changed": False,
         "portfolio_mutation_allowed": False,
     }
-    observation["snapshot_sha256"] = hashlib.sha256(
-        json.dumps(observation, sort_keys=True, default=str).encode("utf-8")
-    ).hexdigest()
+    _seal_observation(observation)
     assert record.get("final_action") == original_action
     assert record.get("reason") == original_reason
     return observation
+
+
+def _record_observation(record: dict[str, Any]) -> dict[str, Any]:
+    stored = record.get("weak_sector_override_v1")
+    if isinstance(stored, dict):
+        expected = deepcopy(stored)
+        digest = expected.get("snapshot_sha256")
+        valid_digest = _seal_observation(expected)["snapshot_sha256"] == digest
+        if (valid_digest and stored.get("experiment") == EXPERIMENT_NAME
+                and stored.get("ticker") == str(record.get("ticker") or "").upper().strip()
+                and stored.get("timestamp") == record.get("timestamp")
+                and stored.get("setup_type") == str(record.get("setup_type") or "").strip()
+                and stored.get("active_decision_snapshot") == {
+                    key: record.get(key) for key in ("initial_action", "final_action", "reason")
+                }):
+            return expected
+    return evaluate_weak_sector_override_v1(record)
 
 
 def persist_first_observations(
@@ -458,7 +549,7 @@ def persist_first_observations(
 ) -> dict[str, int]:
     """Persist the first observation for each date/ticker/setup/path atomically."""
     existing: list[dict[str, Any]] = []
-    known: set[str] = set()
+    known: set[tuple[str, str]] = set()
     if output_path.exists():
         for line_number, line in enumerate(output_path.read_text(encoding="utf-8").splitlines(), 1):
             if not line.strip():
@@ -470,10 +561,10 @@ def persist_first_observations(
             if not isinstance(item, dict) or not item.get("signal_id"):
                 raise ValueError(f"Invalid experiment observation at line {line_number}")
             existing.append(item)
-            known.add(str(item["signal_id"]))
+            known.add((str(item["signal_id"]), item.get("measurement_version", "active_path_v1")))
 
     evaluated = sorted(
-        (evaluate_weak_sector_override_v1(item) for item in records),
+        (_record_observation(item) for item in records),
         key=lambda item: parse_timestamp(item.get("timestamp")),
     )
     considered = [
@@ -483,9 +574,10 @@ def persist_first_observations(
     ]
     added = []
     for item in considered:
-        if item["signal_id"] in known:
+        identity = (item["signal_id"], item.get("measurement_version", "active_path_v1"))
+        if identity in known:
             continue
-        known.add(item["signal_id"])
+        known.add(identity)
         added.append(item)
     if added:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -566,7 +658,16 @@ def build_measurement_summary(
     observations: list[dict[str, Any]], bars_by_ticker: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     bars_by_ticker = bars_by_ticker or {}
-    applicable_observations = [item for item in observations if _observation_applicable(item)]
+    applicable_rows = [item for item in observations if _observation_applicable(item)]
+    # A corrected measurement may follow an old blocked record for the same
+    # opportunity. Keep history, but count that opportunity once in comparisons.
+    latest = {}
+    for item in sorted(applicable_rows, key=lambda row: (
+        row.get("measurement_version") == COUNTERFACTUAL_MEASUREMENT_VERSION,
+        parse_timestamp(row.get("timestamp")),
+    )):
+        latest[item.get("signal_id") or str(id(item))] = item
+    applicable_observations = list(latest.values())
     signals = [item for item in applicable_observations if item.get("signal_eligible") is True]
     all_controls = [item for item in applicable_observations if item.get("control_eligible") is True]
     strata = {
@@ -631,9 +732,20 @@ def build_measurement_summary(
             "plan": "Entry, stop, targets, sizing, policy version and execution costs are frozen at signal time.",
             "outcomes": "Independent signal replay with stop-first same-bar ordering; results are not portfolio returns.",
             "comparison": "All eligible STRONG-sector controls with the same setup, market regime and pre-recorded setup-score bucket.",
+            "measurement_revisions": "Corrected v2 measures preliminary sizing on an isolated copy while retaining the WEAK risk blocker. It supersedes an old measurement of the same opportunity, without rewriting history.",
         },
+        "data_quality_warnings": [
+            "Legacy weak-sector observations could stop before sizing and other gates were evaluated; their zero eligible signals are not evidence that no opportunity existed."
+        ] if any(
+            item.get("cohort") == "WEAK_SIGNAL"
+            and item.get("measurement_version") != COUNTERFACTUAL_MEASUREMENT_VERSION
+            for item in applicable_observations
+        ) else [],
         "observation_count": len(observations),
         "applicable_observation_count": len(applicable_observations),
+        "measurement_version_counts": dict(Counter(
+            item.get("measurement_version", "active_path_v1") for item in applicable_rows
+        )),
         "qualifying_signal_count": len(signals),
         "matched_control_count": len(controls),
         "weak_ineligibility_reasons": dict(ineligible.most_common()),
@@ -691,6 +803,10 @@ def measurement_summary_markdown(summary: dict[str, Any]) -> str:
             "## Ineligibility",
             "",
             json.dumps(summary["weak_ineligibility_reasons"], sort_keys=True),
+            "",
+            "## Data quality",
+            "",
+            json.dumps(summary.get("data_quality_warnings", [])),
             "",
             "Signal outcomes and controls are independent measurements, not portfolio returns.",
             "Review readiness never activates the strategy automatically.",

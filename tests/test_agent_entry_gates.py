@@ -38,6 +38,7 @@ from app.data import DATA_CACHE_TTL_SECONDS, EXTENDED_HOURS_CACHE_TTL_SECONDS, _
 from app.models import ExtendedHoursInfo, ScanResult
 from app.scanner import calculate_extended_hours_impact
 from app.strategy import decide_strategy_candidate, normalize_strategy_candidate
+from app.weak_sector_override import measure_sector_gate_counterfactual, persist_first_observations, load_observations
 
 
 def config() -> AgentRiskConfig:
@@ -791,6 +792,84 @@ def _patch_risk_dependencies(monkeypatch, *, net_rr: float = 2.05, confirmation_
             "warnings": [],
         },
     )
+
+
+@pytest.mark.parametrize("failure", [None, "confirmation", "earnings", "heat", "price", "pilot_score"])
+def test_weak_sector_measurement_reaches_full_gates_without_changing_active_path(monkeypatch, tmp_path, failure):
+    from copy import deepcopy
+
+    _patch_risk_dependencies(monkeypatch, net_rr=3.0, confirmation_passed=failure != "confirmation")
+    monkeypatch.setattr("app.agent_risk.calculate_earnings_blackout", lambda *_: {
+        "earnings_date": "2026-08-15", "days_to_earnings": 28,
+        "earnings_blackout": failure == "earnings", "warnings": [],
+    })
+    ctx = context("NEUTRAL" if failure == "pilot_score" else "BULL")
+    ctx.sector_health = {"Technology": {"label": "Weak", "score": 20, "etf": "XLK"}}
+    candidate = result(score=0.49 if failure == "pilot_score" else 0.65)
+    candidate.risk_reward = 3.0
+    if failure == "price":
+        candidate.current_price = 110.0
+    sector_map = {"TEST": "Technology"}
+    base_kwargs = dict(open_positions={}, cash=90_000., exposure=0., currency_rate=1.,
+                       max_position=10_000., max_total_exposure=ctx.market_regime.max_total_exposure,
+                       max_risk=500., min_rr=2., sector_map=sector_map, sector_health=ctx.sector_health)
+    before_context = deepcopy(ctx)
+    base = decide_strategy_candidate(normalize_strategy_candidate(candidate), **base_kwargs)
+    assert base.action == "SKIP"
+    active = evaluate_agent_candidate(
+        timestamp="2026-07-08T14:30:00+00:00", result=candidate,
+        initial_action=base.action, initial_reason=base.feedback,
+        quantity=base.quantity, cash_out=base.cash_out_ils, risk_amount=base.risk_ils,
+        cash_available=90_000., portfolio_exposure_before=0., open_positions={},
+        sector_map=sector_map, run_context=ctx,
+    )
+    before_active = deepcopy(active)
+    observation = measure_sector_gate_counterfactual(
+        result=candidate, active_record=active, open_positions={}, cash_available=90_000.,
+        portfolio_exposure_before=0., max_position=10_000.,
+        max_total_exposure=ctx.market_regime.max_total_exposure, max_risk=500.,
+        base_min_rr=2., currency_rate=1., sector_map=sector_map, sector_health=ctx.sector_health,
+        run_context=ctx, portfolio_open_risk_before=2_500. if failure == "heat" else 0.,
+        recent_stop_events={}, neutral_pilot_trades_today=0,
+    )
+    assert active == before_active
+    assert ctx == before_context
+    assert observation["active_decision_snapshot"]["final_action"] == "SKIP"
+    assert observation["context_snapshot"]["sector_regime"] == "WEAK"
+    assert observation["signal_eligible"] is (failure is None)
+    assert observation["portfolio_mutation_allowed"] is False
+    assert observation["measurement_version"] == "sector_gate_counterfactual_v2"
+    if failure == "pilot_score":
+        # The measurement must not invent STRONG-sector pilot eligibility.
+        assert observation["entry_path"] == "STANDARD"
+        assert "FAIL:setup_score" in observation["ineligibility_reasons"]
+    if failure is None:
+        assert observation["sizing_snapshot"]["quantity"] > 0
+        active["weak_sector_override_v1"] = observation
+        path = tmp_path / "observations.jsonl"
+        assert persist_first_observations([active], path)["signals_added"] == 1
+        assert persist_first_observations([active], path)["added"] == 0
+        assert load_observations(path)[0] == observation
+
+
+def test_weak_sector_counterfactual_failure_is_unassessable(monkeypatch):
+    from app.agent_risk import AgentRiskConfig, AgentRunRiskContext
+    active = {"ticker": "TEST", "timestamp": "2026-07-08T14:30:00+00:00",
+              "setup_type": "Breakout + Retest", "sector_regime": "WEAK",
+              "market_session_phase": "REGULAR", "final_action": "SKIP", "initial_action": "SKIP"}
+    monkeypatch.setattr("app.strategy.decide_strategy_candidate",
+                        lambda *_, **__: (_ for _ in ()).throw(ValueError("simulated failure")))
+    observation = measure_sector_gate_counterfactual(
+        result=result(), active_record=active, open_positions={}, cash_available=90_000.,
+        portfolio_exposure_before=0., max_position=10_000., max_total_exposure=40_000.,
+        max_risk=500., base_min_rr=2., currency_rate=1., sector_map={"TEST": "Technology"},
+        sector_health={}, run_context=context(), portfolio_open_risk_before=0.,
+        recent_stop_events={}, neutral_pilot_trades_today=0,
+    )
+    assert observation["status"] == "UNASSESSABLE"
+    assert observation["signal_eligible"] is False
+    assert "UNASSESSABLE:counterfactual_evaluation:ValueError" in observation["ineligibility_reasons"]
+    assert active["final_action"] == "SKIP"
 
 
 def test_neutral_pilot_can_buy_half_size_when_only_strict_neutral_score_blocks(monkeypatch) -> None:

@@ -11,6 +11,51 @@ def write_decisions(path: Path, records: list[dict]) -> None:
     path.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
 
 
+def test_summary_projection_matches_full_evidence_and_preserves_source(tmp_path, monkeypatch):
+    from datetime import date
+    from app import performance_summary as module
+
+    records = sample_records()
+    for record in records:
+        record.update(market_regime_indicators={"SPY": {"diagnostics": "x" * 100_000}},
+                      weak_sector_override_v1={"gate_evidence": "y" * 100_000},
+                      selection_candidates=[{"diagnostics": "z" * 100_000}])
+        record["setup_candidates"] = [{"setup_type": record["setup_type"], "legacy_score": 0.6,
+                                       "shadow_setup_normalized_score": 0.7,
+                                       "risk_diagnostics": "v" * 100_000}]
+    path = tmp_path / "market_lens_agent_20260624_153000.jsonl"
+    write_decisions(path, records)
+    before = path.read_bytes()
+    kwargs = dict(period="weekly", target_date=date(2026, 6, 24), decision_dir=tmp_path,
+                  portfolio={}, current_decision_path=path, run_id="fixture", completed_trades=[])
+    compact = module.build_period_summary(**kwargs)
+    collect = module.collect_records
+    monkeypatch.setattr(module, "collect_records",
+                        lambda *args, **kw: collect(*args, **{**kw, "summary_only": False}))
+    full = module.build_period_summary(**kwargs)
+    compact.pop("generated_at", None)
+    full.pop("generated_at", None)
+    assert compact == full
+    assert path.read_bytes() == before
+    retained = module.read_jsonl(path, summary_only=True)
+    assert len(json.dumps(retained)) < len(before) / 10
+    assert module.read_jsonl(path) == records
+
+
+def test_summary_reads_compressed_jsonl_incrementally(tmp_path, monkeypatch):
+    import gzip
+    from app.performance_summary import read_jsonl
+
+    path = tmp_path / "records.jsonl.gz"
+    records = sample_records()
+    with gzip.open(path, "wt", encoding="utf-8") as target:
+        for record in records:
+            target.write(json.dumps(record) + "\n")
+    monkeypatch.setattr(Path, "read_bytes", lambda *_: (_ for _ in ()).throw(AssertionError("whole file read")))
+    monkeypatch.setattr(Path, "read_text", lambda *_args, **_kw: (_ for _ in ()).throw(AssertionError("whole file read")))
+    assert read_jsonl(path) == records
+
+
 def sample_records() -> list[dict]:
     return [
         {
