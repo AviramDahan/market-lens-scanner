@@ -1,36 +1,36 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 143
-Tickers scanned: 20282
+Total scans: 144
+Tickers scanned: 20462
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 4834
-WATCH_REVIEW unique tickers: 193
+WATCH_REVIEW: 4888
+WATCH_REVIEW unique tickers: 197
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 4834
-SKIP: 15275
-NO_TRADE: 11563
+WATCH: 4888
+SKIP: 15399
+NO_TRADE: 11685
 Realized PnL: -106.4
-Unrealized PnL: 287.75
-Portfolio value: 100831.47
+Unrealized PnL: 308.13
+Portfolio value: 100851.85
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.8315
+Cumulative recorded-equity change (%): 0.8519
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: CHD
 Best shadow strategy: BREAKOUT_CONTINUATION
 Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 41
-- FIB_STOP_075_ATR: 103
+- BREAKOUT_CONTINUATION: 42
+- FIB_STOP_075_ATR: 105
 - FIB_STOP_100_ATR: 10
-- FIB_STRUCTURE_STOP: 28
-- TREND_PULLBACK_RECLAIM: 98
+- FIB_STRUCTURE_STOP: 30
+- TREND_PULLBACK_RECLAIM: 101
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -41,9 +41,9 @@ Top rejected candidates:
 - VSH: WATCH score=0.5524 reason=WATCH: Neutral market requires stronger normalized quality (42.25/100).
 - INTC: WATCH score=0.5497 reason=WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.34.
 - FROG: WATCH score=0.5435 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
+- HIMS: WATCH score=0.5418 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - WMT: SKIP score=0.5398 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.93.
 - PENG: WATCH score=0.5394 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.08.
-- KO: SKIP score=0.5314 reason=SKIP: Consumer sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.23.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
