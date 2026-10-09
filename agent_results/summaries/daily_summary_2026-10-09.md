@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-09
-Total scans: 25
-Tickers scanned: 4494
+Total scans: 26
+Tickers scanned: 4674
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1604
-WATCH_REVIEW unique tickers: 159
+WATCH_REVIEW: 1677
+WATCH_REVIEW unique tickers: 166
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1604
-SKIP: 2832
-NO_TRADE: 2631
+WATCH: 1677
+SKIP: 2935
+NO_TRADE: 2735
 Realized PnL: -106.4
-Unrealized PnL: 391.54
-Portfolio value: 100935.25
-Daily recorded-equity change (%): 0.115
+Unrealized PnL: 447.6
+Portfolio value: 100991.31
+Daily recorded-equity change (%): 0.1706
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-08
-Cumulative recorded-equity change (%): 0.9353
+Cumulative recorded-equity change (%): 0.9913
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: CHD
