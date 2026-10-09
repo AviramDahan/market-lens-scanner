@@ -1,0 +1,82 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 74.752,
+  "errors": [],
+  "finished_at": "2026-10-09T11:39:13",
+  "initial_missing_tickers": [
+    "META"
+  ],
+  "initial_result_cards_read": 179,
+  "login_seconds": 0.065,
+  "login_status": "open access",
+  "missing_tickers": [],
+  "open_app_seconds": 0.386,
+  "result_cards_read": 180,
+  "run_id": "20261009_113019",
+  "run_status": "COMPLETE",
+  "scan_complete": true,
+  "scan_coverage": {
+    "coverage_pct": 100.0,
+    "missing": 0,
+    "missing_tickers": [],
+    "received": 180,
+    "requested": 180
+  },
+  "scan_seconds": 197.192,
+  "scan_status": "completed: 180 results",
+  "screenshot_seconds": 0.309,
+  "started_at": "2026-10-09T11:30:19",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "META"
+    ],
+    "attempts": {
+      "META": 1
+    },
+    "duration_seconds": 1.128,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "META"
+    ],
+    "outcomes": [
+      {
+        "attempts": 1,
+        "reason": "Result card recovered by focused retry.",
+        "status": "RECOVERED",
+        "ticker": "META"
+      }
+    ],
+    "recovered_tickers": [
+      "META"
+    ],
+    "scan_requests": 1,
+    "skipped_reason": "",
+    "unavailable_tickers": []
+  },
+  "tickers_requested": 180,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 534.085,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 96,
+  "warnings": [],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 13.921,
+    "candidate_evaluation_seconds": 126.293,
+    "chart_retention_seconds": 48.193,
+    "load_and_schema_seconds": 16.675,
+    "market_context_seconds": 11.895,
+    "notification_seconds": 0.0,
+    "outcome_backfill_seconds": 0.049,
+    "performance_summary_seconds": 20.667,
+    "portfolio_and_decision_write_seconds": 0.315,
+    "portfolio_state_seconds": 0.019,
+    "save_seconds": 18.853,
+    "trade_analytics_seconds": 0.038,
+    "update_log_and_retention_seconds": 1.649
+  },
+  "workbook_update_seconds": 258.573
+}
