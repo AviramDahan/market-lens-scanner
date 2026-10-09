@@ -1,37 +1,37 @@
 Daily Performance Summary
 
 Date: 2026-10-09
-Total scans: 24
-Tickers scanned: 4314
+Total scans: 25
+Tickers scanned: 4494
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1549
-WATCH_REVIEW unique tickers: 158
+WATCH_REVIEW: 1604
+WATCH_REVIEW unique tickers: 159
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1549
-SKIP: 2711
-NO_TRADE: 2508
+WATCH: 1604
+SKIP: 2832
+NO_TRADE: 2631
 Realized PnL: -106.4
-Unrealized PnL: 354.38
-Portfolio value: 100898.09
-Daily recorded-equity change (%): 0.0781
+Unrealized PnL: 391.54
+Portfolio value: 100935.25
+Daily recorded-equity change (%): 0.115
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-08
-Cumulative recorded-equity change (%): 0.8981
+Cumulative recorded-equity change (%): 0.9353
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: CHD
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 5
-- FIB_STOP_075_ATR: 24
+- BREAKOUT_CONTINUATION: 6
+- FIB_STOP_075_ATR: 28
 - FIB_STOP_100_ATR: 2
-- FIB_STRUCTURE_STOP: 11
+- FIB_STRUCTURE_STOP: 12
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 34
+- TREND_PULLBACK_RECLAIM: 39
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -43,8 +43,8 @@ Top rejected candidates:
 - PENG: WATCH score=0.5394 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.08.
 - MPWR: WATCH score=0.5352 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.52.
 - LRCX: WATCH score=0.5285 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.97.
+- ADM: WATCH score=0.5243 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.25.
 - JBL: WATCH score=0.523 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- ADM: WATCH score=0.5085 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
