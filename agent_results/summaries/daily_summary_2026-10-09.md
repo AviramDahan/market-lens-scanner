@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-09
-Total scans: 21
-Tickers scanned: 3774
+Total scans: 22
+Tickers scanned: 3954
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1383
+WATCH_REVIEW: 1440
 WATCH_REVIEW unique tickers: 154
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1383
-SKIP: 2347
-NO_TRADE: 2144
+WATCH: 1440
+SKIP: 2467
+NO_TRADE: 2264
 Realized PnL: -106.4
-Unrealized PnL: 337.83
-Portfolio value: 100881.54
-Daily recorded-equity change (%): 0.0617
+Unrealized PnL: 347.18
+Portfolio value: 100890.89
+Daily recorded-equity change (%): 0.071
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-08
-Cumulative recorded-equity change (%): 0.8815
+Cumulative recorded-equity change (%): 0.8909
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: CHD
@@ -27,10 +27,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- FIB_STOP_075_ATR: 12
+- FIB_STOP_075_ATR: 16
 - FIB_STOP_100_ATR: 2
 - FIB_STRUCTURE_STOP: 9
-- TREND_PULLBACK_RECLAIM: 20
+- TREND_PULLBACK_RECLAIM: 23
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
