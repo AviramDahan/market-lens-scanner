@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-09
-Total scans: 2
-Tickers scanned: 360
+Total scans: 3
+Tickers scanned: 540
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 125
-WATCH_REVIEW unique tickers: 94
+WATCH_REVIEW: 207
+WATCH_REVIEW unique tickers: 100
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 125
-SKIP: 230
-NO_TRADE: 189
+WATCH: 207
+SKIP: 326
+NO_TRADE: 273
 Realized PnL: -106.4
 Unrealized PnL: 189.23
 Portfolio value: 100732.95
@@ -21,7 +21,7 @@ Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-08
 Cumulative recorded-equity change (%): 0.7329
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
-Best ticker: GD
+Best ticker: CLX
 Worst ticker: MSFT
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
