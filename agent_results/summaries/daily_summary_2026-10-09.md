@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-09
-Total scans: 23
-Tickers scanned: 4134
-BUY_SIMULATED: 1
+Total scans: 24
+Tickers scanned: 4314
+BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1493
-WATCH_REVIEW unique tickers: 155
+WATCH_REVIEW: 1549
+WATCH_REVIEW unique tickers: 158
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1493
-SKIP: 2591
-NO_TRADE: 2388
+WATCH: 1549
+SKIP: 2711
+NO_TRADE: 2508
 Realized PnL: -106.4
-Unrealized PnL: 370.64
-Portfolio value: 100914.35
-Daily recorded-equity change (%): 0.0943
+Unrealized PnL: 354.38
+Portfolio value: 100898.09
+Daily recorded-equity change (%): 0.0781
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-08
-Cumulative recorded-equity change (%): 0.9143
+Cumulative recorded-equity change (%): 0.8981
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: CHD
@@ -27,11 +27,12 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- FIB_STOP_075_ATR: 20
+- FIB_STOP_075_ATR: 24
 - FIB_STOP_100_ATR: 2
-- FIB_STRUCTURE_STOP: 9
-- TREND_PULLBACK_RECLAIM: 27
-- VWAP_RECLAIM: 1
+- FIB_STRUCTURE_STOP: 11
+- RELATIVE_STRENGTH_LEADER: 1
+- TREND_PULLBACK_RECLAIM: 34
+- VWAP_RECLAIM: 2
 
 Top rejected candidates:
 - LSCC: WATCH score=0.5753 reason=WATCH: Technical setup detected, but weighted risk/reward 1.86 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.28.
