@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-09
-Total scans: 22
-Tickers scanned: 3954
+Total scans: 23
+Tickers scanned: 4134
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1440
-WATCH_REVIEW unique tickers: 154
+WATCH_REVIEW: 1493
+WATCH_REVIEW unique tickers: 155
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1440
-SKIP: 2467
-NO_TRADE: 2264
+WATCH: 1493
+SKIP: 2591
+NO_TRADE: 2388
 Realized PnL: -106.4
-Unrealized PnL: 347.18
-Portfolio value: 100890.89
-Daily recorded-equity change (%): 0.071
+Unrealized PnL: 370.64
+Portfolio value: 100914.35
+Daily recorded-equity change (%): 0.0943
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-08
-Cumulative recorded-equity change (%): 0.8909
+Cumulative recorded-equity change (%): 0.9143
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: CHD
@@ -27,10 +27,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 5
-- FIB_STOP_075_ATR: 16
+- FIB_STOP_075_ATR: 20
 - FIB_STOP_100_ATR: 2
 - FIB_STRUCTURE_STOP: 9
-- TREND_PULLBACK_RECLAIM: 23
+- TREND_PULLBACK_RECLAIM: 27
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
@@ -43,7 +43,7 @@ Top rejected candidates:
 - MPWR: WATCH score=0.5352 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.52.
 - LRCX: WATCH score=0.5285 reason=WATCH: Technical setup detected, but weighted risk/reward 1.41 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.97.
 - JBL: WATCH score=0.523 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- UTHR: WATCH score=0.5085 reason=WATCH: Technical setup detected, but weighted risk/reward 1.56 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.19.
+- ADM: WATCH score=0.5085 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.27.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
