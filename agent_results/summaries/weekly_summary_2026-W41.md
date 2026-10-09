@@ -1,18 +1,18 @@
 Weekly Performance Summary
 
 Date: 2026-10-05
-Total scans: 132
-Tickers scanned: 18308
+Total scans: 133
+Tickers scanned: 18483
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 4050
-WATCH_REVIEW unique tickers: 159
+WATCH_REVIEW: 4129
+WATCH_REVIEW unique tickers: 181
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 4050
-SKIP: 14107
-NO_TRADE: 10524
+WATCH: 4129
+SKIP: 14201
+NO_TRADE: 10604
 Realized PnL: -106.4
 Unrealized PnL: 189.23
 Portfolio value: 100732.95
@@ -40,10 +40,10 @@ Top rejected candidates:
 - INTC: WATCH score=0.5497 reason=WATCH: Technical setup detected, but weighted risk/reward 1.76 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.34.
 - FROG: WATCH score=0.5435 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
 - WMT: SKIP score=0.5398 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.93.
+- PENG: WATCH score=0.5394 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.08.
 - KO: SKIP score=0.5314 reason=SKIP: Consumer sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.23.
 - WMB: WATCH score=0.5232 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.25.
 - VIAV: WATCH score=0.5224 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- CSCO: WATCH score=0.5194 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.

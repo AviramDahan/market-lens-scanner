@@ -1,0 +1,140 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 101.522,
+  "errors": [],
+  "finished_at": "2026-10-09T04:39:03",
+  "initial_missing_tickers": [
+    "MDLN",
+    "MMED",
+    "NXT",
+    "RBRK",
+    "SPCX"
+  ],
+  "initial_result_cards_read": 175,
+  "login_seconds": 0.054,
+  "login_status": "open access",
+  "missing_tickers": [
+    "MDLN",
+    "MMED",
+    "NXT",
+    "RBRK",
+    "SPCX"
+  ],
+  "open_app_seconds": 0.246,
+  "result_cards_read": 175,
+  "run_id": "20261009_043018",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 97.22,
+    "missing": 5,
+    "missing_tickers": [
+      "MDLN",
+      "MMED",
+      "NXT",
+      "RBRK",
+      "SPCX"
+    ],
+    "received": 175,
+    "requested": 180
+  },
+  "scan_seconds": 180.447,
+  "scan_status": "completed: 175 results; 5 unavailable",
+  "screenshot_seconds": 0.168,
+  "started_at": "2026-10-09T04:30:18",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "MDLN",
+      "MMED",
+      "NXT",
+      "RBRK",
+      "SPCX"
+    ],
+    "attempts": {
+      "MDLN": 2,
+      "MMED": 2,
+      "NXT": 2,
+      "RBRK": 2,
+      "SPCX": 2
+    },
+    "duration_seconds": 4.258,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "MDLN",
+      "MMED",
+      "NXT",
+      "RBRK",
+      "SPCX"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "MDLN: MDLN: only 43 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MDLN"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMED: MMED: only 32 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMED"
+      },
+      {
+        "attempts": 2,
+        "reason": "NXT: NXT: only 192 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "NXT"
+      },
+      {
+        "attempts": 2,
+        "reason": "RBRK: RBRK: only 129 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "RBRK"
+      },
+      {
+        "attempts": 2,
+        "reason": "SPCX: SPCX: only 18 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "SPCX"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 7,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "MDLN",
+      "MMED",
+      "NXT",
+      "RBRK",
+      "SPCX"
+    ]
+  },
+  "tickers_requested": 180,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 524.936,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 95,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for MDLN, MMED, NXT, RBRK, SPCX."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 13.826,
+    "candidate_evaluation_seconds": 108.737,
+    "chart_retention_seconds": 45.94,
+    "load_and_schema_seconds": 15.413,
+    "market_context_seconds": 11.31,
+    "notification_seconds": 0.001,
+    "outcome_backfill_seconds": 0.493,
+    "performance_summary_seconds": 20.098,
+    "portfolio_and_decision_write_seconds": 0.311,
+    "portfolio_state_seconds": 0.015,
+    "save_seconds": 21.354,
+    "trade_analytics_seconds": 0.032,
+    "update_log_and_retention_seconds": 2.602
+  },
+  "workbook_update_seconds": 240.14
+}
