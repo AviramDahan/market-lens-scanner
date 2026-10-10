@@ -1,0 +1,127 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 107.804,
+  "errors": [],
+  "finished_at": "2026-10-10T02:39:14",
+  "initial_missing_tickers": [
+    "ALAB",
+    "CBRS",
+    "MANE",
+    "SNDK"
+  ],
+  "initial_result_cards_read": 176,
+  "login_seconds": 0.083,
+  "login_status": "open access",
+  "missing_tickers": [
+    "ALAB",
+    "CBRS",
+    "MANE",
+    "SNDK"
+  ],
+  "open_app_seconds": 0.556,
+  "result_cards_read": 176,
+  "run_id": "20261010_023025",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 97.78,
+    "missing": 4,
+    "missing_tickers": [
+      "ALAB",
+      "CBRS",
+      "MANE",
+      "SNDK"
+    ],
+    "received": 176,
+    "requested": 180
+  },
+  "scan_seconds": 160.266,
+  "scan_status": "completed: 176 results; 4 unavailable",
+  "screenshot_seconds": 0.259,
+  "started_at": "2026-10-10T02:30:25",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "ALAB",
+      "CBRS",
+      "MANE",
+      "SNDK"
+    ],
+    "attempts": {
+      "ALAB": 2,
+      "CBRS": 2,
+      "MANE": 2,
+      "SNDK": 2
+    },
+    "duration_seconds": 4.625,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "ALAB",
+      "CBRS",
+      "MANE",
+      "SNDK"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "ALAB: ALAB: only 134 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "ALAB"
+      },
+      {
+        "attempts": 2,
+        "reason": "CBRS: CBRS: only 22 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "CBRS"
+      },
+      {
+        "attempts": 2,
+        "reason": "MANE: MANE: only 36 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MANE"
+      },
+      {
+        "attempts": 2,
+        "reason": "SNDK: SNDK: only 87 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "SNDK"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 5,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "ALAB",
+      "CBRS",
+      "MANE",
+      "SNDK"
+    ]
+  },
+  "tickers_requested": 180,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 528.34,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 80,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for ALAB, CBRS, MANE, SNDK."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 14.261,
+    "candidate_evaluation_seconds": 104.529,
+    "chart_retention_seconds": 54.659,
+    "load_and_schema_seconds": 18.268,
+    "market_context_seconds": 11.948,
+    "notification_seconds": 0.001,
+    "outcome_backfill_seconds": 0.059,
+    "performance_summary_seconds": 27.212,
+    "portfolio_and_decision_write_seconds": 0.358,
+    "portfolio_state_seconds": 0.033,
+    "save_seconds": 21.432,
+    "trade_analytics_seconds": 0.033,
+    "update_log_and_retention_seconds": 2.298
+  },
+  "workbook_update_seconds": 255.098
+}
