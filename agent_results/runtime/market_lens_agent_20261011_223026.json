@@ -1,0 +1,113 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 101.387,
+  "errors": [],
+  "finished_at": "2026-10-11T22:39:21",
+  "initial_missing_tickers": [
+    "CAI",
+    "HALO",
+    "HNGE"
+  ],
+  "initial_result_cards_read": 177,
+  "login_seconds": 0.077,
+  "login_status": "open access",
+  "missing_tickers": [
+    "CAI",
+    "HNGE"
+  ],
+  "open_app_seconds": 0.612,
+  "result_cards_read": 178,
+  "run_id": "20261011_223026",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 98.89,
+    "missing": 2,
+    "missing_tickers": [
+      "CAI",
+      "HNGE"
+    ],
+    "received": 178,
+    "requested": 180
+  },
+  "scan_seconds": 162.156,
+  "scan_status": "completed: 178 results; 2 unavailable",
+  "screenshot_seconds": 0.297,
+  "started_at": "2026-10-11T22:30:26",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "CAI",
+      "HALO",
+      "HNGE"
+    ],
+    "attempts": {
+      "CAI": 2,
+      "HALO": 1,
+      "HNGE": 2
+    },
+    "duration_seconds": 4.26,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "CAI",
+      "HALO",
+      "HNGE"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "CAI: CAI: only 69 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "CAI"
+      },
+      {
+        "attempts": 1,
+        "reason": "Result card recovered by focused retry.",
+        "status": "RECOVERED",
+        "ticker": "HALO"
+      },
+      {
+        "attempts": 2,
+        "reason": "HNGE: HNGE: only 73 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "HNGE"
+      }
+    ],
+    "recovered_tickers": [
+      "HALO"
+    ],
+    "scan_requests": 3,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "CAI",
+      "HNGE"
+    ]
+  },
+  "tickers_requested": 180,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 535.031,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 88,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for CAI, HNGE."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 15.982,
+    "candidate_evaluation_seconds": 113.176,
+    "chart_retention_seconds": 55.476,
+    "load_and_schema_seconds": 19.015,
+    "market_context_seconds": 13.05,
+    "notification_seconds": 0.001,
+    "outcome_backfill_seconds": 0.78,
+    "performance_summary_seconds": 26.021,
+    "portfolio_and_decision_write_seconds": 0.342,
+    "portfolio_state_seconds": 0.016,
+    "save_seconds": 20.802,
+    "trade_analytics_seconds": 0.035,
+    "update_log_and_retention_seconds": 1.997
+  },
+  "workbook_update_seconds": 266.701
+}
