@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-12
-Total scans: 20
-Tickers scanned: 3598
+Total scans: 21
+Tickers scanned: 3778
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1236
-WATCH_REVIEW unique tickers: 146
+WATCH_REVIEW: 1295
+WATCH_REVIEW unique tickers: 147
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1236
-SKIP: 2322
-NO_TRADE: 2116
+WATCH: 1295
+SKIP: 2441
+NO_TRADE: 2236
 Realized PnL: 61.76
-Unrealized PnL: 284.76
-Portfolio value: 100672.53
-Daily recorded-equity change (%): -0.0342
+Unrealized PnL: 260.46
+Portfolio value: 100648.23
+Daily recorded-equity change (%): -0.0583
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-11
-Cumulative recorded-equity change (%): 0.6725
+Cumulative recorded-equity change (%): 0.6482
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
@@ -27,12 +27,12 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 26
+- FIB_STOP_075_ATR: 27
 - FIB_STOP_100_ATR: 7
-- FIB_STRUCTURE_STOP: 17
+- FIB_STRUCTURE_STOP: 18
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 47
-- VWAP_RECLAIM: 1
+- TREND_PULLBACK_RECLAIM: 51
+- VWAP_RECLAIM: 2
 
 Top rejected candidates:
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
