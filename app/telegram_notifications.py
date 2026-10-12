@@ -364,10 +364,18 @@ def format_position_event_message(
         f"SL: {_price_with_percent(position.get('stop_loss'), entry)}",
         f"TP1: {_price_with_percent(position.get('target_1'), entry)}",
         f"TP2: {_price_with_percent(position.get('target_2'), entry)}",
-        f"Bar H/L/C: {_money(getattr(event, 'high', None))} / {_money(getattr(event, 'low', None))} / {_money(getattr(event, 'close', None))}",
     ]
+    if getattr(event, "high", None) is not None and getattr(event, "low", None) is not None:
+        lines.append(f"Bar H/L/C: {_money(event.high)} / {_money(event.low)} / {_money(getattr(event, 'close', None))}")
+    else:
+        lines.append(f"Observed quote: {_money(getattr(event, 'close', None))}")
     if action == "TAKE_PARTIAL_PROFIT":
-        lines.append("Next: remaining stop moves to entry.")
+        if position.get("quantity") is None:
+            lines.append("Remaining position details unavailable.")
+        elif int(_to_float(position.get("quantity"))) > quantity:
+            lines.append("Next: remaining stop moves to entry.")
+        else:
+            lines.append("Position fully closed; no remaining stop.")
     note = _shorten(getattr(event, "note", ""), 180)
     if note:
         lines.append(f"Note: {_escape(note)}")
