@@ -32,3 +32,8 @@ Regression cases cover all three actual scanner exits, original levels despite
 NO_TRADE, position removal, partial stop movement, one-share TP1, shared monitor
 dedupe, delayed outbox delivery, failed delivery retry, partial delivery retry
 and incomplete evidence. Telegram is simulated in all tests.
+
+Release QA also checks the actual workbook JSON-string representation so the
+monitor/scanner share the lot's trade ID, rather than accidentally falling back
+to price fields. Host preflight preserves Git porcelain's leading status columns
+and can persist receipt-only recovery without blocking or resending an alert.

@@ -60,7 +60,9 @@ def run(*args: str, cwd: Path = REPO, timeout: int = 60,
 
 
 def output(*args: str, cwd: Path = REPO) -> str:
-    return subprocess.check_output(args, cwd=cwd, text=True, timeout=60).strip()
+    # Porcelain status uses leading columns; stripping them hides a recoverable
+    # receipt-only change after a delivery succeeded but the receipt push failed.
+    return subprocess.check_output(args, cwd=cwd, text=True, timeout=60).rstrip("\r\n")
 
 
 def file_hash(path: Path) -> str:

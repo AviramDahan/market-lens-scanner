@@ -17,7 +17,7 @@ def position(quantity=10):
     return dict(ticker='TEST', entry_date='2026-10-09T14:00:00', entry_price=100.0,
                 current_price=100.0, quantity=quantity, stop_loss=95.0, target_1=110.0,
                 target_2=120.0, partial_taken=False, exposure_ils=quantity * 100.0, risk_ils=quantity * 5.0,
-                chart_url='agent_results/charts/test.png', decision_json={'trade_id': 'entry-test-1'})
+                chart_url='agent_results/charts/test.png', decision_json=json.dumps({'trade_id': 'entry-test-1'}))
 
 
 def exit_decision(price, quantity=10):
@@ -53,6 +53,7 @@ def test_real_scanner_exit_path_produces_alert_after_position_mutation(tmp_path,
     event = position_monitor.PositionEvent('TEST', action, '', decision.execution_price, 0, 0, price,
                                           decision.quantity, decision.cash_in_ils, '')
     assert records[0]['dedupe_key'] == position_monitor.position_event_dedupe_key(original, event)
+    assert '|entry-test-1|' in records[0]['dedupe_key']
     if action == 'TAKE_PARTIAL_PROFIT':
         assert positions['TEST']['stop_loss'] == 100
         assert records[1]['notification_type'] == 'STOP_TO_ENTRY'
