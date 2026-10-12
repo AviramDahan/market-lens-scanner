@@ -1,35 +1,37 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 12
-Tickers scanned: 2158
+Total scans: 13
+Tickers scanned: 2338
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 802
-WATCH_REVIEW unique tickers: 131
+WATCH_REVIEW: 859
+WATCH_REVIEW unique tickers: 136
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 802
-SKIP: 1332
-NO_TRADE: 1116
+WATCH: 859
+SKIP: 1453
+NO_TRADE: 1237
 Realized PnL: 61.76
-Unrealized PnL: 258.16
-Portfolio value: 100645.93
+Unrealized PnL: 244.58
+Portfolio value: 100632.35
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.6459
+Cumulative recorded-equity change (%): 0.6324
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
-Worst ticker: AIG
+Worst ticker: TSN
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 1
-- FIB_STOP_075_ATR: 3
-- FIB_STRUCTURE_STOP: 5
-- TREND_PULLBACK_RECLAIM: 9
+- BREAKOUT_CONTINUATION: 2
+- FIB_STOP_075_ATR: 8
+- FIB_STOP_100_ATR: 1
+- FIB_STRUCTURE_STOP: 9
+- RELATIVE_STRENGTH_LEADER: 1
+- TREND_PULLBACK_RECLAIM: 18
 
 Top rejected candidates:
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
