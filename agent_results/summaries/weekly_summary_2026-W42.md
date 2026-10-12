@@ -1,37 +1,38 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 18
-Tickers scanned: 3238
+Total scans: 19
+Tickers scanned: 3418
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1126
+WATCH_REVIEW: 1180
 WATCH_REVIEW unique tickers: 143
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1126
-SKIP: 2076
-NO_TRADE: 1867
+WATCH: 1180
+SKIP: 2200
+NO_TRADE: 1992
 Realized PnL: 61.76
-Unrealized PnL: 308.42
-Portfolio value: 100696.19
+Unrealized PnL: 278.7
+Portfolio value: 100666.47
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.6962
+Cumulative recorded-equity change (%): 0.6665
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 3
-- FIB_STOP_075_ATR: 24
-- FIB_STOP_100_ATR: 5
+- BREAKOUT_CONTINUATION: 4
+- FIB_STOP_075_ATR: 25
+- FIB_STOP_100_ATR: 6
 - FIB_STRUCTURE_STOP: 16
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 41
+- TREND_PULLBACK_RECLAIM: 44
+- VWAP_RECLAIM: 1
 
 Top rejected candidates:
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
@@ -43,7 +44,7 @@ Top rejected candidates:
 - HALO: WATCH score=0.509 reason=WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.23.
 - DBX: WATCH score=0.5062 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.15.
 - SM: WATCH score=0.5042 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
-- FANG: WATCH score=0.5029 reason=WATCH: Technical setup detected, but weighted risk/reward 1.86 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.38.
+- FANG: WATCH score=0.5031 reason=WATCH: Technical setup detected, but weighted risk/reward 1.87 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.39.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
