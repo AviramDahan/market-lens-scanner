@@ -649,6 +649,7 @@ def test_position_event_message_contains_exit_details() -> None:
     position = {
         "ticker": "BA",
         "entry_price": 200,
+        "quantity": 10,
         "stop_loss": 190,
         "target_1": 215,
         "target_2": 230,

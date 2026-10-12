@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 from openpyxl import load_workbook
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
+from agent.position_monitor import PositionEvent, position_event_dedupe_key, should_notify_stop_moved_to_entry
 from app.charts import write_scan_chart
 from app.agent_dashboard import compute_full_trade_performance as dashboard_compute_full_trade_performance
 from app.agent_dashboard import compute_realized_pnl as dashboard_compute_realized_pnl
@@ -47,9 +48,12 @@ from app.telegram_notifications import (
     build_telegram_dedupe_key,
     dashboard_url_from_env,
     format_position_opened_message,
+    format_position_event_message,
+    format_stop_moved_to_entry_message,
     format_qualified_capital_blocked_message,
     format_qualified_setup_message,
     send_telegram_notification,
+    send_telegram_message,
 )
 from app.trade_outcomes import backfill_trade_outcomes
 from app.weak_sector_override import (
@@ -1593,6 +1597,11 @@ def build_buy_notification_records(
     dashboard_url = dashboard_url_from_env(settings.url)
     records = []
     for result, decision in pending_decisions:
+        if decision.action in {"EXIT_STOP", "TAKE_PARTIAL_PROFIT", "TAKE_PROFIT"}:
+            records.extend(build_scanner_exit_notification_records(
+                result, decision, run_id=run_id, timestamp=timestamp, dashboard_url=dashboard_url,
+            ))
+            continue
         notification_type = "BUY_SIMULATED"
         if decision.action == "BUY_SIMULATED":
             position = open_positions.get(result.ticker)
@@ -1660,6 +1669,44 @@ def build_buy_notification_records(
     return records
 
 
+def build_scanner_exit_notification_records(
+    result: SetupResult, decision: Decision, *, run_id: str, timestamp: str, dashboard_url: str,
+) -> list[dict[str, str]]:
+    # A terminal exit has already removed the position. Use its frozen pre-exit
+    # plan, never the current scan's (possibly NO_TRADE) stop or targets.
+    payload = decision.decision_json or {}
+    plan = payload.get("position_exit_plan") or {}
+    if not plan or not plan.get("entry_price") or decision.quantity <= 0:
+        raise ValueError(f"Missing persisted position exit evidence for {result.ticker}")
+    position = dict(plan, ticker=result.ticker, decision_json={"trade_id": payload.get("trade_id", "")})
+    execution_price = decision.execution_price or payload.get("exit_execution_price") or result.current_price
+    event = PositionEvent(
+        ticker=result.ticker, action=decision.action, triggered_at=timestamp,
+        trigger_price=float(execution_price), high=None, low=None, close=result.current_price,
+        quantity=decision.quantity, cash_in=decision.cash_in_ils, note=decision.feedback,
+        trade_id=str(payload.get("trade_id") or ""),
+    )
+    key = position_event_dedupe_key(position, event)
+    records = [{
+        "ticker": result.ticker, "notification_type": decision.action,
+        "message": format_position_event_message(
+            position=position, event=event, run_id=run_id, timestamp=timestamp, dashboard_url=dashboard_url,
+        ),
+        "dedupe_key": key, "chart_ref": str(result.chart_url or plan.get("chart_url") or ""),
+        "dashboard_url": dashboard_url,
+    }]
+    if should_notify_stop_moved_to_entry(position, event):
+        records.append({
+            "ticker": result.ticker, "notification_type": "STOP_TO_ENTRY", "transport": "message",
+            "message": format_stop_moved_to_entry_message(
+                position=position, event=event, run_id=run_id, timestamp=timestamp, dashboard_url=dashboard_url,
+            ),
+            "dedupe_key": build_telegram_dedupe_key(key, "STOP_TO_ENTRY"),
+            "dashboard_url": dashboard_url,
+        })
+    return records
+
+
 def is_qualified_capital_blocked_notification(decision: Decision) -> bool:
     if not env_bool("MARKET_LENS_TELEGRAM_QUALIFIED_BLOCKED_ENABLED", True):
         return False
@@ -1708,14 +1755,17 @@ def send_buy_notification_records(records: list[dict[str, str]]) -> list[Any]:
         ticker = record["ticker"]
         dedupe_key = record["dedupe_key"]
         notification_type = record.get("notification_type", "BUY_SIMULATED")
-        log_label = "qualified setup" if notification_type in {"QUALIFIED_CAPITAL_BLOCKED", "QUALIFIED_SETUP"} else "position-open"
-        outcome = send_telegram_notification(
-            record["message"],
-            chart_ref=record.get("chart_ref"),
-            ticker=ticker,
-            dashboard_url=record.get("dashboard_url", ""),
-            dedupe_key=dedupe_key,
-        )
+        log_label = "qualified setup" if notification_type in {"QUALIFIED_CAPITAL_BLOCKED", "QUALIFIED_SETUP"} else notification_type
+        if record.get("transport") == "message":
+            outcome = send_telegram_message(record["message"], dedupe_key=dedupe_key)
+        else:
+            outcome = send_telegram_notification(
+                record["message"],
+                chart_ref=record.get("chart_ref"),
+                ticker=ticker,
+                dashboard_url=record.get("dashboard_url", ""),
+                dedupe_key=dedupe_key,
+            )
         outcomes.append(outcome)
         if outcome.sent:
             log(f"Telegram {log_label} notification sent for {ticker}.")
@@ -1762,7 +1812,7 @@ def write_buy_notification_outbox(
         encoding="utf-8",
     )
     temporary.replace(path)
-    log(f"Buy notification outbox: {path}")
+    log(f"Scanner notification outbox: {path}")
     return path
 
 
@@ -2319,7 +2369,9 @@ def capture_position_exit_plan(payload: dict[str, Any], position: dict[str, Any]
         stored = parse_json_cell(stored)
     payload["trade_id"] = position.get("trade_id") or stored.get("trade_id") or ""
     payload["position_exit_plan"] = {
-        key: position.get(key) for key in ("entry_date", "entry_price", "stop_loss", "target_1", "target_2")
+        key: position.get(key) for key in (
+            "entry_date", "entry_price", "quantity", "stop_loss", "target_1", "target_2", "chart_url",
+        )
     }
 
 
