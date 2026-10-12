@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 19
-Tickers scanned: 3418
+Total scans: 20
+Tickers scanned: 3598
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1180
-WATCH_REVIEW unique tickers: 143
+WATCH_REVIEW: 1236
+WATCH_REVIEW unique tickers: 146
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1180
-SKIP: 2200
-NO_TRADE: 1992
+WATCH: 1236
+SKIP: 2322
+NO_TRADE: 2116
 Realized PnL: 61.76
-Unrealized PnL: 278.7
-Portfolio value: 100666.47
+Unrealized PnL: 284.76
+Portfolio value: 100672.53
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.6665
+Cumulative recorded-equity change (%): 0.6725
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
@@ -27,17 +27,17 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 25
-- FIB_STOP_100_ATR: 6
-- FIB_STRUCTURE_STOP: 16
+- FIB_STOP_075_ATR: 26
+- FIB_STOP_100_ATR: 7
+- FIB_STRUCTURE_STOP: 17
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 44
+- TREND_PULLBACK_RECLAIM: 47
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
+- CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ADM: WATCH score=0.5442 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
-- CSCO: WATCH score=0.5384 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - IOT: WATCH score=0.528 reason=WATCH: Technical setup detected, but weighted risk/reward 1.33 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - JBL: WATCH score=0.5162 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - CHD: WATCH score=0.5095 reason=WATCH: Technical setup detected, but weighted risk/reward 1.97 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.17.
