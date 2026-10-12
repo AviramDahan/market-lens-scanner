@@ -8,6 +8,38 @@ import pytest
 from deploy.hetzner import run_runtime as runtime
 
 
+def test_preflight_preserves_actual_porcelain_columns_for_receipt_recovery(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.touch()
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    (tmp_path / "deployed_revision").write_text("release")
+    calls = []
+    recovered = False
+
+    def fake_output(args, **kwargs):
+        if args[:3] == ("git", "status", "--porcelain"):
+            return "" if recovered else " M agent_results/telegram_notifications.jsonl\n"
+        if args[:2] == ("git", "rev-parse"):
+            return "head\n"
+        return ""
+
+    def persist():
+        nonlocal recovered
+        recovered = True
+        calls.append("persist_receipts")
+
+    monkeypatch.setattr(runtime.subprocess, "check_output", fake_output)
+    monkeypatch.setattr(runtime, "run", lambda *_a, **_k: None)
+    monkeypatch.setattr(runtime, "persist_notification_receipts", persist)
+    monkeypatch.setattr(runtime, "check_disk_capacity", lambda: None)
+    monkeypatch.setattr(runtime, "deliver", lambda *_a: pytest.fail("No pending outbox; do not resend"))
+    runtime.require_live_preflight()
+    assert calls == ["persist_receipts"]
+
+
 def test_push_backup_retries_transient_rejection(monkeypatch):
     attempts = []
     delays = []

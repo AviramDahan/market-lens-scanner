@@ -1678,7 +1678,7 @@ def build_scanner_exit_notification_records(
     plan = payload.get("position_exit_plan") or {}
     if not plan or not plan.get("entry_price") or decision.quantity <= 0:
         raise ValueError(f"Missing persisted position exit evidence for {result.ticker}")
-    position = dict(plan, ticker=result.ticker, decision_json={"trade_id": payload.get("trade_id", "")})
+    position = dict(plan, ticker=result.ticker, decision_json=json.dumps({"trade_id": payload.get("trade_id", "")}))
     execution_price = decision.execution_price or payload.get("exit_execution_price") or result.current_price
     event = PositionEvent(
         ticker=result.ticker, action=decision.action, triggered_at=timestamp,
