@@ -1,37 +1,37 @@
 Daily Performance Summary
 
 Date: 2026-10-12
-Total scans: 16
-Tickers scanned: 2878
+Total scans: 17
+Tickers scanned: 3058
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1018
-WATCH_REVIEW unique tickers: 140
+WATCH_REVIEW: 1072
+WATCH_REVIEW unique tickers: 141
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1018
-SKIP: 1828
-NO_TRADE: 1616
+WATCH: 1072
+SKIP: 1952
+NO_TRADE: 1741
 Realized PnL: 61.76
-Unrealized PnL: 294.66
-Portfolio value: 100682.43
-Daily recorded-equity change (%): -0.0243
+Unrealized PnL: 298.18
+Portfolio value: 100685.95
+Daily recorded-equity change (%): -0.0208
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-11
-Cumulative recorded-equity change (%): 0.6824
+Cumulative recorded-equity change (%): 0.686
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
-Best ticker: CLX
+Best ticker: IONS
 Worst ticker: TSN
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 3
-- FIB_STOP_075_ATR: 18
-- FIB_STOP_100_ATR: 3
-- FIB_STRUCTURE_STOP: 13
+- FIB_STOP_075_ATR: 22
+- FIB_STOP_100_ATR: 4
+- FIB_STRUCTURE_STOP: 15
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 31
+- TREND_PULLBACK_RECLAIM: 36
 
 Top rejected candidates:
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
@@ -42,7 +42,7 @@ Top rejected candidates:
 - HALO: WATCH score=0.509 reason=WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.23.
 - DBX: WATCH score=0.5062 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.15.
 - SM: WATCH score=0.5042 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
-- FANG: WATCH score=0.5009 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
+- FANG: WATCH score=0.5029 reason=WATCH: Technical setup detected, but weighted risk/reward 1.86 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.38.
 - VIAV: WATCH score=0.4999 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 
 Recommendations:
