@@ -767,6 +767,14 @@ function formatAgeMinutes(minutes) {
 }
 
 function renderMetrics(summary) {
+  const review = summary.historical_execution_review || {};
+  const reviewNotice = document.getElementById("executionReviewNotice");
+  if (reviewNotice) {
+    reviewNotice.hidden = !(review.flagged_exits > 0 || review.status === "REPORT_ERROR");
+    reviewNotice.textContent = review.status === "REPORT_ERROR"
+      ? "Historical execution review could not be loaded. Reported portfolio figures have not been adjusted."
+      : `${review.flagged_exits} historical exits have execution-data issues (${formatSignedMoney(review.affected_recorded_pnl)} recorded P/L). Reported figures remain unchanged pending review.`;
+  }
   const exitWinRate = Number(summary.exit_event_win_rate ?? summary.win_rate ?? 0);
   const exitWins = Number(summary.exit_event_wins ?? summary.wins ?? 0);
   const exitLosses = Number(summary.exit_event_losses ?? summary.losses ?? 0);
@@ -2264,6 +2272,7 @@ function renderTrades() {
           <div>
             <strong>${trade.quantity} shares / ${money.format(cash)}</strong>
             <p>${escapeHtml(tradePotentialText(trade))}</p>
+            ${trade.execution_data_quality ? `<p class="money-neg" title="${escapeHtml(trade.execution_data_quality.reason || "")}">Historical execution data under review</p>` : ""}
           </div>
         </div>
       `;

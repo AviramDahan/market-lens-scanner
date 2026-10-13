@@ -62,7 +62,7 @@ class FakeClock:
 def test_fake_clock_price_window_persists_tp1_then_tp2_once(monkeypatch, tmp_path):
     clock = FakeClock(datetime(2026, 9, 8, 14, 15, tzinfo=timezone.utc))
     frame = pd.DataFrame(
-        {"High": [160.0, 182.0], "Low": [155.0, 175.0], "Close": [159.0, 181.0]},
+        {"Open": [155.0, 175.0], "High": [160.0, 182.0], "Low": [155.0, 175.0], "Close": [159.0, 181.0]},
         index=pd.to_datetime(["2026-09-08T14:11:00Z", "2026-09-08T14:12:00Z"]),
     )
     monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
@@ -109,7 +109,7 @@ def test_fake_clock_price_window_persists_tp1_then_tp2_once(monkeypatch, tmp_pat
     ("TAKE_PROFIT", 182, 175, 180.62),
 ])
 def test_window_applies_partial_then_later_terminal_once(monkeypatch, tmp_path, terminal, high, low, expected_price):
-    frame = pd.DataFrame({"High": [160, high], "Low": [155, low], "Close": [159, high - 1]},
+    frame = pd.DataFrame({"Open": [155, low], "High": [160, high], "Low": [155, low], "Close": [159, high - 1]},
                          index=pd.to_datetime(["2026-09-08T14:11:00Z", "2026-09-08T14:12:00Z"]))
     calls = []
     def fetch(*args, **kwargs):
@@ -137,7 +137,7 @@ def test_window_applies_partial_then_later_terminal_once(monkeypatch, tmp_path, 
 
 
 def test_window_partial_then_hold_refreshes_and_replay_is_noop(monkeypatch, tmp_path):
-    frame = pd.DataFrame({"High": [160, 165], "Low": [155, 158], "Close": [159, 164]},
+    frame = pd.DataFrame({"Open": [155, 158], "High": [160, 165], "Low": [155, 158], "Close": [159, 164]},
                          index=pd.to_datetime(["2026-09-08T14:11:00Z", "2026-09-08T14:12:00Z"]))
     monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
     wb, p = book(), position()
@@ -156,7 +156,7 @@ def test_window_partial_then_hold_refreshes_and_replay_is_noop(monkeypatch, tmp_
 
 
 def test_window_does_not_infer_new_stop_order_inside_tp1_candle(monkeypatch, tmp_path):
-    frame = pd.DataFrame({"High": [160], "Low": [149], "Close": [159]},
+    frame = pd.DataFrame({"Open": [155], "High": [160], "Low": [149], "Close": [159]},
                          index=pd.to_datetime(["2026-09-08T14:11:00Z"]))
     monkeypatch.setattr("agent.position_monitor.fetch_intraday_frame", lambda *a, **k: frame)
     wb, p = book(), position()

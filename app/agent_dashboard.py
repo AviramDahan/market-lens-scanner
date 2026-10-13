@@ -80,6 +80,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
     realized = compute_realized_pnl(scoped_trades)
     full_trade_performance = compute_full_trade_performance(scoped_trades)
     annotated_trades = realized.get("trades", scoped_trades)
+    execution_review = annotate_historical_execution_review(annotated_trades, full_trade_performance, results_dir)
     latest_monitor_update = select_latest_monitor_update(updates, latest_update)
     latest_monitor_status = load_monitor_status(position_monitor_dir) if not selected_date else {}
     if parse_timestamp(latest_monitor_status.get("timestamp")) > parse_timestamp(latest_monitor_update.get("timestamp")):
@@ -218,6 +219,7 @@ def build_agent_dashboard(project_root: Path, selected_date: str | None = None) 
         ),
         "open_full_trades": full_trade_performance["open_count"],
         "strategy_cohorts": full_trade_performance["strategy_cohorts"],
+        "historical_execution_review": execution_review,
     }
 
     dashboard = {
@@ -1507,6 +1509,34 @@ def read_open_positions(wb: Any) -> list[dict[str, Any]]:
             )
         )
     return rows
+
+
+def annotate_historical_execution_review(trades: list[dict], performance: dict, results_dir: Path) -> dict:
+    path = results_dir / "audits" / "position_execution_review_20261013.json"
+    if not path.exists():
+        return {}
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+        if report.get("schema_version") != 1 or report.get("portfolio_restatement") is not False:
+            raise ValueError("Invalid read-only execution review")
+        evidence = {str(row["trade_id"]): row for row in report["annotations"]}
+        matched = {}
+        for trade in trades:
+            row = evidence.get(str(trade.get("trade_id") or ""))
+            if (row and trade.get("action") == "EXIT_STOP" and trade.get("ticker") == row["ticker"]
+                    and parse_timestamp(trade.get("timestamp")) == parse_timestamp(row["timestamp"])):
+                trade["execution_data_quality"] = {key: row.get(key) for key in ("status", "reason", "source_chart")}
+                matched[row["trade_id"]] = row
+        for trade in performance.get("closed", []):
+            row = matched.get(str(trade.get("trade_id") or ""))
+            if row:
+                trade["execution_data_quality"] = {"status": row["status"], "reason": row["reason"]}
+        return {"status": "REVIEW_REQUIRED" if matched else "NO_MATCHING_EXITS",
+                "flagged_exits": len(matched),
+                "affected_recorded_pnl": round(sum(float(row["recorded_pnl"]) for row in matched.values()), 2),
+                "portfolio_restatement": False}
+    except (KeyError, TypeError, ValueError, OSError):
+        return {"status": "REPORT_ERROR", "flagged_exits": None, "portfolio_restatement": False}
 
 
 def read_trade_analytics(

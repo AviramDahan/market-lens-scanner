@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
 
 from app.execution import EXECUTION_VERSION, position_metadata, sell_fill
 from app.data import fetch_intraday_frame
+from app.position_market_data import validated_position_frame
 from app.trading_clock import NY_TZ, session_bounds
 from app.telegram_notifications import (
     build_telegram_dedupe_key,
@@ -430,7 +431,8 @@ def process_position_window(
     # At most one partial and one terminal exit; a final pass may refresh a hold.
     for _ in range(3):
         result = monitor_position(position, settings=settings, since=since,
-                                  currency_rate=currency_rate, frame_cache=frame_cache)
+                                  currency_rate=currency_rate, frame_cache=frame_cache,
+                                  as_of=parse_timestamp(timestamp))
         if not result.event:
             if not results or result.error or result.status in {"ERROR", "DATA_ERROR", "NO_DATA"}:
                 results.append(result)
@@ -453,6 +455,7 @@ def monitor_position(
     since: datetime | None,
     currency_rate: float,
     frame_cache: dict[str, Any] | None = None,
+    as_of: datetime | None = None,
 ) -> MonitorResult:
     ticker = str(position.get("ticker") or "").upper()
     entry_time = parse_timestamp(position.get("entry_date"))
@@ -477,6 +480,12 @@ def monitor_position(
 
     if frame.empty:
         return MonitorResult(ticker=ticker, status="NO_DATA", current_price=0.0)
+
+    if as_of is not None:
+        try:
+            frame = validated_position_frame(frame, interval=settings.interval, now=as_of)
+        except (KeyError, TypeError, ValueError) as exc:
+            return MonitorResult(ticker=ticker, status="DATA_ERROR", current_price=0.0, error=str(exc))
 
     try:
         prices = frame[["High", "Low", "Close"]].astype(float)
