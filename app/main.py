@@ -139,6 +139,18 @@ def dashboard_cache_key(selected_date: str | None = None) -> tuple[str, int, int
         return (selected_date or "", 0, 0)
 
 
+def dashboard_refresh_version() -> str:
+    """Change only when persisted dashboard/portfolio data changes, not each poll."""
+    parts = []
+    for path in (DASHBOARD_SNAPSHOT_PATH, AGENT_TRACKER_DIR / TRACKER_NAME):
+        try:
+            stat = path.stat()
+            parts.extend((stat.st_mtime_ns, stat.st_size))
+        except OSError:
+            parts.extend((0, 0))
+    return ":".join(str(value) for value in parts)
+
+
 def cached_agent_dashboard(selected_date: str | None = None) -> dict:
     sync_status = sync_agent_results_if_enabled(PROJECT_ROOT)
     key = dashboard_cache_key(selected_date)
@@ -597,6 +609,7 @@ async def get_agent_dashboard(
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
 ) -> dict:
+    version = dashboard_refresh_version() if not date else ""
     dashboard = current_agent_dashboard() if not date else cached_agent_dashboard(date)
     if section:
         return dashboard_section_payload(
@@ -612,7 +625,9 @@ async def get_agent_dashboard(
             sort=sort,
         )
     if compact:
-        return compact_agent_dashboard_payload(dashboard, action_limit=limit, trade_limit=limit)
+        payload = compact_agent_dashboard_payload(dashboard, action_limit=limit, trade_limit=limit)
+        payload["dashboard_refresh_version"] = version
+        return payload
     if dashboard.get("status") == "ok":
         dashboard["payload"] = {
             "mode": "full",
@@ -745,6 +760,7 @@ def sanitize_run_id(value: str) -> str:
 
 @app.get("/agent/live-prices")
 async def get_agent_live_prices() -> dict:
+    version = dashboard_refresh_version()
     dashboard = current_agent_dashboard()
     if dashboard.get("status") != "ok":
         return dashboard
@@ -806,7 +822,9 @@ async def get_agent_live_prices() -> dict:
 
     return {
         "status": "ok",
+        "dashboard_refresh_version": version,
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "system_health": dashboard.get("system_health") or {},
         "summary": summary,
         "open_positions": refreshed,
         "position_attention": build_position_attention(refreshed),
