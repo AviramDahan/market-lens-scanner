@@ -25,6 +25,9 @@ const state = {
   scheduleTimer: null,
   nextLiveSyncAt: null,
   lastLivePriceUpdatedAt: "",
+  liveRefreshBusy: false,
+  lastLiveSyncError: false,
+  dashboardLoadGeneration: 0,
   monitorTriggerCooldowns: {},
   lastMonitorTrigger: null,
   diagnostic: {
@@ -280,46 +283,78 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDashboard(selectedDate);
   updateScheduleIndicators();
   state.scheduleTimer = window.setInterval(updateScheduleIndicators, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshLivePrices();
+  });
 });
 
-async function loadDashboard(selectedDate = "") {
+async function fetchDashboardPayload(url) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 20_000);
+  try {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) throw new Error(`Dashboard request failed: ${response.status}`);
+    return await response.json();
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+async function loadDashboard(selectedDate = "", { preserveView = false } = {}) {
+  const generation = ++state.dashboardLoadGeneration;
+  const previousRunId = state.data?.latest_run?.latest_scan_run_id || state.data?.latest_run?.run_id;
+  state.selectedDate = selectedDate;
+  if (!preserveView) stopLivePrices();
   try {
     const params = new URLSearchParams();
     if (selectedDate) params.set("date", selectedDate);
     params.set("limit", String(ACTIONS_PAGE_SIZE));
-    const response = await fetch(`/agent/data${params.toString() ? `?${params}` : ""}`);
-    if (!response.ok) {
-      throw new Error(`Agent data failed: ${response.status}`);
+    const data = await fetchDashboardPayload(`/agent/data?${params}`);
+    if (generation !== state.dashboardLoadGeneration) return;
+    if (data.status !== "ok") throw new Error(data.error || "Agent dashboard unavailable");
+    resetPagedCollections(data, { preserveView, previousRunId });
+    state.data = data;
+    if (!preserveView) {
+      state.actionsExpanded = false;
+      state.tradesExpanded = false;
     }
-    state.data = await response.json();
-    state.selectedDate = selectedDate;
-    resetPagedCollections(state.data);
-    state.actionsExpanded = false;
-    state.tradesExpanded = false;
     syncDateUrl(selectedDate);
     renderDashboard(state.data);
   } catch (error) {
+    if (generation !== state.dashboardLoadGeneration) return;
+    if (preserveView) throw error;
     document.getElementById("runStatus").textContent = "Error";
     document.getElementById("summaryText").textContent = error.message;
   }
 }
 
-function resetPagedCollections(data) {
+function resetPagedCollections(data, { preserveView = false, previousRunId = "" } = {}) {
   const pagination = data.pagination || {};
   const actionPage = pagination.actions || {};
   const tradePage = pagination.trades || {};
-  state.actions = data.latest_setups || [];
+  const actions = data.latest_setups || [];
+  const trades = data.recent_trades || [];
+  const scanId = data.latest_run?.latest_scan_run_id || data.latest_run?.run_id;
+  const keepActionTail = preserveView && scanId === previousRunId &&
+    actions.every((row, index) => row.ticker === state.actions[index]?.ticker);
+  const keepTradeTail = preserveView && Number(tradePage.total) === state.tradeTotal &&
+    trades.every((row, index) => row.ticker === state.trades[index]?.ticker &&
+      row.timestamp === state.trades[index]?.timestamp && row.action === state.trades[index]?.action);
+  state.actions = keepActionTail ? actions.concat(state.actions.slice(actions.length)) : actions;
   state.actionTotal = Number(actionPage.total ?? state.actions.length);
-  state.actionHasMore = Boolean(actionPage.has_more ?? state.actions.length < state.actionTotal);
-  state.trades = data.recent_trades || [];
+  state.actionHasMore = keepActionTail ? state.actions.length < state.actionTotal :
+    Boolean(actionPage.has_more ?? state.actions.length < state.actionTotal);
+  state.trades = keepTradeTail ? trades.concat(state.trades.slice(trades.length)) : trades;
   state.tradeTotal = Number(tradePage.total ?? state.trades.length);
   state.closedTradeTotal = Number(tradePage.closed_total ?? (data.closed_trades || []).length);
-  state.tradeHasMore = Boolean(tradePage.has_more ?? state.trades.length < state.tradeTotal);
+  state.tradeHasMore = keepTradeTail ? state.trades.length < state.tradeTotal :
+    Boolean(tradePage.has_more ?? state.trades.length < state.tradeTotal);
 }
 
 async function loadActionsPage(reset = false) {
   if (state.actionsLoading) return;
   state.actionsLoading = true;
+  const generation = state.dashboardLoadGeneration;
   renderActions();
   try {
     const params = new URLSearchParams({
@@ -331,6 +366,7 @@ async function loadActionsPage(reset = false) {
     const response = await fetch(`/agent/data?${params}`);
     if (!response.ok) throw new Error(`Actions failed: ${response.status}`);
     const page = await response.json();
+    if (generation !== state.dashboardLoadGeneration) return;
     if (page.status !== "ok") throw new Error(page.error || "Actions unavailable");
     state.actions = reset ? page.items || [] : state.actions.concat(page.items || []);
     state.actionTotal = Number(page.total || state.actions.length);
@@ -346,6 +382,7 @@ async function loadActionsPage(reset = false) {
 async function loadTradesPage(reset = false) {
   if (state.tradesLoading) return;
   state.tradesLoading = true;
+  const generation = state.dashboardLoadGeneration;
   renderTrades();
   try {
     const params = new URLSearchParams({
@@ -357,6 +394,7 @@ async function loadTradesPage(reset = false) {
     const response = await fetch(`/agent/data?${params}`);
     if (!response.ok) throw new Error(`Trades failed: ${response.status}`);
     const page = await response.json();
+    if (generation !== state.dashboardLoadGeneration) return;
     if (page.status !== "ok") throw new Error(page.error || "Trades unavailable");
     state.trades = reset ? page.items || [] : state.trades.concat(page.items || []);
     state.tradeTotal = Number(page.total || state.trades.length);
@@ -491,7 +529,7 @@ function setCollapsibleSection(key, expanded, options = {}) {
 
 function startLivePrices(selectedDate) {
   stopLivePrices();
-  if (selectedDate || !state.data?.open_positions?.length) {
+  if (selectedDate) {
     state.nextLiveSyncAt = null;
     updateScheduleIndicators();
     return;
@@ -515,11 +553,24 @@ function stopLivePrices() {
 }
 
 async function refreshLivePrices() {
+  if (state.liveRefreshBusy || state.selectedDate || document.hidden || !state.data) return;
+  const generation = state.dashboardLoadGeneration;
+  let expectedGeneration = generation;
+  state.liveRefreshBusy = true;
   try {
-    const response = await fetch(`/agent/live-prices?v=${Date.now()}`);
-    if (!response.ok) return;
-    const live = await response.json();
-    if (live.status !== "ok" || !state.data) return;
+    const live = await fetchDashboardPayload(`/agent/live-prices?v=${Date.now()}`);
+    if (generation !== state.dashboardLoadGeneration || state.selectedDate) return;
+    if (live.status !== "ok") throw new Error(live.error || "Live dashboard unavailable");
+    state.lastLiveSyncError = false;
+    state.data.system_health = live.system_health || state.data.system_health;
+    renderPositionExecutionHealth(state.data.system_health || {}, live.open_positions || []);
+    if (live.dashboard_refresh_version &&
+        live.dashboard_refresh_version !== state.data.dashboard_refresh_version) {
+      const refresh = loadDashboard("", { preserveView: true });
+      expectedGeneration = state.dashboardLoadGeneration;
+      await refresh;
+      return;
+    }
     state.lastLivePriceUpdatedAt = live.updated_at || "";
     state.data.summary = live.summary || state.data.summary;
     state.data.open_positions = live.open_positions || state.data.open_positions;
@@ -538,7 +589,16 @@ async function refreshLivePrices() {
     renderPositionCharts(state.data.open_positions);
     detectAndTriggerMonitorEvents(state.data.open_positions);
   } catch (_error) {
-    // Live refresh is best-effort; the committed tracker remains the fallback.
+    if (state.selectedDate || expectedGeneration !== state.dashboardLoadGeneration) return;
+    state.lastLiveSyncError = true;
+    renderPositionExecutionHealth({
+      ...state.data.system_health,
+      price_sensor_status: "STATUS_SYNC_UNAVAILABLE",
+      execution_sensor_status: "STATUS_SYNC_UNAVAILABLE",
+    }, state.data.open_positions || []);
+  } finally {
+    state.liveRefreshBusy = false;
+    updateScheduleIndicators();
   }
 }
 
@@ -557,7 +617,8 @@ function updateScheduleIndicators() {
   if (!nextSyncEl || !nextSyncMetaEl) return;
   if (state.nextLiveSyncAt) {
     nextSyncEl.textContent = formatCountdown(state.nextLiveSyncAt - Date.now());
-    nextSyncMetaEl.textContent = "Open-position prices";
+    nextSyncMetaEl.textContent = state.lastLiveSyncError ? "Status sync unavailable" :
+      state.data?.open_positions?.length ? "Prices and monitor status" : "Scan and monitor status";
   } else if (document.getElementById("historyDate")?.value) {
     nextSyncEl.textContent = "Paused";
     nextSyncMetaEl.textContent = "Historical snapshot";
