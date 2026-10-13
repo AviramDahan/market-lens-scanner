@@ -1,30 +1,30 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 27
-Tickers scanned: 4858
+Total scans: 28
+Tickers scanned: 5038
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1776
+WATCH_REVIEW: 1845
 WATCH_REVIEW unique tickers: 153
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1776
-SKIP: 3028
-NO_TRADE: 2819
+WATCH: 1845
+SKIP: 3137
+NO_TRADE: 2899
 Realized PnL: 61.76
-Unrealized PnL: 296.22
-Portfolio value: 100683.99
+Unrealized PnL: 237.74
+Portfolio value: 100625.51
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.684
+Cumulative recorded-equity change (%): 0.6255
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
-Best shadow strategy: INSUFFICIENT_OUTCOMES
-Worst shadow strategy: INSUFFICIENT_OUTCOMES
+Best shadow strategy: BREAKOUT_CONTINUATION
+Worst shadow strategy: VWAP_RECLAIM
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
 - FIB_STOP_075_ATR: 29
@@ -35,7 +35,7 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
-- HIMS: WATCH score=0.5967 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.09.
+- HIMS: WATCH score=0.6084 reason=WATCH: Technical setup detected, but weighted risk/reward 1.38 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.03.
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
 - CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ADM: WATCH score=0.5442 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
