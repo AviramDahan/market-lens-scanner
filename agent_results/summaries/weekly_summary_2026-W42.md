@@ -1,29 +1,29 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 54
-Tickers scanned: 9716
+Total scans: 55
+Tickers scanned: 9896
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3333
-WATCH_REVIEW unique tickers: 190
+WATCH_REVIEW: 3397
+WATCH_REVIEW unique tickers: 193
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3333
-SKIP: 6273
-NO_TRADE: 5767
+WATCH: 3397
+SKIP: 6386
+NO_TRADE: 5875
 Realized PnL: 61.76
-Unrealized PnL: 406.54
-Portfolio value: 100794.31
+Unrealized PnL: 424.3
+Portfolio value: 100812.07
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.7943
+Cumulative recorded-equity change (%): 0.8121
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
-Best shadow strategy: TREND_PULLBACK_RECLAIM
+Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 8
@@ -40,11 +40,11 @@ Top rejected candidates:
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
 - DVA: WATCH score=0.5646 reason=WATCH: Normalized quality score is too low for a new entry (30.64/100).
 - CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
+- TPL: WATCH score=0.5501 reason=WATCH: Neutral market requires stronger normalized quality (37.30/100).
 - ADM: WATCH score=0.5442 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
 - IOT: WATCH score=0.528 reason=WATCH: Technical setup detected, but weighted risk/reward 1.33 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - BIIB: WATCH score=0.5254 reason=WATCH: Technical setup detected, but weighted risk/reward 1.21 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.84.
 - FANG: WATCH score=0.5228 reason=WATCH: Technical setup detected, but weighted risk/reward 1.82 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.53.
-- WAT: WATCH score=0.5185 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
