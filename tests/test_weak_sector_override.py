@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from app.weak_sector_override import (
     build_measurement_summary,
@@ -90,6 +91,191 @@ def decision(*, ticker: str = "TEST", sector: str = "WEAK") -> dict:
         "estimated_slippage": 0.08,
         "estimated_fees": 0.0,
     }
+
+
+def rejected_before_sizing() -> dict:
+    record = decision()
+    record.update(initial_action="WATCH", adjusted_position_size=0,
+                  adjusted_cash_out=0.0, adjusted_risk_amount=0.0,
+                  setup_score=0.2, weighted_net_rr=1.0)
+    return record
+
+
+def test_report_does_not_call_zero_sizing_a_cash_shortage_or_change_evidence() -> None:
+    record = rejected_before_sizing()
+    observation = evaluate_weak_sector_override_v1(record)
+    before = deepcopy(observation)
+
+    summary = build_measurement_summary([observation])
+    diagnostics = summary["gate_diagnostics"]
+
+    assert "cash_capacity" not in diagnostics["failed_gate_counts"]
+    assert "position_sizing" not in diagnostics["failed_gate_counts"]
+    assert diagnostics["not_assessed_gate_counts"] == {
+        "position_sizing": 1, "cash_capacity": 1,
+        "portfolio_exposure": 1, "portfolio_heat": 1,
+    }
+    assert diagnostics["failed_gate_counts"]["setup_score"] == 1
+    assert "sector_regime" not in diagnostics["failed_gate_counts"]
+    assert diagnostics["failed_gate_counts"]["weighted_net_rr"] == 1
+    assert diagnostics["counts_overlap"] is True
+    assert diagnostics["classification_is_reporting_only"] is True
+    assert summary["weak_ineligibility_reasons"]["FAIL:cash_capacity"] == 1
+    assert summary["qualifying_signal_count"] == 0
+    assert observation == before
+    assert record["final_action"] == "WATCH"
+
+
+def test_report_keeps_a_real_cash_shortage_as_a_failure() -> None:
+    record = decision()
+    record["cash_available"] = 500.0
+    observation = evaluate_weak_sector_override_v1(record)
+
+    summary = build_measurement_summary([observation])
+
+    assert summary["gate_diagnostics"]["failed_gate_counts"]["cash_capacity"] == 1
+    assert "cash_capacity" not in summary["gate_diagnostics"]["not_assessed_gate_counts"]
+    assert summary["qualifying_signal_count"] == 0
+
+
+@pytest.mark.parametrize("cash", [None, 90_000.0])
+def test_report_zero_cost_without_base_rejection_is_not_a_cash_shortage(cash) -> None:
+    record = decision()
+    record.update(cash_available=cash, adjusted_position_size=0,
+                  adjusted_cash_out=0.0, adjusted_risk_amount=0.0)
+    summary = build_measurement_summary([evaluate_weak_sector_override_v1(record)])
+
+    assert "cash_capacity" not in summary["gate_diagnostics"]["failed_gate_counts"]
+    assert summary["gate_diagnostics"]["unassessable_gate_counts"]["cash_capacity"] == 1
+    assert summary["gate_diagnostics"]["failed_gate_counts"]["position_sizing"] == 1
+    assert summary["gate_diagnostics"]["not_assessed_gate_counts"] == {}
+    assert summary["qualifying_signal_count"] == 0
+
+
+def test_report_missing_sizing_stays_unassessable() -> None:
+    record = rejected_before_sizing()
+    for key in ("adjusted_position_size", "adjusted_cash_out", "adjusted_risk_amount"):
+        record.pop(key)
+    summary = build_measurement_summary([evaluate_weak_sector_override_v1(record)])
+
+    assert summary["gate_diagnostics"]["unassessable_gate_counts"]["position_sizing"] == 1
+    assert summary["gate_diagnostics"]["unassessable_gate_counts"]["cash_capacity"] == 1
+    assert summary["gate_diagnostics"]["not_assessed_gate_counts"] == {}
+
+
+def test_report_legacy_reason_without_sizing_does_not_invent_cash_shortage() -> None:
+    observation = evaluate_weak_sector_override_v1(rejected_before_sizing())
+    observation.pop("gate_evidence")
+    observation.pop("sizing_snapshot")
+    summary = build_measurement_summary([observation])
+
+    assert summary["gate_diagnostics"]["unassessable_gate_counts"]["cash_capacity"] == 1
+    assert "cash_capacity" not in summary["gate_diagnostics"]["failed_gate_counts"]
+    assert summary["gate_diagnostics"]["not_assessed_gate_counts"] == {}
+
+
+def test_report_base_rejection_with_positive_size_does_not_hide_cash_shortage() -> None:
+    record = decision()
+    record.update(initial_action="WATCH", cash_available=500.0)
+    summary = build_measurement_summary([evaluate_weak_sector_override_v1(record)])
+
+    assert summary["gate_diagnostics"]["failed_gate_counts"]["cash_capacity"] == 1
+    assert summary["gate_diagnostics"]["not_assessed_gate_counts"] == {}
+
+
+def test_report_separates_versions_without_double_counting_or_changing_eligibility() -> None:
+    old = evaluate_weak_sector_override_v1(rejected_before_sizing())
+    corrected = evaluate_weak_sector_override_v1(decision())
+    corrected["measurement_version"] = "sector_gate_counterfactual_v2"
+    rows = [old, corrected]
+    before = deepcopy(rows)
+    summary = build_measurement_summary(rows)
+
+    assert summary["applicable_observation_count"] == 1
+    assert summary["qualifying_signal_count"] == 1
+    assert summary["gate_diagnostics"]["rejected_weak_observation_count"] == 0
+    assert summary["measurement_cohorts"]["active_path_v1"]["weak_observation_count"] == 1
+    assert summary["measurement_cohorts"]["active_path_v1"]["qualifying_signal_count"] == 0
+    assert summary["measurement_cohorts"]["sector_gate_counterfactual_v2"]["qualifying_signal_count"] == 1
+    assert rows == before
+    markdown = measurement_summary_markdown(summary)
+    assert "Version cohorts may cover the same opportunity; do not add their counts" in markdown
+    assert "Original persisted rejection labels (audit only)" in markdown
+
+
+def test_report_counts_eligible_controls_even_when_no_signal_matches() -> None:
+    rows = [evaluate_weak_sector_override_v1(decision(ticker="CTRL", sector="STRONG"))]
+    before = deepcopy(rows)
+    summary = build_measurement_summary(rows)
+
+    assert summary["qualifying_signal_count"] == 0
+    assert summary["eligible_control_count"] == 1
+    assert summary["matched_control_count"] == 0
+    assert summary["unmatched_control_count"] == 1
+    assert summary["control_results"]["total"] == 0
+    assert summary["controls"] == []
+    assert rows == before
+
+
+def test_report_collection_days_are_not_qualifying_signal_days() -> None:
+    first = rejected_before_sizing()
+    second = rejected_before_sizing()
+    second.update(timestamp="2026-10-05T10:15:00-04:00",
+                  market_session_timestamp="2026-10-05T10:15:00-04:00")
+    summary = build_measurement_summary([
+        evaluate_weak_sector_override_v1(first), evaluate_weak_sector_override_v1(second),
+    ])
+
+    assert summary["collection_coverage"]["trading_days_with_observations"] == 2
+    assert summary["review_progress"]["trading_days"] == 0
+    assert summary["review_requirements"] == {
+        "signals": 50, "closed_outcomes": 30, "trading_days": 20, "sectors": 3,
+    }
+    assert summary["review_ready"] is False
+
+
+def test_report_keeps_unmatched_controls_out_of_comparative_outcomes() -> None:
+    signal = evaluate_weak_sector_override_v1(decision())
+    matched = evaluate_weak_sector_override_v1(decision(ticker="MATCH", sector="STRONG"))
+    unmatched = evaluate_weak_sector_override_v1(decision(ticker="OTHER", sector="STRONG"))
+    unmatched["comparison_stratum"]["market_regime"] = "NEUTRAL"
+
+    summary = build_measurement_summary([signal, matched, unmatched])
+
+    assert summary["eligible_control_count"] == 2
+    assert summary["matched_control_count"] == summary["unmatched_control_count"] == 1
+    assert summary["control_results"]["total"] == 1
+    assert summary["control_results"]["unassessable"] == 1
+    assert [row["ticker"] for row in summary["controls"]] == ["MATCH"]
+
+
+def test_report_empty_collection_does_not_invent_dates_or_outcomes() -> None:
+    summary = build_measurement_summary([])
+
+    assert summary["collection_coverage"]["first_session_date"] is None
+    assert summary["collection_coverage"]["last_observation"] is None
+    assert summary["measurement_cohorts"] == {}
+    assert summary["gate_diagnostics"]["failed_gate_counts"] == {}
+    assert summary["signal_results"]["closed_expectancy_r"] is None
+    assert summary["eligible_control_count"] == summary["unmatched_control_count"] == 0
+
+
+def test_report_rejected_observation_without_checks_is_missing_evidence() -> None:
+    observation = evaluate_weak_sector_override_v1(rejected_before_sizing())
+    observation.pop("gate_evidence")
+    observation.pop("ineligibility_reasons")
+    summary = build_measurement_summary([observation])
+
+    assert summary["gate_diagnostics"]["unassessable_gate_counts"]["gate_evidence"] == 1
+    assert summary["qualifying_signal_count"] == 0
+
+
+def test_markdown_legacy_summary_does_not_render_missing_classification_as_zero() -> None:
+    summary = build_measurement_summary([evaluate_weak_sector_override_v1(rejected_before_sizing())])
+    summary.pop("gate_diagnostics")
+    markdown = measurement_summary_markdown(summary)
+
+    assert "Gate classification is unavailable in this report." in markdown
 
 
 def test_qualifying_signal_is_recorded_once(tmp_path: Path) -> None:

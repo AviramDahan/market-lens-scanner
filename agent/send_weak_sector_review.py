@@ -98,10 +98,51 @@ def format_review(rows: list[dict], summary: dict, *, now: datetime, latest_run:
     run_id = str(latest_run.get("run_id") or "לא זמין")
     run_at = str(latest_run.get("timestamp") or "זמן לא זמין")
     period = f"{dates[0]} עד {dates[-1]}" if dates else "אין תצפיות ישימות"
-    reasons = Counter(summary.get("weak_ineligibility_reasons") or {})
-    reason_text = ", ".join(f"{reason} ({count})" for reason, count in reasons.most_common(5)) or "לא נרשמו"
+    diagnostics = summary.get("gate_diagnostics")
+    if diagnostics is None:
+        reason_text = "סיווג הפסילות אינו זמין בדוח זה"
+    else:
+        reasons = Counter(diagnostics["failed_gate_counts"])
+        reason_text = ", ".join(f"{reason} ({count})" for reason, count in reasons.most_common(5)) or "לא נרשמו"
     signals = int(summary["qualifying_signal_count"])
     controls = int(summary["matched_control_count"])
+    eligible_controls = summary.get("eligible_control_count", "לא זמין")
+    unmatched_controls = summary.get("unmatched_control_count", "לא זמין")
+    diagnostic_lines = []
+    if diagnostics is not None:
+        not_assessed = diagnostics["not_assessed_gate_counts"]
+        if not_assessed:
+            diagnostic_lines.append(
+                "לא נבדקו מול עסקה ישימה אחרי פסילה מוקדמת: "
+                + ", ".join(f"{name} ({count})" for name, count in not_assessed.items())
+                + ". אלה אינם הוכחה למחסור במזומן או לחריגה מהחשיפה."
+            )
+        unavailable = diagnostics["unassessable_gate_counts"]
+        if unavailable:
+            diagnostic_lines.append("מידע לא מספיק לבדיקה: " + ", ".join(
+                f"{name} ({count})" for name, count in unavailable.items()
+            ) + ".")
+    cohort_lines = []
+    for version, label in (
+        ("active_path_v1", "מדידה ישנה"),
+        ("sector_gate_counterfactual_v2", "מדידה מתוקנת"),
+    ):
+        cohort = (summary.get("measurement_cohorts") or {}).get(version)
+        if cohort is None:
+            continue
+        weak_coverage = cohort["weak_collection_coverage"]
+        cohort_lines.append(
+            f"{label}: {cohort['weak_observation_count']} תצפיות סקטור חלש, "
+            f"{weak_coverage['trading_days_with_observations']} ימי תצפיות, "
+            f"{cohort['qualifying_signal_count']} אותות כשירים."
+        )
+    progress = summary.get("review_progress") or {}
+    requirements = summary.get("review_requirements") or {}
+    if "trading_days" in progress and "trading_days" in requirements:
+        diagnostic_lines.append(
+            f"ימי מסחר עם אותות כשירים לצורך סף הבחינה: {progress['trading_days']}/{requirements['trading_days']}; "
+            "לא מספר ימי התצפיות הכולל."
+        )
     quality = summary.get("market_data_errors") or {}
     limits = []
     if signals == 0:
@@ -121,9 +162,13 @@ def format_review(rows: list[dict], summary: dict, *, now: datetime, latest_run:
         f"תצפית אחרונה: {latest}; נבדק ב־{now.astimezone(ZoneInfo('Asia/Jerusalem')).strftime('%Y-%m-%d %H:%M')} שעון ישראל.",
         f"סריקה אחרונה: {run_id} ({run_at}); סטטוס: {latest_run.get('run_status') or 'לא זמין'}.",
         f"הזדמנויות ייחודיות ישימות: {len(opportunities)}; אותות כשירים: {signals}; קבוצת ביקורת מותאמת: {controls}.",
+        f"ביקורת כשירה לפני התאמה: {eligible_controls}; ללא התאמה לאות כשיר: {unmatched_controls}. אפס ביקורת מותאמת אינו אפס ביקורת כשירה.",
+        *cohort_lines,
+        "ספירות הגרסאות עשויות לחפוף; אין לחבר אותן." if cohort_lines else "",
         _outcomes("אותות", summary.get("signal_results") or {}, has_signals=bool(signals)),
-        _outcomes("ביקורת", summary.get("control_results") or {}, has_signals=bool(controls)),
-        f"סיבות פסילה מרכזיות: {reason_text}.",
+        _outcomes("ביקורת מותאמת", summary.get("control_results") or {}, has_signals=bool(controls)),
+        f"בדיקות שנכשלו מעבר לחסם הסקטור (ספירות חופפות): {reason_text}.",
+        *diagnostic_lines,
         "מה ניתן להעריך: היקף הזדמנויות, בדיקות זכאות וסיבות פסילה לפי הנתונים שנשמרו.",
         "מה חסר: " + " ".join(limits),
     ]
