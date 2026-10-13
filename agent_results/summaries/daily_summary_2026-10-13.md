@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-13
-Total scans: 31
-Tickers scanned: 5578
+Total scans: 32
+Tickers scanned: 5758
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1833
+WATCH_REVIEW: 1903
 WATCH_REVIEW unique tickers: 156
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1833
-SKIP: 3677
-NO_TRADE: 3353
+WATCH: 1903
+SKIP: 3784
+NO_TRADE: 3452
 Realized PnL: 0.0
-Unrealized PnL: 398.58
-Portfolio value: 100786.35
-Daily recorded-equity change (%): 0.1017
+Unrealized PnL: 392.95
+Portfolio value: 100780.71
+Daily recorded-equity change (%): 0.0961
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-12
-Cumulative recorded-equity change (%): 0.7864
+Cumulative recorded-equity change (%): 0.7807
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: AIG
