@@ -271,6 +271,32 @@ def test_monitor_noop_stays_local(tmp_path, monkeypatch):
     assert calls[0][0] == ["python", "agent/position_monitor.py"]
 
 
+@pytest.mark.parametrize('changed', [False, True])
+def test_monitor_heartbeat_content_disambiguates_coalesced_mtime(tmp_path, monkeypatch, changed):
+    monkeypatch.setattr(runtime, 'REPO', tmp_path)
+    monkeypatch.setattr(runtime, 'STATE', tmp_path / 'state')
+    tracker=tmp_path/'tracker.xlsx'
+    tracker.write_bytes(b'unchanged portfolio')
+    monkeypatch.setattr(runtime,'TRACKER',tracker)
+    heartbeat=runtime.STATE/'monitor/latest_status.json'
+    heartbeat.parent.mkdir(parents=True)
+    heartbeat.write_text(json.dumps(dict(status='MONITOR_OK',event_count=0,run_id='previous')))
+    stamp=heartbeat.stat()
+    monkeypatch.setattr(runtime,'require_live_preflight',lambda:None)
+    def worker(*args,**kwargs):
+        if changed:
+            heartbeat.write_text(json.dumps(dict(status='MONITOR_OK',event_count=0,run_id='current')))
+            os.utime(heartbeat,ns=(stamp.st_atime_ns,stamp.st_mtime_ns))
+    monkeypatch.setattr(runtime,'worker',worker)
+    monkeypatch.setattr(runtime,'persist',lambda *_:pytest.fail('No-op should not persist'))
+    if changed:
+        runtime.execute('monitor')
+    else:
+        with pytest.raises(RuntimeError,match='fresh heartbeat'):
+            runtime.execute('monitor')
+    assert tracker.read_bytes()==b'unchanged portfolio'
+
+
 def test_scanner_cannot_notify_if_persistence_fails(tmp_path, monkeypatch):
     monkeypatch.setattr(runtime, "REPO", tmp_path)
     monkeypatch.setattr(runtime, "STATE", tmp_path / "state")
