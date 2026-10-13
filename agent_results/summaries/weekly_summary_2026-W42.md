@@ -1,30 +1,30 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 41
-Tickers scanned: 7377
+Total scans: 42
+Tickers scanned: 7557
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2791
-WATCH_REVIEW unique tickers: 169
+WATCH_REVIEW: 2834
+WATCH_REVIEW unique tickers: 179
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2791
-SKIP: 4504
-NO_TRADE: 4054
+WATCH: 2834
+SKIP: 4639
+NO_TRADE: 4186
 Realized PnL: 61.76
-Unrealized PnL: 150.41
-Portfolio value: 100538.18
+Unrealized PnL: 251.14
+Portfolio value: 100638.91
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.5382
+Cumulative recorded-equity change (%): 0.6389
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
 Best shadow strategy: FIB_STOP_100_ATR
-Worst shadow strategy: VWAP_RECLAIM
+Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
 - FIB_STOP_075_ATR: 29
@@ -36,6 +36,7 @@ Shadow would-buy counts:
 
 Top rejected candidates:
 - HIMS: WATCH score=0.6084 reason=WATCH: Technical setup detected, but weighted risk/reward 1.38 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.03.
+- EQT: WATCH score=0.5837 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
 - CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - ADM: WATCH score=0.5442 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
@@ -44,7 +45,6 @@ Top rejected candidates:
 - JBL: WATCH score=0.5162 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - CHD: WATCH score=0.5095 reason=WATCH: Technical setup detected, but weighted risk/reward 1.97 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.17.
 - HALO: WATCH score=0.509 reason=WATCH: Technical setup detected, but weighted risk/reward 1.68 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.23.
-- DBX: WATCH score=0.5062 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.15.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
