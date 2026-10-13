@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 36
-Tickers scanned: 6477
+Total scans: 37
+Tickers scanned: 6657
 BUY_SIMULATED: 1
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 2426
+WATCH_REVIEW: 2499
 WATCH_REVIEW unique tickers: 169
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 2426
-SKIP: 3979
-NO_TRADE: 3609
+WATCH: 2499
+SKIP: 4084
+NO_TRADE: 3698
 Realized PnL: 61.76
-Unrealized PnL: 269.69
-Portfolio value: 100657.46
+Unrealized PnL: 231.69
+Portfolio value: 100619.46
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.6575
+Cumulative recorded-equity change (%): 0.6195
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
