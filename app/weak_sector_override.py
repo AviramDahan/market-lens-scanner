@@ -654,6 +654,104 @@ def _outcome_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _gate_diagnostics(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    """Explain stored checks without changing their eligibility or evidence.
+
+    A zero-sized rejected base candidate is not an executable proposal. Its
+    downstream zero-cost checks cannot establish cash/exposure/heat capacity.
+    """
+    counts: dict[str, Counter] = defaultdict(Counter)
+    other_reasons: Counter = Counter()
+    rejected = [
+        row for row in observations
+        if row.get("cohort") == "WEAK_SIGNAL" and row.get("signal_eligible") is not True
+    ]
+    for row in rejected:
+        checks = {
+            check["name"]: check.get("status", "UNASSESSABLE")
+            for check in row.get("gate_evidence") or []
+            if isinstance(check, dict) and check.get("name")
+        }
+        for reason in row.get("ineligibility_reasons") or []:
+            prefix, separator, name = str(reason).partition(":")
+            if separator and prefix in {"FAIL", "UNASSESSABLE"}:
+                checks.setdefault(name, prefix)
+            else:
+                other_reasons[str(reason)] += 1
+        if not checks:
+            counts["UNASSESSABLE"]["gate_evidence"] += 1
+        sizing = row.get("sizing_snapshot") or {}
+        zero_size = all(
+            _number(sizing.get(key)) == 0
+            for key in ("quantity", "cash_out", "risk_amount")
+        )
+        rejected_before_sizing = checks.get("base_candidate") == "FAIL" and zero_size
+        for name, status in checks.items():
+            if name == "sector_regime":
+                continue
+            if rejected_before_sizing and name in {
+                "position_sizing", "cash_capacity", "portfolio_exposure", "portfolio_heat",
+            }:
+                status = "NOT_ASSESSED_AFTER_BASE_REJECTION"
+            elif name == "cash_capacity" and status == "FAIL":
+                cost = _number(sizing.get("cash_out"))
+                cash = _number(sizing.get("cash_available"))
+                # A shortage requires a positive proposal and a known balance.
+                if cost is None or cash is None or cost <= 0 or cash >= cost:
+                    status = "UNASSESSABLE"
+            if status not in {"PASS", "FAIL", "UNASSESSABLE", "NOT_ASSESSED_AFTER_BASE_REJECTION"}:
+                status = "UNASSESSABLE"
+            counts[status][name] += 1
+    return {
+        "rejected_weak_observation_count": len(rejected),
+        "failed_gate_counts": dict(counts["FAIL"].most_common()),
+        "not_assessed_gate_counts": dict(counts["NOT_ASSESSED_AFTER_BASE_REJECTION"].most_common()),
+        "unassessable_gate_counts": dict(counts["UNASSESSABLE"].most_common()),
+        "passed_gate_counts": dict(counts["PASS"].most_common()),
+        "other_rejection_reasons": dict(other_reasons.most_common()),
+        "counts_overlap": True,
+        "classification_is_reporting_only": True,
+    }
+
+
+def _collection_coverage(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    dates = sorted({str(row["session_date"]) for row in observations if row.get("session_date")})
+    timestamps = sorted(
+        (str(row["timestamp"]) for row in observations if row.get("timestamp")),
+        key=parse_timestamp,
+    )
+    return {
+        "first_session_date": dates[0] if dates else None,
+        "last_session_date": dates[-1] if dates else None,
+        "trading_days_with_observations": len(dates),
+        "first_observation": timestamps[0] if timestamps else None,
+        "last_observation": timestamps[-1] if timestamps else None,
+    }
+
+
+def _measurement_cohorts(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    groups: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
+    for row in sorted(observations, key=lambda item: parse_timestamp(item.get("timestamp"))):
+        version = str(row.get("measurement_version") or "active_path_v1")
+        groups[version][row.get("signal_id") or str(id(row))] = row
+    result = {}
+    for version, unique in sorted(groups.items()):
+        rows = list(unique.values())
+        weak = [row for row in rows if row.get("cohort") == "WEAK_SIGNAL"]
+        strong = [row for row in rows if row.get("cohort") == "STRONG_CONTROL"]
+        result[version] = {
+            "unique_opportunity_count": len(rows),
+            "weak_observation_count": len(weak),
+            "strong_observation_count": len(strong),
+            "qualifying_signal_count": sum(row.get("signal_eligible") is True for row in weak),
+            "eligible_control_count": sum(row.get("control_eligible") is True for row in strong),
+            "collection_coverage": _collection_coverage(rows),
+            "weak_collection_coverage": _collection_coverage(weak),
+            "gate_diagnostics": _gate_diagnostics(weak),
+        }
+    return result
+
+
 def build_measurement_summary(
     observations: list[dict[str, Any]], bars_by_ticker: dict[str, Any] | None = None
 ) -> dict[str, Any]:
@@ -723,6 +821,7 @@ def build_measurement_summary(
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "experiment": EXPERIMENT_NAME,
         "version": EXPERIMENT_VERSION,
+        "reporting_schema_version": "weak_sector_report_v2",
         "mode": "READ_ONLY_SIGNAL_MEASUREMENT",
         "active_trading_logic_changed": False,
         "portfolio_return_claimed": False,
@@ -733,6 +832,8 @@ def build_measurement_summary(
             "outcomes": "Independent signal replay with stop-first same-bar ordering; results are not portfolio returns.",
             "comparison": "All eligible STRONG-sector controls with the same setup, market regime and pre-recorded setup-score bucket.",
             "measurement_revisions": "Corrected v2 measures preliminary sizing on an isolated copy while retaining the WEAK risk blocker. It supersedes an old measurement of the same opportunity, without rewriting history.",
+            "gate_reporting": "Raw evidence and eligibility are unchanged. Zero sizing after base rejection is not assessed, not a cash shortage. Gate counts overlap.",
+            "cohort_reporting": "Per-version opportunity counts can overlap; they must not be summed. Combined totals prefer corrected evidence.",
         },
         "data_quality_warnings": [
             "Legacy weak-sector observations could stop before sizing and other gates were evaluated; their zero eligible signals are not evidence that no opportunity existed."
@@ -747,7 +848,12 @@ def build_measurement_summary(
             item.get("measurement_version", "active_path_v1") for item in applicable_rows
         )),
         "qualifying_signal_count": len(signals),
+        "eligible_control_count": len(all_controls),
         "matched_control_count": len(controls),
+        "unmatched_control_count": len(all_controls) - len(controls),
+        "collection_coverage": _collection_coverage(applicable_observations),
+        "measurement_cohorts": _measurement_cohorts(applicable_rows),
+        "gate_diagnostics": _gate_diagnostics(applicable_observations),
         "weak_ineligibility_reasons": dict(ineligible.most_common()),
         "signal_results": _outcome_summary(signal_rows),
         "control_results": _outcome_summary(control_rows),
@@ -780,6 +886,27 @@ def _observation_applicable(item: dict[str, Any]) -> bool:
 def measurement_summary_markdown(summary: dict[str, Any]) -> str:
     progress = summary["review_progress"]
     requirements = summary["review_requirements"]
+    coverage = summary.get("collection_coverage") or {}
+    diagnostics = summary.get("gate_diagnostics")
+    diagnostic_lines = ["Gate classification is unavailable in this report."] if diagnostics is None else [
+        "- Failed non-sector checks: " + json.dumps(diagnostics["failed_gate_counts"], sort_keys=True),
+        "- Not assessed after base rejection: " + json.dumps(diagnostics["not_assessed_gate_counts"], sort_keys=True),
+        "- Insufficient evidence: " + json.dumps(diagnostics["unassessable_gate_counts"], sort_keys=True),
+    ]
+    cohort_lines = []
+    for version, cohort in (summary.get("measurement_cohorts") or {}).items():
+        weak_coverage = cohort["weak_collection_coverage"]
+        cohort_lines.extend([
+            f"### {version}",
+            "",
+            f"- WEAK observations: {cohort['weak_observation_count']}; eligible signals: {cohort['qualifying_signal_count']}.",
+            f"- STRONG observations: {cohort['strong_observation_count']}; eligible controls before matching: {cohort['eligible_control_count']}.",
+            f"- WEAK collection: {weak_coverage['first_session_date']} to {weak_coverage['last_session_date']}; observation days: {weak_coverage['trading_days_with_observations']}.",
+            "- Failed non-sector checks: " + json.dumps(cohort["gate_diagnostics"]["failed_gate_counts"], sort_keys=True),
+            "- Not assessed after base rejection: " + json.dumps(cohort["gate_diagnostics"]["not_assessed_gate_counts"], sort_keys=True),
+            "- Insufficient evidence: " + json.dumps(cohort["gate_diagnostics"]["unassessable_gate_counts"], sort_keys=True),
+            "",
+        ])
     return "\n".join(
         [
             "# WEAK_SECTOR_OVERRIDE_V1 Measurement",
@@ -787,11 +914,15 @@ def measurement_summary_markdown(summary: dict[str, Any]) -> str:
             "Read-only signal experiment. It does not modify active decisions or the paper portfolio.",
             "",
             f"- Qualifying signals: {summary['qualifying_signal_count']}",
+            f"- Eligible STRONG-sector controls before matching: {summary.get('eligible_control_count', 'unavailable')}",
             f"- Matched STRONG-sector controls: {summary['matched_control_count']}",
+            f"- Eligible controls without a matching signal stratum: {summary.get('unmatched_control_count', 'unavailable')}",
             f"- Closed signal outcomes: {progress['closed_outcomes']}",
-            f"- Trading days: {progress['trading_days']}",
+            f"- Collection days with observations: {coverage.get('trading_days_with_observations', 'unavailable')}",
+            f"- Trading days with qualifying signals (review gate): {progress['trading_days']}",
             f"- Sectors: {progress['sectors']}",
             f"- Review ready: {summary['review_ready']}",
+            "- Zero matched controls does not mean zero eligible controls. Unmatched controls are not included in comparative outcomes.",
             "",
             "## Review gates",
             "",
@@ -800,7 +931,18 @@ def measurement_summary_markdown(summary: dict[str, Any]) -> str:
             f"{progress['trading_days']}/{requirements['trading_days']}; sectors "
             f"{progress['sectors']}/{requirements['sectors']}.",
             "",
-            "## Ineligibility",
+            "## Reported gate diagnostics",
+            "",
+            "Counts overlap: one opportunity can fail multiple checks. Not-assessed checks are not independent rejections or proof of a cash shortage.",
+            "",
+            *diagnostic_lines,
+            "",
+            "## Measurement versions",
+            "",
+            "Version cohorts may cover the same opportunity; do not add their counts. Combined totals prefer corrected evidence. Original history is retained.",
+            "",
+            *cohort_lines,
+            "## Original persisted rejection labels (audit only)",
             "",
             json.dumps(summary["weak_ineligibility_reasons"], sort_keys=True),
             "",

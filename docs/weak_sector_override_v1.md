@@ -111,3 +111,62 @@ The original rows are retained. Summary comparisons count each opportunity once,
 preferring corrected evidence where available, and warn about remaining legacy
 observations. No historical confirmation or executable sizing is invented.
 Existing review requirements and the October 13 reminder remain unchanged.
+
+## Report clarification (2026-10-13)
+
+`reporting_schema_version=weak_sector_report_v2` is an additive reporting change,
+not a new measurement policy. The evaluator, eligibility, frozen trade plans,
+active decisions, reminder due date/delivery key, portfolio and review gates are
+unchanged. The report never rewrites or re-seals persisted observations.
+
+The JSON/Markdown summary and reminder formatter now distinguish:
+
+- `gate_diagnostics.failed_gate_counts`: recorded failed non-sector checks, excluding the
+  downstream zero-sized checks described below. Counts overlap, not distinct
+  rejected trades.
+- `not_assessed_gate_counts`: sizing, cash, exposure and heat checks for a failed
+  base candidate whose recorded quantity, cost and risk are all zero. There is
+  no executable proposal against which to assess those capacities. This is not
+  evidence that the account ran out of cash or exceeded exposure/heat limits.
+- `unassessable_gate_counts`: insufficient evidence. A reported cash failure is
+  treated as an actual shortage only when recorded positive cost exceeds known
+  cash; missing balances or proposals are not invented.
+- `weak_ineligibility_reasons`: the original rejection labels remain available
+  for audit/backward compatibility, even when the reporting classification differs.
+- `measurement_cohorts`: independent, deduplicated legacy/corrected-version
+  cohorts, including WEAK/STRONG counts, collection periods and gate diagnostics.
+  Their opportunity counts may overlap and must not be added. The combined
+  comparison still prefers corrected evidence for the same opportunity.
+- `eligible_control_count`, `matched_control_count`, `unmatched_control_count`:
+  available STRONG controls versus those matching qualifying WEAK signals.
+  Unmatched controls are not inserted into comparative outcome statistics.
+- `collection_coverage`: days with observations, kept separate from the review
+  gate's days with qualifying signals. Neither replaces the other.
+
+Reclassification is diagnostic only: a formerly ineligible or unassessable
+observation never becomes a qualifying signal because of the report change.
+Closed, censored-open and unassessable outcomes retain their existing semantics.
+The completed one-time reminder is not resent, and no live test message is sent.
+
+Isolated QA:
+
+```powershell
+python -m pytest -q tests/test_weak_sector_override.py tests/test_weak_sector_review_telegram.py
+```
+
+To inspect saved data without market downloads or sending Telegram messages,
+write summaries to a separate directory:
+
+```powershell
+python agent/weak_sector_override_summary.py --skip-market-data --output-dir .runtime/weak-sector-report-qa
+```
+
+Validation on 2026-10-13: 740 tests passed, including 16 added regression cases.
+The new CLI report and an unsent Telegram preview were exercised on a separate
+copy of 776 production observations. Compared with the previous code, all 20
+non-volatile original summary fields and the original methodology entries were
+identical; source observations and their file hash were unchanged. In that copy,
+237 zero-sized cash checks were classified as not assessed, 5 eligible controls
+were visible separately from 0 matched controls, and the corrected cohort had 23
+WEAK observations over 3 observation days. No market data download, portfolio
+change, live notification or deployment was performed by this QA.

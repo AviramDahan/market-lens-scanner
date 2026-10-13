@@ -164,7 +164,7 @@ def test_closed_open_and_unassessable_outcomes_are_distinct() -> None:
     }
     message = review.format_review(rows, summary, now=clock(), latest_run=None)
     assert "אותות: סגורות 1, פתוחות/מצונזרות 1, ללא נתוני תוצאה מספיקים 1" in message
-    assert "ביקורת: סגורות 0, פתוחות/מצונזרות 2" in message
+    assert "ביקורת מותאמת: סגורות 0, פתוחות/מצונזרות 2" in message
     assert "נתוני שוק חסרים (מספר טיקרים: 1)" in message
 
 
@@ -215,3 +215,42 @@ def test_workflow_has_unconditional_due_check_and_serialized_delivery() -> None:
     assert "cancel-in-progress: false" in workflow
     assert "market-lens-agent.yml" not in workflow
     assert "MARKET_LENS_TELEGRAM_CHAT_ID" in workflow
+
+
+def test_formatted_report_separates_cash_dependencies_versions_and_controls() -> None:
+    from app.weak_sector_override import build_measurement_summary
+
+    weak = {
+        "signal_id": "weak", "timestamp": "2026-10-02T14:30:00",
+        "session_date": "2026-10-02", "applicable": True,
+        "cohort": "WEAK_SIGNAL", "signal_eligible": False,
+        "measurement_version": "sector_gate_counterfactual_v2",
+        "sizing_snapshot": {"quantity": 0, "cash_out": 0, "risk_amount": 0, "cash_available": 90_000},
+        "ineligibility_reasons": ["FAIL:base_candidate", "FAIL:cash_capacity", "FAIL:position_sizing", "FAIL:setup_score"],
+    }
+    strong = {
+        "signal_id": "control", "timestamp": "2026-10-02T14:30:00",
+        "session_date": "2026-10-02", "applicable": True,
+        "cohort": "STRONG_CONTROL", "control_eligible": True,
+    }
+    rows = [weak, strong]
+    summary = build_measurement_summary(rows)
+    message = review.format_review(rows, summary, now=clock(), latest_run=None)
+
+    assert "ביקורת כשירה לפני התאמה: 1; ללא התאמה לאות כשיר: 1" in message
+    assert "קבוצת ביקורת מותאמת: 0" in message
+    assert "ביקורת מותאמת: אין מדגם כשיר" in message
+    assert "מדידה מתוקנת: 1 תצפיות סקטור חלש, 1 ימי תצפיות, 0 אותות כשירים" in message
+    assert "לא נבדקו מול עסקה ישימה אחרי פסילה מוקדמת" in message
+    assert "אינם הוכחה למחסור במזומן" in message
+    assert "FAIL:cash_capacity" not in message
+    assert "ימי מסחר עם אותות כשירים לצורך סף הבחינה: 0/20" in message
+    assert "ספירות הגרסאות עשויות לחפוף" in message
+
+
+def test_formatted_report_does_not_claim_zero_controls_when_count_is_missing() -> None:
+    summary = {"qualifying_signal_count": 0, "matched_control_count": 0, "review_ready": False}
+    message = review.format_review([], summary, now=clock(), latest_run=None)
+
+    assert "ביקורת כשירה לפני התאמה: לא זמין" in message
+    assert "סיווג הפסילות אינו זמין" in message
