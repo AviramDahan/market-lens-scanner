@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-12T21:30:00+00:00",
+  "read_only": true,
+  "portfolio_restatement": false,
+  "annotations": [
+    {
+      "trade_id": "20261008_190018-TRGP",
+      "ticker": "TRGP",
+      "action": "EXIT_STOP",
+      "timestamp": "2026-10-09T00:20:03",
+      "status": "CONFIRMED_STALE_PRICE_SOURCE",
+      "recorded_pnl": -106.4,
+      "execution_reference": 283.96,
+      "planned_stop": 286.5682,
+      "archived_quote_price": 288.49,
+      "source_chart": "agent_results/charts/market_lens_agent_20261009_001515_trgp.png",
+      "previous_session": "2026-10-07",
+      "before_recorded_exit": {
+        "ticker": "TRGP",
+        "status": "HOLD",
+        "current_price": 288.49,
+        "event": null,
+        "error": ""
+      },
+      "later_counterfactual": {
+        "ticker": "TRGP",
+        "status": "EVENT",
+        "current_price": 286.5,
+        "event": {
+          "ticker": "TRGP",
+          "action": "EXIT_STOP",
+          "triggered_at": "2026-10-09T19:47:00+00:00",
+          "trigger_price": 286.0006,
+          "high": 286.59,
+          "low": 286.5,
+          "close": 286.5,
+          "quantity": 17,
+          "cash_in": 4862.01,
+          "note": "Stop loss touched by intraday low.",
+          "trade_id": "20261008_190018-TRGP",
+          "execution_details": {
+            "execution_model_version": "costed_paper_v1",
+            "exit_trigger_price": 286.5682,
+            "exit_reference_price": 286.54998779296875,
+            "exit_execution_price": 286.0006,
+            "exit_cost_per_share": 0.5494
+          }
+        },
+        "error": ""
+      },
+      "coverage": {
+        "first_bar": "2026-10-08T12:21:00+00:00",
+        "last_bar": "2026-10-12T20:56:00+00:00",
+        "interval": "1m"
+      },
+      "reason": "Technical setup price matched the previous-session close; archived quote was above the stop."
+    },
+    {
+      "trade_id": "20261009_173018-TGTX",
+      "ticker": "TGTX",
+      "action": "EXIT_STOP",
+      "timestamp": "2026-10-10T00:20:00",
+      "status": "CONFIRMED_STALE_PRICE_SOURCE",
+      "recorded_pnl": -149.07,
+      "execution_reference": 53.34,
+      "planned_stop": 53.6524,
+      "archived_quote_price": 55.05,
+      "source_chart": "agent_results/charts/market_lens_agent_20261010_001526_tgtx.png",
+      "previous_session": "2026-10-08",
+      "before_recorded_exit": {
+        "ticker": "TGTX",
+        "status": "HOLD",
+        "current_price": 55.37,
+        "event": null,
+        "error": ""
+      },
+      "later_counterfactual": {
+        "ticker": "TGTX",
+        "status": "HOLD",
+        "current_price": 54.9363,
+        "event": null,
+        "error": ""
+      },
+      "coverage": {
+        "first_bar": "2026-10-08T08:01:00+00:00",
+        "last_bar": "2026-10-12T21:10:00+00:00",
+        "interval": "1m"
+      },
+      "reason": "Technical setup price matched the previous-session close; archived quote was above the stop."
+    },
+    {
+      "trade_id": "20261009_190021-PFE",
+      "ticker": "PFE",
+      "action": "EXIT_STOP",
+      "timestamp": "2026-10-10T00:20:00",
+      "status": "CONFIRMED_STALE_PRICE_SOURCE",
+      "recorded_pnl": -68.64,
+      "execution_reference": 27.82,
+      "planned_stop": 27.9217,
+      "archived_quote_price": 28.27,
+      "source_chart": "agent_results/charts/market_lens_agent_20261010_001526_pfe.png",
+      "previous_session": "2026-10-08",
+      "before_recorded_exit": {
+        "ticker": "PFE",
+        "status": "HOLD",
+        "current_price": 28.2667,
+        "event": null,
+        "error": ""
+      },
+      "later_counterfactual": {
+        "ticker": "PFE",
+        "status": "HOLD",
+        "current_price": 28.38,
+        "event": null,
+        "error": ""
+      },
+      "coverage": {
+        "first_bar": "2026-10-08T08:00:00+00:00",
+        "last_bar": "2026-10-12T21:19:37+00:00",
+        "interval": "1m"
+      },
+      "reason": "Technical setup price matched the previous-session close; archived quote was above the stop."
+    }
+  ],
+  "affected_recorded_pnl": -324.11,
+  "qualified_cohort": {
+    "closed_trades": 10,
+    "unique_tickers": 8,
+    "wins": 1,
+    "losses": 9,
+    "net_pnl": -1080.08,
+    "modeled_costs": 96.02,
+    "profit_factor": 0.0541
+  },
+  "qualified_cohort_excluding_flagged_for_diagnosis_only": {
+    "closed_trades": 7,
+    "unique_tickers": 5,
+    "wins": 1,
+    "losses": 6,
+    "net_pnl": -755.97,
+    "modeled_costs": 49.94,
+    "profit_factor": 0.0755
+  },
+  "neutral_pilot_research": {
+    "sample_status": "INCONCLUSIVE_NEEDS_CLEAN_FORWARD_SAMPLE",
+    "setup_types": [
+      "Fib 61.8 Confluence Buy Zone"
+    ],
+    "regimes": [
+      "NEUTRAL"
+    ],
+    "confirmation_age_observations": 10,
+    "confirmation_closed_age_over_60_minutes": 6,
+    "average_confirmation_closed_age_minutes": 46.69,
+    "recommendation": "Fix execution validity first; compare confirmation freshness and Fib stop variants in shadow only."
+  },
+  "limitations": [
+    "Later counterfactuals are independent trade observations, not portfolio returns.",
+    "No closed outcome is assigned to a still-open counterfactual.",
+    "Missing bar evidence is not interpreted as no TP/SL activity.",
+    "Re-fetched Yahoo bars are corroboration, not an archived broker execution feed.",
+    "Daily-bar MFE/MAE includes entire entry/exit days and cannot validate entry timing.",
+    "The legacy cohort has different periods and execution costs; this is not a causal version comparison."
+  ],
+  "source_tracker_sha256": "404e18f0664263275a7021e565c8c24ab7589ec810bd207d0f5c7089d76a5028",
+  "source_tracker_unchanged": true,
+  "bar_evidence_sha256": {
+    "review_bars_TRGP_1m_20261013.csv.gz": "a964a3c2ac1ed3019a988a582956b4a962388ac67e30b48aa855779094bd0b65",
+    "review_bars_TGTX_1m_20261013.csv.gz": "b53beb61a70c2d7340cce522f05b4a00d871805ed9d20f3621909483d53a762c",
+    "review_bars_PFE_1m_20261013.csv.gz": "095fdc1d3d4532ea30acd48fae0d03d894ae1bd4897e40c5df13ba1a46ec1e44"
+  }
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.candidate_selection import select_qualified_candidate
 from app.execution import sell_fill
+from app.position_market_data import fetch_position_mark
 
 import math
 from dataclasses import dataclass, field
@@ -196,7 +197,10 @@ def apply_strategy_decisions(
             running_exposure += exposure_delta
         elif candidate.ticker in simulated_positions:
             running_exposure += refresh_strategy_position(
-                simulated_positions[candidate.ticker], candidate.current_price, currency_rate
+                simulated_positions[candidate.ticker],
+                float(decision.decision_json.get("position_mark_price")
+                      or simulated_positions[candidate.ticker].get("current_price")
+                      or simulated_positions[candidate.ticker].get("entry_price")), currency_rate
             )
     return enriched
 
@@ -284,41 +288,18 @@ def decide_strategy_candidate(
 ) -> StrategyDecision:
     existing = open_positions.get(result.ticker)
     if existing:
-        quantity = int(existing.get("quantity") or 0)
-        if result.current_price <= float(existing["stop_loss"]):
-            exit_price, fill = sell_fill(existing, "EXIT_STOP", float(existing["stop_loss"]), result.current_price)
-            return StrategyDecision(
-                "EXIT_STOP",
-                "Current price reached stop loss.",
-                quantity=quantity,
-                cash_in_ils=round(quantity * exit_price * currency_rate, 2),
-                execution_price=exit_price,
-                decision_json=fill,
-            )
-        target_1 = float(existing.get("target_1") or 0)
-        target_2 = float(existing.get("target_2") or 0)
-        if target_2 > 0 and result.current_price >= target_2:
-            exit_price, fill = sell_fill(existing, "TAKE_PROFIT", target_2)
-            return StrategyDecision(
-                "TAKE_PROFIT",
-                "Target 2 reached; close remaining simulated position.",
-                quantity=quantity,
-                cash_in_ils=round(quantity * exit_price * currency_rate, 2),
-                execution_price=exit_price,
-                decision_json=fill,
-            )
-        if target_1 > 0 and result.current_price >= target_1 and not existing.get("partial_taken"):
-            partial_qty = max(1, quantity // 2)
-            exit_price, fill = sell_fill(existing, "TAKE_PARTIAL_PROFIT", target_1)
-            return StrategyDecision(
-                "TAKE_PARTIAL_PROFIT",
-                "Target 1 reached; take partial simulated profit and move stop to breakeven.",
-                quantity=partial_qty,
-                cash_in_ils=round(partial_qty * exit_price * currency_rate, 2),
-                execution_price=exit_price,
-                decision_json=fill,
-            )
-        return StrategyDecision("HOLD", "Existing simulated position remains open.")
+        # A daily setup price can roll back to yesterday's close after midnight.
+        # Only the monitor replays TP/SL touches and owns lifecycle ledger writes.
+        try:
+            mark = fetch_position_mark(result.ticker)
+        except Exception as exc:
+            mark = {"position_market_data_status": "DATA_ERROR",
+                    "position_market_data_reason": str(exc),
+                    "position_execution_owner": "POSITION_MONITOR_COMPLETED_BARS"}
+        reason = "HOLD: TP/SL execution belongs to the completed-bar position monitor; setup price is not an execution quote."
+        if mark["position_market_data_status"] != "VALIDATED":
+            reason += " Intraday mark unavailable; prior portfolio mark preserved."
+        return StrategyDecision("HOLD", reason, decision_json=mark)
 
     if result.setup_type.upper().replace(" ", "_") in {"NO_TRADE", "NO-TRADE"} or result.setup_type == "No Trade":
         return StrategyDecision("SKIP", "No Trade result.")

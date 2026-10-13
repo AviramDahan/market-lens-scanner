@@ -129,13 +129,14 @@ def test_invalid_hold_price_does_not_mutate_position(price):
 
 
 def test_user_processes_existing_first_but_preserves_display_order(monkeypatch):
+    monkeypatch.setattr(strategy, "fetch_position_mark", lambda _: {"position_market_data_status": "VALIDATED", "position_mark_price": 120.})
     monkeypatch.setattr(strategy, "build_agent_run_context", lambda **_: context())
     monkeypatch.setattr(strategy, "base_universe", lambda: {})
     observed = []
     def final(**kwargs):
         observed.append(kwargs["result"].ticker)
         if kwargs["result"].ticker == "NEW":
-            assert kwargs["cash_available"] == 1200.
+            assert kwargs["cash_available"] == 0.
         return {"final_action": kwargs["initial_action"], "reason": "fixture"}
     monkeypatch.setattr(strategy, "evaluate_agent_candidate", final)
     rows = [candidate("NEW", 100.), candidate("OLD", 120.)]
@@ -145,8 +146,9 @@ def test_user_processes_existing_first_but_preserves_display_order(monkeypatch):
     assert [r.ticker for r in output] == ["NEW", "OLD"]
 
 
-@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 1200., 0., 12), (110., 550., 550., 5), (105., 0., 1050., 0)])
-def test_user_next_candidate_sees_exit_proceeds_without_mutating_input(monkeypatch, price, cash, exposure, quantity):
+@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 0., 1200., 0), (110., 0., 1100., 0), (105., 0., 1050., 0)])
+def test_user_does_not_invent_exit_proceeds_from_setup_price(monkeypatch, price, cash, exposure, quantity):
+    monkeypatch.setattr(strategy, "fetch_position_mark", lambda _: {"position_market_data_status": "VALIDATED", "position_mark_price": price})
     original = {"OLD": position()}
     before = deepcopy(original)
     observed = []
@@ -169,8 +171,9 @@ def test_user_next_candidate_sees_exit_proceeds_without_mutating_input(monkeypat
     assert original == before
 
 
-@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 1200., 0., 12), (110., 550., 550., 5), (105., 0., 1050., 0)])
-def test_agent_next_candidate_sees_exit_proceeds(monkeypatch, tmp_path, price, cash, exposure, quantity):
+@pytest.mark.parametrize("price,cash,exposure,quantity", [(120., 0., 1200., 0), (110., 0., 1100., 0), (105., 0., 1050., 0)])
+def test_agent_does_not_invent_exit_proceeds_from_setup_price(monkeypatch, tmp_path, price, cash, exposure, quantity):
+    monkeypatch.setattr(strategy, "fetch_position_mark", lambda _: {"position_market_data_status": "VALIDATED", "position_mark_price": price})
     settings = SimpleNamespace(excel_path=tmp_path / "unused.xlsx", min_rr=2,
                                analysis_period="6mo", universe="smart", tickers=[])
     monkeypatch.setattr(agent, "load_workbook", lambda _: object())

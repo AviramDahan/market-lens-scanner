@@ -6,6 +6,7 @@ import pytest
 
 from agent import market_lens_ui_agent as scanner, position_monitor, send_buy_notifications
 from app import telegram_notifications as telegram
+from app.execution import sell_fill
 
 
 def settings(tmp_path):
@@ -25,9 +26,14 @@ def exit_decision(price, quantity=10):
     original = copy.deepcopy(positions['TEST'])
     # A scanner may report NO_TRADE after entry: exit levels belong to the lot.
     result = scanner.SetupResult('TEST', 'No Trade', 0, price, None, None, None, None, None, 0, '', '')
-    decision = scanner.decide(result, open_positions=positions, cash=90000, exposure=1000, usd_ils=1,
-                              max_position=10000, max_total_exposure=40000, max_risk=1000, min_rr=2,
-                              sector_map={}, sector_health={})
+    # Retain retry compatibility for already persisted scanner exit payloads.
+    # New scans no longer execute exits from a technical setup price.
+    action = 'EXIT_STOP' if price < 95 else 'TAKE_PROFIT' if price >= 120 else 'TAKE_PARTIAL_PROFIT'
+    trigger = 95.0 if action == 'EXIT_STOP' else 120.0 if action == 'TAKE_PROFIT' else 110.0
+    fill, details = sell_fill(original, action, trigger, price)
+    size = max(1, quantity // 2) if action == 'TAKE_PARTIAL_PROFIT' else quantity
+    decision = scanner.Decision(action, 'Persisted exit compatibility fixture', quantity=size,
+                               cash_in_ils=size * fill, execution_price=fill, decision_json=details)
     scanner.capture_position_exit_plan(decision.decision_json, positions['TEST'])
     scanner.apply_exit_decision(positions, result, decision, 1)
     return original, positions, result, decision
@@ -38,7 +44,7 @@ def exit_decision(price, quantity=10):
     (111, 'TAKE_PARTIAL_PROFIT', 'TP1 | PARTIAL SOLD', 2),
     (121, 'TAKE_PROFIT', 'TP2 | POSITION CLOSED', 1),
 ])
-def test_real_scanner_exit_path_produces_alert_after_position_mutation(tmp_path, price, action, title, count):
+def test_persisted_scanner_exit_payload_produces_alert_after_position_mutation(tmp_path, price, action, title, count):
     original, positions, result, decision = exit_decision(price)
     before = copy.deepcopy((positions, result, decision))
     records = scanner.build_buy_notification_records([(result, decision)], open_positions=positions,

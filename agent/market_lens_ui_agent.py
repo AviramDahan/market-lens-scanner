@@ -1346,6 +1346,9 @@ def update_workbook(
             decision.feedback = final_reason
             decision_json.update(decision.decision_json)
             decision.decision_json = decision_json
+        if decision_json.get("position_market_data_status") == "DATA_ERROR":
+            errors.append(f"POSITION_MARK_UNAVAILABLE: {result.ticker}; prior mark preserved. "
+                          f"{decision_json.get('position_market_data_reason', '')}")
         enrich_decision_analytics(decision_json, run_id=run_id, result=result, final_action=final_action)
         if final_action in {"TAKE_PARTIAL_PROFIT", "TAKE_PROFIT", "EXIT_STOP"}:
             capture_position_exit_plan(decision_json, open_positions[result.ticker])
@@ -2480,7 +2483,10 @@ def refresh_open_position(
     usd_ils: float,
     decision: Decision | None = None,
 ) -> float:
-    exposure_delta = refresh_strategy_position(pos, result.current_price, usd_ils)
+    evidence = decision.decision_json if decision else {}
+    mark_price = float((evidence or {}).get("position_mark_price")
+                       or pos.get("current_price") or pos.get("entry_price"))
+    exposure_delta = refresh_strategy_position(pos, mark_price, usd_ils)
     if result.chart_url:
         pos["chart_url"] = result.chart_url
     if result.selection_context:
