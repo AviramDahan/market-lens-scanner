@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-13
-Total scans: 24
-Tickers scanned: 4318
+Total scans: 25
+Tickers scanned: 4498
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1440
+WATCH_REVIEW: 1482
 WATCH_REVIEW unique tickers: 146
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1440
-SKIP: 2830
-NO_TRADE: 2543
+WATCH: 1482
+SKIP: 2966
+NO_TRADE: 2676
 Realized PnL: 0.0
-Unrealized PnL: 322.24
-Portfolio value: 100710.01
-Daily recorded-equity change (%): 0.0258
+Unrealized PnL: 347.83
+Portfolio value: 100735.6
+Daily recorded-equity change (%): 0.0513
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-12
-Cumulative recorded-equity change (%): 0.71
+Cumulative recorded-equity change (%): 0.7356
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: AIG
@@ -27,10 +27,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 2
-- FIB_STOP_075_ATR: 6
+- FIB_STOP_075_ATR: 8
 - FIB_STOP_100_ATR: 1
-- FIB_STRUCTURE_STOP: 10
-- TREND_PULLBACK_RECLAIM: 20
+- FIB_STRUCTURE_STOP: 12
+- TREND_PULLBACK_RECLAIM: 22
 - VWAP_RECLAIM: 2
 
 Top rejected candidates:
@@ -42,7 +42,7 @@ Top rejected candidates:
 - BIIB: WATCH score=0.5254 reason=WATCH: Technical setup detected, but weighted risk/reward 1.21 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.84.
 - FANG: WATCH score=0.5228 reason=WATCH: Technical setup detected, but weighted risk/reward 1.82 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.53.
 - WAT: WATCH score=0.5185 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
-- MGY: WATCH score=0.5075 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
+- MGY: WATCH score=0.5128 reason=WATCH: NEUTRAL market requires setup score (0.51 < 0.55).
 - MTCH: WATCH score=0.5012 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 
 Recommendations:
