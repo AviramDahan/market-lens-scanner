@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-13
-Total scans: 5
-Tickers scanned: 900
+Total scans: 6
+Tickers scanned: 1079
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 360
-WATCH_REVIEW unique tickers: 93
+WATCH_REVIEW: 431
+WATCH_REVIEW unique tickers: 110
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 360
-SKIP: 530
-NO_TRADE: 433
+WATCH: 431
+SKIP: 636
+NO_TRADE: 523
 Realized PnL: 0.0
 Unrealized PnL: 296.22
 Portfolio value: 100683.99
@@ -35,9 +35,9 @@ Top rejected candidates:
 - QCOM: WATCH score=0.4966 reason=WATCH: Technical setup detected, but weighted risk/reward 1.84 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.39.
 - SM: WATCH score=0.4864 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
 - TRGP: WATCH score=0.4829 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
+- LITE: WATCH score=0.4718 reason=WATCH: Technical setup detected, but weighted risk/reward 1.55 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.17.
 - KO: SKIP score=0.4706 reason=SKIP: Consumer sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.03.
-- EXE: WATCH score=0.47 reason=WATCH: NEUTRAL market requires setup score (0.47 < 0.55).
-- INTC: WATCH score=0.4657 reason=WATCH: NEUTRAL market requires setup score (0.47 < 0.55).
+- NTNX: WATCH score=0.4706 reason=WATCH: Technical setup detected, but weighted risk/reward 1.83 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.23.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
