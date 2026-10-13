@@ -223,14 +223,17 @@ def execute(kind: str) -> None:
     before = set((REPO / "agent_results/runtime").glob("market_lens_agent_*.json"))
     tracker_before = file_hash(TRACKER)
     heartbeat_path = STATE / "monitor/latest_status.json"
-    heartbeat_before = heartbeat_path.stat().st_mtime_ns if heartbeat_path.exists() else None
+    heartbeat_before = (heartbeat_path.stat().st_mtime_ns, file_hash(heartbeat_path)) if heartbeat_path.exists() else None
     script = "agent/market_lens_ui_agent.py" if kind == "scanner" else "agent/position_monitor.py"
     worker(["python", script], timeout=1500 if kind == "scanner" else 840)
     if kind == "scanner":
         record = latest_scan_record(before)
         print(f"Scanner status={record['run_status']} cards={record['result_cards_read']}")
     else:
-        if not heartbeat_path.exists() or heartbeat_path.stat().st_mtime_ns == heartbeat_before:
+        # Filesystems can coalesce timestamps for rapid writes. Changed content
+        # is still a new heartbeat; unchanged content and time are not evidence.
+        if (not heartbeat_path.exists()
+                or (heartbeat_path.stat().st_mtime_ns, file_hash(heartbeat_path)) == heartbeat_before):
             raise RuntimeError("Monitor did not write a fresh heartbeat")
         heartbeat = json.loads(heartbeat_path.read_text(encoding="utf-8"))
         if heartbeat.get("status") not in {"MONITOR_OK", "MONITOR_DEGRADED"}:

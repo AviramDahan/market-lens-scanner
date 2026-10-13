@@ -21,6 +21,9 @@ If that mark is unavailable, the prior mark is preserved and the Agent records
 The monitor still uses the existing stop-first event ordering, half-position
 TP1, stop-to-entry, TP2, frozen execution costs, event cursors, writer lock,
 outbox and persistent Telegram receipts. Old scanner outboxes remain retryable.
+The host heartbeat guard compares content as well as file time: coalesced
+filesystem timestamps must not reject a genuinely updated heartbeat. A file
+whose content and timestamp both remain unchanged still fails the guard.
 Its production bar window now excludes incomplete/future bars and rejects
 regular-session observations older than 300 seconds (configurable through
 `MARKET_LENS_POSITION_BAR_MAX_AGE_SECONDS`). This is data validation, not an
