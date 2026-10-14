@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 72
-Tickers scanned: 12956
+Total scans: 73
+Tickers scanned: 13136
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 4323
-WATCH_REVIEW unique tickers: 205
+WATCH_REVIEW: 4366
+WATCH_REVIEW unique tickers: 208
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 4323
-SKIP: 8469
-NO_TRADE: 7681
-Realized PnL: 61.76
-Unrealized PnL: 173.38
-Portfolio value: 100561.15
+WATCH: 4366
+SKIP: 8604
+NO_TRADE: 7811
+Realized PnL: -36.53
+Unrealized PnL: 284.32
+Portfolio value: 100573.8
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.5611
+Cumulative recorded-equity change (%): 0.5738
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
@@ -35,16 +35,16 @@ Shadow would-buy counts:
 - VWAP_RECLAIM: 4
 
 Top rejected candidates:
+- EQT: WATCH score=0.6257 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - HIMS: WATCH score=0.6084 reason=WATCH: Technical setup detected, but weighted risk/reward 1.38 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.03.
-- EQT: WATCH score=0.5967 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - LSCC: WATCH score=0.5736 reason=WATCH: Target 1 net R/R 0.80 is below minimum 0.80; Target 2 cannot justify the entry alone.
 - DVA: WATCH score=0.5646 reason=WATCH: Normalized quality score is too low for a new entry (30.64/100).
 - CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - TPL: WATCH score=0.5501 reason=WATCH: Neutral market requires stronger normalized quality (37.30/100).
 - ADM: WATCH score=0.5442 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
+- CL: SKIP score=0.5377 reason=SKIP: Consumer sector regime is weak (21/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.15.
+- SANM: WATCH score=0.5293 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
 - IOT: WATCH score=0.528 reason=WATCH: Technical setup detected, but weighted risk/reward 1.33 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
-- BIIB: WATCH score=0.5254 reason=WATCH: Technical setup detected, but weighted risk/reward 1.21 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.84.
-- FANG: WATCH score=0.5228 reason=WATCH: Technical setup detected, but weighted risk/reward 1.82 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.53.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
