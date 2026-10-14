@@ -2200,12 +2200,14 @@ function renderActions() {
                 <img class="action-chart" src="${escapeHtml(setup.chart_url)}?v=${Date.now()}" alt="${escapeHtml(setup.ticker)} chart" loading="lazy" decoding="async" />
               </button>`
             : `<div class="action-chart missing"></div>`}
-          <div class="ticker-cell">
-            <strong>${escapeHtml(tickerLabel(setup))}</strong>
-            <span class="meta">${escapeHtml(decisionMeta(setup) || setup.sector || "Unknown")}</span>
+          <div class="action-identity">
+            <div class="ticker-cell">
+              <strong>${escapeHtml(tickerLabel(setup))}</strong>
+              <span class="meta">${escapeHtml(decisionMeta(setup) || setup.sector || "Unknown")}</span>
+            </div>
+            <span class="${actionBadgeClass(setup.action)}">${escapeHtml(setup.action || "UNKNOWN")}</span>
           </div>
-          <span class="${actionBadgeClass(setup.action)}">${escapeHtml(setup.action || "UNKNOWN")}</span>
-          <div>
+          <div class="action-details">
             <div class="setup-title-line">
               <strong>${escapeHtml(setup.setup_type || "")}</strong>
               ${entryChecklist(setup)}
@@ -2329,8 +2331,8 @@ function renderTrades() {
             <strong>${escapeHtml(tickerLabel(trade))}</strong>
             <span class="meta">${escapeHtml(tickerMeta(trade, formatDate(trade.timestamp)))}</span>
           </div>
-          <span class="${actionBadgeClass(trade.action)}">${escapeHtml(trade.action)}</span>
-          <div>
+          <span class="${actionBadgeClass(trade.action)} trade-status" data-action="${escapeHtml(trade.action)}" title="${escapeHtml(trade.action)}">${escapeHtml(String(trade.action || "UNKNOWN").replaceAll("_", " "))}</span>
+          <div class="trade-details">
             <strong>${trade.quantity} shares / ${money.format(cash)}</strong>
             <p>${escapeHtml(tradePotentialText(trade))}</p>
             ${trade.execution_data_quality ? `<p class="money-neg" title="${escapeHtml(trade.execution_data_quality.reason || "")}">Historical execution data under review</p>` : ""}

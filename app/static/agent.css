@@ -1416,7 +1416,7 @@ td {
 
 .action-row {
   display: grid;
-  grid-template-columns: 92px minmax(80px, 0.35fr) minmax(120px, 0.45fr) minmax(0, 1fr);
+  grid-template-columns: 92px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   min-height: 58px;
@@ -1426,16 +1426,63 @@ td {
   background: #fff;
 }
 
+.action-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.action-identity .ticker-cell {
+  flex: 1 1 180px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.action-identity .badge {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.action-details {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .trade-row {
   display: grid;
-  grid-template-columns: minmax(80px, 0.35fr) minmax(120px, 0.45fr) minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 170px);
+  gap: 8px 12px;
+  align-items: start;
   min-height: 58px;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+}
+
+.trade-row .ticker-cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trade-status {
+  justify-self: end;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.trade-details {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
 }
 
 .action-chart {
@@ -1695,8 +1742,10 @@ td {
 .media-modal {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 80;
   display: none;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
   padding: 28px;
   background: rgba(15, 23, 42, 0.78);
@@ -1707,8 +1756,9 @@ td {
 }
 
 .media-modal img {
-  max-width: min(1200px, 96vw);
-  max-height: 90vh;
+  min-width: 0;
+  max-width: min(1200px, 100%);
+  max-height: min(90vh, 100%);
   object-fit: contain;
   border-radius: 8px;
   background: #fff;
@@ -1738,7 +1788,7 @@ td {
 .diagnostic-modal {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 65;
   display: none;
   padding: 28px;
   background: rgba(15, 23, 42, 0.54);
