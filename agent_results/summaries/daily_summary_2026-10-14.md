@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-14
-Total scans: 18
-Tickers scanned: 3240
+Total scans: 19
+Tickers scanned: 3420
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 869
-WATCH_REVIEW unique tickers: 119
+WATCH_REVIEW: 912
+WATCH_REVIEW unique tickers: 126
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 869
-SKIP: 2324
-NO_TRADE: 2039
+WATCH: 912
+SKIP: 2460
+NO_TRADE: 2164
 Realized PnL: -225.57
-Unrealized PnL: 301.95
-Portfolio value: 100464.15
-Daily recorded-equity change (%): -0.3141
+Unrealized PnL: 302.4
+Portfolio value: 100464.6
+Daily recorded-equity change (%): -0.3137
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-13
-Cumulative recorded-equity change (%): 0.4641
+Cumulative recorded-equity change (%): 0.4646
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CLX
 Worst ticker: COKE
@@ -27,10 +27,10 @@ Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 6
-- FIB_STOP_100_ATR: 2
+- FIB_STOP_075_ATR: 7
+- FIB_STOP_100_ATR: 3
 - FIB_STRUCTURE_STOP: 4
-- TREND_PULLBACK_RECLAIM: 5
+- TREND_PULLBACK_RECLAIM: 7
 
 Top rejected candidates:
 - EQT: WATCH score=0.6257 reason=WATCH: Entry confirmation timing invalid: Confirmation uses a previous regular session; wait for a new completed confirmation.
