@@ -8,7 +8,7 @@ import os
 import re
 import tempfile
 from collections import defaultdict, deque
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 from pathlib import Path
 from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -20,6 +20,8 @@ from app.smart_universe import base_universe, company_name_for
 
 
 TRACKER_NAME = "market_lens_agent_portfolio_budget_100k.xlsx"
+SCANNER_HEALTH_STALE_MINUTES = 36 * 60
+SCANNER_HEALTH_STALE_NOTE = "Latest scanner update is older than 36 hours."
 _SECTOR_MAP: dict[str, str] | None = None
 
 
@@ -1376,8 +1378,8 @@ def build_system_health(
     notes = []
     if not latest_scan_update:
         notes.append("No scanner update found in tracker.")
-    elif scan_age is not None and scan_age > 36 * 60:
-        notes.append("Latest scanner update is older than 36 hours.")
+    elif scan_age is not None and scan_age > SCANNER_HEALTH_STALE_MINUTES:
+        notes.append(SCANNER_HEALTH_STALE_NOTE)
     try:
         tracker_mtime = datetime.utcfromtimestamp(tracker_path.stat().st_mtime).replace(microsecond=0)
     except OSError:
@@ -1403,6 +1405,43 @@ def build_system_health(
         "recent_runs_loaded": len(updates),
         "notes": notes,
     }
+
+
+def refresh_system_health_ages(
+    health: dict[str, Any], *, now: datetime | None = None,
+) -> dict[str, Any]:
+    """Recompute live ages without changing the snapshot or its source timestamps."""
+    observed_at = now or datetime.now(timezone.utc)
+    if observed_at.tzinfo is None:
+        observed_at = observed_at.replace(tzinfo=timezone.utc)
+    observed_at = observed_at.astimezone(timezone.utc)
+    refreshed = dict(health)
+    for source in ("scan", "monitor"):
+        value = health.get(f"latest_{source}_at")
+        try:
+            timestamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
+            age = max(0, int((observed_at - timestamp).total_seconds() // 60))
+        except (TypeError, ValueError, OverflowError):
+            age = None
+        refreshed[f"latest_{source}_age_minutes"] = age
+
+    # Cached staleness notes must advance with the clock too, not just their ages.
+    notes = list(health.get("notes") or [])
+    scan_age = refreshed["latest_scan_age_minutes"]
+    if scan_age is not None:
+        notes = [note for note in notes if note != SCANNER_HEALTH_STALE_NOTE]
+        if scan_age > SCANNER_HEALTH_STALE_MINUTES:
+            notes.append(SCANNER_HEALTH_STALE_NOTE)
+    refreshed["notes"] = notes
+    if health.get("status", "ok") in {"ok", "attention"}:
+        if notes:
+            refreshed["status"] = "attention"
+        elif health.get("notes"):
+            refreshed["status"] = "ok"
+    refreshed["ages_evaluated_at"] = observed_at.replace(microsecond=0).isoformat()
+    return refreshed
 
 
 def load_monitor_status(position_monitor_dir: Path) -> dict[str, Any]:
