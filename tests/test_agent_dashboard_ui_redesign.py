@@ -86,3 +86,46 @@ def test_run_strip_shows_canonical_status_and_scan_coverage() -> None:
     assert "recoveredTickers.length" in JS
     assert "Focused recovery completed; no missing cards recovered" in JS
     assert 'data-status="PARTIAL_OK"' in CSS
+
+
+def test_trade_log_separates_identity_status_and_financial_details() -> None:
+    trade_css = CSS[CSS.index(".trade-row {"):CSS.index(".action-chart {")]
+    assert "grid-template-columns: minmax(0, 1fr) minmax(0, 170px)" in trade_css
+    assert ".trade-row .ticker-cell" in trade_css
+    assert "min-width: 0" in trade_css
+    assert ".trade-status" in trade_css
+    assert "white-space: normal" in trade_css
+    assert ".trade-details" in trade_css
+    assert "grid-column: 1 / -1" in trade_css
+    trade_js = JS[JS.index("function renderTrades()"):JS.index("function renderSummary")]
+    assert 'class="trade-details"' in trade_js
+    assert 'data-action="${escapeHtml(trade.action)}"' in trade_js
+    assert '.replaceAll("_", " ")' in trade_js
+    assert "TRADES_PAGE_SIZE" in trade_js
+    assert "trade.execution_data_quality" in trade_js
+
+
+def test_actions_keep_chart_identity_and_details_in_shrinkable_tracks() -> None:
+    action_css = CSS[CSS.index(".action-row {"):CSS.index(".trade-row {")]
+    assert "grid-template-columns: 92px minmax(0, 1fr)" in action_css
+    assert ".action-identity .ticker-cell" in action_css
+    assert "min-width: 0" in action_css
+    assert "flex-wrap: wrap" in action_css
+    assert ".action-details" in action_css
+    assert "grid-column: 1 / -1" in action_css
+    action_js = JS[JS.index("function renderActions()"):JS.index("function setupMediaModal")]
+    assert 'class="action-identity"' in action_js
+    assert 'class="action-details"' in action_js
+    assert "ACTIONS_PAGE_SIZE" in action_js
+
+
+def test_chart_modal_fits_its_padded_track_and_covers_mobile_navigation() -> None:
+    media_css = CSS[CSS.index(".media-modal {"):CSS.index(".media-close {")]
+    diagnostic_css = CSS[CSS.index(".diagnostic-modal {"):CSS.index(".diagnostic-modal-panel {")]
+    assert "grid-template-columns: minmax(0, 1fr)" in media_css
+    assert "grid-template-rows: minmax(0, 1fr)" in media_css
+    assert "max-width: min(1200px, 100%)" in media_css
+    assert "max-height: min(90vh, 100%)" in media_css
+    assert "z-index: 80" in media_css
+    assert "z-index: 65" in diagnostic_css
+    assert "z-index: 60" in CSS[CSS.index("  .dashboard-nav {"):]
