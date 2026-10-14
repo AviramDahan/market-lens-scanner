@@ -1005,6 +1005,16 @@ def test_diagnostic_chart_endpoint_generates_only_for_current_diagnostic(monkeyp
 
     monkeypatch.setattr(main, "AGENT_RESULTS_DIR", tmp_path / "agent_results")
     monkeypatch.setattr(main, "DASHBOARD_SNAPSHOT_PATH", tmp_path / "agent_results" / "dashboard_snapshot.json")
+    monkeypatch.setattr(main, "CHART_DIR", tmp_path / "charts")
+    main.AGENT_RESULTS_DIR.mkdir()
+    main.DASHBOARD_SNAPSHOT_PATH.write_bytes(b'{"status":"ok","summary":{"cash_ils":100000}}')
+    original_snapshot = main.DASHBOARD_SNAPSHOT_PATH.read_bytes()
+    calls = []
+
+    def no_snapshot_write(*_args):
+        raise AssertionError("UI chart generation must not update portfolio state")
+
+    monkeypatch.setattr(main, "attach_diagnostic_chart_to_snapshot", no_snapshot_write)
     monkeypatch.setattr(
         main,
         "current_agent_dashboard",
@@ -1030,9 +1040,14 @@ def test_diagnostic_chart_endpoint_generates_only_for_current_diagnostic(monkeyp
             },
         },
     )
-    monkeypatch.setattr(main, "scan_ticker_detail", lambda *_args, **_kwargs: types.SimpleNamespace(result=FakeResult()))
+    def fake_scan(*_args, **_kwargs):
+        calls.append("scan")
+        return types.SimpleNamespace(result=FakeResult())
+
+    monkeypatch.setattr(main, "scan_ticker_detail", fake_scan)
 
     def fake_write_chart(_detail, output_dir):
+        assert output_dir == main.CHART_DIR / "agent-diagnostics"
         path = output_dir / "aaa-scan.png"
         path.write_bytes(b"png")
         return path
@@ -1046,9 +1061,65 @@ def test_diagnostic_chart_endpoint_generates_only_for_current_diagnostic(monkeyp
     assert response.status_code == 200
     payload = response.json()
     assert payload["generated"] is True
-    assert payload["chart_url"].startswith("/agent-results/charts/market_lens_diagnostic_test-run_aaa")
-    assert (tmp_path / "agent_results" / "charts" / "market_lens_diagnostic_test-run_aaa.png").exists()
+    assert payload["chart_url"].startswith("/charts/agent-diagnostics/market_lens_diagnostic_test-run_aaa")
+    assert (tmp_path / "charts" / "agent-diagnostics" / "market_lens_diagnostic_test-run_aaa.png").exists()
+    assert payload["persistence"] == "ephemeral_diagnostic_cache"
     assert blocked.status_code == 404
+    chart_static = next(route.app for route in main.app.routes if route.name == "charts")
+    monkeypatch.setattr(chart_static, "directory", str(main.CHART_DIR))
+    monkeypatch.setattr(chart_static, "all_directories", [str(main.CHART_DIR)])
+    image_response = client.get(payload["chart_url"])
+    assert image_response.status_code == 200
+    assert image_response.headers["content-type"] == "image/png"
+    assert image_response.content == b"png"
+    repeated = client.post("/agent/diagnostic-chart?ticker=AAA&diagnostic_key=WATCH_READY")
+    assert repeated.status_code == 200
+    assert repeated.json()["generated"] is False
+    assert calls == ["scan"]
+    assert main.DASHBOARD_SNAPSHOT_PATH.read_bytes() == original_snapshot
+    assert not (main.AGENT_RESULTS_DIR / "charts").exists()
+
+
+def test_diagnostic_chart_cache_failure_is_explicit_without_snapshot_write(monkeypatch, tmp_path) -> None:
+    cache = tmp_path / "charts"
+    cache.mkdir()
+    (cache / "agent-diagnostics").write_text("not a writable directory")
+    monkeypatch.setattr(main, "CHART_DIR", cache)
+    monkeypatch.setattr(main, "current_agent_dashboard", lambda: {
+        "status": "ok", "latest_run": {"run_id": "test"},
+        "decision_diagnostics": {"drilldowns": {"WATCH_READY": [{"ticker": "AAA"}]}},
+    })
+
+    def unexpected(*_args, **_kwargs):
+        raise AssertionError("No scan or snapshot write after cache failure")
+
+    monkeypatch.setattr(main, "scan_ticker_detail", unexpected)
+    monkeypatch.setattr(main, "attach_diagnostic_chart_to_snapshot", unexpected)
+    response = TestClient(main.app).post("/agent/diagnostic-chart?ticker=AAA")
+    assert response.status_code == 502
+    assert "Chart generation failed" in response.json()["detail"]
+
+
+def test_diagnostic_chart_reuses_retained_original_without_new_scan(monkeypatch, tmp_path) -> None:
+    saved = tmp_path / "agent_results/charts/original.png"
+    saved.parent.mkdir(parents=True)
+    saved.write_bytes(b"original chart")
+    monkeypatch.setattr(main, "AGENT_RESULTS_DIR", tmp_path / "agent_results")
+    monkeypatch.setattr(main, "current_agent_dashboard", lambda: {
+        "status": "ok", "latest_run": {"run_id": "test"},
+        "decision_diagnostics": {"drilldowns": {"WATCH_READY": [{"ticker": "AAA", "chart_url": "/agent-results/charts/original.png"}]}},
+    })
+
+    def unexpected(*_args, **_kwargs):
+        raise AssertionError("Retained charts must not be regenerated or rewritten")
+
+    monkeypatch.setattr(main, "scan_ticker_detail", unexpected)
+    monkeypatch.setattr(main, "attach_diagnostic_chart_to_snapshot", unexpected)
+    response = TestClient(main.app).post("/agent/diagnostic-chart?ticker=AAA")
+    assert response.status_code == 200
+    assert response.json()["generated"] is False
+    assert response.json()["chart_url"] == "/agent-results/charts/original.png"
+    assert saved.read_bytes() == b"original chart"
 
 
 def test_monitor_live_endpoint_dispatches_once_when_any_position_touches_target(monkeypatch, tmp_path) -> None:

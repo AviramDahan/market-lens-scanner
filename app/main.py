@@ -664,12 +664,14 @@ async def create_agent_diagnostic_chart(
         return {"status": "ok", "ticker": normalized_ticker, "chart_url": existing_url, "generated": False}
 
     run_id = sanitize_run_id(str((dashboard.get("latest_run") or {}).get("run_id") or "latest"))
-    chart_dir = AGENT_RESULTS_DIR / "charts"
-    chart_dir.mkdir(parents=True, exist_ok=True)
+    # UI-derived charts must not write into the portfolio's read-only state mount.
+    chart_dir = CHART_DIR / "agent-diagnostics"
     destination = chart_dir / f"market_lens_diagnostic_{run_id}_{normalized_ticker.lower()}.png"
-    chart_url = f"/agent-results/charts/{destination.name}"
+    chart_url = f"/charts/agent-diagnostics/{destination.name}"
+    created = False
     if not destination.exists():
         try:
+            chart_dir.mkdir(parents=True, exist_ok=True)
             detail = scan_ticker_detail(normalized_ticker, min_rr=min_rr, analysis_period=analysis_period)
             update: dict[str, object] = {
                 "setup_type": item.get("setup_type") or detail.result.setup_type,
@@ -691,16 +693,15 @@ async def create_agent_diagnostic_chart(
             detail.result = detail.result.model_copy(update=update)
             generated = write_scan_chart(detail, chart_dir)
             if generated != destination:
-                destination.write_bytes(generated.read_bytes())
-                try:
-                    generated.unlink()
-                except OSError:
-                    pass
+                generated.replace(destination)
+            created = True
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"Chart generation failed: {exc}") from exc
 
-    attach_diagnostic_chart_to_snapshot(normalized_ticker, chart_url)
-    return {"status": "ok", "ticker": normalized_ticker, "chart_url": chart_url, "generated": True}
+    return {
+        "status": "ok", "ticker": normalized_ticker, "chart_url": chart_url,
+        "generated": created, "persistence": "ephemeral_diagnostic_cache",
+    }
 
 
 def find_diagnostic_item(dashboard: dict, *, ticker: str, diagnostic_key: str) -> dict | None:
