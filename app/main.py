@@ -28,6 +28,7 @@ from app.agent_dashboard import (
     load_monitor_status,
     load_period_summary,
     parse_timestamp,
+    refresh_system_health_ages,
     sanitize_dashboard_media_urls,
     to_float,
     with_position_calculations,
@@ -175,6 +176,7 @@ def current_agent_dashboard() -> dict:
             if isinstance(dashboard, dict) and dashboard.get("status") == "ok":
                 asset_sync_status = sync_dashboard_snapshot_assets_if_enabled(PROJECT_ROOT, dashboard)
                 dashboard = enrich_agent_dashboard_snapshot(dashboard)
+                dashboard["system_health"] = refresh_system_health_ages(dashboard.get("system_health") or {})
                 if not merge_host_monitor_health(dashboard):
                     merge_live_monitor_health(dashboard)
                     merge_execution_monitor_health(dashboard)
@@ -182,7 +184,8 @@ def current_agent_dashboard() -> dict:
                 return dashboard
         except Exception:
             pass
-    dashboard = cached_agent_dashboard()
+    dashboard = dict(cached_agent_dashboard())
+    dashboard["system_health"] = refresh_system_health_ages(dashboard.get("system_health") or {})
     if not merge_host_monitor_health(dashboard):
         merge_live_monitor_health(dashboard)
         merge_execution_monitor_health(dashboard)
