@@ -130,6 +130,21 @@ def test_null_notes_and_existing_failure_status_are_safe():
     assert health["notes"] is None
 
 
+@pytest.mark.parametrize("stamp", [None, "", "invalid", 0])
+def test_unknown_scan_timestamp_cannot_clear_existing_stale_warning(stamp):
+    health = {"status": "attention", "notes": [SCANNER_HEALTH_STALE_NOTE], "latest_scan_at": stamp}
+    refreshed = refresh_system_health_ages(health, now=datetime(2026, 10, 14))
+    assert refreshed["latest_scan_age_minutes"] is None
+    assert refreshed["notes"] == [SCANNER_HEALTH_STALE_NOTE]
+    assert refreshed["status"] == "attention"
+
+
+@pytest.mark.parametrize("stamp", ["2026-10-14T00:00:00Z", "2026-10-12T00:00:00Z"])
+def test_scanner_warning_refresh_cannot_clear_independent_failure_status(stamp):
+    health = {"status": "degraded", "notes": [SCANNER_HEALTH_STALE_NOTE], "latest_scan_at": stamp}
+    assert refresh_system_health_ages(health, now=datetime(2026, 10, 14))["status"] == "degraded"
+
+
 def test_scanner_staleness_note_refresh_preserves_other_health_warnings():
     now = datetime(2026, 10, 14, tzinfo=timezone.utc)
     health = {"latest_scan_at": "2026-10-12T11:59:00Z", "status": "attention",

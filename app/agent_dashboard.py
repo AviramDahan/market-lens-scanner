@@ -1428,15 +1428,18 @@ def refresh_system_health_ages(
         refreshed[f"latest_{source}_age_minutes"] = age
 
     # Cached staleness notes must advance with the clock too, not just their ages.
-    notes = [note for note in health.get("notes") or [] if note != SCANNER_HEALTH_STALE_NOTE]
+    notes = list(health.get("notes") or [])
     scan_age = refreshed["latest_scan_age_minutes"]
-    if scan_age is not None and scan_age > SCANNER_HEALTH_STALE_MINUTES:
-        notes.append(SCANNER_HEALTH_STALE_NOTE)
+    if scan_age is not None:
+        notes = [note for note in notes if note != SCANNER_HEALTH_STALE_NOTE]
+        if scan_age > SCANNER_HEALTH_STALE_MINUTES:
+            notes.append(SCANNER_HEALTH_STALE_NOTE)
     refreshed["notes"] = notes
-    if notes:
-        refreshed["status"] = "attention"
-    elif health.get("notes"):
-        refreshed["status"] = "ok"
+    if health.get("status", "ok") in {"ok", "attention"}:
+        if notes:
+            refreshed["status"] = "attention"
+        elif health.get("notes"):
+            refreshed["status"] = "ok"
     refreshed["ages_evaluated_at"] = observed_at.replace(microsecond=0).isoformat()
     return refreshed
 
