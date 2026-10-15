@@ -1,0 +1,20 @@
+[Unit]
+Description=Verify a read-only Market Lens host recovery mirror
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=trader
+EnvironmentFile=/home/trader/.config/market-lens/host.env
+WorkingDirectory=/home/trader/market-lens-runtime
+ExecStart=/usr/bin/python3 /home/trader/market-lens-runtime/deploy/hetzner/host_archive_runner.py publish
+TimeoutStartSec=1800
+SuccessExitStatus=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/trader/market-lens-runtime-state
+PrivateTmp=true
+MemoryMax=512M
+CPUQuota=100%
+Nice=10
