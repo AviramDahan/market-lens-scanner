@@ -42,6 +42,11 @@ including actual relationships and worksheet XML, and pending notification
 schemas are checked against their consumers in an isolated restore. Only then are
 verified.json and a durable local last_verified.json written. No Telegram call,
 trade execution, mutation of the portfolio, or live restore is performed.
+Required portfolio sheets are also decoded with openpyxl, not just inspected as
+XML. On the minimal host Python the check uses the already deployed worker image
+in an offline, read-only, resource-limited container, mounting only the workbook
+and a small parser script. It receives no environment secrets and runs no Agent
+or notification code. Missing/failing parser is a failed check, never success.
 
 ## Commands
 
@@ -52,6 +57,10 @@ python3 deploy/hetzner/host_archive_runner.py local-check
 python3 deploy/hetzner/host_archive_runner.py publish
 python3 deploy/hetzner/host_archive_runner.py status
 ```
+
+The unit grants the trader service account the Docker group for its offline
+Excel parser. For manual checks when the SSH login lacks that group, use
+`sudo -u trader -g docker python3 deploy/hetzner/host_archive_runner.py local-check`.
 
 local-check requires no token and does not upload. It keeps the frozen pending
 generation, so publish retries that exact generation rather than silently

@@ -501,3 +501,56 @@ def test_low_space_and_failed_backup_do_not_touch_active_runner_source():
     service = (root / "deploy/hetzner/market-lens-archive.service").read_text()
     assert "TimeoutStartSec=1800" in service
     assert "ProtectSystem=strict" in service
+
+
+def test_numeric_cell_that_openpyxl_cannot_decode_is_not_verified(source):
+    workbook = source[0] / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
+    replacement = workbook.with_suffix(".replacement")
+    with zipfile.ZipFile(workbook) as original, zipfile.ZipFile(replacement, "w") as target:
+        for info in original.infolist():
+            body = original.read(info)
+            if info.filename == "xl/worksheets/sheet1.xml":
+                assert b"<v>10</v>" in body
+                body = body.replace(b"<v>10</v>", b"<v>not-a-number</v>", 1)
+            target.writestr(info, body)
+    replacement.replace(workbook)
+    with pytest.raises(ValueError):
+        freeze(source)
+
+
+@pytest.mark.parametrize("key,value", [("quantity", "NaN"), ("quantity", True), ("cash_in", float("inf")),
+                                       ("trigger_price", "bad"), ("low", float("nan"))])
+def test_consumer_breaking_monitor_values_are_not_verified(source, key, value):
+    event = {"ticker": "CME", "action": "EXIT_STOP", "triggered_at": "2026-10-16T00:00:00Z",
+             "trigger_price": 250.0, "high": 251.0, "low": 249.0, "close": 250.0,
+             "quantity": 10, "cash_in": 2500.0, "note": "existing saved event"}
+    event[key] = value
+    (source[1] / "outbox/monitor.json").write_text(json.dumps({"schema_version": 1,
+        "events": [{"position": {"ticker": "CME"}, "event": event}]}))
+    with pytest.raises(ValueError, match="notification values"):
+        freeze(source)
+
+
+def test_host_parser_fallback_is_offline_read_only_and_requires_proof(source, monkeypatch):
+    from deploy.hetzner import workbook_archive_check as checker
+
+    monkeypatch.setattr(checker, "validate_workbook", lambda *_: (_ for _ in ()).throw(ImportError("not installed")))
+    monkeypatch.setattr(archive.os, "getuid", lambda: 1000, raising=False)
+    monkeypatch.setattr(archive.os, "getgid", lambda: 1000, raising=False)
+    calls = []
+
+    def fake_run(args, **kwargs):
+        calls.append((args, kwargs))
+        return SimpleNamespace(stdout='{"parser":"openpyxl","validated_sheets":["Open Positions","Trade Log"]}')
+
+    monkeypatch.setattr(archive.subprocess, "run", fake_run)
+    workbook = source[0] / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
+    archive.validate_workbook_parser(workbook)
+    args, kwargs = calls[0]
+    assert args[args.index("--network") + 1] == "none"
+    assert args[args.index("--user") + 1] == "1000:1000"
+    assert "--read-only" in args and "--env-file" not in args
+    assert kwargs == {"check": True, "text": True, "capture_output": True, "timeout": 120}
+    monkeypatch.setattr(archive.subprocess, "run", lambda *_a, **_k: SimpleNamespace(stdout="{}"))
+    with pytest.raises(ValueError, match="did not confirm"):
+        archive.validate_workbook_parser(workbook)
