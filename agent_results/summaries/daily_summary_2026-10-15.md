@@ -1,35 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-10-15
-Total scans: 21
-Tickers scanned: 3778
+Total scans: 22
+Tickers scanned: 3958
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1054
+WATCH_REVIEW: 1088
 WATCH_REVIEW unique tickers: 105
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1054
-SKIP: 2703
-NO_TRADE: 2116
+WATCH: 1088
+SKIP: 2848
+NO_TRADE: 2248
 Realized PnL: 0.0
-Unrealized PnL: 345.5
-Portfolio value: 100507.7
-Daily recorded-equity change (%): 0.061
+Unrealized PnL: 344.9
+Portfolio value: 100507.1
+Daily recorded-equity change (%): 0.0604
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-14
-Cumulative recorded-equity change (%): 0.5077
+Cumulative recorded-equity change (%): 0.5071
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
-Worst ticker: AEP
+Worst ticker: NOC
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 4
-- FIB_STOP_075_ATR: 5
-- FIB_STRUCTURE_STOP: 10
-- TREND_PULLBACK_RECLAIM: 9
+- BREAKOUT_CONTINUATION: 5
+- FIB_STOP_075_ATR: 6
+- FIB_STRUCTURE_STOP: 12
+- TREND_PULLBACK_RECLAIM: 11
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
