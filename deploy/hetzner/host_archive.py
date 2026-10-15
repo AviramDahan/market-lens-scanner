@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import posixpath
 import shutil
 import stat
+import subprocess
 import uuid
 import zipfile
 from datetime import datetime, timezone
@@ -299,6 +301,30 @@ def validate_recovery(destination: Path) -> None:
     validate_recovery_paths(destination / "repo", destination / "runtime")
 
 
+def validate_workbook_parser(path: Path) -> None:
+    try:
+        if __package__:
+            from .workbook_archive_check import validate_workbook
+        else:
+            from workbook_archive_check import validate_workbook
+        validate_workbook(path)
+        return
+    except ImportError:
+        # The minimal host Python has no pip; use the already deployed worker's
+        # parser offline. No env_file, trading code, or live writable bind mounts.
+        checker = Path(__file__).with_name("workbook_archive_check.py").resolve()
+        completed = subprocess.run([
+            "docker", "run", "--rm", "--read-only", "--network", "none", "--memory", "256m",
+            "--cpus", "0.5", "--pids-limit", "64", "--security-opt", "no-new-privileges",
+            "--user", f"{os.getuid()}:{os.getgid()}", "--mount", f"type=bind,source={path.resolve()},target=/workbook.xlsx,readonly",
+            "--mount", f"type=bind,source={checker},target=/check.py,readonly",
+            "--entrypoint", "python", "market-lens-runtime-worker", "/check.py", "/workbook.xlsx",
+        ], check=True, text=True, capture_output=True, timeout=120)
+        proof = json.loads(completed.stdout)
+        if proof != {"parser": "openpyxl", "validated_sheets": ["Open Positions", "Trade Log"]}:
+            raise ValueError("Workbook parser did not confirm validation")
+
+
 def validate_recovery_paths(root: Path, state: Path) -> None:
     dashboard = json.loads((root / "agent_results/dashboard_snapshot.json").read_text(encoding="utf-8"))
     if dashboard.get("status") != "ok":
@@ -329,6 +355,7 @@ def validate_recovery_paths(root: Path, state: Path) -> None:
                 raise ValueError("Portfolio worksheet data missing") from None
             if not worksheet.tag.endswith("}worksheet") or not any(node.tag.endswith("}sheetData") for node in worksheet):
                 raise ValueError("Invalid portfolio worksheet XML")
+    validate_workbook_parser(workbook)
     receipts = root / "agent_results/telegram_notifications.jsonl"
     for line in receipts.read_text(encoding="utf-8").splitlines():
         if line.strip():
@@ -365,5 +392,12 @@ def validate_outbox(name: str, payload: dict) -> None:
             if (not isinstance(row, dict) or not isinstance(row.get("position"), dict) or not isinstance(event, dict)
                     or not required.issubset(event) or set(event) - allowed):
                 raise ValueError("Malformed monitor notification event")
+            if (not isinstance(event["quantity"], int) or isinstance(event["quantity"], bool) or event["quantity"] < 0
+                    or any(not isinstance(event[key], (int, float)) or isinstance(event[key], bool)
+                           or not math.isfinite(event[key]) for key in ("trigger_price", "high", "low", "close", "cash_in"))
+                    or any(not isinstance(event[key], str) for key in ("ticker", "action", "triggered_at", "note"))
+                    or not event["ticker"] or not event["action"]
+                    or not isinstance(event.get("execution_details", {}), dict)):
+                raise ValueError("Invalid monitor notification values")
     else:
         raise ValueError("Unknown notification outbox kind")
