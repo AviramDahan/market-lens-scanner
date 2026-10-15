@@ -1,25 +1,25 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 118
-Tickers scanned: 21233
+Total scans: 119
+Tickers scanned: 21413
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 6508
-WATCH_REVIEW unique tickers: 264
+WATCH_REVIEW: 6591
+WATCH_REVIEW unique tickers: 265
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 6508
-SKIP: 14512
-NO_TRADE: 12709
+WATCH: 6591
+SKIP: 14608
+NO_TRADE: 12797
 Realized PnL: -163.81
-Unrealized PnL: 353.0
-Portfolio value: 100515.2
+Unrealized PnL: 351.6
+Portfolio value: 100513.8
 Daily recorded-equity change (%): None
 Daily return status: None
 Daily reference date: None
-Cumulative recorded-equity change (%): 0.5152
+Cumulative recorded-equity change (%): 0.5138
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
@@ -43,8 +43,8 @@ Top rejected candidates:
 - CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - SANM: WATCH score=0.5517 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.26.
 - TPL: WATCH score=0.5501 reason=WATCH: Neutral market requires stronger normalized quality (37.30/100).
+- BALL: WATCH score=0.5474 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.96.
 - ADM: WATCH score=0.5442 reason=WATCH: NEUTRAL market requires setup score (0.54 < 0.55).
-- BALL: WATCH score=0.5341 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.96.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
