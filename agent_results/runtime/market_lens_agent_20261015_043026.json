@@ -1,0 +1,82 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 71.728,
+  "errors": [],
+  "finished_at": "2026-10-15T04:38:34",
+  "initial_missing_tickers": [
+    "EQT"
+  ],
+  "initial_result_cards_read": 179,
+  "login_seconds": 0.075,
+  "login_status": "open access",
+  "missing_tickers": [],
+  "open_app_seconds": 0.278,
+  "result_cards_read": 180,
+  "run_id": "20261015_043026",
+  "run_status": "COMPLETE",
+  "scan_complete": true,
+  "scan_coverage": {
+    "coverage_pct": 100.0,
+    "missing": 0,
+    "missing_tickers": [],
+    "received": 180,
+    "requested": 180
+  },
+  "scan_seconds": 185.252,
+  "scan_status": "completed: 180 results",
+  "screenshot_seconds": 0.302,
+  "started_at": "2026-10-15T04:30:26",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "EQT"
+    ],
+    "attempts": {
+      "EQT": 1
+    },
+    "duration_seconds": 1.074,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "EQT"
+    ],
+    "outcomes": [
+      {
+        "attempts": 1,
+        "reason": "Result card recovered by focused retry.",
+        "status": "RECOVERED",
+        "ticker": "EQT"
+      }
+    ],
+    "recovered_tickers": [
+      "EQT"
+    ],
+    "scan_requests": 1,
+    "skipped_reason": "",
+    "unavailable_tickers": []
+  },
+  "tickers_requested": 180,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 488.375,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 96,
+  "warnings": [],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 13.951,
+    "candidate_evaluation_seconds": 102.514,
+    "chart_retention_seconds": 44.75,
+    "load_and_schema_seconds": 15.251,
+    "market_context_seconds": 12.121,
+    "notification_seconds": 0.001,
+    "outcome_backfill_seconds": 0.606,
+    "performance_summary_seconds": 15.743,
+    "portfolio_and_decision_write_seconds": 0.304,
+    "portfolio_state_seconds": 0.018,
+    "save_seconds": 21.267,
+    "trade_analytics_seconds": 0.033,
+    "update_log_and_retention_seconds": 1.842
+  },
+  "workbook_update_seconds": 228.408
+}
