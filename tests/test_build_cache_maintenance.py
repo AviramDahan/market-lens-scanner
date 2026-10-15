@@ -64,7 +64,43 @@ def test_threshold_prunes_only_build_cache(tmp_path, monkeypatch):
     result = maintenance.maintenance_once()
     assert result["status"] == "pruned"
     assert commands == [["docker", "buildx", "prune", "--filter", "until=168h",
+                         "--min-free-space", "21474836480",
                          "--max-used-space", "16gb", "--reserved-space", "12gb", "--force"]]
+
+
+def test_low_disk_prunes_cache_below_size_ceiling(tmp_path, monkeypatch):
+    monkeypatch.setattr(maintenance, "STATE", tmp_path)
+    free = iter((14 * 1024**3, 21 * 1024**3))
+    monkeypatch.setattr(maintenance, "free_bytes", lambda: next(free))
+    monkeypatch.setattr(maintenance, "cache_bytes", lambda: 15 * 1000**3)
+    monkeypatch.setattr(maintenance, "busy_reason", lambda: None)
+    commands = []
+    alerts = []
+    monkeypatch.setattr(maintenance.subprocess, "run", lambda args, **kwargs: commands.append((args, kwargs)))
+    monkeypatch.setattr(maintenance, "send_runtime_alert", lambda *args: alerts.append(args))
+
+    result = maintenance.maintenance_once()
+
+    assert result["status"] == "pruned"
+    assert len(commands) == 1
+    args, kwargs = commands[0]
+    assert args == ["docker", "buildx", "prune", "--filter", "until=168h",
+                    "--min-free-space", "21474836480", "--max-used-space", "16gb",
+                    "--reserved-space", "12gb", "--force"]
+    assert kwargs == {"check": True, "capture_output": True, "text": True, "timeout": 600}
+    assert alerts == []
+    assert json.loads((tmp_path / "build-cache-last.json").read_text()) == result
+
+
+def test_prune_free_space_target_uses_same_threshold(monkeypatch):
+    monkeypatch.setattr(maintenance, "TRIGGER_FREE_GB", 21.5)
+    commands = []
+    monkeypatch.setattr(maintenance.subprocess, "run", lambda args, **kwargs: commands.append(args))
+
+    maintenance.prune_cache()
+
+    args = commands[0]
+    assert args[args.index("--min-free-space") + 1] == str(int(21.5 * 1024**3))
 
 
 def test_ineffective_low_disk_prune_alerts(tmp_path, monkeypatch):

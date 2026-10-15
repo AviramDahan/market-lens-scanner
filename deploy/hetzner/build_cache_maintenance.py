@@ -83,6 +83,7 @@ def prune_cache() -> None:
     # Do not use docker system prune: that also selects images, networks and containers.
     subprocess.run(
         ["docker", "buildx", "prune", "--filter", f"until={MIN_AGE}",
+         "--min-free-space", str(int(TRIGGER_FREE_GB * 1024**3)),
          "--max-used-space", MAX_CACHE, "--reserved-space", RESERVED_CACHE, "--force"],
         check=True, capture_output=True, text=True, timeout=600,
     )
