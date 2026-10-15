@@ -518,6 +518,21 @@ def test_numeric_cell_that_openpyxl_cannot_decode_is_not_verified(source):
         freeze(source)
 
 
+def test_incorrect_worksheet_dimensions_cannot_hide_invalid_portfolio_cells(source):
+    workbook = source[0] / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
+    replacement = workbook.with_suffix(".replacement")
+    with zipfile.ZipFile(workbook) as original, zipfile.ZipFile(replacement, "w") as target:
+        for info in original.infolist():
+            body = original.read(info)
+            if info.filename == "xl/worksheets/sheet1.xml":
+                body = body.replace(b'<dimension ref="A1:D2"', b'<dimension ref="A1:D1"')
+                body = body.replace(b'</sheetData>', b'<row r="3"><c r="B3" t="n"><v>not-a-number</v></c></row></sheetData>')
+            target.writestr(info, body)
+    replacement.replace(workbook)
+    with pytest.raises(ValueError):
+        freeze(source)
+
+
 @pytest.mark.parametrize("key,value", [("quantity", "NaN"), ("quantity", True), ("cash_in", float("inf")),
                                        ("trigger_price", "bad"), ("low", float("nan"))])
 def test_consumer_breaking_monitor_values_are_not_verified(source, key, value):
@@ -541,7 +556,7 @@ def test_host_parser_fallback_is_offline_read_only_and_requires_proof(source, mo
 
     def fake_run(args, **kwargs):
         calls.append((args, kwargs))
-        return SimpleNamespace(stdout='{"parser":"openpyxl","validated_sheets":["Open Positions","Trade Log"]}')
+        return SimpleNamespace(stdout='{"parser":"openpyxl","validated_sheets":["Open Positions","Trade Log"],"all_worksheets_decoded":true}')
 
     monkeypatch.setattr(archive.subprocess, "run", fake_run)
     workbook = source[0] / "agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
@@ -554,3 +569,17 @@ def test_host_parser_fallback_is_offline_read_only_and_requires_proof(source, mo
     monkeypatch.setattr(archive.subprocess, "run", lambda *_a, **_k: SimpleNamespace(stdout="{}"))
     with pytest.raises(ValueError, match="did not confirm"):
         archive.validate_workbook_parser(workbook)
+
+
+@pytest.mark.parametrize("key,value", [("quantity", "NaN"), ("quantity", "1.5"), ("entry_price", "NaN"),
+                                       ("stop_loss", float("inf")), ("target_1", "bad")])
+def test_nested_monitor_position_values_must_be_consumable(source, key, value):
+    event = {"ticker": "CME", "action": "TAKE_PARTIAL_PROFIT", "triggered_at": "2026-10-16T00:00:00Z",
+             "trigger_price": 280, "high": 281, "low": 279, "close": 280,
+             "quantity": 5, "cash_in": 1400, "note": "existing saved event"}
+    position = {"ticker": "CME", "quantity": 10, "entry_price": 254.3, "stop_loss": 250}
+    position[key] = value
+    (source[1] / "outbox/monitor.json").write_text(json.dumps({"schema_version": 1,
+        "events": [{"position": position, "event": event}]}))
+    with pytest.raises(ValueError, match="position values"):
+        freeze(source)
