@@ -321,7 +321,7 @@ def validate_workbook_parser(path: Path) -> None:
             "--entrypoint", "python", "market-lens-runtime-worker", "/check.py", "/workbook.xlsx",
         ], check=True, text=True, capture_output=True, timeout=120)
         proof = json.loads(completed.stdout)
-        if proof != {"parser": "openpyxl", "validated_sheets": ["Open Positions", "Trade Log"]}:
+        if proof != {"parser": "openpyxl", "validated_sheets": ["Open Positions", "Trade Log"], "all_worksheets_decoded": True}:
             raise ValueError("Workbook parser did not confirm validation")
 
 
@@ -399,5 +399,18 @@ def validate_outbox(name: str, payload: dict) -> None:
                     or not event["ticker"] or not event["action"]
                     or not isinstance(event.get("execution_details", {}), dict)):
                 raise ValueError("Invalid monitor notification values")
+            position = row["position"]
+            for key in ("entry_price", "stop_loss", "target_1", "target_2", "quantity"):
+                value = position.get(key)
+                if value is None:
+                    continue
+                try:
+                    numeric = float(value)
+                    if isinstance(value, bool) or not math.isfinite(numeric):
+                        raise ValueError("Non-finite position value")
+                    if key == "quantity" and (int(value) != numeric or numeric < 0):
+                        raise ValueError("Invalid position quantity")
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("Invalid monitor notification position values") from None
     else:
         raise ValueError("Unknown notification outbox kind")

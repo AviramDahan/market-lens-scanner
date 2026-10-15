@@ -42,8 +42,9 @@ including actual relationships and worksheet XML, and pending notification
 schemas are checked against their consumers in an isolated restore. Only then are
 verified.json and a durable local last_verified.json written. No Telegram call,
 trade execution, mutation of the portfolio, or live restore is performed.
-Required portfolio sheets are also decoded with openpyxl, not just inspected as
-XML. On the minimal host Python the check uses the already deployed worker image
+Every worksheet is decoded with openpyxl with declared dimensions reset, not
+just inspected as XML. The two portfolio sheets are mandatory. On the minimal
+host Python the check uses the already deployed worker image
 in an offline, read-only, resource-limited container, mounting only the workbook
 and a small parser script. It receives no environment secrets and runs no Agent
 or notification code. Missing/failing parser is a failed check, never success.

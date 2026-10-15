@@ -13,12 +13,15 @@ def validate_workbook(path: Path) -> dict:
 
     workbook = load_workbook(path, read_only=True, data_only=False)
     try:
-        for name in REQUIRED_SHEETS:
-            for _ in workbook[name].values:
+        if not set(REQUIRED_SHEETS).issubset({sheet.title for sheet in workbook.worksheets}):
+            raise ValueError("Required portfolio worksheets missing")
+        for sheet in workbook.worksheets:
+            sheet.reset_dimensions()  # Do not trust a stale/truncated declared range.
+            for _ in sheet.values:
                 pass  # Iteration, not just sheet names, validates cell decoding.
     finally:
         workbook.close()
-    return {"parser": "openpyxl", "validated_sheets": list(REQUIRED_SHEETS)}
+    return {"parser": "openpyxl", "validated_sheets": list(REQUIRED_SHEETS), "all_worksheets_decoded": True}
 
 
 if __name__ == "__main__":
