@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-15
-Total scans: 6
-Tickers scanned: 1080
+Total scans: 7
+Tickers scanned: 1260
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 345
-WATCH_REVIEW unique tickers: 73
+WATCH_REVIEW: 402
+WATCH_REVIEW unique tickers: 80
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 345
-SKIP: 729
-NO_TRADE: 525
+WATCH: 402
+SKIP: 851
+NO_TRADE: 610
 Realized PnL: 0.0
 Unrealized PnL: 284.2
 Portfolio value: 100446.4
@@ -37,7 +37,7 @@ Top rejected candidates:
 - MA: SKIP score=0.485 reason=SKIP: Financials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 0.78.
 - LW: WATCH score=0.4838 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
 - SO: SKIP score=0.4742 reason=SKIP: Utilities / Real Assets sector regime is weak (41/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.54.
-- O: SKIP score=0.4646 reason=SKIP: Utilities / Real Assets sector regime is weak (41/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 6.15.
+- VEEV: WATCH score=0.4648 reason=WATCH: Technical setup detected, but weighted risk/reward 1.39 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.94.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
