@@ -1,34 +1,35 @@
 Daily Performance Summary
 
 Date: 2026-10-15
-Total scans: 18
-Tickers scanned: 3238
+Total scans: 19
+Tickers scanned: 3418
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 939
-WATCH_REVIEW unique tickers: 97
+WATCH_REVIEW: 977
+WATCH_REVIEW unique tickers: 102
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 939
-SKIP: 2281
-NO_TRADE: 1724
+WATCH: 977
+SKIP: 2422
+NO_TRADE: 1855
 Realized PnL: 0.0
-Unrealized PnL: 334.0
-Portfolio value: 100496.2
-Daily recorded-equity change (%): 0.0496
+Unrealized PnL: 332.8
+Portfolio value: 100495.0
+Daily recorded-equity change (%): 0.0484
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-14
-Cumulative recorded-equity change (%): 0.4962
+Cumulative recorded-equity change (%): 0.495
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: AEP
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- FIB_STOP_075_ATR: 2
-- FIB_STRUCTURE_STOP: 2
-- TREND_PULLBACK_RECLAIM: 3
+- BREAKOUT_CONTINUATION: 1
+- FIB_STOP_075_ATR: 3
+- FIB_STRUCTURE_STOP: 4
+- TREND_PULLBACK_RECLAIM: 6
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
@@ -39,7 +40,7 @@ Top rejected candidates:
 - BLK: SKIP score=0.5019 reason=SKIP: Financials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 2.66.
 - HALO: WATCH score=0.4965 reason=WATCH: NEUTRAL market requires setup score (0.50 < 0.55).
 - PCVX: WATCH score=0.4936 reason=WATCH: Technical setup detected, but weighted risk/reward 1.38 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.11.
-- CTVA: WATCH score=0.4923 reason=WATCH: Technical setup detected, but weighted risk/reward 1.66 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.36.
+- CTVA: WATCH score=0.493 reason=WATCH: Technical setup detected, but weighted risk/reward 1.69 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 1.38.
 - MA: SKIP score=0.485 reason=SKIP: Financials sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 0.78.
 - LW: WATCH score=0.4838 reason=WATCH: NEUTRAL market requires setup score (0.48 < 0.55).
 
