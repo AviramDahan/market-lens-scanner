@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-15
-Total scans: 12
-Tickers scanned: 2158
+Total scans: 13
+Tickers scanned: 2338
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 686
+WATCH_REVIEW: 741
 WATCH_REVIEW unique tickers: 80
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 686
-SKIP: 1460
-NO_TRADE: 1040
+WATCH: 741
+SKIP: 1584
+NO_TRADE: 1128
 Realized PnL: 0.0
-Unrealized PnL: 284.2
-Portfolio value: 100446.4
-Daily recorded-equity change (%): 0.0
+Unrealized PnL: 327.0
+Portfolio value: 100489.2
+Daily recorded-equity change (%): 0.0426
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-14
-Cumulative recorded-equity change (%): 0.4464
+Cumulative recorded-equity change (%): 0.4892
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: CALM
 Worst ticker: TSN
