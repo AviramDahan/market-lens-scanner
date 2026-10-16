@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-16
-Total scans: 4
-Tickers scanned: 718
+Total scans: 5
+Tickers scanned: 898
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 243
-WATCH_REVIEW unique tickers: 117
+WATCH_REVIEW: 314
+WATCH_REVIEW unique tickers: 121
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 243
-SKIP: 471
-NO_TRADE: 392
+WATCH: 314
+SKIP: 579
+NO_TRADE: 481
 Realized PnL: 0.0
 Unrealized PnL: 351.6
 Portfolio value: 100513.8
@@ -30,6 +30,7 @@ Shadow would-buy counts:
 Top rejected candidates:
 - BALL: WATCH score=0.5474 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.96.
 - CTVA: WATCH score=0.5427 reason=WATCH: Technical setup detected, but weighted risk/reward 1.37 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.12.
+- MRSH: SKIP score=0.5349 reason=SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.37.
 - RPRX: WATCH score=0.5223 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - SYY: WATCH score=0.5159 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - MDLZ: WATCH score=0.5056 reason=WATCH: Technical setup detected, but weighted risk/reward 1.42 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.08.
@@ -37,7 +38,6 @@ Top rejected candidates:
 - FANG: WATCH score=0.4936 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
 - APD: SKIP score=0.493 reason=SKIP: Materials sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.75.
 - LYV: SKIP score=0.489 reason=SKIP: Communication Services sector regime is weak (24/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.93.
-- CNC: WATCH score=0.4877 reason=WATCH: Technical setup detected, but weighted risk/reward 1.14 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.77.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
