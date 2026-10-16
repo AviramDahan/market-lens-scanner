@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-16
-Total scans: 15
-Tickers scanned: 2697
+Total scans: 16
+Tickers scanned: 2877
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 994
-WATCH_REVIEW unique tickers: 133
+WATCH_REVIEW: 1041
+WATCH_REVIEW unique tickers: 140
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 994
-SKIP: 1689
-NO_TRADE: 1415
+WATCH: 1041
+SKIP: 1822
+NO_TRADE: 1545
 Realized PnL: 370.7
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -22,22 +22,27 @@ Daily reference date: 2026-10-15
 Cumulative recorded-equity change (%): 0.5329
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
-Worst ticker: TSN
+Worst ticker: CHD
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
+- FIB_STOP_075_ATR: 2
+- FIB_STOP_100_ATR: 1
+- FIB_STRUCTURE_STOP: 1
+- TREND_PULLBACK_RECLAIM: 1
+- VWAP_RECLAIM: 1
 
 Top rejected candidates:
+- APD: WATCH score=0.5646 reason=Gross R/R is valid, but Net R/R 2.00 failed minimum 2.50 after slippage/spread adjustment.
 - BALL: WATCH score=0.5474 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.96.
 - CTVA: WATCH score=0.5427 reason=WATCH: Technical setup detected, but weighted risk/reward 1.37 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.12.
 - MRSH: SKIP score=0.5349 reason=SKIP: Financials sector regime is weak (23/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 3.37.
 - RPRX: WATCH score=0.5223 reason=WATCH: Technical setup detected, but weighted risk/reward 1.46 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.99.
 - SYY: WATCH score=0.5159 reason=WATCH: NEUTRAL market requires setup score (0.52 < 0.55).
 - MDLZ: WATCH score=0.5056 reason=WATCH: Technical setup detected, but weighted risk/reward 1.42 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.08.
+- VNOM: WATCH score=0.5053 reason=WATCH: Technical setup detected, but weighted risk/reward 1.50 is below minimum 2.00. Market regime NEUTRAL; sector STRONG; net R/R 0.91.
 - DLTR: WATCH score=0.494 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
 - FANG: WATCH score=0.4936 reason=WATCH: NEUTRAL market requires setup score (0.49 < 0.55).
-- APD: SKIP score=0.493 reason=SKIP: Materials sector regime is weak (22/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.75.
-- LYV: SKIP score=0.489 reason=SKIP: Communication Services sector regime is weak (24/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.93.
 
 Recommendations:
-- Keep collecting shadow data; no strategy changes are recommended from this sample alone.
+- Review shadow would-buy candidates that active gates skipped before changing thresholds.
