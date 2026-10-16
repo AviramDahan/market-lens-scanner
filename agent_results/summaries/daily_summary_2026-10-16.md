@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-16
-Total scans: 20
-Tickers scanned: 3597
+Total scans: 21
+Tickers scanned: 3777
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1248
-WATCH_REVIEW unique tickers: 156
+WATCH_REVIEW: 1295
+WATCH_REVIEW unique tickers: 159
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1248
-SKIP: 2335
-NO_TRADE: 2034
+WATCH: 1295
+SKIP: 2468
+NO_TRADE: 2155
 Realized PnL: 370.7
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -26,11 +26,11 @@ Worst ticker: HRL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 3
-- FIB_STOP_075_ATR: 13
+- BREAKOUT_CONTINUATION: 4
+- FIB_STOP_075_ATR: 15
 - FIB_STOP_100_ATR: 3
-- FIB_STRUCTURE_STOP: 7
-- TREND_PULLBACK_RECLAIM: 9
+- FIB_STRUCTURE_STOP: 8
+- TREND_PULLBACK_RECLAIM: 10
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
