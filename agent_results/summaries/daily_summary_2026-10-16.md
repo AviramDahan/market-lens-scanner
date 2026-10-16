@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-16
-Total scans: 26
-Tickers scanned: 4677
+Total scans: 27
+Tickers scanned: 4857
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1501
+WATCH_REVIEW: 1544
 WATCH_REVIEW unique tickers: 165
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1501
-SKIP: 3162
-NO_TRADE: 2760
+WATCH: 1544
+SKIP: 3299
+NO_TRADE: 2878
 Realized PnL: 370.7
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -29,8 +29,8 @@ Shadow would-buy counts:
 - BREAKOUT_CONTINUATION: 9
 - FIB_STOP_075_ATR: 21
 - FIB_STOP_100_ATR: 3
-- FIB_STRUCTURE_STOP: 16
-- TREND_PULLBACK_RECLAIM: 20
+- FIB_STRUCTURE_STOP: 17
+- TREND_PULLBACK_RECLAIM: 21
 - VWAP_RECLAIM: 1
 
 Top rejected candidates:
