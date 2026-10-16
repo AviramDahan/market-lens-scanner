@@ -1,18 +1,18 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 146
-Tickers scanned: 26268
+Total scans: 147
+Tickers scanned: 26448
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 8252
-WATCH_REVIEW unique tickers: 292
+WATCH_REVIEW: 8295
+WATCH_REVIEW unique tickers: 293
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 8252
-SKIP: 17785
-NO_TRADE: 15581
+WATCH: 8295
+SKIP: 17922
+NO_TRADE: 15701
 Realized PnL: 206.89
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -26,12 +26,12 @@ Worst ticker: TSN
 Best shadow strategy: RELATIVE_STRENGTH_LEADER
 Worst shadow strategy: BREAKOUT_CONTINUATION
 Shadow would-buy counts:
-- BREAKOUT_CONTINUATION: 37
-- FIB_STOP_075_ATR: 81
+- BREAKOUT_CONTINUATION: 38
+- FIB_STOP_075_ATR: 82
 - FIB_STOP_100_ATR: 21
-- FIB_STRUCTURE_STOP: 73
+- FIB_STRUCTURE_STOP: 74
 - RELATIVE_STRENGTH_LEADER: 1
-- TREND_PULLBACK_RECLAIM: 136
+- TREND_PULLBACK_RECLAIM: 138
 - VWAP_RECLAIM: 6
 
 Top rejected candidates:
