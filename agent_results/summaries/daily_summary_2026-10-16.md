@@ -1,25 +1,25 @@
 Daily Performance Summary
 
 Date: 2026-10-16
-Total scans: 10
-Tickers scanned: 1797
+Total scans: 11
+Tickers scanned: 1977
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 670
+WATCH_REVIEW: 742
 WATCH_REVIEW unique tickers: 124
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 670
-SKIP: 1117
-NO_TRADE: 921
+WATCH: 742
+SKIP: 1224
+NO_TRADE: 1009
 Realized PnL: 0.0
-Unrealized PnL: 351.6
-Portfolio value: 100513.8
-Daily recorded-equity change (%): 0.0
+Unrealized PnL: 342.0
+Portfolio value: 100504.2
+Daily recorded-equity change (%): -0.0096
 Daily return status: RECORDED_EQUITY_CHANGE
 Daily reference date: 2026-10-15
-Cumulative recorded-equity change (%): 0.5138
+Cumulative recorded-equity change (%): 0.5042
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: IONS
 Worst ticker: TSN
