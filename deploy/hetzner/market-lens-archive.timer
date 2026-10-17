@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily verified recovery mirror (enable only after remote restore proof)
+
+[Timer]
+OnCalendar=*-*-* 22:05:00 America/New_York
+Persistent=true
+Unit=market-lens-archive.service
+
+[Install]
+WantedBy=timers.target
