@@ -12,6 +12,7 @@ from app.data import (
     fetch_ticker,
 )
 from app.fibonacci import detect_swing_low_confluence, get_best_fib
+from app.entry_policy import fibonacci_entries_enabled
 from app.indicators import (
     classify_volume_price_scenario,
     compute_atr,
@@ -79,7 +80,7 @@ def scan_ticker_detail(
     market_structure = compute_market_structure(data.daily)
     vp_scenario = classify_volume_price_scenario(data.daily)
     vp = filter_hvn(compute_volume_profile(data.hourly), atr)
-    fib_info = get_best_fib(data.daily, atr, current_price)
+    fib_info = get_best_fib(data.daily, atr, current_price) if fibonacci_entries_enabled() else None
 
     if spy_returns is None:
         try:

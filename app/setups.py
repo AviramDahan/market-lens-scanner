@@ -3,6 +3,7 @@ from datetime import datetime
 import pandas as pd
 
 from app.fibonacci import find_pivot_highs
+from app.entry_policy import fibonacci_entries_enabled
 from app.trading_clock import session_status
 from app.models import BreakoutRetestInfo, FibonacciInfo, ScanResult, VolumeProfile, VolumeSupportedSwingLow
 
@@ -89,6 +90,8 @@ def detect_setup(
     relative_strength: float = 1.0,
     daily: "pd.DataFrame | None" = None,
 ) -> ScanResult:
+    if not fibonacci_entries_enabled():
+        fib_info = None
     candidates = detect_setup_candidates(
         ticker=ticker,
         current_price=current_price,
@@ -136,6 +139,9 @@ def detect_setup_candidates(
     daily: "pd.DataFrame | None" = None,
 ) -> list[ScanResult]:
     """Evaluate every detector while preserving the legacy first-match winner."""
+    if not fibonacci_entries_enabled():
+        # No Fib detector, scoring confluence, or Fib-derived targets in active plans.
+        fib_info = None
     vp = volume_profile
     in_value_area = vp.val < current_price < vp.vah
     price_above_ema = current_price > ema_20

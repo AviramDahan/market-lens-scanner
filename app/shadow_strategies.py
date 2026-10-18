@@ -16,7 +16,11 @@ STRATEGY_NAMES = (
 )
 
 
-def evaluate_shadow_strategies(result: Any, decision_json: dict[str, Any]) -> list[dict[str, Any]]:
+def evaluate_shadow_strategies(result: Any, decision_json: dict[str, Any], *, enabled: bool | None = None) -> list[dict[str, Any]]:
+    if enabled is None:
+        enabled = os.getenv("MARKET_LENS_SHADOW_STRATEGIES_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+    if not enabled:
+        return []
     strategies: list[tuple[str, Callable[[Any, dict[str, Any]], dict[str, Any]]]] = [
         ("BREAKOUT_CONTINUATION", breakout_continuation),
         ("TREND_PULLBACK_RECLAIM", trend_pullback_reclaim),

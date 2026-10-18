@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from app.shadow_strategies import STRATEGY_NAMES, evaluate_shadow_strategies
+
+
+@pytest.fixture(autouse=True)
+def historical_registry_enabled(monkeypatch):
+    # These fixtures exercise the retained offline research registry.
+    monkeypatch.setenv("MARKET_LENS_SHADOW_STRATEGIES_ENABLED", "true")
 
 
 def base_result() -> SimpleNamespace:

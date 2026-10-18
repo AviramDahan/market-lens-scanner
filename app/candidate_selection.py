@@ -7,6 +7,7 @@ import os
 from typing import Any, Callable
 
 from app.execution import STRATEGY_VERSION
+from app.entry_policy import fibonacci_entries_enabled
 
 
 def _pause_new_entry(candidate, decision, evidence, *, disabled, existing):
@@ -15,7 +16,7 @@ def _pause_new_entry(candidate, decision, evidence, *, disabled, existing):
     evidence = dict(evidence)
     reason = (
         f"{candidate.setup_type} entries are paused after historical performance review; "
-        "detection and shadow measurement remain active."
+        "historical records are retained."
     )
     evidence["entry_strategy_policy"] = {
         "version": "manual_entry_pause_v1", "entry_enabled": False,
@@ -101,6 +102,9 @@ def select_qualified_candidate(result: Any, evaluate: Callable, *, existing: boo
         seen.add(name)
     disabled = frozenset(name.strip().casefold() for name in
                          os.getenv("MARKET_LENS_DISABLED_ENTRY_SETUPS", "").split(",") if name.strip())
+    if not fibonacci_entries_enabled():
+        disabled |= frozenset(str(candidate.setup_type).strip().casefold() for candidate in candidates
+                              if "fib" in str(candidate.setup_type).casefold())
     evaluated = []
     for candidate in candidates:
         decision, evidence = evaluate(candidate)
