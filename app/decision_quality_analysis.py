@@ -255,12 +255,12 @@ def sector_only_shadow_flips(records: list[dict[str, Any]]) -> list[dict[str, An
         )
         before = {
             item["name"]: item
-            for item in evaluate_shadow_strategies(result, deepcopy(record))
+            for item in evaluate_shadow_strategies(result, deepcopy(record), enabled=True)
         }
         changed = deepcopy(record)
         changed["sector_regime"] = "NEUTRAL"
         after = {
-            item["name"]: item for item in evaluate_shadow_strategies(result, changed)
+            item["name"]: item for item in evaluate_shadow_strategies(result, changed, enabled=True)
         }
         flipped = sorted(
             name

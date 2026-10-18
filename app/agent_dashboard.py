@@ -776,6 +776,7 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
             ({"market_bear"}, "BEAR blocks new buys", "MARKET_BLOCKED"),
             ({"market_data_quality"}, "Market data quality", "MARKET_BLOCKED"),
             ({"weak_sector"}, "Weak sector", "WEAK_EARNINGS"),
+            ({"strategy_paused"}, "Strategy paused", "STRATEGY_PAUSED"),
         ):
             if keys & condition_keys:
                 blockers[label] += 1
@@ -785,7 +786,8 @@ def build_decision_diagnostics(setups: list[dict[str, Any]]) -> dict[str, Any]:
         for condition in missing_conditions:
             register_entry_blocker(entry_blockers, condition, drilldown_item)
 
-        if action in {"WATCH", "WATCH_READY", "SKIP"} and setup_type and setup_type.lower() != "no trade":
+        if (action in {"WATCH", "WATCH_READY", "SKIP"} and setup_type and setup_type.lower() != "no trade"
+                and "strategy_paused" not in keys):
             near_misses.append(drilldown_item)
             closest_to_entry.append(drilldown_item)
 
@@ -887,6 +889,10 @@ def entry_missing_conditions(
     target_status = str(decision.get("target_feasibility_status") or "").upper()
     session_phase = str(decision.get("market_session_phase") or decision.get("market_session") or "").upper()
 
+    policy = decision.get("entry_strategy_policy") or {}
+    if policy.get("entry_enabled") is False:
+        conditions.append(blocker_condition("strategy_paused", "Strategy paused",
+            str(policy.get("reason") or "New entries for this setup are paused."), "fail"))
     if normalized_setup == "no trade" or "no trade result" in text:
         conditions.append(blocker_condition("no_trade", "No technical setup", "No actionable setup structure was detected.", "warn"))
     if str(decision.get("market_regime") or "").upper() == "BEAR":
@@ -994,6 +1000,8 @@ def entry_readiness_score(
 ) -> int:
     if action == "BUY_SIMULATED":
         return 100
+    if (decision.get("entry_strategy_policy") or {}).get("entry_enabled") is False:
+        return 0
     if str(setup_type or "").lower() == "no trade":
         return 0
 

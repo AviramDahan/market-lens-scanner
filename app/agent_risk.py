@@ -12,6 +12,7 @@ import pandas as pd
 
 from app.data import fetch_daily_frame, fetch_intraday_frame, fetch_next_earnings_date
 from app.indicators import compute_atr
+from app.entry_policy import breakout_continuation_profile
 from app.regime_evidence import (
     cached_regime_state,
     completed_regime_frame,
@@ -504,6 +505,13 @@ def evaluate_agent_candidate(
             "confirmation_status": "TIMING_INVALID",
             "confirmation_reason": confirmation_freshness["reason"],
         }
+    active_entry_profile = breakout_continuation_profile(
+        setup_type=result.setup_type, market_regime=run_context.market_regime.label,
+        sector_regime=sector_info["regime"], session=market_session,
+        confirmation=confirmation, freshness=confirmation_freshness,
+        net_rr_1=net_rr_info.get("net_rr_1"), earnings_blackout=earnings_info["earnings_blackout"],
+        minimum_primary_net_rr=config.minimum_primary_net_rr,
+    )
     cooldown = cooldown_check(
         ticker=ticker,
         result=result,
@@ -666,6 +674,7 @@ def evaluate_agent_candidate(
             minimum_setup_score=minimum_setup_score,
             entry_mode=neutral_pilot["entry_mode"],
             market_session=market_session,
+            active_entry_profile=active_entry_profile,
         )
         if blockers:
             capital_blockers = [blocker for blocker in blockers if is_capital_blocker(blocker)]
@@ -833,6 +842,7 @@ def evaluate_agent_candidate(
         "normalized_liquidity_score": snapshot.normalized_liquidity_score,
         "normalized_quality_score": normalized_quality_score,
         "setup_type": result.setup_type,
+        "active_entry_profile": active_entry_profile,
         "setup_score": round(float(result.score or 0), 4),
         "setup_candidates": setup_candidate_measurements,
         "buy_zone_low": result.buy_zone_low,
@@ -1271,8 +1281,19 @@ def buy_blockers(
     minimum_setup_score: float | None = None,
     entry_mode: str = "standard",
     market_session: dict[str, Any] | None = None,
+    active_entry_profile: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
+    if active_entry_profile and active_entry_profile.get("applicable") and not active_entry_profile.get("passed"):
+        # Keep the existing explicit WEAK-sector blocker as the single source
+        # for that failure, including read-only sector counterfactual analysis.
+        sector_only = (
+            active_entry_profile.get("blockers") == ["sector_regime"]
+            and sector_info.get("regime") == "WEAK"
+        )
+        if not sector_only:
+            action = "WATCH_READY" if active_entry_profile.get("staging_only") else "WATCH"
+            blockers.append({"action": action, "reason": action + ": " + active_entry_profile["reason"]})
     regime = run_context.market_regime
     session = market_session or market_session_status(
         allow_off_hours_buys=run_context.config.allow_off_hours_buys

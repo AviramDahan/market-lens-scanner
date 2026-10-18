@@ -1354,6 +1354,9 @@ def update_workbook(
             capture_position_exit_plan(decision_json, open_positions[result.ticker])
         decision_json["active_strategy"] = "QUALIFIED_SELECTION_V1"
         decision_json["shadow_strategies"] = evaluate_shadow_strategies(result, decision_json)
+        decision_json["shadow_collection_status"] = (
+            "ACTIVE" if decision_json["shadow_strategies"] else "RETIRED"
+        )
         decision_json["weak_sector_override_v1"] = measure_sector_gate_counterfactual(
             result=result, active_record=decision_json, open_positions=open_positions,
             cash_available=cash, portfolio_exposure_before=exposure,

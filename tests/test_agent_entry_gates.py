@@ -262,6 +262,7 @@ def blockers_for(
     confirmation_passed: bool = True,
     cooldown_active: bool = False,
     regime_allows_new_buys: bool = True,
+    active_entry_profile: dict | None = None,
 ) -> list[dict[str, str]]:
     run_context = context(regime)
     run_context.market_regime.allows_new_buys = regime_allows_new_buys
@@ -295,6 +296,7 @@ def blockers_for(
         portfolio_exposure_after=5_000,
         sizing={"blocked": False, "reason": ""},
         minimum_net_rr=run_context.market_regime.minimum_net_rr,
+        active_entry_profile=active_entry_profile,
         market_session={
             "phase": "REGULAR",
             "timestamp": "2026-06-18T10:30-04:00",
@@ -1622,3 +1624,24 @@ def test_allocation_ranking_prioritizes_open_positions_then_stronger_setups() ->
     )
 
     assert [item.ticker for item in ordered] == ["OPEN", "STRONG", "WEAK", "NONE"]
+
+
+@pytest.mark.parametrize("overrides,expected", [
+    ({"score": .1}, "requires setup score"),
+    ({"net_rr_1": .2}, "Target 1"),
+    ({"net_rr": .9}, "failed minimum"),
+    ({"cooldown_active": True}, "cooldown"),
+    ({"confirmation_passed": False}, "confirmation failed"),
+    ({"target_status": "INVALID"}, "Target validation failed"),
+    ({"regime": "BEAR"}, "Bear market"),
+])
+def test_promoted_breakout_cannot_bypass_existing_gates(overrides, expected):
+    approved_profile = {"applicable": True, "passed": True}
+    blockers = blockers_for(active_entry_profile=approved_profile, **overrides)
+    assert any(expected in row["reason"] for row in blockers)
+
+
+def test_failed_active_breakout_profile_is_an_entry_gate():
+    blockers = blockers_for(active_entry_profile={
+        "applicable": True, "passed": False, "reason": "Breakout continuation requires fresh confirmation."})
+    assert any("Breakout continuation requires" in row["reason"] for row in blockers)
