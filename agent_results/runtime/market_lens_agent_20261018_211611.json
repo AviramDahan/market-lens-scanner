@@ -1,0 +1,127 @@
+{
+  "analysis_period": "6mo",
+  "batch_size": 10,
+  "configure_scan_seconds": 113.057,
+  "errors": [],
+  "finished_at": "2026-10-18T21:25:06",
+  "initial_missing_tickers": [
+    "CRCL",
+    "MANE",
+    "MMED",
+    "TLN"
+  ],
+  "initial_result_cards_read": 176,
+  "login_seconds": 0.069,
+  "login_status": "open access",
+  "missing_tickers": [
+    "CRCL",
+    "MANE",
+    "MMED",
+    "TLN"
+  ],
+  "open_app_seconds": 0.243,
+  "result_cards_read": 176,
+  "run_id": "20261018_211611",
+  "run_status": "PARTIAL_OK",
+  "scan_complete": false,
+  "scan_coverage": {
+    "coverage_pct": 97.78,
+    "missing": 4,
+    "missing_tickers": [
+      "CRCL",
+      "MANE",
+      "MMED",
+      "TLN"
+    ],
+    "received": 176,
+    "requested": 180
+  },
+  "scan_seconds": 183.264,
+  "scan_status": "completed: 176 results; 4 unavailable",
+  "screenshot_seconds": 0.167,
+  "started_at": "2026-10-18T21:16:11",
+  "target_tickers": 175,
+  "ticker_recovery": {
+    "attempted_tickers": [
+      "CRCL",
+      "MANE",
+      "MMED",
+      "TLN"
+    ],
+    "attempts": {
+      "CRCL": 2,
+      "MANE": 2,
+      "MMED": 2,
+      "TLN": 2
+    },
+    "duration_seconds": 4.474,
+    "enabled": true,
+    "initial_missing_tickers": [
+      "CRCL",
+      "MANE",
+      "MMED",
+      "TLN"
+    ],
+    "outcomes": [
+      {
+        "attempts": 2,
+        "reason": "CRCL: CRCL: only 72 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "CRCL"
+      },
+      {
+        "attempts": 2,
+        "reason": "MANE: MANE: only 37 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MANE"
+      },
+      {
+        "attempts": 2,
+        "reason": "MMED: MMED: only 33 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "MMED"
+      },
+      {
+        "attempts": 2,
+        "reason": "TLN: TLN: only 177 rows for interval=1wk, need at least 200",
+        "status": "DATA_UNAVAILABLE",
+        "ticker": "TLN"
+      }
+    ],
+    "recovered_tickers": [],
+    "scan_requests": 5,
+    "skipped_reason": "",
+    "unavailable_tickers": [
+      "CRCL",
+      "MANE",
+      "MMED",
+      "TLN"
+    ]
+  },
+  "tickers_requested": 180,
+  "timeout_seconds": 900,
+  "total_scan_limit": 180,
+  "total_seconds": 535.266,
+  "universe": "smart-universe",
+  "url": "http://web:8000/",
+  "valid_setups": 126,
+  "warnings": [
+    "PARTIAL_SCAN: No result card for CRCL, MANE, MMED, TLN."
+  ],
+  "workbook_phase_seconds": {
+    "append_rows_seconds": 14.896,
+    "candidate_evaluation_seconds": 103.766,
+    "chart_retention_seconds": 36.902,
+    "load_and_schema_seconds": 14.912,
+    "market_context_seconds": 12.773,
+    "notification_seconds": 0.001,
+    "outcome_backfill_seconds": 1.035,
+    "performance_summary_seconds": 27.107,
+    "portfolio_and_decision_write_seconds": 0.365,
+    "portfolio_state_seconds": 0.019,
+    "save_seconds": 21.224,
+    "trade_analytics_seconds": 0.053,
+    "update_log_and_retention_seconds": 2.599
+  },
+  "workbook_update_seconds": 235.661
+}

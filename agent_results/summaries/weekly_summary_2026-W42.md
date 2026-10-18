@@ -1,18 +1,18 @@
 Weekly Performance Summary
 
 Date: 2026-10-12
-Total scans: 150
-Tickers scanned: 26988
+Total scans: 151
+Tickers scanned: 27164
 BUY_SIMULATED: 2
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 8420
-WATCH_REVIEW unique tickers: 296
+WATCH_REVIEW: 8514
+WATCH_REVIEW unique tickers: 330
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 8420
-SKIP: 18337
-NO_TRADE: 16033
+WATCH: 8514
+SKIP: 18419
+NO_TRADE: 16083
 Realized PnL: 206.89
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -41,10 +41,10 @@ Top rejected candidates:
 - APD: WATCH score=0.5646 reason=Gross R/R is valid, but Net R/R 2.00 failed minimum 2.50 after slippage/spread adjustment.
 - DVA: WATCH score=0.5646 reason=WATCH: Normalized quality score is too low for a new entry (30.64/100).
 - CL: SKIP score=0.5638 reason=SKIP: Consumer sector regime is weak (20/100); skip new entry. Market regime NEUTRAL; sector WEAK; net R/R 1.49.
+- IDXX: SKIP score=0.5625 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 - CSCO: WATCH score=0.5608 reason=WATCH: Entry confirmation failed - Support/Fib setup requires completed close above the buy zone or a strong bullish reclaim from the zone; weak or falling candles are blocked.
 - SANM: WATCH score=0.5517 reason=WATCH: Technical setup detected, but weighted risk/reward 1.59 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 1.26.
 - TPL: WATCH score=0.5501 reason=WATCH: Neutral market requires stronger normalized quality (37.30/100).
-- BALL: WATCH score=0.5474 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime NEUTRAL; sector NEUTRAL; net R/R 0.96.
 
 Recommendations:
 - Review shadow would-buy candidates that active gates skipped before changing thresholds.
