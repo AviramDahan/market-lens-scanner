@@ -1285,7 +1285,15 @@ def buy_blockers(
 ) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     if active_entry_profile and active_entry_profile.get("applicable") and not active_entry_profile.get("passed"):
-        blockers.append({"action": "WATCH", "reason": "WATCH: " + active_entry_profile["reason"]})
+        # Keep the existing explicit WEAK-sector blocker as the single source
+        # for that failure, including read-only sector counterfactual analysis.
+        sector_only = (
+            active_entry_profile.get("blockers") == ["sector_regime"]
+            and sector_info.get("regime") == "WEAK"
+        )
+        if not sector_only:
+            action = "WATCH_READY" if active_entry_profile.get("staging_only") else "WATCH"
+            blockers.append({"action": action, "reason": action + ": " + active_entry_profile["reason"]})
     regime = run_context.market_regime
     session = market_session or market_session_status(
         allow_off_hours_buys=run_context.config.allow_off_hours_buys

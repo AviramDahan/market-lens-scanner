@@ -55,7 +55,7 @@ def test_promoted_breakout_is_additive_not_a_gate_bypass(monkeypatch):
     ({"market_regime": "UNKNOWN"}, "market_regime"),
     ({"sector_regime": "WEAK"}, "sector_regime"),
     ({"sector_regime": "UNKNOWN"}, "sector_regime"),
-    ({"session": {"phase": "PRE", "can_open_new_buy": True}}, "regular_session"),
+    ({"session": {"phase": "PRE_MARKET", "can_open_new_buy": True}}, "regular_session"),
     ({"session": {}}, "regular_session"),
     ({"confirmation": {}}, "completed_confirmation"),
     ({"confirmation": {"entry_confirmation_passed": False}}, "completed_confirmation"),
@@ -81,6 +81,25 @@ def test_no_fib_or_pullback_alias_is_promoted(monkeypatch):
         assert profile(setup_type=name)["applicable"] is False
     monkeypatch.setenv("MARKET_LENS_BREAKOUT_CONTINUATION_ENABLED", "false")
     assert profile()["applicable"] is False
+
+
+def test_python_defaults_match_production_policy(monkeypatch):
+    from app.entry_policy import fibonacci_entries_enabled
+
+    monkeypatch.delenv("MARKET_LENS_FIBONACCI_ENTRIES_ENABLED", raising=False)
+    monkeypatch.delenv("MARKET_LENS_BREAKOUT_CONTINUATION_ENABLED", raising=False)
+    assert not fibonacci_entries_enabled()
+    assert profile()["applicable"] and profile()["passed"]
+
+
+@pytest.mark.parametrize("phase", ["PRE_MARKET", "AFTER_HOURS", "CLOSED", "WEEKEND", "HOLIDAY"])
+def test_off_hours_timing_only_failure_keeps_staging_not_entry(phase):
+    saved = profile(session={"phase": phase, "can_open_new_buy": False},
+                    freshness={"status": "OFF_HOURS_REFERENCE"})
+    assert not saved["passed"] and saved["staging_only"]
+    assert profile(freshness={"status": "STALE_INTRADAY"})["staging_only"] is False
+    assert profile(session={"phase": "CLOSED", "can_open_new_buy": False},
+                   net_rr_1=.2)["staging_only"] is False
 
 
 def detection_args():

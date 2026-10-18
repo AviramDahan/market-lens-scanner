@@ -34,6 +34,8 @@ def evaluate(c, action='BUY_SIMULATED'):
 
 @pytest.fixture(autouse=True)
 def clean_policy(monkeypatch):
+    # Exercise the independent manual-pause switch against the legacy detector.
+    monkeypatch.setenv('MARKET_LENS_FIBONACCI_ENTRIES_ENABLED', 'true')
     monkeypatch.delenv('MARKET_LENS_DISABLED_ENTRY_SETUPS', raising=False)
 
 

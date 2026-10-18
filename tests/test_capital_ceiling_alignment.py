@@ -95,7 +95,7 @@ def test_real_preliminary_sizing_above_legacy_cap(monkeypatch, ceiling, expected
         return {"final_action": "WATCH", "reason": "Final gate still rejects the candidate"}
 
     monkeypatch.setattr(strategy, "evaluate_agent_candidate", final)
-    candidate = strategy.StrategyCandidate("TEST", "Fib", .6, 100, 99, 101, 95, 110, 120, 3)
+    candidate = strategy.StrategyCandidate("TEST", "Breakout + Retest", .6, 100, 99, 101, 95, 110, 120, 3)
     result = strategy.apply_strategy_decisions([candidate], analysis_period="6mo", min_rr=2,
                                                exposure=45_000, cash=55_000)
     assert captured == [expected_quantity]

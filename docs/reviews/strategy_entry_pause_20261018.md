@@ -111,11 +111,14 @@ be presented as an expected live win rate.
 
 ### QA and rollback
 
-Local full regression: `python -m pytest -q` -> 824 passed. New coverage includes
+Local full regression: `python -m pytest -q` -> 830 passed. New coverage includes
 default-off Shadow/nonmutation and offline reproduction, Fib-free scanner and
 detector inputs, cached variant blocking, shared web/worker configuration,
 all existing lifecycle actions, additive Breakout failures and preservation
-of existing risk gates. Existing isolated monitor accounting/idempotency
+of existing risk gates. Python defaults match Compose; off-hours timing-only
+failures retain WATCH_READY, not entry permission. A WEAK-sector failure is
+reported through the existing sector blocker, preserving the separate read-only
+counterfactual measurement. Existing isolated monitor accounting/idempotency
 tests remain in the full suite. No synthetic production trade or Telegram
 test is required or sent.
 
