@@ -74,7 +74,16 @@ def decision_policy_evidence(config: Any, **effective_inputs: Any) -> dict[str, 
 
 def write_policy_manifest(directory: Path, config: Any, **effective_inputs: Any) -> Path:
     manifest = policy_manifest(config, **effective_inputs)
-    directory.mkdir(parents=True, exist_ok=True)
+    try:
+        directory.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        if not directory.is_dir():
+            raise
+    else:
+        # Root workers must not leave host-owned scanner stages unremovable.
+        if getattr(os, "geteuid", lambda: None)() == 0 and hasattr(os, "chown"):
+            parent = directory.parent.stat()
+            os.chown(directory, parent.st_uid, parent.st_gid)
     path = directory / f"{manifest['fingerprint']}.json"
     if path.exists():
         if json.loads(path.read_text(encoding="utf-8")) != manifest:
