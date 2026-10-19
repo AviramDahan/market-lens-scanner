@@ -2398,6 +2398,17 @@ function decisionMeta(item) {
   return parts.join(" - ");
 }
 
+function correlationCheck(d) {
+  if (d.correlation_warning) {
+    return {status: "warn", detail: `${d.highest_correlation_ticker || "Position"} ${Number(d.highest_correlation_value || 0).toFixed(2)}`};
+  }
+  if (["UNKNOWN", "PARTIAL", "LEGACY_UNRECORDED"].includes(d.correlation_status)
+      || typeof d.correlation_warning !== "boolean") {
+    return {status: "unknown", detail: `Not verified (${d.correlation_positions_checked ?? "?"}/${d.correlation_positions_expected ?? "?"} positions)`};
+  }
+  return {status: "pass", detail: d.correlation_status === "NOT_REQUIRED" ? "No other open positions" : "Acceptable"};
+}
+
 function riskCheckPills(item) {
   const d = item.decision_json || {};
   if (!Object.keys(d).length) return "";
@@ -2413,11 +2424,8 @@ function riskCheckPills(item) {
   }
   if (d.factor_exposure_limit_exceeded) checks.push(["Factor", "Limit"]);
   else if (Array.isArray(d.factor_tags) && d.factor_tags.length) checks.push(["Factor", d.factor_tags.slice(0, 2).join(", ")]);
-  if (d.correlation_warning) {
-    checks.push(["Corr", `${d.highest_correlation_ticker || ""} ${Number(d.highest_correlation_value || 0).toFixed(2)}`]);
-  } else {
-    checks.push(["Corr", "OK"]);
-  }
+  const correlation = correlationCheck(d);
+  checks.push(["Corr", correlation.detail]);
   if (d.target_feasibility_status) checks.push(["Targets", d.target_feasibility_status]);
   if (d.position_size_adjusted) checks.push(["Size", `Adjusted to ${d.adjusted_position_size || 0}`]);
   return `<div class="risk-checks">${checks
@@ -2527,11 +2535,8 @@ function buildEntryChecklistItems(item) {
       detail: d.factor_exposure_limit_exceeded ? "Factor limit exceeded" : "Within factor limit",
     },
     {
-      status: d.correlation_warning ? "warn" : "pass",
       label: "Correlation",
-      detail: d.correlation_warning
-        ? `${d.highest_correlation_ticker || "Position"} ${Number(d.highest_correlation_value || 0).toFixed(2)}`
-        : "Acceptable",
+      ...correlationCheck(d),
     },
   ];
 

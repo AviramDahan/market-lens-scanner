@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from app.indicators import compute_relative_strength
+from app.professional import _relative_return_ratio, assess_relative_strength
 
 
 def inputs(stock_return, benchmark_return):
@@ -46,3 +47,29 @@ def test_first_interval_is_included_for_both_legs():
     stock, benchmark = inputs(.10, 0)
     benchmark.iloc[0] = .05
     assert compute_relative_strength(stock, benchmark) == pytest.approx(2)
+
+
+@pytest.mark.parametrize("market_return", [-.02, .02])
+def test_professional_strength_preserves_ordering_and_uses_shared_intervals(market_return):
+    stock, returns = inputs(market_return - .08, market_return)
+    benchmark = pd.DataFrame({"Close": [100.] * 20 + [100 * (1 + market_return)]}, index=stock.index)
+    assert _relative_return_ratio(stock, benchmark) == pytest.approx(
+        max(0, min(2.5, compute_relative_strength(stock, returns)))
+    )
+    assessment = assess_relative_strength(stock, {k: benchmark for k in ("SPY", "QQQ", "IWM")})
+    assert assessment.label == "Lagging"
+    assert assessment.score == 0
+
+
+def test_professional_strength_missing_or_future_intervals_are_neutral():
+    stock, _ = inputs(.10, .05)
+    benchmark = pd.DataFrame({"Close": [100.] * 20 + [105.]}, index=stock.index)
+    assert _relative_return_ratio(stock, benchmark.iloc[1:]) == 1
+    future = benchmark.copy()
+    future.loc[stock.index[-1] + pd.Timedelta(days=1), "Close"] = 200
+    assert _relative_return_ratio(stock, future) == pytest.approx(2)
+
+
+def test_professional_strength_parity_is_not_leadership_when_both_fall():
+    stock, _ = inputs(-.02, -.02)
+    assert _relative_return_ratio(stock, stock) == pytest.approx(1)

@@ -15,6 +15,51 @@ def workbook_with_trade_log() -> Workbook:
     return workbook
 
 
+def test_single_pass_followup_projection_matches_all_legacy_queues(tmp_path, monkeypatch):
+    wb = Workbook()
+    wb.active.title = "Open Positions"
+    wb.active.append(["Ticker"])
+    wb.active.append(["OPEN"])
+    ws = wb.create_sheet("Setup Watchlist")
+    ws.append([f"column_{i}" for i in range(18)])
+    now = datetime.now().replace(microsecond=0)
+    for i, (ticker, action, data) in enumerate([
+        ("READY", "WATCH", {"watch_status": "WATCH_READY"}),
+        ("WATCH", "WATCH", {"reason": "Needs confirmation"}),
+        ("NEAR", "SKIP", {"setup_type": "VWAP", "setup_score": .4, "net_rr": 1.7}),
+        ("OLD", "WATCH", {}),
+        ("UPDATED", "WATCH", {"watch_status": "WATCH_READY"}),
+        ("UPDATED", "SKIP", {"setup_type": "No Trade"}),
+        ("WARNING_READY", "WATCH", {"warnings": ["WATCH_READY: staged"]}),
+    ]):
+        row = [None] * 18
+        row[0] = (now - timedelta(minutes=10-i) if ticker != "OLD" else now-timedelta(days=30)).isoformat()
+        row[1], row[2], row[12] = ticker, "No Trade" if ticker == "UPDATED" and action == "SKIP" else "VWAP", action
+        row[17] = json.dumps({**data, "unused_large_evidence": "x" * 10000})
+        ws.append(row)
+    path = tmp_path / "followups.xlsx"
+    wb.save(path)
+    before = path.read_bytes()
+    expected = {"open": agent.read_open_position_tickers(path), "ready": agent.read_recent_watch_ready_tickers(path),
+                "watch": agent.read_recent_watch_tickers(path), "near": agent.read_recent_near_miss_tickers(path),
+                "skip": agent.read_recent_skip_tickers(path), "today": agent.read_today_scanned_tickers(path)}
+    actual_load = agent.load_workbook
+    calls = []
+    def counted_load(*args, **kwargs):
+        calls.append(1)
+        return actual_load(*args, **kwargs)
+    monkeypatch.setattr(agent, "load_workbook", counted_load)
+    assert agent.read_scan_followup_tickers(path) == expected
+    assert len(calls) == 1
+    assert path.read_bytes() == before
+
+
+def test_missing_followup_workbook_fails_visibly_instead_of_empty_scan(tmp_path):
+    import pytest
+    with pytest.raises(FileNotFoundError):
+        agent.read_scan_followup_tickers(tmp_path / "missing.xlsx")
+
+
 def append_trade(
     workbook: Workbook,
     *,

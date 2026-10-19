@@ -8,6 +8,8 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any, Iterable
 
+from app.risk_evidence import correlation_passed
+
 
 REPLAY_SCHEMA_VERSION = "first_match_replay_v1"
 HORIZONS = (1, 3, 5, 10)
@@ -154,8 +156,8 @@ def assess_candidate(
         ),
         check(
             "correlation",
-            "FAIL" if record.get("correlation_warning") else "PASS",
-            "Recorded ticker/portfolio correlation warning was active." if record.get("correlation_warning") else "Recorded ticker/portfolio correlation was acceptable.",
+            "UNASSESSABLE" if correlation_passed(record) is None else "PASS" if correlation_passed(record) else "FAIL",
+            f"Recorded correlation status: {record.get('correlation_status', 'legacy')}; warning={record.get('correlation_warning')}.",
         ),
         check(
             "primary_net_rr",

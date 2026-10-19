@@ -26,20 +26,28 @@ def _true_range(daily: pd.DataFrame) -> pd.Series:
 
 
 def compute_vwap(hourly: pd.DataFrame) -> float:
-    """True session VWAP — resets at the start of each trading day."""
-    tp = (hourly["High"] + hourly["Low"] + hourly["Close"]) / 3
-    dates = hourly.index.normalize()
-    last_date = dates[-1]
-    mask = dates == last_date
+    """Session VWAP approximation from regular-session OHLCV bars."""
+    return session_vwap(hourly)
 
-    today_tp = tp[mask]
-    today_vol = hourly["Volume"][mask]
 
-    cum_vol = today_vol.cumsum()
-    if cum_vol.iloc[-1] == 0:
-        return float(hourly["Close"].iloc[-1])
-
-    return float((today_tp * today_vol).cumsum().iloc[-1] / cum_vol.iloc[-1])
+def session_vwap(frame: pd.DataFrame) -> float:
+    """Typical-price VWAP, reset by New York session date, not rolling bars."""
+    if (frame is None or frame.empty or not isinstance(frame.index, pd.DatetimeIndex)
+            or frame.index.tz is None or not frame.index.is_unique or not frame.index.is_monotonic_increasing):
+        raise ValueError("Session VWAP requires ordered timezone-aware intraday bars")
+    dates = frame.index.tz_convert("America/New_York").date
+    window = frame.loc[dates == dates[-1], ["High", "Low", "Close", "Volume"]].astype(float)
+    if (not np.isfinite(window.to_numpy()).all() or (window["Volume"] < 0).any()
+            or (window[["High", "Low", "Close"]] <= 0).any().any()
+            or (window["Low"] > window["High"]).any()
+            or (window["Close"] < window["Low"]).any()
+            or (window["Close"] > window["High"]).any()):
+        raise ValueError("Session VWAP requires valid OHLCV")
+    volume = float(window["Volume"].sum())
+    if volume <= 0:
+        raise ValueError("Session VWAP volume unavailable")
+    typical = window[["High", "Low", "Close"]].mean(axis=1)
+    return float((typical * window["Volume"]).sum() / volume)
 
 
 def compute_ema(daily: pd.DataFrame, period: int = 20) -> float:

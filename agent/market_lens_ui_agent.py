@@ -29,6 +29,7 @@ from app.agent_dashboard import read_trade_analytics as dashboard_read_trade_ana
 from app.agent_risk import build_agent_run_context, evaluate_agent_candidate
 from app.trading_clock import session_status
 from app.performance_summary import write_performance_summaries
+from app.policy_evidence import write_policy_manifest
 from app.run_status import (
     AUTH_FAILED,
     FAILED,
@@ -428,18 +429,19 @@ def login(page: Page, settings: Settings, deadline: float) -> str:
 def configure_scan(page: Page, settings: Settings, deadline: float) -> list[str]:
     page.locator('[data-testid="min-rr-input"]').fill(str(settings.min_rr))
     page.locator('[data-testid="analysis-period-select"]').select_option(settings.analysis_period)
-    open_tickers = read_open_position_tickers(settings.excel_path)
-    watch_ready_tickers = read_recent_watch_ready_tickers(settings.excel_path)
-    watch_tickers = read_recent_watch_tickers(settings.excel_path)
-    near_miss_tickers = read_recent_near_miss_tickers(settings.excel_path)
+    followups = read_scan_followup_tickers(settings.excel_path)
+    open_tickers = followups["open"]
+    watch_ready_tickers = followups["ready"]
+    watch_tickers = followups["watch"]
+    near_miss_tickers = followups["near"]
     carry_forward_tickers = limited_carry_forward_tickers(
         open_tickers,
         watch_tickers,
         near_miss_tickers,
         watch_ready_tickers=watch_ready_tickers,
     )
-    skipped_tickers = read_recent_skip_tickers(settings.excel_path)
-    scanned_today_tickers = read_today_scanned_tickers(settings.excel_path)
+    skipped_tickers = followups["skip"]
+    scanned_today_tickers = followups["today"]
     rotation_exclusions = unique_tickers(skipped_tickers + scanned_today_tickers)
     if carry_forward_tickers:
         log(
@@ -1277,6 +1279,7 @@ def update_workbook(
 
     phase_started = time.monotonic()
     for result in allocation_order:
+        snapshot_cache = {}
         def evaluate_selection(result):
             decision = decide(
                 result,
@@ -1309,6 +1312,8 @@ def update_workbook(
                 neutral_pilot_trades_today=neutral_pilot_buys_today,
                 currency_rate=currency_rate,
                 base_min_rr=min_rr,
+                preliminary_max_risk=max_risk,
+                snapshot_cache=snapshot_cache,
             )
             return decision, decision_json
 
@@ -1404,6 +1409,15 @@ def update_workbook(
         open_position_tickers=initial_open_position_tickers | set(open_positions),
     )
     mark_runtime_phase(workbook_phase_seconds, "chart_retention_seconds", phase_started)
+    try:
+        write_policy_manifest(RUN_DIR / "policies", run_context.config, base_min_rr=min_rr,
+                              preliminary_max_risk=max_risk, currency_rate=currency_rate)
+        policy_manifest_status = "VERIFIED_LOCAL"
+    except Exception as exc:
+        errors.append(f"POLICY_MANIFEST_FAILED: {exc}")
+        policy_manifest_status = "FAILED"
+    for record in decision_records:
+        record["decision_policy_manifest_status"] = policy_manifest_status
     phase_started = time.monotonic()
     for result, decision in pending_decisions:
         if result.ticker in open_positions and (result.chart_url or result.ticker in new_buy_tickers):
@@ -2129,13 +2143,41 @@ def read_open_position_tickers(excel_path: Path) -> list[str]:
         wb.close()
 
 
-def read_recent_watch_tickers(excel_path: Path, days: int | None = None) -> list[str]:
+def read_scan_followup_tickers(excel_path: Path) -> dict[str, list[str]]:
+    """Read one compact workbook projection for all discovery queues."""
+    rows = []
+    open_tickers = []
+    wb = load_workbook(excel_path, read_only=True, data_only=True)
+    try:
+        if "Open Positions" in wb:
+            open_tickers = [str(row[0]).upper() for row in wb["Open Positions"].iter_rows(min_row=2, values_only=True) if row[0]]
+        if "Setup Watchlist" in wb:
+            for row in wb["Setup Watchlist"].iter_rows(min_row=2, values_only=True):
+                payload = parse_json_cell(row[17] if len(row) > 17 else "")
+                action = str(row[12] or "") if len(row) > 12 else ""
+                compact = {k: payload[k] for k in ("setup_type", "setup_score", "final_display_score", "net_rr", "net_rr_1") if k in payload}
+                compact["watch_status"] = "WATCH_READY" if is_watch_ready_payload(action, payload) else "REVIEW"
+                projected = [None] * 18
+                for index in (0, 1, 2, 12):
+                    projected[index] = row[index] if len(row) > index else None
+                projected[17] = json.dumps(compact)
+                rows.append(projected)
+    finally:
+        wb.close()
+    return {"open": open_tickers, "ready": read_recent_watch_ready_tickers(excel_path, rows=rows),
+            "watch": read_recent_watch_tickers(excel_path, rows=rows),
+            "near": read_recent_near_miss_tickers(excel_path, rows=rows),
+            "skip": read_recent_skip_tickers(excel_path, rows=rows),
+            "today": read_today_scanned_tickers(excel_path, rows=rows)}
+
+
+def read_recent_watch_tickers(excel_path: Path, days: int | None = None, *, rows=None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_CARRY_FORWARD_DAYS", "14"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
-    return read_recent_action_tickers(excel_path, "WATCH", cutoff)
+    return read_recent_action_tickers(excel_path, "WATCH", cutoff, rows=rows)
 
 
-def read_recent_watch_ready_tickers(excel_path: Path, days: int | None = None) -> list[str]:
+def read_recent_watch_ready_tickers(excel_path: Path, days: int | None = None, *, rows=None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_WATCH_READY_CARRY_FORWARD_DAYS", "5"))
     cutoff = datetime.now() - timedelta(days=lookback_days)
     return read_recent_action_tickers(
@@ -2143,24 +2185,29 @@ def read_recent_watch_ready_tickers(excel_path: Path, days: int | None = None) -
         "WATCH_READY",
         cutoff,
         decision_predicate=is_watch_ready_payload,
+        rows=rows,
     )
 
 
-def read_recent_near_miss_tickers(excel_path: Path, days: int | None = None) -> list[str]:
+def read_recent_near_miss_tickers(excel_path: Path, days: int | None = None, *, rows=None) -> list[str]:
     lookback_days = days or int(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_DAYS", "5"))
     if lookback_days <= 0:
         return []
     cutoff = datetime.now() - timedelta(days=lookback_days)
     min_score = float(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_MIN_SETUP_SCORE", "0.35"))
     min_net_rr = float(os.getenv("MARKET_LENS_AGENT_NEAR_MISS_MIN_NET_RR", "1.50"))
-    try:
-        wb = load_workbook(excel_path, read_only=True, data_only=True)
-        ws = wb["Setup Watchlist"]
-    except Exception:
-        return []
+    wb = None
+    if rows is None:
+        try:
+            wb = load_workbook(excel_path, read_only=True, data_only=True)
+            rows = wb["Setup Watchlist"].iter_rows(min_row=2, values_only=True)
+        except Exception:
+            if wb is not None:
+                wb.close()
+            return []
     try:
         latest: dict[str, tuple[datetime, bool]] = {}
-        for row in ws.iter_rows(min_row=2, values_only=True):
+        for row in rows:
             ticker = str(row[1] or "").upper().strip() if len(row) > 1 else ""
             action = str(row[12] or "").upper().strip() if len(row) > 12 else ""
             timestamp = parse_agent_timestamp(row[0] if row else None)
@@ -2189,16 +2236,17 @@ def read_recent_near_miss_tickers(excel_path: Path, days: int | None = None) -> 
         }
         return sorted(matching, key=lambda ticker: matching[ticker], reverse=True)
     finally:
-        wb.close()
+        if wb is not None:
+            wb.close()
 
 
-def read_recent_skip_tickers(excel_path: Path, hours: int | None = None) -> list[str]:
+def read_recent_skip_tickers(excel_path: Path, hours: int | None = None, *, rows=None) -> list[str]:
     cooldown_hours = hours or int(os.getenv("MARKET_LENS_SKIP_COOLDOWN_HOURS", "8"))
     cutoff = datetime.now() - timedelta(hours=cooldown_hours)
-    return read_recent_action_tickers(excel_path, "SKIP", cutoff)
+    return read_recent_action_tickers(excel_path, "SKIP", cutoff, rows=rows)
 
 
-def read_today_scanned_tickers(excel_path: Path, now: datetime | None = None) -> list[str]:
+def read_today_scanned_tickers(excel_path: Path, now: datetime | None = None, *, rows=None) -> list[str]:
     if not env_bool("MARKET_LENS_AGENT_DAILY_ROTATION_ENABLED", True):
         return []
     current = (now or datetime.now()).replace(tzinfo=None)
@@ -2207,6 +2255,7 @@ def read_today_scanned_tickers(excel_path: Path, now: datetime | None = None) ->
         excel_path,
         {"BUY_SIMULATED", "WATCH", "WATCH_READY", "SKIP", "HOLD"},
         cutoff,
+        rows=rows,
     )
 
 
@@ -2301,16 +2350,21 @@ def read_recent_action_tickers(
     cutoff: datetime,
     *,
     decision_predicate: Any | None = None,
+    rows=None,
 ) -> list[str]:
     action_names = {action_name} if isinstance(action_name, str) else set(action_name)
-    try:
-        wb = load_workbook(excel_path, read_only=True, data_only=True)
-        ws = wb["Setup Watchlist"]
-    except Exception:
-        return []
+    wb = None
+    if rows is None:
+        try:
+            wb = load_workbook(excel_path, read_only=True, data_only=True)
+            rows = wb["Setup Watchlist"].iter_rows(min_row=2, values_only=True)
+        except Exception:
+            if wb is not None:
+                wb.close()
+            return []
     try:
         latest: dict[str, tuple[datetime, bool]] = {}
-        for row in ws.iter_rows(min_row=2, values_only=True):
+        for row in rows:
             ticker = str(row[1] or "").upper().strip() if len(row) > 1 else ""
             action = str(row[12] or "").upper().strip() if len(row) > 12 else ""
             timestamp = parse_agent_timestamp(row[0] if row else None)
@@ -2330,7 +2384,8 @@ def read_recent_action_tickers(
         }
         return sorted(matching, key=lambda ticker: matching[ticker], reverse=True)
     finally:
-        wb.close()
+        if wb is not None:
+            wb.close()
 
 
 def parse_agent_timestamp(value: Any) -> datetime | None:
