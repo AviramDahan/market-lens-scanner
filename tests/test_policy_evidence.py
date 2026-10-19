@@ -1,5 +1,6 @@
 from dataclasses import replace
 import json
+import os
 from datetime import date
 
 from app.agent_risk import AgentRiskConfig
@@ -31,6 +32,28 @@ def test_config_change_starts_new_measurement_cohort_without_mutation():
     cfg = config()
     assert policy_manifest(cfg)["fingerprint"] != policy_manifest(replace(cfg, minimum_primary_net_rr=1.2))["fingerprint"]
     assert cfg.minimum_primary_net_rr == .8
+
+
+def test_new_root_worker_manifest_directory_inherits_host_parent_owner(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(os, "geteuid", lambda: 0, raising=False)
+    monkeypatch.setattr(os, "chown", lambda *args: calls.append(args), raising=False)
+    directory = tmp_path / "policies"
+    path = write_policy_manifest(directory, config())
+    parent = tmp_path.stat()
+    assert calls == [(directory, parent.st_uid, parent.st_gid)]
+    assert path.is_file()
+    if os.name == "posix":
+        assert path.parent.stat().st_mode & 0o002 == 0
+    assert json.loads(path.read_text())["fingerprint"] == policy_manifest(config())["fingerprint"]
+    write_policy_manifest(directory, config())
+    assert len(calls) == 1, "Existing directory ownership must not be changed"
+
+
+def test_unprivileged_manifest_writer_never_requests_chown(monkeypatch, tmp_path):
+    monkeypatch.setattr(os, "geteuid", lambda: 1000, raising=False)
+    monkeypatch.setattr(os, "chown", lambda *args: (_ for _ in ()).throw(AssertionError("chown")), raising=False)
+    assert write_policy_manifest(tmp_path / "policies", config()).is_file()
 
 
 def test_effective_api_workbook_gates_and_currency_change_policy_identity():
