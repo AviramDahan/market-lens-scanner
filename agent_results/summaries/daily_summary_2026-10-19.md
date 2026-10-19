@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-19
-Total scans: 23
-Tickers scanned: 4138
+Total scans: 24
+Tickers scanned: 4318
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1372
-WATCH_REVIEW unique tickers: 137
+WATCH_REVIEW: 1409
+WATCH_REVIEW unique tickers: 138
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1372
-SKIP: 2766
-NO_TRADE: 2083
+WATCH: 1409
+SKIP: 2909
+NO_TRADE: 2201
 Realized PnL: 0.0
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -37,7 +37,7 @@ Top rejected candidates:
 - CVX: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.22.
 - HALO: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.15.
 - RVTY: WATCH score=0.467 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.19.
-- EQH: SKIP score=0.4607 reason=SKIP: Financials sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 0.80.
+- FANG: WATCH score=0.4608 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.11.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
