@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pandas as pd
 import pytest
 
-from app.agent_risk import AgentRiskConfig, assess_agent_market_regime
+from app.agent_risk import AgentRiskConfig, assess_agent_market_regime, vix_is_calm, vix_is_stressed
 from app.data import _fetch_frame
 from app.regime_evidence import (
     cached_regime_state,
@@ -15,6 +15,30 @@ from app.regime_evidence import (
 
 def frame(day):
     return pd.DataFrame({"Close": [100.]}, index=pd.DatetimeIndex([day]))
+
+
+@pytest.mark.parametrize("state,calm,stressed", [
+    ({"trend": "stressed", "price": 19.99}, False, True),
+    ({"trend": "calm", "price": 25}, False, True),
+    ({"trend": "mixed", "price": 17.56}, True, False),
+    ({"trend": "mixed", "price": 22}, False, False),
+    ({}, False, False),
+])
+def test_vix_regime_is_never_both_calm_and_stressed(state, calm, stressed):
+    assert vix_is_calm(state) is calm
+    assert vix_is_stressed(state) is stressed
+
+
+def test_stressed_vix_below_twenty_has_negative_regime_contribution(monkeypatch):
+    states = iter([
+        {"trend": "mixed"}, {"trend": "mixed"}, {"trend": "mixed"},
+        {"trend": "stressed", "price": 19.99}, {"trend": "mixed"}, {"trend": "mixed"},
+    ])
+    monkeypatch.setattr("app.agent_risk.fetch_daily_frame", lambda *a, **k: frame("2026-10-16"))
+    monkeypatch.setattr("app.agent_risk.benchmark_state", lambda *a, **k: next(states))
+    regime = assess_agent_market_regime(AgentRiskConfig(100000, 40000, 10000),
+                                      evaluated_at=datetime.fromisoformat("2026-10-16T21:00:00+00:00"))
+    assert regime.indicators["VIX"]["risk_point_contribution"] == -2
 
 
 def history_ending(day: str, *, rising: bool = True) -> pd.DataFrame:

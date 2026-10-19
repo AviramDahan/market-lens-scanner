@@ -380,6 +380,38 @@ def test_market_session_regular_allows_new_buy() -> None:
     assert session["can_open_new_buy"] is True
 
 
+def test_selection_snapshot_cache_reuses_market_data_not_portfolio_limits(monkeypatch):
+    from copy import deepcopy
+    import app.agent_risk as module
+
+    _patch_risk_dependencies(monkeypatch, net_rr=3.0, confirmation_passed=True)
+    build = module.build_candidate_snapshot
+    calls = []
+    def counted(*args):
+        calls.append(1)
+        return build(*args)
+    monkeypatch.setattr(module, "build_candidate_snapshot", counted)
+    ctx = context("BULL")
+    ctx.sector_health = {"Technology": {"label": "Strong", "score": 80, "etf": "XLK"}}
+    args = dict(timestamp="2026-07-08T14:30:00+00:00", result=result(), initial_action="BUY_SIMULATED",
+                initial_reason="base buy", quantity=100, cash_out=10000, risk_amount=500,
+                cash_available=90000, portfolio_exposure_before=0, open_positions={}, sector_map={"TEST": "Technology"},
+                run_context=ctx)
+    cache = {}
+    before = deepcopy(ctx)
+    cached = module.evaluate_agent_candidate(**args, snapshot_cache=cache)
+    assert len(calls) == 1
+    repeat = module.evaluate_agent_candidate(**args, snapshot_cache=cache)
+    assert repeat == cached
+    assert len(calls) == 1
+    assert module.evaluate_agent_candidate(**args) == cached
+    assert len(calls) == 2
+    limited = module.evaluate_agent_candidate(**{**args, "cash_available": 0}, snapshot_cache=cache)
+    assert limited["position_size"] == 0
+    assert limited["final_action"] != "BUY_SIMULATED"
+    assert ctx == before
+
+
 def test_market_session_weekend_stages_new_buy() -> None:
     session = market_session_status(
         now=pd.Timestamp("2026-06-20T10:30:00-04:00").to_pydatetime(),
@@ -788,6 +820,9 @@ def _patch_risk_dependencies(monkeypatch, *, net_rr: float = 2.05, confirmation_
     monkeypatch.setattr(
         "app.agent_risk.correlation_check",
         lambda **kwargs: {
+            "status": "NOT_REQUIRED",
+            "positions_expected": 0,
+            "positions_checked": 0,
             "correlation_warning": False,
             "highest_correlation_ticker": "",
             "highest_correlation_value": None,

@@ -5,6 +5,14 @@ def test_absent_evidence_never_passes():
     assert not any(row['status'] == 'pass' for row in watch_entry_checklist({}))
 
 
+def test_unknown_correlation_is_not_a_green_check():
+    rows = watch_entry_checklist(dict(correlation_status="UNKNOWN", correlation_warning=False,
+                                     correlation_positions_checked=0, correlation_positions_expected=1))
+    row = next(row for row in rows if row["label"] == "Correlation coverage")
+    assert row["status"] == "unknown"
+    assert "0 / Expected: 1" in row["detail"]
+
+
 def test_candle_confirmation_does_not_override_score_or_capital_blockers():
     decision = dict(entry_confirmation_passed=True, setup_score=0.41,
                     minimum_setup_score_required=0.55, net_rr=1.49,

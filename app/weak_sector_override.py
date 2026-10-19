@@ -12,6 +12,7 @@ from typing import Any
 
 from app.decision_quality_analysis import simulate_fixed_plan
 from app.setup_selection_replay import exchange_session_identity, parse_timestamp
+from app.risk_evidence import correlation_passed
 
 
 EXPERIMENT_NAME = "WEAK_SECTOR_OVERRIDE_V1"
@@ -78,7 +79,7 @@ def measure_sector_gate_counterfactual(
             portfolio_open_risk_before=portfolio_open_risk_before,
             recent_stop_events=deepcopy(recent_stop_events),
             neutral_pilot_trades_today=neutral_pilot_trades_today,
-            currency_rate=currency_rate, base_min_rr=base_min_rr,
+            currency_rate=currency_rate, base_min_rr=base_min_rr, preliminary_max_risk=max_risk,
         )
         measured["weighted_net_rr"] = measured.get("net_rr")
         measured["setup_score_bucket"] = active_record.get("setup_score_bucket")
@@ -265,7 +266,7 @@ def _explicit_gate_evidence(record: dict[str, Any], *, path: str) -> list[dict[s
         ),
         _check(
             "correlation",
-            None if correlation is None else correlation is False,
+            correlation_passed(record),
             f"warning={correlation}",
         ),
         _check(

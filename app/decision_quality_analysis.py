@@ -8,6 +8,7 @@ from typing import Any
 from app.execution import EXECUTION_VERSION, sell_fill
 from app.setup_selection_replay import exchange_session_identity, parse_timestamp
 from app.shadow_strategies import evaluate_shadow_strategies
+from app.risk_evidence import correlation_passed
 
 
 UNCHANGED_PLAN_SHADOWS = {
@@ -154,7 +155,7 @@ def entry_path_assessment(record: dict[str, Any], *, path: str) -> dict[str, Any
     correlation = record.get("correlation_warning")
     check(
         "correlation",
-        None if correlation is None else not bool(correlation),
+        correlation_passed(record),
         f"warning={correlation}",
     )
 

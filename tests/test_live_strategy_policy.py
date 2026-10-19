@@ -136,7 +136,7 @@ def test_scanner_does_not_compute_fib_when_retired(monkeypatch):
 
     monkeypatch.setenv("MARKET_LENS_FIBONACCI_ENTRIES_ENABLED", "false")
     frame = pd.DataFrame(dict(Close=[100.]*220, High=[102.]*220, Low=[98.]*220, Volume=[1000.]*220),
-                         index=pd.date_range("2026-01-01", periods=220))
+                         index=pd.date_range("2026-01-01", periods=220, tz="UTC"))
     monkeypatch.setattr(scanner, "fetch_ticker", lambda *_a, **_k: SimpleNamespace(
         daily=frame, hourly=frame, weekly=frame))
     monkeypatch.setattr(scanner, "get_best_fib", lambda *_a, **_k: pytest.fail("Fib computed"))

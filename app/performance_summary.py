@@ -11,6 +11,7 @@ from functools import lru_cache
 from typing import Any
 
 from app.trading_clock import session_bounds
+from app.policy_evidence import EXECUTION_ASSUMPTIONS
 
 
 # These nested diagnostics are retained in JSONL but are not used by summaries.
@@ -227,6 +228,11 @@ def build_period_summary(
         )),
         "performance_by_strategy_version": trade_performance_by(performance_records, "strategy_version"),
         "performance_by_execution_model_version": trade_performance_by(performance_records, "execution_model_version"),
+        "performance_by_decision_policy": trade_performance_by(performance_records, "decision_policy_fingerprint") if completed_trades is not None else None,
+        "performance_by_policy_setup_score": policy_setup_score_performance(performance_records) if completed_trades is not None else None,
+        "policy_calibration_status": "CLOSED_LIFECYCLES_PROVIDED" if completed_trades is not None else "MISSING_COMPLETED_TRADE_LIFECYCLES",
+        "decision_policy_coverage": dict(Counter(str(record.get("decision_policy_fingerprint") or "LEGACY_UNRECORDED") for record in records)),
+        "policy_manifest_coverage": dict(Counter(str(record.get("decision_policy_manifest_status") or "LEGACY_UNRECORDED") for record in records)),
         "history_coverage_status": "AVAILABLE_FILES_ONLY_NOT_INDEPENDENTLY_VERIFIED",
         "date": target_date.isoformat() if period == "daily" else None,
         "week_start": week_start.isoformat() if period == "weekly" else None,
@@ -339,6 +345,8 @@ def build_period_summary(
         "average_winner_R": rounded_mean(winners),
         "average_loser_R": rounded_mean(losers),
         "max_drawdown": realized_max_drawdown(full_trade_pnl_values) if completed_trades is not None else None,
+        "max_drawdown_basis": "REALIZED_CLOSED_TRADE_PNL_IN_PORTFOLIO_CURRENCY_NOT_MARK_TO_MARKET",
+        "execution_model_assumptions": EXECUTION_ASSUMPTIONS,
         "most_frequent_actionable_setup": best_counter(actionable_setups),
         "best_setup_type": best_performance_group(setup_performance),
         "worst_setup_type": worst_performance_group(setup_performance),
@@ -1047,6 +1055,14 @@ def trade_performance_by(events: list[dict[str, Any]], key: str) -> dict[str, di
             "win_rate": round(wins / len(items) * 100, 2) if items else None,
         }
     return output
+
+
+def policy_setup_score_performance(trades: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Closed lifecycle calibration; never pool distinct policy/score definitions."""
+    projected = [{**trade, "calibration_group": " / ".join(str(trade.get(k) or "LEGACY_UNRECORDED") for k in (
+        "decision_policy_fingerprint", "score_definition_version", "setup_type", "setup_score_bucket"
+    ))} for trade in trades]
+    return trade_performance_by(projected, "calibration_group")
 
 
 def best_performance_group(values: dict[str, dict[str, Any]]) -> str:

@@ -16,6 +16,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from openpyxl import load_workbook
 
 from app.run_status import build_scan_coverage, normalize_run_status
+from app.risk_evidence import correlation_passed
 from app.smart_universe import base_universe, company_name_for
 
 
@@ -960,6 +961,9 @@ def entry_missing_conditions(
         conditions.append(
             blocker_condition("correlation", "Correlation warning", f"High correlation with {ticker} ({value:.2f}).", "warn")
         )
+    elif decision.get("correlation_status") in {"UNKNOWN", "PARTIAL", "LEGACY_UNRECORDED"}:
+        conditions.append(blocker_condition("correlation_data", "Correlation not verified",
+                                           "Comparison coverage is incomplete; this is not a passed check.", "need"))
     if not bool(decision.get("entry_confirmation_passed")) and (
         "entry confirmation" in text
         or "confirmed entry" in text
@@ -1089,6 +1093,12 @@ def watch_entry_checklist(decision: dict[str, Any]) -> list[dict[str, str]]:
     cooldown = decision.get("cooldown_active")
     add("Stop-loss cooldown", "pass" if cooldown is False or decision.get("cooldown_exception_used") is True else "fail" if cooldown is True else "unknown",
         f"Active: {cooldown} | Exception: {decision.get('cooldown_exception_used', 'Not recorded')}")
+
+    correlation = correlation_passed(decision)
+    add("Correlation coverage", "unknown" if correlation is None else "pass" if correlation else "fail",
+        f"Status: {decision.get('correlation_status', 'Legacy evidence')} | "
+        f"Checked: {decision.get('correlation_positions_checked', 'Not recorded')} / "
+        f"Expected: {decision.get('correlation_positions_expected', 'Not recorded')}")
 
     for label, fields in (
         ("Market / sector", ("market_regime", "sector_regime")),
@@ -2355,6 +2365,9 @@ def compute_full_trade_performance(trades: list[dict[str, Any]]) -> dict[str, An
                 "stop_loss": stop,
                 "strategy_version": decision.get("strategy_version", "legacy"),
                 "execution_model_version": decision.get("execution_model_version", "legacy"),
+                "decision_policy_version": decision.get("decision_policy_version", "LEGACY_UNRECORDED"),
+                "decision_policy_fingerprint": decision.get("decision_policy_fingerprint", "LEGACY_UNRECORDED"),
+                "score_definition_version": decision.get("score_definition_version", "LEGACY_UNRECORDED"),
                 "modeled_costs": to_float(decision.get("entry_cost_per_share")) * quantity * usd_ils,
                 "initial_quantity": quantity,
                 "remaining_quantity": quantity,
@@ -2491,6 +2504,9 @@ def completed_full_trade(lot: dict[str, Any], exit_timestamp: Any) -> dict[str, 
     return {
         "strategy_version": lot.get("strategy_version", "legacy"),
         "execution_model_version": lot.get("execution_model_version", "legacy"),
+        "decision_policy_version": lot.get("decision_policy_version", "LEGACY_UNRECORDED"),
+        "decision_policy_fingerprint": lot.get("decision_policy_fingerprint", "LEGACY_UNRECORDED"),
+        "score_definition_version": lot.get("score_definition_version", "LEGACY_UNRECORDED"),
         "modeled_costs": round(to_float(lot.get("modeled_costs")), 2),
         "trade_id": lot.get("trade_id", ""),
         "ticker": lot.get("ticker", ""),

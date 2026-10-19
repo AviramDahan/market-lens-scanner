@@ -5,6 +5,14 @@ from copy import deepcopy
 from app.setup_selection_replay import assess_candidate, build_setup_selection_replay, candidate_rr
 
 
+def test_unknown_correlation_cannot_produce_passed_replay_eligibility():
+    record = decision()
+    record.update(correlation_status="UNKNOWN", correlation_warning=False)
+    value = assess_candidate(record, record["setup_candidates"][0], active=True)
+    assert value["counterfactual_entry_eligibility"] != "PASS"
+    assert next(check for check in value["gate_evidence"] if check["name"] == "correlation")["status"] == "UNASSESSABLE"
+
+
 def decision() -> dict:
     return {
         "timestamp": "2026-09-01T14:00:00",

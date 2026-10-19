@@ -10,6 +10,31 @@ const deferred = () => {
   const promise = new Promise(done => { resolve = done; });
   return { promise, resolve };
 };
+
+test('unknown correlation is never rendered as OK or a passed checklist', () => {
+  const h = harness();
+  for (const status of ['UNKNOWN', 'PARTIAL', 'LEGACY_UNRECORDED']) {
+    h.context.item = {decision_json: {correlation_status: status, correlation_warning: false,
+      correlation_positions_checked: 0, correlation_positions_expected: 1}};
+    assert.match(h.run('riskCheckPills(item)'), /Not verified/);
+    assert.doesNotMatch(h.run('riskCheckPills(item)'), /> OK</);
+    assert.equal(h.run('buildEntryChecklistItems(item).find(x=>x.label==="Correlation").status'), 'unknown');
+  }
+});
+
+test('known correlation failures survive incomplete coverage', () => {
+  const h = harness();
+  h.context.evidence = {correlation_status: 'PARTIAL', correlation_warning: true,
+    highest_correlation_ticker: 'NVDA', highest_correlation_value: .92};
+  assert.equal(h.run('correlationCheck(evidence).status'), 'warn');
+  assert.match(h.run('correlationCheck(evidence).detail'), /NVDA 0.92/);
+});
+
+test('no peers is not required, while missing evidence is unknown', () => {
+  const h = harness();
+  assert.equal(h.run('correlationCheck({}).status'), 'unknown');
+  assert.equal(h.run('correlationCheck({correlation_status:"NOT_REQUIRED",correlation_warning:false}).status'), 'pass');
+});
 function dashboard(version = 'v1', run = 'scan-a') {
   return {
     status: 'ok', dashboard_refresh_version: version,

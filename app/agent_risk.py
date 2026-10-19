@@ -11,8 +11,10 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from app.data import fetch_daily_frame, fetch_intraday_frame, fetch_next_earnings_date
-from app.indicators import compute_atr
+from app.indicators import compute_atr, session_vwap
 from app.entry_policy import breakout_continuation_profile
+from app.execution import position_metadata
+from app.policy_evidence import decision_policy_evidence
 from app.regime_evidence import (
     cached_regime_state,
     completed_regime_frame,
@@ -171,6 +173,7 @@ def build_agent_run_context(
         analysis_period=analysis_period,
         bull_min_setup_score=float(os.getenv("MARKET_LENS_BULL_MIN_SETUP_SCORE", "0.45")),
         neutral_min_setup_score=float(os.getenv("MARKET_LENS_NEUTRAL_MIN_SETUP_SCORE", "0.55")),
+        correlation_block_threshold=float(os.getenv("MARKET_LENS_CORRELATION_BLOCK_THRESHOLD", "0.85")),
         primary_rr_weight=float(os.getenv("MARKET_LENS_PRIMARY_RR_WEIGHT", "0.80")),
         stretch_rr_weight=float(os.getenv("MARKET_LENS_STRETCH_RR_WEIGHT", "0.20")),
         minimum_primary_net_rr=float(os.getenv("MARKET_LENS_MIN_PRIMARY_NET_RR", "0.80")),
@@ -478,12 +481,21 @@ def evaluate_agent_candidate(
     neutral_pilot_trades_today: int = 0,
     currency_rate: float = 1.0,
     base_min_rr: float = 2.0,
+    preliminary_max_risk: float | None = None,
+    snapshot_cache: dict[str, CandidateMarketSnapshot] | None = None,
 ) -> dict[str, Any]:
     config = run_context.config
     ticker = str(result.ticker).upper()
     sector = sector_map.get(ticker, "Unknown")
     sector_info = sector_regime_for(sector, run_context.sector_health)
-    snapshot = build_candidate_snapshot(ticker, result.current_price, config)
+    # Caller owns this cache for one ticker's candidate-selection pass only.
+    # Portfolio sizing, gates and correlations are always evaluated again.
+    if snapshot_cache is not None and ticker in snapshot_cache:
+        snapshot = snapshot_cache[ticker]
+    else:
+        snapshot = build_candidate_snapshot(ticker, result.current_price, config)
+        if snapshot_cache is not None:
+            snapshot_cache[ticker] = snapshot
     factor_tags = factor_tags_for(ticker, sector, snapshot.market_cap_bucket)
     net_rr_info = calculate_net_rr(result, snapshot, config)
     earnings_info = calculate_earnings_blackout(ticker, config)
@@ -616,6 +628,7 @@ def evaluate_agent_candidate(
         candidate_daily=snapshot.daily,
         open_positions=open_positions,
         analysis_period=config.analysis_period,
+        threshold=config.correlation_block_threshold,
     )
 
     warnings = []
@@ -707,6 +720,8 @@ def evaluate_agent_candidate(
                 )
             if sizing["adjusted"]:
                 final_reason += f" Position size reduced to {effective_quantity} shares to fit exposure caps."
+            if correlation.get("status") in {"UNKNOWN", "PARTIAL"}:
+                final_reason = final_reason.replace("correlation acceptable", "correlation not fully verified (see warnings)")
     elif initial_action == "WATCH":
         final_reason = enrich_non_buy_reason("WATCH", initial_reason, run_context, sector_info, net_rr_info)
     elif initial_action == "SKIP":
@@ -755,6 +770,8 @@ def evaluate_agent_candidate(
     )
     from app.execution import EXECUTION_VERSION, STRATEGY_VERSION
     decision = {
+        **decision_policy_evidence(config, base_min_rr=base_min_rr,
+                                   preliminary_max_risk=preliminary_max_risk, currency_rate=currency_rate),
         "strategy_version": STRATEGY_VERSION,
         "execution_model_version": EXECUTION_VERSION,
         "entry_signal_price": result.current_price,
@@ -867,6 +884,8 @@ def evaluate_agent_candidate(
         "technical_confirmation_passed": technical_confirmation_passed,
         "confirmation_timing_valid": confirmation_freshness["status"] == "FRESH_SAME_SESSION",
         "confirmation_timeframe": confirmation["confirmation_timeframe"],
+        "confirmation_vwap_reference": confirmation.get("confirmation_vwap_reference"),
+        "confirmation_vwap_price": confirmation.get("confirmation_vwap_price"),
         "confirmation_candle_timestamp": confirmation["confirmation_candle_timestamp"],
         "confirmation_lookback_candles": config.entry_confirmation_lookback_candles,
         "confirmation_window_used": confirmation.get("confirmation_window_used", 1),
@@ -924,6 +943,10 @@ def evaluate_agent_candidate(
         "factor_exposure_cap": factor_exposure["cap"],
         "factor_exposure_limit_exceeded": factor_exposure["limit_exceeded"],
         "correlation_warning": correlation["correlation_warning"],
+        "correlation_status": correlation.get("status", "LEGACY_UNRECORDED"),
+        "correlation_positions_expected": correlation.get("positions_expected"),
+        "correlation_positions_checked": correlation.get("positions_checked"),
+        "correlation_missing_tickers": correlation.get("missing_tickers", []),
         "highest_correlation_ticker": correlation["highest_correlation_ticker"],
         "highest_correlation_value": correlation["highest_correlation_value"],
         "cooldown_active": cooldown["cooldown_active"],
@@ -2130,7 +2153,8 @@ def calculate_entry_confirmation_from_frame(
             buy_high=buy_high,
             timeframe=timeframe,
             confirmation_window_used=offset,
-            vwap=rolling_vwap(completed.iloc[: len(completed) - offset + 1]),
+            vwap=(rolling_vwap(completed.iloc[: len(completed) - offset + 1])
+                  if timeframe.removesuffix("_completed") in INTERVAL_MINUTES else None),
         )
         attempts.append(attempt)
         if not attempt["entry_confirmation_passed"]:
@@ -2201,9 +2225,9 @@ def entry_confirmation_from_candles(
         retest_held = close >= buy_low and not falling_into_zone
         passed = vwap_reclaimed and retest_held
         reason = (
-            "Completed candle reclaimed VWAP proxy and held the setup zone."
+            "Completed candle reclaimed regular-session VWAP and held the setup zone."
             if passed
-            else "VWAP reclaim requires completed close above VWAP proxy with hold/follow-through."
+            else "VWAP reclaim requires completed close above regular-session VWAP with hold/follow-through."
         )
     else:
         zone_width = max(0.0, buy_high - buy_low)
@@ -2239,6 +2263,8 @@ def entry_confirmation_from_candles(
         "retest_held": bool(retest_held),
         "entry_confirmation_passed": bool(passed),
         "confirmation_timeframe": timeframe,
+        "confirmation_vwap_reference": "REGULAR_SESSION_VWAP" if "vwap" in setup_type else None,
+        "confirmation_vwap_price": round(vwap, 4) if vwap is not None and "vwap" in setup_type else None,
         "confirmation_candle_timestamp": candle_timestamp,
         "confirmation_window_used": confirmation_window_used,
         "warnings": [] if passed else [reason],
@@ -2267,15 +2293,15 @@ def latest_candle_keeps_setup_relevant(
 
 
 def rolling_vwap(frame: pd.DataFrame, lookback: int = 20) -> float | None:
-    if frame is None or frame.empty or not {"High", "Low", "Close", "Volume"}.issubset(frame.columns):
+    """Compatibility name: confirmation now shares the scanner's session reset.
+
+    The old lookback argument no longer mixes prior sessions into the reference.
+    Caller supplies completed regular-session intraday candles only.
+    """
+    try:
+        return session_vwap(frame)
+    except (ValueError, KeyError, TypeError):
         return None
-    window = frame.tail(min(lookback, len(frame)))
-    volume = window["Volume"].astype(float)
-    total_volume = float(volume.sum())
-    if total_volume <= 0:
-        return None
-    typical = (window["High"].astype(float) + window["Low"].astype(float) + window["Close"].astype(float)) / 3.0
-    return float((typical * volume).sum() / total_volume)
 
 
 def cooldown_check(
@@ -2522,7 +2548,14 @@ def current_factor_exposure(
         open_ticker = str(open_ticker).upper()
         if open_ticker == ticker:
             continue
-        tags = factor_tags_for(open_ticker, sector_map.get(open_ticker, "Unknown"), "Unknown")
+        metadata = position_metadata(pos)
+        stored_tags = metadata.get("factor_tags")
+        sector = str(metadata.get("sector") or sector_map.get(open_ticker, "Unknown"))
+        bucket = str(metadata.get("market_cap_bucket") or "Unknown")
+        tags = set(factor_tags_for(open_ticker, sector, bucket))
+        tags.update(factor_tags_for(open_ticker, sector_map.get(open_ticker, "Unknown"), bucket))
+        if isinstance(stored_tags, list):
+            tags.update(tag.strip() for tag in stored_tags if isinstance(tag, str) and tag.strip())
         for tag in tags:
             before[tag] = before.get(tag, 0.0) + float(pos.get("exposure_ils") or 0)
     return before
@@ -2543,51 +2576,67 @@ def correlation_check(
     candidate_daily: pd.DataFrame | None,
     open_positions: dict[str, dict[str, Any]],
     analysis_period: str,
+    threshold: float | None = None,
 ) -> dict[str, Any]:
-    warnings = []
+    warnings: list[str] = []
     best_ticker = ""
     best_corr: float | None = None
-    if candidate_daily is None or candidate_daily.empty or not open_positions:
+    peers = sorted({str(symbol).upper() for symbol in open_positions if str(symbol).upper() != ticker.upper()})
+    checked: list[str] = []
+    missing: list[str] = []
+
+    def evidence() -> dict[str, Any]:
+        limit = threshold if threshold is not None else float(os.getenv("MARKET_LENS_CORRELATION_BLOCK_THRESHOLD", "0.85"))
+        warning = best_corr is not None and best_corr >= limit
+        status = ("NOT_REQUIRED" if not peers else "UNKNOWN" if not checked
+                  else "PARTIAL" if missing else "HIGH" if warning else "PASS")
         return {
-            "correlation_warning": False,
-            "highest_correlation_ticker": "",
-            "highest_correlation_value": None,
+            "status": status,
+            "positions_expected": len(peers), "positions_checked": len(checked),
+            "missing_tickers": missing,
+            "correlation_warning": bool(warning),
+            "highest_correlation_ticker": best_ticker,
+            "highest_correlation_value": round(best_corr, 4) if best_corr is not None else None,
             "warnings": warnings,
         }
-    candidate_returns = candidate_daily["Close"].pct_change().dropna().tail(90)
+
+    if not peers:
+        return evidence()
+    if candidate_daily is None or candidate_daily.empty or "Close" not in candidate_daily:
+        missing.extend(peers)
+        warnings.append("Candidate correlation data unavailable; correlation is not verified.")
+        return evidence()
+    candidate_returns = candidate_daily["Close"].pct_change(fill_method=None).replace([math.inf, -math.inf], float("nan")).dropna().tail(90)
     if len(candidate_returns) < 40:
-        warnings.append("Insufficient candidate history for correlation check.")
-        return {
-            "correlation_warning": False,
-            "highest_correlation_ticker": "",
-            "highest_correlation_value": None,
-            "warnings": warnings,
-        }
-    for open_ticker in open_positions:
-        open_ticker = str(open_ticker).upper()
-        if open_ticker == ticker:
-            continue
+        missing.extend(peers)
+        warnings.append("Insufficient candidate history for correlation check; correlation is not verified.")
+        return evidence()
+    for open_ticker in peers:
         try:
             open_daily = fetch_daily_frame(open_ticker, period=analysis_period)
-            open_returns = open_daily["Close"].pct_change().dropna().tail(90)
+            open_returns = open_daily["Close"].pct_change(fill_method=None).replace([math.inf, -math.inf], float("nan")).dropna().tail(90)
             aligned = pd.concat([candidate_returns, open_returns], axis=1, join="inner").dropna()
             if len(aligned) < 40:
+                missing.append(open_ticker)
+                warnings.append(f"Insufficient overlapping history for {open_ticker}; correlation is not verified.")
+                continue
+            if bool((aligned.std() <= 0).any()):
+                missing.append(open_ticker)
+                warnings.append(f"Undefined correlation for {open_ticker}; correlation is not verified.")
                 continue
             corr = float(aligned.iloc[:, 0].corr(aligned.iloc[:, 1]))
-            if math.isnan(corr):
+            if not math.isfinite(corr):
+                missing.append(open_ticker)
+                warnings.append(f"Undefined correlation for {open_ticker}; correlation is not verified.")
                 continue
+            checked.append(open_ticker)
             if best_corr is None or corr > best_corr:
                 best_corr = corr
                 best_ticker = open_ticker
         except Exception as exc:
+            missing.append(open_ticker)
             warnings.append(f"Correlation data unavailable for {open_ticker}: {exc}")
-    warning = best_corr is not None and best_corr >= float(os.getenv("MARKET_LENS_CORRELATION_BLOCK_THRESHOLD", "0.85"))
-    return {
-        "correlation_warning": bool(warning),
-        "highest_correlation_ticker": best_ticker,
-        "highest_correlation_value": round(best_corr, 4) if best_corr is not None else None,
-        "warnings": warnings,
-    }
+    return evidence()
 
 
 def factor_tags_for(ticker: str, sector: str, market_cap_bucket_value: str) -> list[str]:
@@ -2636,7 +2685,9 @@ def trend_is_bearish(state: dict[str, Any]) -> bool:
 
 
 def vix_is_calm(state: dict[str, Any]) -> bool:
-    return state.get("trend") == "calm" or float(state.get("price") or 99) < 20
+    if vix_is_stressed(state):
+        return False
+    return state.get("trend") == "calm" or 0 < float(state.get("price") or 99) < 20
 
 
 def vix_is_stressed(state: dict[str, Any]) -> bool:

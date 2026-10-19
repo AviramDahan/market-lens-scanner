@@ -5,6 +5,7 @@ from typing import Any
 
 import pandas as pd
 
+from app.indicators import compute_relative_strength
 from app.models import (
     EventRiskInfo,
     LiquidityInfo,
@@ -98,7 +99,7 @@ def assess_relative_strength(daily: pd.DataFrame, benchmarks: dict[str, pd.DataF
         symbol.lower(): _relative_return_ratio(daily, frame)
         for symbol, frame in benchmarks.items()
     }
-    values = [value for value in ratios.values() if value > 0]
+    values = list(ratios.values())
     average_ratio = sum(values) / len(values) if values else 1.0
     score = max(0.0, min(1.0, average_ratio / 1.8))
 
@@ -341,15 +342,14 @@ def _benchmark_trend(daily: pd.DataFrame) -> str:
 
 
 def _relative_return_ratio(daily: pd.DataFrame, benchmark: pd.DataFrame, n_days: int = 20) -> float:
-    if len(daily) < n_days or len(benchmark) < n_days:
+    if "Close" not in daily or "Close" not in benchmark:
         return 1.0
-    ticker_ret = float(daily["Close"].iloc[-1] / daily["Close"].iloc[-n_days] - 1)
-    benchmark_ret = float(benchmark["Close"].iloc[-1] / benchmark["Close"].iloc[-n_days] - 1)
-    if benchmark_ret == 0:
-        return 1.0 + ticker_ret
-    if ticker_ret >= 0 and benchmark_ret < 0:
-        return 1.8
-    return max(0.0, min(2.5, ticker_ret / benchmark_ret))
+    # Share the scanner's aligned, sign-safe return contract. Zero is genuine
+    # underperformance and must remain in the cross-benchmark average.
+    strength = compute_relative_strength(
+        daily, benchmark["Close"].pct_change(fill_method=None), n_days=n_days
+    )
+    return max(0.0, min(2.5, strength))
 
 
 def _largest_recent_gap(daily: pd.DataFrame, lookback: int = 20) -> float:

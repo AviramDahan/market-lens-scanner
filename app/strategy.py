@@ -107,6 +107,7 @@ def apply_strategy_decisions(
     for result_index in allocation_order_indices(results, simulated_positions):
         result = results[result_index]
         candidate = normalize_strategy_candidate(result)
+        snapshot_cache = {}
         def evaluate_selection(candidate):
             decision = decide_strategy_candidate(
                 candidate,
@@ -139,6 +140,8 @@ def apply_strategy_decisions(
                 neutral_pilot_trades_today=neutral_pilot_trades_today,
                 currency_rate=currency_rate,
                 base_min_rr=min_rr,
+                preliminary_max_risk=max_risk,
+                snapshot_cache=snapshot_cache,
             )
             return decision, decision_json
 
