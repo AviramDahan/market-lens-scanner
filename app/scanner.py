@@ -5,11 +5,13 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 
 from app.data import (
+    HOURLY_PERIOD_BY_ANALYSIS_PERIOD,
     fetch_daily_frame,
     fetch_extended_hours_quote,
     fetch_next_earnings_date,
     fetch_spy_returns,
     fetch_ticker,
+    invalidate_frame_if_unchanged,
 )
 from app.fibonacci import detect_swing_low_confluence, get_best_fib
 from app.entry_policy import fibonacci_entries_enabled
@@ -73,13 +75,20 @@ def scan_ticker_detail(
 
     current_price = float(data.daily["Close"].iloc[-1])
     atr = compute_atr(data.daily)
-    vwap = compute_vwap(data.hourly)
+    try:
+        vwap = compute_vwap(data.hourly)
+        vp = filter_hvn(compute_volume_profile(data.hourly), atr)
+    except ValueError:
+        # Focused UI retries must reach the provider when session volume is
+        # incomplete, not reuse an unusable frame for the full cache TTL.
+        invalidate_frame_if_unchanged(ticker, "1h",
+                                     HOURLY_PERIOD_BY_ANALYSIS_PERIOD.get(analysis_period, "60d"), data.hourly)
+        raise
     ema_20 = compute_ema(data.daily)
     ma200_weekly = compute_ma200_weekly(data.weekly)
     price_above_ma200 = current_price > ma200_weekly
     market_structure = compute_market_structure(data.daily)
     vp_scenario = classify_volume_price_scenario(data.daily)
-    vp = filter_hvn(compute_volume_profile(data.hourly), atr)
     fib_info = get_best_fib(data.daily, atr, current_price) if fibonacci_entries_enabled() else None
 
     if spy_returns is None:

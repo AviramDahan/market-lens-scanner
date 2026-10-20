@@ -281,14 +281,19 @@ def _fetch_validated_frame(ticker: str, interval: str, period: str, min_rows: in
     except ValueError:
         # A focused scan retry must reach the provider, not replay an inadequate
         # history for the whole TTL. Do not evict a newer concurrent response.
-        key = (ticker.upper(), interval, period, False)
-        with _CACHE_LOCK:
-            cached = _FRAME_CACHE.get(key)
-            if (cached is not None
-                    and cached[1].attrs.get("provider_fetched_at") == frame.attrs.get("provider_fetched_at")
-                    and cached[1].equals(frame)):
-                _FRAME_CACHE.pop(key, None)
+        invalidate_frame_if_unchanged(ticker, interval, period, frame)
         raise
+
+
+def invalidate_frame_if_unchanged(ticker: str, interval: str, period: str, frame: pd.DataFrame) -> None:
+    """Evict the rejected observation, never a newer concurrent provider reply."""
+    key = (ticker.upper(), interval, period, False)
+    with _CACHE_LOCK:
+        cached = _FRAME_CACHE.get(key)
+        if (cached is not None
+                and cached[1].attrs.get("provider_fetched_at") == frame.attrs.get("provider_fetched_at")
+                and cached[1].equals(frame)):
+            _FRAME_CACHE.pop(key, None)
 
 
 _CACHE_MISS = object()
