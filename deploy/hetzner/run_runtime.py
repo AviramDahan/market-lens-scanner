@@ -265,23 +265,37 @@ def execute(kind: str) -> None:
     print(f"{kind} completed and persisted")
 
 
-@contextmanager
-def writer_lock(timeout: float = 60):
-    STATE.mkdir(parents=True, exist_ok=True)
-    deadline = time.monotonic() + timeout
-    with (STATE / "writer.lock").open("w") as lock:
-        while True:
-            try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                if time.monotonic() >= deadline:
-                    raise RuntimeError("Portfolio writer lock timed out") from None
-                time.sleep(0.25)
+def acquire_lock(lock, deadline: float) -> None:
+    while True:
         try:
-            yield
-        finally:
-            fcntl.flock(lock, fcntl.LOCK_UN)
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                raise RuntimeError("Portfolio writer lock timed out") from None
+            time.sleep(0.25)
+
+
+@contextmanager
+def writer_lock(timeout: float = 60, *, priority: bool = False):
+    STATE.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    deadline = time.monotonic() + timeout
+    # Reserve the next writer turn for an already-waiting monitor. This lock
+    # never permits a second writer and never interrupts an atomic promotion.
+    with (STATE / "monitor-priority.lock").open("a") as reservation:
+        acquire_lock(reservation, deadline)
+        with (STATE / "writer.lock").open("a") as lock:
+            acquire_lock(lock, deadline)
+            if not priority:
+                fcntl.flock(reservation, fcntl.LOCK_UN)
+            acquired = time.monotonic()
+            print(f"Writer lock priority={priority} wait_seconds={acquired - started:.3f}", flush=True)
+            try:
+                yield
+            finally:
+                print(f"Writer lock held_seconds={time.monotonic() - acquired:.3f}", flush=True)
+                fcntl.flock(lock, fcntl.LOCK_UN)
 
 
 def execute_staged_scanner() -> None:
@@ -294,6 +308,9 @@ def execute_staged_scanner() -> None:
         worker(["python", "agent/market_lens_ui_agent.py"], timeout=1500, stage=stage)
         record = latest_scan_record(previous, results=stage.results)
         print(f"Staged scanner status={record['run_status']} cards={record['result_cards_read']}")
+        # Dashboard/workbook postprocessing uses this same isolated snapshot.
+        # It must not hold the live writer lock while reading historical JSONL.
+        worker(["python", "deploy/hetzner/postprocess.py"], timeout=180, stage=stage)
 
         with writer_lock():
             require_live_preflight()
@@ -303,7 +320,6 @@ def execute_staged_scanner() -> None:
                     f"Stage retained at {stage.root}"
                 )
             promote_stage(stage, REPO, STATE)
-            worker(["python", "deploy/hetzner/postprocess.py"], timeout=180)
             if persist("scanner"):
                 deliver("scanner")
     except Exception:
@@ -324,7 +340,7 @@ def main() -> None:
     if args.kind == "scanner":
         execute_staged_scanner()
     else:
-        with writer_lock():
+        with writer_lock(priority=True):
             execute("monitor")
 
 

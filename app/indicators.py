@@ -57,6 +57,12 @@ def compute_ema(daily: pd.DataFrame, period: int = 20) -> float:
 
 
 def compute_volume_profile(hourly: pd.DataFrame, n_buckets: int = 50) -> VolumeProfile:
+    if hourly.empty or not {"Close", "Volume"}.issubset(hourly.columns):
+        raise ValueError("Volume profile requires prices and volume")
+    values = hourly[["Close", "Volume"]].to_numpy(dtype=float)
+    if (not np.isfinite(values).all() or (hourly["Close"] <= 0).any()
+            or (hourly["Volume"] < 0).any() or float(hourly["Volume"].sum()) <= 0):
+        raise ValueError("Volume profile volume unavailable or invalid")
     lo = hourly["Close"].min()
     hi = hourly["Close"].max()
 
@@ -71,10 +77,6 @@ def compute_volume_profile(hourly: pd.DataFrame, n_buckets: int = 50) -> VolumeP
     poc = float(bin_mids[poc_idx])
 
     total_volume = counts.sum()
-    if total_volume == 0:
-        mid = float((hi + lo) / 2)
-        return VolumeProfile(poc=mid, vah=mid, val=mid)
-
     sorted_idx = np.argsort(counts)[::-1]
     accumulated = 0.0
     selected = []

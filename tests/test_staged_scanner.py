@@ -29,7 +29,7 @@ def test_staged_results_are_invisible_until_promotion(tmp_path):
     repo, state, tracker = fixture_repo(tmp_path)
     stage = prepare_stage(repo, state, runtime.file_hash(tracker))
     (stage.tracker / tracker.name).write_bytes(b"new-portfolio")
-    (stage.results / "decisions").mkdir()
+    (stage.results / "decisions").mkdir(exist_ok=True)
     (stage.results / "decisions/run.jsonl").write_text('{"final_action":"WATCH"}\n')
     (stage.results / "runtime/run.json").write_text('{"run_status":"COMPLETE"}')
     (stage.runtime / "outbox/scanner.json").write_text('{"events":[]}')
@@ -79,6 +79,8 @@ def test_stale_scanner_cannot_overwrite_monitor_event(tmp_path, monkeypatch):
 
     def fake_worker(command, *, timeout, stage=None):
         assert stage is not None
+        if command == ["python", "deploy/hetzner/postprocess.py"]:
+            return
         (stage.tracker / tracker.name).write_bytes(b"stale-scanner-buy")
         record = stage.results / "runtime/market_lens_agent_20261005_140000.json"
         record.write_text(json.dumps({"run_status": "COMPLETE", "result_cards_read": 10}))
@@ -108,8 +110,8 @@ def test_scanner_promotes_then_persists_before_notification(tmp_path, monkeypatc
     calls = []
 
     def fake_worker(command, *, timeout, stage=None):
-        if stage is None:
-            assert command == ["python", "deploy/hetzner/postprocess.py"]
+        assert stage is not None
+        if command == ["python", "deploy/hetzner/postprocess.py"]:
             calls.append("postprocess")
             return
         (stage.tracker / tracker.name).write_bytes(b"valid-scan")
@@ -148,7 +150,83 @@ def test_separate_systemd_units_keep_monitor_minute_timer():
     assert "Unit=market-lens-scanner.service" in scanner_timer
     override = yaml.safe_load((deploy / "compose.stage.yaml").read_text())
     mounts = override["services"]["worker"]["volumes"]
-    assert len(mounts) == 3
+    assert len(mounts) == 4
     assert any("/app/agent_tracker:rw" in item for item in mounts)
     assert any("/app/agent_results:rw" in item for item in mounts)
     assert any("/app/runtime:rw" in item for item in mounts)
+    assert any("/app/agent_results_history:ro" in item for item in mounts)
+
+
+@pytest.fixture
+def symlinks(tmp_path):
+    probe = tmp_path / "link-probe"
+    try:
+        probe.symlink_to(tmp_path / "target")
+    except OSError as error:
+        if getattr(error, "winerror", None) == 1314:
+            pytest.skip("Windows requires symlink privileges; Linux CI runs this test")
+        raise
+    probe.unlink()
+
+
+def test_history_is_readable_without_copying_or_promoting_old_evidence(tmp_path, symlinks):
+    repo, state, tracker = fixture_repo(tmp_path)
+    decisions = repo / "agent_results/decisions"
+    decisions.mkdir()
+    historical = decisions / "old.jsonl"
+    historical.write_text('{"action":"WATCH"}\n')
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker),
+                          history_root=repo / "agent_results")
+    linked = stage.results / "decisions/old.jsonl"
+    assert linked.is_symlink()
+    assert linked.read_bytes() == historical.read_bytes()
+    assert not (stage.results / "summaries/existing.md").is_symlink()
+    linked.unlink()
+    linked.write_text('{"action":"SKIP"}\n')
+    assert historical.read_text() == '{"action":"WATCH"}\n'
+    with pytest.raises(RuntimeError, match="historical evidence changed"):
+        promote_stage(stage, repo, state)
+    assert historical.read_text() == '{"action":"WATCH"}\n'
+
+
+def test_unchanged_history_links_never_replace_live_history(tmp_path, symlinks):
+    repo, state, tracker = fixture_repo(tmp_path)
+    historical = repo / "agent_results/runtime/old.json"
+    historical.write_text('{}')
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker),
+                          history_root=repo / "agent_results")
+    promote_stage(stage, repo, state)
+    assert historical.is_file() and not historical.is_symlink()
+    assert historical.read_text() == '{}'
+
+
+def test_stage_rejects_source_symlink_without_removing_source(tmp_path, symlinks):
+    repo, state, tracker = fixture_repo(tmp_path)
+    external = tmp_path / "external.txt"
+    external.write_text("do not follow")
+    (repo / "agent_results/link.txt").symlink_to(external)
+    with pytest.raises(RuntimeError, match="must not contain symlinks"):
+        prepare_stage(repo, state, runtime.file_hash(tracker))
+    assert external.read_text() == "do not follow"
+    assert not list((state / "scanner-staging").iterdir())
+
+
+@pytest.mark.parametrize("mutation", ["replace", "delete"])
+def test_changed_source_history_blocks_promotion(tmp_path, symlinks, mutation):
+    repo, state, tracker = fixture_repo(tmp_path)
+    historical = repo / "agent_results/runtime/old.json"
+    historical.write_text('{}')
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker), history_root=repo / "agent_results")
+    historical.unlink()
+    if mutation == "replace":
+        historical.write_text('{"changed":true}')
+    with pytest.raises(RuntimeError, match="Historical source changed"):
+        promote_stage(stage, repo, state)
+    assert tracker.read_bytes() == b"original-portfolio"
+
+
+def test_stage_precreates_worker_writable_directories(tmp_path):
+    from deploy.hetzner.staged_scanner import WRITABLE_DIRECTORIES
+    repo, state, tracker = fixture_repo(tmp_path)
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker))
+    assert all((stage.results / name).is_dir() for name in WRITABLE_DIRECTORIES)
