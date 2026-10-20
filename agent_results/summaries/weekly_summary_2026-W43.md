@@ -1,18 +1,18 @@
 Weekly Performance Summary
 
 Date: 2026-10-19
-Total scans: 51
-Tickers scanned: 9174
+Total scans: 52
+Tickers scanned: 9354
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 3154
+WATCH_REVIEW: 3190
 WATCH_REVIEW unique tickers: 183
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 3154
-SKIP: 6020
-NO_TRADE: 4238
+WATCH: 3190
+SKIP: 6164
+NO_TRADE: 4370
 Realized PnL: 0.0
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -22,7 +22,7 @@ Daily reference date: None
 Cumulative recorded-equity change (%): 0.5329
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: SFM
-Worst ticker: RRC
+Worst ticker: HRL
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
