@@ -59,6 +59,7 @@ class Checkpoints:
         if (proof.get("generation") != result["manifest"]["generation"]
                 or proof.get("repository") != self.store.repository
                 or proof.get("manifest_sha256") != hashlib.sha256(encoded(result["manifest"])).hexdigest()
+                or proof.get("workbook_verified") is not True
                 or not (proof.get("all_hashes_verified") is True or proof.get("chain_verified") is True)):
             raise RuntimeError("Checkpoint has no verified restore proof")
         return result
@@ -158,7 +159,8 @@ class Checkpoints:
             # actual changed inputs first, then for the real downloaded parts.
             require_headroom(self.root, changed_bytes)
             bundle = freeze(self.repo, self.state, self.root / "generations",
-                            source_revision=revision, base=(previous or {}).get("manifest"))
+                            source_revision=revision, base=(previous or {}).get("manifest"),
+                            parse_source_workbook=False)
             pending = self.root / "pending.json"
             temporary = pending.with_suffix(".tmp")
             with temporary.open("wb") as target:

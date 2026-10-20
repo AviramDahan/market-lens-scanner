@@ -114,6 +114,45 @@ def test_checkpoint_bootstrap_and_incremental_proof_are_distinct(source, checkpo
     assert (source[0] / "agent_results/decisions/history-0.jsonl").exists()
 
 
+def test_full_decode_is_remote_once_and_reused_only_for_identical_workbook(source, checkpoints, monkeypatch):
+    calls = []
+    original = archive.validate_workbook_parser
+    def validate(path):
+        calls.append(path)
+        return original(path)
+    monkeypatch.setattr(archive, "validate_workbook_parser", validate)
+    first = checkpoints.save("first", bootstrap=True)
+    assert len(calls) == 1
+    assert first["proof"]["workbook_parser_status"] == "DECODED_CURRENT_CONTENT"
+    second = checkpoints.save("second")
+    assert len(calls) == 1
+    assert second["proof"]["workbook_parser_status"] == "INHERITED_IDENTICAL_VERIFIED_CONTENT"
+    tracker = source[0] / checkpoint.TRACKER.removeprefix("repo/")
+    wb = load_workbook(tracker)
+    wb["Open Positions"]["B2"] = 9
+    wb.save(tracker)
+    wb.close()
+    third = checkpoints.save("third")
+    assert len(calls) == 2
+    assert third["proof"]["workbook_parser_status"] == "DECODED_CURRENT_CONTENT"
+
+
+def test_corrupt_workbook_cannot_become_verified_checkpoint_after_deferred_parse(source, checkpoints):
+    tracker = source[0] / checkpoint.TRACKER.removeprefix("repo/")
+    replacement = tracker.with_suffix(".replacement")
+    with zipfile.ZipFile(tracker) as original, zipfile.ZipFile(replacement, "w") as target:
+        for info in original.infolist():
+            body = original.read(info)
+            if info.filename == "xl/worksheets/sheet1.xml":
+                body = body.replace(b"<v>10</v>", b"<v>not-a-number</v>", 1)
+            target.writestr(info, body)
+    replacement.replace(tracker)
+    with pytest.raises(ValueError):
+        checkpoints.save("corrupt", bootstrap=True)
+    assert not (checkpoints.root / "last_verified.json").exists()
+    assert (checkpoints.root / "pending.json").exists()
+
+
 def test_failed_checkpoint_cannot_authorize_another_write_and_recovers_exact_generation(source, checkpoints):
     first = checkpoints.save("first", bootstrap=True)
     (source[0] / "agent_results/decisions/new.jsonl").write_text('{}\n')

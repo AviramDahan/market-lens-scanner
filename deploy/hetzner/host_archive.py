@@ -155,7 +155,7 @@ def validate_manifest(manifest: dict) -> None:
 
 def freeze(repo: Path, state: Path, spool: Path, *, source_revision: str,
            base: dict | None = None, part_raw_bytes: int = PART_RAW_BYTES,
-           created_at: str | None = None) -> Path:
+           created_at: str | None = None, parse_source_workbook: bool = True) -> Path:
     """Caller holds writer.lock. Only frozen compressed copies enter the spool."""
     repo, state, spool = repo.resolve(), state.resolve(), spool.resolve()
     if spool == repo or repo in spool.parents or spool == state:
@@ -164,7 +164,7 @@ def freeze(repo: Path, state: Path, spool: Path, *, source_revision: str,
         validate_manifest(base)
     previous = {entry["path"]: entry for entry in (base or {}).get("files", [])}
     files = recovery_files(repo, state)
-    validate_recovery_paths(repo, state)
+    validate_recovery_paths(repo, state, parse_workbook=parse_source_workbook)
     signatures = {name: file_signature(path) for name, path in files.items()}
     spool.mkdir(parents=True, exist_ok=True, mode=0o700)
     temporary = spool / ("building-" + uuid.uuid4().hex)
@@ -245,7 +245,7 @@ def freeze(repo: Path, state: Path, spool: Path, *, source_revision: str,
         raise
 
 
-def restore(manifest: dict, destination: Path, fetch_asset) -> dict:
+def restore(manifest: dict, destination: Path, fetch_asset, *, verified_workbook_sha: str | None = None) -> dict:
     """Restore into a NEW directory only. fetch_asset(generation, name, output)."""
     validate_manifest(manifest)
     destination = destination.resolve()
@@ -287,18 +287,24 @@ def restore(manifest: dict, destination: Path, fetch_asset) -> dict:
                     raise ValueError("Recovery member integrity failed")
         archive_path.unlink()  # Download cache only; originals and remote assets remain intact.
     cache.rmdir()
-    validate_recovery(destination)
+    tracker_entry = next(entry for entry in manifest["files"] if entry["path"] ==
+                         "repo/agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx")
+    if verified_workbook_sha is not None and verified_workbook_sha != tracker_entry["sha256"]:
+        raise ValueError("Previously verified workbook hash does not match restored content")
+    validate_recovery(destination, parse_workbook=verified_workbook_sha is None)
     if (destination / "runtime/deployed_revision").read_text().strip() != manifest["deployed_revision"]:
         raise ValueError("Restored deployment identity differs")
     proof = {"generation": manifest["generation"], "file_count": len(manifest["files"]),
              "total_bytes": sum(entry["bytes"] for entry in manifest["files"]),
              "all_hashes_verified": True, "workbook_verified": True}
+    proof["workbook_parser_status"] = ("DECODED_CURRENT_CONTENT" if verified_workbook_sha is None
+                                        else "INHERITED_IDENTICAL_VERIFIED_CONTENT")
     (destination / "restore-proof.json").write_bytes(encoded(proof))
     return proof
 
 
-def validate_recovery(destination: Path) -> None:
-    validate_recovery_paths(destination / "repo", destination / "runtime")
+def validate_recovery(destination: Path, *, parse_workbook: bool = True) -> None:
+    validate_recovery_paths(destination / "repo", destination / "runtime", parse_workbook=parse_workbook)
 
 
 def validate_workbook_parser(path: Path) -> None:
@@ -315,7 +321,7 @@ def validate_workbook_parser(path: Path) -> None:
         checker = Path(__file__).with_name("workbook_archive_check.py").resolve()
         completed = subprocess.run([
             "docker", "run", "--rm", "--read-only", "--network", "none", "--memory", "256m",
-            "--cpus", "0.5", "--pids-limit", "64", "--security-opt", "no-new-privileges",
+            "--cpus", "1.0", "--pids-limit", "64", "--security-opt", "no-new-privileges",
             "--user", f"{os.getuid()}:{os.getgid()}", "--mount", f"type=bind,source={path.resolve()},target=/workbook.xlsx,readonly",
             "--mount", f"type=bind,source={checker},target=/check.py,readonly",
             "--entrypoint", "python", "market-lens-runtime-worker", "/check.py", "/workbook.xlsx",
@@ -325,7 +331,7 @@ def validate_workbook_parser(path: Path) -> None:
             raise ValueError("Workbook parser did not confirm validation")
 
 
-def validate_recovery_paths(root: Path, state: Path) -> None:
+def validate_recovery_paths(root: Path, state: Path, *, parse_workbook: bool = True) -> None:
     dashboard = json.loads((root / "agent_results/dashboard_snapshot.json").read_text(encoding="utf-8"))
     if dashboard.get("status") != "ok":
         raise ValueError("Recovery dashboard is not healthy")
@@ -355,7 +361,8 @@ def validate_recovery_paths(root: Path, state: Path) -> None:
                 raise ValueError("Portfolio worksheet data missing") from None
             if not worksheet.tag.endswith("}worksheet") or not any(node.tag.endswith("}sheetData") for node in worksheet):
                 raise ValueError("Invalid portfolio worksheet XML")
-    validate_workbook_parser(workbook)
+    if parse_workbook:
+        validate_workbook_parser(workbook)
     receipts = root / "agent_results/telegram_notifications.jsonl"
     for line in receipts.read_text(encoding="utf-8").splitlines():
         if line.strip():

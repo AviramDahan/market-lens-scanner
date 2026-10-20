@@ -169,6 +169,7 @@ def incremental_restore_manifest(manifest: dict, previous: dict, repository: str
     if (previous.get("repository") != repository or proof.get("repository") != repository
             or proof.get("manifest_sha256") != hashlib.sha256(encoded(base)).hexdigest()
             or proof.get("generation") != base["generation"]
+            or proof.get("workbook_verified") is not True
             or not (proof.get("all_hashes_verified") is True or proof.get("chain_verified") is True)):
         raise ValueError("Incremental checkpoint requires verified same-repository ancestry")
     prior = {entry["path"]: entry for entry in base["files"]}
@@ -214,7 +215,15 @@ def publish_verified(bundle: Path, state: Path, store, *, previous: dict | None 
         downloaded_manifest = json.loads(downloaded.read_text())
         checked = (incremental_restore_manifest(downloaded_manifest, previous, store.repository)
                    if previous is not None else downloaded_manifest)
-        restored = restore(checked, temporary / "restored", store.get)
+        verified_workbook_sha = None
+        if previous is not None:
+            tracker_path = "repo/agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
+            old_tracker = next(row for row in previous["manifest"]["files"] if row["path"] == tracker_path)
+            new_tracker = next(row for row in downloaded_manifest["files"] if row["path"] == tracker_path)
+            if old_tracker["sha256"] == new_tracker["sha256"]:
+                verified_workbook_sha = old_tracker["sha256"]
+        restored = restore(checked, temporary / "restored", store.get,
+                           verified_workbook_sha=verified_workbook_sha)
         proof = {**restored, "manifest_sha256": sha256(manifest_path), "repository": store.repository}
         proof["delivery_state"] = ("VERIFIED_PENDING_DELIVERY" if any(
             row["path"].startswith("runtime/outbox/") for row in manifest["files"]) else "COMPLETE")
