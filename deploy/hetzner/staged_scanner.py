@@ -14,6 +14,10 @@ READ_ONLY_HISTORY = frozenset({
     "charts", "screenshots", "decisions", "runtime", "diagnostics", "policies", "audits",
 })
 CONTAINER_HISTORY = Path("/app/agent_results_history")
+WRITABLE_DIRECTORIES = frozenset({
+    "charts", "screenshots", "decisions", "runtime", "diagnostics", "policies",
+    "summaries", "regime", "experiments",
+})
 
 
 @dataclass
@@ -25,6 +29,8 @@ class ScannerStage:
     original_tracker_hash: str
     baseline: dict[Path, tuple[int, int]]
     history_paths: frozenset[Path]
+    history_source: Path
+    history_signatures: dict[Path, tuple[int, int, int]]
 
 
 def signature(path: Path) -> tuple[int, int]:
@@ -52,10 +58,15 @@ def prepare_stage(repo: Path, state: Path, tracker_hash: str,
             if source.is_dir():
                 target.mkdir(exist_ok=True)
             elif source.is_file():
-                if relative.parts[0] in READ_ONLY_HISTORY:
+                if (relative.parts[0] in READ_ONLY_HISTORY
+                        and not (relative.parts[0] == "charts" and not source.name.startswith("market_lens_agent_"))):
                     target.symlink_to(linked_root / relative)
                 else:
                     shutil.copy2(source, target)
+        # The root worker must not create these as root-owned directories;
+        # otherwise trader cannot remove their contents after a successful run.
+        for name in WRITABLE_DIRECTORIES:
+            (results / name).mkdir(exist_ok=True)
         runtime.mkdir()
         (runtime / "outbox").mkdir()
     except Exception:
@@ -66,7 +77,12 @@ def prepare_stage(repo: Path, state: Path, tracker_hash: str,
         for path in results.rglob("*") if path.is_file() or path.is_symlink()
     }
     history_paths = frozenset(path.relative_to(results) for path in results.rglob("*") if path.is_symlink())
-    return ScannerStage(root, tracker, results, runtime, tracker_hash, baseline, history_paths)
+    history_signatures = {}
+    for relative in history_paths:
+        info = (repo / "agent_results" / relative).stat()
+        history_signatures[relative] = info.st_size, info.st_mtime_ns, info.st_ino
+    return ScannerStage(root, tracker, results, runtime, tracker_hash, baseline, history_paths,
+                        repo / "agent_results", history_signatures)
 
 
 def changed_results(stage: ScannerStage) -> list[Path]:
@@ -74,6 +90,14 @@ def changed_results(stage: ScannerStage) -> list[Path]:
         path = stage.results / relative
         if not path.is_symlink() or signature(path) != stage.baseline[relative]:
             raise RuntimeError(f"Read-only historical evidence changed: {relative}")
+        try:
+            source = stage.history_source / relative
+            info = source.stat()
+            current = info.st_size, info.st_mtime_ns, info.st_ino
+        except OSError:
+            current = None
+        if source.is_symlink() or current != stage.history_signatures[relative]:
+            raise RuntimeError(f"Historical source changed during scan: {relative}")
     changed = [
         path for path in stage.results.rglob("*")
         if not path.is_symlink() and path.is_file()

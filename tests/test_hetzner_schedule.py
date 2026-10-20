@@ -48,7 +48,7 @@ def test_scanner_catches_slot_missed_by_long_previous_run(tmp_path, monkeypatch)
     assert record["slots"]["2026-10-19_16:20"]["status"] == "COMPLETE"
     schedule.dispatch_scanner_locked(at_utc("2026-10-19T20:24:00"), path)
     assert len(calls) == 1
-    assert calls[0][1] == {"check": True, "timeout": 2700}
+    assert calls[0][1] == {"check": True}
 
 
 def test_scanner_retry_is_bounded_and_crash_can_recover(tmp_path, monkeypatch):
@@ -56,7 +56,9 @@ def test_scanner_retry_is_bounded_and_crash_can_recover(tmp_path, monkeypatch):
     import subprocess
     import pytest
     path = tmp_path / "schedule.json"
-    path.write_text(json.dumps({"slots": {"2026-10-19_16:20": {"status": "RUNNING", "attempts": 1}}}))
+    path.write_text(json.dumps({"slots": {"2026-10-19_16:20": {
+        "status": "RUNNING", "attempts": 1, "started_at": "2026-10-19T20:20:00+00:00",
+        "scheduled_at": "2026-10-19T16:20:00-04:00"}}}))
     calls = []
     def fail(*args, **kwargs):
         calls.append(args)
@@ -80,6 +82,19 @@ def test_scheduler_coalesces_backlog_but_does_not_replay_stale_slots(tmp_path, m
     assert slots["2026-10-19_16:15"]["status"] == "COALESCED"
     assert len(calls) == 1
     assert schedule.scanner_slots(at_utc("2026-10-19T21:10:00")) == []
+
+
+def test_long_run_failure_remains_retryable_after_original_slot_expires(tmp_path, monkeypatch):
+    import json
+    path = tmp_path / "schedule.json"
+    path.write_text(json.dumps({"slots": {"2026-10-19_16:20": {
+        "status": "FAILED", "attempts": 1, "started_at": "2026-10-19T20:20:00+00:00",
+        "finished_at": "2026-10-19T20:50:00+00:00", "scheduled_at": "2026-10-19T16:20:00-04:00"}}}))
+    calls = []
+    monkeypatch.setattr(schedule.subprocess, "run", lambda *args, **kwargs: calls.append(args))
+    schedule.dispatch_scanner_locked(at_utc("2026-10-19T20:51:00"), path)
+    assert len(calls) == 1
+    assert json.loads(path.read_text())["slots"]["2026-10-19_16:20"]["attempts"] == 2
 
 
 def test_monitor_boundaries_and_after_hours_scans():

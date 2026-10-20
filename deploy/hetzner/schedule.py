@@ -46,6 +46,12 @@ def save_schedule(path: Path, record: dict) -> None:
         target.flush()
         os.fsync(target.fileno())
     temporary.replace(path)
+    if hasattr(os, "O_DIRECTORY"):
+        descriptor = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
 
 
 def dispatch_scanner(instant: datetime) -> None:
@@ -68,8 +74,18 @@ def dispatch_scanner_locked(instant: datetime, path: Path) -> None:
     candidates = [(key, slot) for key, slot in scanner_slots(instant)
                   if slots.get(key, {}).get("status") not in {"COMPLETE", "COALESCED"}
                   and slots.get(key, {}).get("attempts", 0) < 2]
+    for key, previous in slots.items():
+        if (previous.get("status") not in {"RUNNING", "FAILED"}
+                or previous.get("attempts", 0) >= 2 or any(item[0] == key for item in candidates)):
+            continue
+        reference = datetime.fromisoformat(previous.get("finished_at") or previous["started_at"])
+        age = (instant - reference).total_seconds()
+        grace = 30 * 60 if previous.get("finished_at") else 75 * 60
+        if 0 <= age <= grace:
+            candidates.append((key, datetime.fromisoformat(previous["scheduled_at"])))
     if not candidates:
         return
+    candidates.sort(key=lambda item: item[1])
     key, slot = candidates[-1]
     for older, _ in candidates[:-1]:
         slots[older] = {**slots.get(older, {}), "status": "COALESCED", "covered_by": key}
@@ -78,9 +94,12 @@ def dispatch_scanner_locked(instant: datetime, path: Path) -> None:
     save_schedule(path, record)
     print(f"Scanner slot={key} delay_seconds={int((instant - slot).total_seconds())}", flush=True)
     try:
-        subprocess.run([sys.executable, str(RUNNER), "scanner"], check=True, timeout=2700)
+        # The systemd service bounds the complete cgroup at 3000 seconds; each
+        # Docker worker has its own timeout and container-stop cleanup.
+        subprocess.run([sys.executable, str(RUNNER), "scanner"], check=True)
     except Exception:
         slots[key]["status"] = "FAILED"
+        slots[key]["finished_at"] = datetime.now(timezone.utc).isoformat()
         save_schedule(path, record)
         raise
     slots[key]["status"] = "COMPLETE"

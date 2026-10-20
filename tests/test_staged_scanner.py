@@ -29,7 +29,7 @@ def test_staged_results_are_invisible_until_promotion(tmp_path):
     repo, state, tracker = fixture_repo(tmp_path)
     stage = prepare_stage(repo, state, runtime.file_hash(tracker))
     (stage.tracker / tracker.name).write_bytes(b"new-portfolio")
-    (stage.results / "decisions").mkdir()
+    (stage.results / "decisions").mkdir(exist_ok=True)
     (stage.results / "decisions/run.jsonl").write_text('{"final_action":"WATCH"}\n')
     (stage.results / "runtime/run.json").write_text('{"run_status":"COMPLETE"}')
     (stage.runtime / "outbox/scanner.json").write_text('{"events":[]}')
@@ -209,3 +209,24 @@ def test_stage_rejects_source_symlink_without_removing_source(tmp_path, symlinks
         prepare_stage(repo, state, runtime.file_hash(tracker))
     assert external.read_text() == "do not follow"
     assert not list((state / "scanner-staging").iterdir())
+
+
+@pytest.mark.parametrize("mutation", ["replace", "delete"])
+def test_changed_source_history_blocks_promotion(tmp_path, symlinks, mutation):
+    repo, state, tracker = fixture_repo(tmp_path)
+    historical = repo / "agent_results/runtime/old.json"
+    historical.write_text('{}')
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker), history_root=repo / "agent_results")
+    historical.unlink()
+    if mutation == "replace":
+        historical.write_text('{"changed":true}')
+    with pytest.raises(RuntimeError, match="Historical source changed"):
+        promote_stage(stage, repo, state)
+    assert tracker.read_bytes() == b"original-portfolio"
+
+
+def test_stage_precreates_worker_writable_directories(tmp_path):
+    from deploy.hetzner.staged_scanner import WRITABLE_DIRECTORIES
+    repo, state, tracker = fixture_repo(tmp_path)
+    stage = prepare_stage(repo, state, runtime.file_hash(tracker))
+    assert all((stage.results / name).is_dir() for name in WRITABLE_DIRECTORIES)
