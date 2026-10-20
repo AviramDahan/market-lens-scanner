@@ -152,7 +152,8 @@ class Checkpoints:
             previous = None if bootstrap else self.receipt()
             if bootstrap and (self.root / "last_verified.json").exists():
                 raise RuntimeError("Bootstrap must not replace an existing checkpoint chain")
-            self.store.require_private()
+            # Publication checks repository privacy inside its bounded child;
+            # do not add an unbounded duplicate network wait to the writer.
             prior_files = {row["path"]: row for row in (previous or {}).get("manifest", {}).get("files", [])}
             changed_bytes = sum(path.stat().st_size for name, path in recovery_files(self.repo, self.state).items()
                                 if prior_files.get(name, {}).get("sha256") != sha256(path))

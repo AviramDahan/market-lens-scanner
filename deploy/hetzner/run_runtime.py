@@ -39,6 +39,12 @@ CODE_PATHS = ("app", "agent", "pyproject.toml", "config.yaml")
 HOST_ONLY_AGENT_FILES = {"agent/ops_health_check.py", "agent/production_smoke.py"}
 SUCCESS_STATUSES = {"COMPLETE", "PARTIAL_OK"}
 PUSH_RETRY_DELAYS = (2, 5)
+SCANNER_LOCK_WAIT_SECONDS = 60
+MONITOR_LOCK_WAIT_SECONDS = 360
+# Includes local freeze/promotion, two bounded publications, notification work
+# and worker-stop cleanup. An overrun remains a failure, never a lease renewal.
+WRITER_TRANSACTION_SECONDS = 360
+WRITER_OWNER = None
 
 
 class RuntimeDeliveryFailure(RuntimeError):
@@ -105,7 +111,10 @@ def require_live_preflight() -> None:
     if any(line[3:] != "agent_results/telegram_notifications.jsonl"
            for line in status.splitlines()):
         raise RuntimeError("Runtime checkout has unpersisted changes")
-    run("git", "fetch", "origin", "main", timeout=300)
+    # Archive mode is deployment-pinned. Refreshing source refs is deployment
+    # work, not a network dependency of every TP/SL evaluation.
+    if not archived:
+        run("git", "fetch", "origin", "main", timeout=300)
     local = output("git", "rev-parse", "HEAD")
     remote = output("git", "rev-parse", "origin/main")
     if local != remote:
@@ -119,6 +128,8 @@ def require_live_preflight() -> None:
         elif common == local:
             if archived and output("git", "log", "--format=%H", f"HEAD..{remote}", "--", *GENERATED):
                 raise RuntimeError("Remote source changed archive-managed data; refusing to overwrite the live portfolio")
+            if archived:
+                raise RuntimeError("Source revision changed; deploy the pinned revision before resuming writers")
             run("git", "merge", "--ff-only", remote if archived else "origin/main", timeout=60)
         else:
             raise RuntimeError("Runtime and GitHub histories diverged; manual reconciliation required")
@@ -198,6 +209,7 @@ def push_backup() -> None:
 
 
 def persist(kind: str) -> bool:
+    writer_phase("CHECKPOINT")
     if archive_enabled():
         receipt = Checkpoints(REPO, STATE).save(output("git", "rev-parse", "HEAD"))
         print(f"Archive checkpoint verified: {receipt['manifest']['generation']}", flush=True)
@@ -218,6 +230,7 @@ def deliver(kind: str) -> None:
     outbox = STATE / "outbox" / f"{kind}.json"
     if not outbox.exists():
         return
+    writer_phase("NOTIFICATION_DELIVERY")
     script = "agent/send_buy_notifications.py" if kind == "scanner" else "agent/send_monitor_notifications.py"
     try:
         worker(["python", script, f"/app/runtime/outbox/{kind}.json"], timeout=120)
@@ -227,6 +240,7 @@ def deliver(kind: str) -> None:
 
 
 def persist_notification_receipts() -> None:
+    writer_phase("RECEIPT_CHECKPOINT")
     if archive_enabled():
         Checkpoints(REPO, STATE).save(output("git", "rev-parse", "HEAD"))
         return
@@ -240,12 +254,14 @@ def persist_notification_receipts() -> None:
 
 
 def execute(kind: str) -> None:
+    writer_phase("PREFLIGHT")
     require_live_preflight()
     before = set((REPO / "agent_results/runtime").glob("market_lens_agent_*.json"))
     tracker_before = file_hash(TRACKER)
     heartbeat_path = STATE / "monitor/latest_status.json"
     heartbeat_before = (heartbeat_path.stat().st_mtime_ns, file_hash(heartbeat_path)) if heartbeat_path.exists() else None
     script = "agent/market_lens_ui_agent.py" if kind == "scanner" else "agent/position_monitor.py"
+    writer_phase("POSITION_EVALUATION" if kind == "monitor" else "SCANNER")
     worker(["python", script], timeout=1500 if kind == "scanner" else 840)
     if kind == "scanner":
         record = latest_scan_record(before)
@@ -286,41 +302,98 @@ def execute(kind: str) -> None:
     print(f"{kind} completed and persisted")
 
 
-def acquire_lock(lock, deadline: float) -> None:
+def coordination_record(path: Path, record: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + f".{os.getpid()}.tmp")
+    with temporary.open("w", encoding="utf-8") as target:
+        json.dump(record, target, sort_keys=True)
+        target.flush()
+        os.fsync(target.fileno())
+    temporary.replace(path)
+
+
+def writer_phase(phase: str) -> None:
+    if WRITER_OWNER is not None:
+        # Coordination is deliberately outside archived monitor/outbox inputs.
+        WRITER_OWNER["phase"] = phase
+        coordination_record(STATE / "coordination/writer.json", WRITER_OWNER)
+
+
+def acquire_lock(lock, deadline: float, *, wait=None) -> None:
     while True:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return
         except BlockingIOError:
+            if wait is not None:
+                deadline = min(deadline, wait(deadline))
             if time.monotonic() >= deadline:
                 raise RuntimeError("Portfolio writer lock timed out") from None
             time.sleep(0.25)
 
 
 @contextmanager
-def writer_lock(timeout: float = 60, *, priority: bool = False):
+def writer_lock(timeout: float | None = None, *, priority: bool = False):
+    global WRITER_OWNER
     STATE.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    deadline = time.monotonic() + timeout
+    budget = timeout if timeout is not None else (MONITOR_LOCK_WAIT_SECONDS if priority else SCANNER_LOCK_WAIT_SECONDS)
+    deadline = started + budget
+    wait_path = STATE / "coordination/monitor_wait.json"
+    last_wait_status = None
+
+    def wait(current_deadline):
+        nonlocal last_wait_status
+        phase = "UNKNOWN"
+        try:
+            owner = json.loads((STATE / "coordination/writer.json").read_text())
+            phase = owner.get("phase", "UNKNOWN")
+            owner_deadline = float(owner["deadline_monotonic"])
+            # Never extend the original queue deadline or trust metadata to
+            # grant ownership. The kernel flock alone grants access.
+            current_deadline = min(current_deadline, owner_deadline)
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+        elapsed = time.monotonic() - started
+        status = ("LOCK_DEADLINE_EXCEEDED" if time.monotonic() >= current_deadline else
+                  "DEFERRED_LOCK" if elapsed >= SCANNER_LOCK_WAIT_SECONDS else "WAITING_FOR_WRITER")
+        if status != last_wait_status:
+            coordination_record(wait_path, {"pid": os.getpid(), "status": status,
+                "wait_seconds": round(elapsed, 3), "owner_phase": phase,
+                "deadline_monotonic": current_deadline})
+            print(f"Monitor writer queue status={status} owner_phase={phase} wait_seconds={elapsed:.3f}", flush=True)
+            last_wait_status = status
+        return current_deadline
     # Reserve the next writer turn for an already-waiting monitor. This lock
     # never permits a second writer and never interrupts an atomic promotion.
     with (STATE / "monitor-priority.lock").open("a") as reservation:
-        acquire_lock(reservation, deadline)
+        acquire_lock(reservation, deadline, wait=wait if priority else None)
         with (STATE / "writer.lock").open("a") as lock:
-            acquire_lock(lock, deadline)
+            acquire_lock(lock, deadline, wait=wait if priority else None)
             if not priority:
                 fcntl.flock(reservation, fcntl.LOCK_UN)
             acquired = time.monotonic()
             print(f"Writer lock priority={priority} wait_seconds={acquired - started:.3f}", flush=True)
+            WRITER_OWNER = {"pid": os.getpid(), "token": uuid.uuid4().hex, "phase": "ACQUIRED",
+                "started_monotonic": acquired, "deadline_monotonic": acquired + WRITER_TRANSACTION_SECONDS}
             try:
+                writer_phase("ACQUIRED")
+                if priority:
+                    coordination_record(wait_path, {"pid": os.getpid(), "status": "ACQUIRED",
+                        "wait_seconds": round(acquired - started, 3)})
                 yield
             finally:
-                print(f"Writer lock held_seconds={time.monotonic() - acquired:.3f}", flush=True)
-                fcntl.flock(lock, fcntl.LOCK_UN)
+                try:
+                    (STATE / "coordination/writer.json").unlink(missing_ok=True)
+                finally:
+                    WRITER_OWNER = None
+                    print(f"Writer lock held_seconds={time.monotonic() - acquired:.3f}", flush=True)
+                    fcntl.flock(lock, fcntl.LOCK_UN)
 
 
 def execute_staged_scanner() -> None:
     with writer_lock():
+        writer_phase("STAGE_PREPARATION")
         require_live_preflight()
         stage = prepare_stage(REPO, STATE, file_hash(TRACKER))
         previous = set((stage.results / "runtime").glob("market_lens_agent_*.json"))
@@ -334,12 +407,14 @@ def execute_staged_scanner() -> None:
         worker(["python", "deploy/hetzner/postprocess.py"], timeout=180, stage=stage)
 
         with writer_lock():
+            writer_phase("PREFLIGHT")
             require_live_preflight()
             if file_hash(TRACKER) != stage.original_tracker_hash:
                 raise ScannerSnapshotStale(
                     "Portfolio changed during scan; staged decisions were not applied. "
                     f"Stage retained at {stage.root}"
                 )
+            writer_phase("PROMOTION")
             promote_stage(stage, REPO, STATE)
             if persist("scanner"):
                 deliver("scanner")

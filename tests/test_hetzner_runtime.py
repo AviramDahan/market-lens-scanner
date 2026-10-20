@@ -52,6 +52,52 @@ def test_archive_preflight_refuses_remote_generated_data_commits(tmp_path, monke
     assert not any("merge" in args for args in calls)
 
 
+def test_archive_preflight_is_offline_when_source_pin_is_unchanged(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.touch()
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    (tmp_path / "deployed_revision").write_text("deployed")
+    monkeypatch.setattr(runtime, "archive_enabled", lambda: True)
+    monkeypatch.setattr(runtime, "output", lambda *args: "same" if args[1] == "rev-parse" else "")
+    monkeypatch.setattr(runtime, "run", lambda *_args, **_kwargs: pytest.fail("Pinned preflight accessed Git network"))
+    monkeypatch.setattr(runtime, "check_disk_capacity", lambda: None)
+
+    class Backend:
+        def __init__(self, *_args):
+            pass
+
+        def recover(self):
+            return {"verified": True}
+
+        def receipts_changed(self, receipt):
+            assert receipt == {"verified": True}
+            return False
+
+    monkeypatch.setattr(runtime, "Checkpoints", Backend)
+    runtime.require_live_preflight()
+
+
+def test_archive_preflight_requires_deployment_instead_of_auto_merging_source(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.touch()
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    monkeypatch.setattr(runtime, "archive_enabled", lambda: True)
+
+    def output(*args):
+        return {"status": "", "rev-parse": "local" if args[2] == "HEAD" else "remote",
+                "merge-base": "local", "log": ""}[args[1]]
+
+    monkeypatch.setattr(runtime, "output", output)
+    monkeypatch.setattr(runtime, "run", lambda *_args, **_kwargs: pytest.fail("Source changed without deployment"))
+    with pytest.raises(RuntimeError, match="deploy the pinned revision"):
+        runtime.require_live_preflight()
+
+
 def test_preflight_preserves_actual_porcelain_columns_for_receipt_recovery(tmp_path, monkeypatch):
     monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
