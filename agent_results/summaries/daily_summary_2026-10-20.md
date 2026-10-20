@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-20
-Total scans: 1
-Tickers scanned: 180
+Total scans: 2
+Tickers scanned: 360
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 66
-WATCH_REVIEW unique tickers: 66
+WATCH_REVIEW: 131
+WATCH_REVIEW unique tickers: 73
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 66
-SKIP: 114
-NO_TRADE: 73
+WATCH: 131
+SKIP: 229
+NO_TRADE: 144
 Realized PnL: 0.0
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -35,9 +35,9 @@ Top rejected candidates:
 - MRSH: WATCH score=0.4714 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.54.
 - HALO: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.15.
 - RVTY: WATCH score=0.467 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.19.
+- WSM: SKIP score=0.4651 reason=SKIP: Consumer sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 0.74.
 - FANG: WATCH score=0.465 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.12.
-- LW: WATCH score=0.4474 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.05.
-- EQT: WATCH score=0.4467 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 0.99.
+- PKG: SKIP score=0.4496 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
