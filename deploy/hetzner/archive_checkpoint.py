@@ -93,6 +93,7 @@ class Checkpoints:
                     receipt = self.publish(bundle, receipt)
                 pending.unlink()
                 sync_directory(self.root)
+                self.cache_verified_generation(bundle, receipt)
             if receipt is None:
                 raise RuntimeError("Bootstrap checkpoint has not been published")
             self.matching_tracker(receipt["manifest"])
@@ -174,7 +175,120 @@ class Checkpoints:
             receipt = self.publish(bundle, previous)
             pending.unlink()
             sync_directory(self.root)
+            self.cache_verified_generation(bundle, receipt)
             return receipt
+
+    def cache_verified_generation(self, bundle: Path, receipt: dict) -> None:
+        try:
+            self.record_verified_cache(bundle, receipt)
+            self.prune_verified_cache()
+        except Exception as error:
+            # Remote portfolio durability and delivery recovery must not depend
+            # on successful housekeeping of redundant local cache copies.
+            print(f"Verified checkpoint cache cleanup deferred: {type(error).__name__}", file=sys.stderr)
+
+    def record_verified_cache(self, bundle: Path, receipt: dict) -> None:
+        # Mark only a remotely verified generation. Remote history is permanent;
+        # this index owns redundant LOCAL compressed cache copies only.
+        marker = bundle / "remote-verified.json"
+        metadata = {"generation": bundle.name, "repository": self.store.repository,
+                    "manifest_sha256": receipt["proof"]["manifest_sha256"],
+                    "verified_at": receipt["verified_at"]}
+        temporary = marker.with_suffix(".tmp")
+        with temporary.open("wb") as target:
+            target.write(encoded(metadata))
+            target.flush()
+            os.fsync(target.fileno())
+        temporary.replace(marker)
+        index = self.root / "cache-index.json"
+        try:
+            items = json.loads(index.read_text()) if index.exists() else []
+            if (not isinstance(items, list)
+                    or any(not isinstance(item, str) or len(item) != 64
+                           or any(c not in "0123456789abcdef" for c in item) for item in items)
+                    or len(set(items)) != len(items)):
+                raise ValueError("Invalid cache index")
+        except (ValueError, OSError):
+            # Rebuild only an inventory, not permission to delete. Each candidate
+            # must still pass full marker/manifest/part verification below.
+            items = sorted(path.name for path in (self.root / "generations").iterdir()
+                           if path.is_dir() and not path.is_symlink()
+                           and len(path.name) == 64 and all(c in "0123456789abcdef" for c in path.name)
+                           and (path / "remote-verified.json").is_file())
+            if bundle.name in items:
+                items.remove(bundle.name)
+        if bundle.name not in items:
+            items.append(bundle.name)
+        temporary = index.with_suffix(".tmp")
+        with temporary.open("wb") as target:
+            target.write(encoded(items))
+            target.flush()
+            os.fsync(target.fileno())
+        temporary.replace(index)
+        sync_directory(self.root)
+
+    def prune_verified_cache(self, keep: int = 2) -> None:
+        if (self.root / "pending.json").exists():
+            return
+        index = self.root / "cache-index.json"
+        items = json.loads(index.read_text()) if index.exists() else []
+        if not isinstance(items, list) or len(set(items)) != len(items):
+            raise ValueError("Invalid verified cache index")
+        protected = set(items[-max(2, keep):])
+        current = self.receipt()
+        protected.add(current["manifest"]["generation"])
+        for row in current["manifest"]["files"]:
+            if row["path"].startswith("runtime/outbox/") or Path(row["path"]).suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+                protected.add(current["manifest"]["generation"] if row["generation"] == "self" else row["generation"])
+        remaining = []
+        for generation in items:
+            if len(generation) != 64 or any(c not in "0123456789abcdef" for c in generation):
+                raise ValueError("Invalid cache generation")
+            if generation in protected:
+                remaining.append(generation)
+                continue
+            try:
+                self.prune_cached_generation(generation)
+            except Exception as error:
+                remaining.append(generation)
+                print(f"Checkpoint cache evidence retained: {generation} ({type(error).__name__})", file=sys.stderr)
+        temporary = index.with_suffix(".tmp")
+        with temporary.open("wb") as target:
+            target.write(encoded(remaining))
+            target.flush()
+            os.fsync(target.fileno())
+        temporary.replace(index)
+        sync_directory(self.root)
+
+    def prune_cached_generation(self, generation: str) -> None:
+        bundle = self.root / "generations" / generation
+        if not bundle.exists():
+            return  # A prior prune may have finished before index fsync.
+        if bundle.is_symlink() or bundle.resolve().parent != (self.root / "generations").resolve():
+            raise ValueError("Unsafe checkpoint cache path")
+        marker_path = bundle / "remote-verified.json"
+        manifest_path = bundle / "manifest.json"
+        if marker_path.is_symlink() or manifest_path.is_symlink():
+            raise ValueError("Unsafe checkpoint cache metadata")
+        marker = json.loads(marker_path.read_text())
+        manifest = json.loads(manifest_path.read_text())
+        validate_manifest(manifest)
+        if (marker["generation"] != generation or marker["repository"] != self.store.repository
+                or marker["manifest_sha256"] != sha256(manifest_path)):
+            raise ValueError("Cache lacks matching remote verification")
+        parts = {row["asset"]: row for row in manifest["files"] if row["generation"] == "self"}
+        if {path.name for path in bundle.iterdir()} - (set(parts) | {"manifest.json", "remote-verified.json"}):
+            raise ValueError("Unknown local evidence in cache generation; retaining it")
+        for name, row in parts.items():
+            path = bundle / name
+            if path.exists():
+                if (path.is_symlink() or path.resolve().parent != bundle.resolve()
+                        or path.stat().st_size != row["asset_bytes"] or sha256(path) != row["asset_sha256"]):
+                    raise ValueError("Refusing cleanup of an altered/unverified cache copy")
+                path.unlink()  # Remote-verified duplicate, never live/unique history.
+        manifest_path.unlink()
+        marker_path.unlink()
+        bundle.rmdir()
 
     def publish(self, bundle: Path, previous: dict | None) -> dict:
         if not isinstance(self.store, GitHubArchive):

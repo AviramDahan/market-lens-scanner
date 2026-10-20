@@ -153,6 +153,71 @@ def test_corrupt_workbook_cannot_become_verified_checkpoint_after_deferred_parse
     assert (checkpoints.root / "pending.json").exists()
 
 
+def test_verified_cache_is_bounded_and_old_remote_history_still_restores(source, checkpoints, tmp_path):
+    first = checkpoints.save("first", bootstrap=True)
+    checkpoints.save("second")
+    checkpoints.save("third")
+    checkpoints.save("fourth")
+    assert len(list((checkpoints.root / "generations").iterdir())) == 2
+    assert (first["manifest"]["generation"], "manifest.json") in checkpoints.store.assets
+    assert not (checkpoints.root / "generations" / first["manifest"]["generation"]).exists()
+    restored = tmp_path / "old-remote-history"
+    archive.restore(first["manifest"], restored, checkpoints.store.get)
+    assert (restored / checkpoint.TRACKER).read_bytes() == (source[0] / checkpoint.TRACKER.removeprefix("repo/")).read_bytes()
+    assert (source[0] / "agent_results/decisions/one.jsonl").exists()
+
+
+def test_unknown_cache_evidence_is_retained_without_failing_verified_event(checkpoints):
+    first = checkpoints.save("first", bootstrap=True)
+    bundle = checkpoints.root / "generations" / first["manifest"]["generation"]
+    unknown = bundle / "operator-evidence.txt"
+    unknown.write_text("keep this unique evidence")
+    checkpoints.save("second")
+    newest = checkpoints.save("third")
+    assert unknown.read_text() == "keep this unique evidence"
+    assert checkpoints.receipt()["manifest"] == newest["manifest"]
+    assert not (checkpoints.root / "pending.json").exists()
+
+
+def test_bad_cache_index_does_not_block_persistence_or_delivery_recovery(checkpoints):
+    checkpoints.save("first", bootstrap=True)
+    (checkpoints.root / "cache-index.json").write_text("invalid")
+    newest = checkpoints.save("second")
+    assert checkpoints.recover()["manifest"] == newest["manifest"]
+    assert not (checkpoints.root / "pending.json").exists()
+    checkpoints.save("third")
+    checkpoints.save("fourth")
+    assert len(list((checkpoints.root / "generations").iterdir())) == 2
+
+
+def test_interrupted_cache_cleanup_cannot_block_healthy_retention(source, checkpoints, monkeypatch, tmp_path):
+    first = checkpoints.save("first", bootstrap=True)
+    damaged = checkpoints.root / "generations" / first["manifest"]["generation"]
+    checkpoints.save("second")
+    unlink = Path.unlink
+    def crash_after_manifest_delete(path, *args, **kwargs):
+        unlink(path, *args, **kwargs)
+        if path == damaged / "manifest.json":
+            raise SystemExit("simulated process death after redundant manifest deletion")
+    with monkeypatch.context() as interrupted:
+        interrupted.setattr(Path, "unlink", crash_after_manifest_delete)
+        with pytest.raises(SystemExit, match="simulated process death"):
+            checkpoints.save("third")
+    assert not (damaged / "manifest.json").exists()
+    for iteration in range(4, 9):
+        path = source[0] / checkpoint.TRACKER.removeprefix("repo/")
+        wb = load_workbook(path)
+        wb["Open Positions"]["B2"] = iteration
+        wb.save(path)
+        wb.close()
+        checkpoints.save(str(iteration))
+    assert len(list((checkpoints.root / "generations").iterdir())) == 3  # 1 retained + 2 healthy.
+    restored = tmp_path / "old-history-after-interrupted-cleanup"
+    archive.restore(first["manifest"], restored, checkpoints.store.get)
+    original_tracker = next(row for row in first["manifest"]["files"] if row["path"] == checkpoint.TRACKER)
+    assert archive.sha256(restored / checkpoint.TRACKER) == original_tracker["sha256"]
+
+
 def test_failed_checkpoint_cannot_authorize_another_write_and_recovers_exact_generation(source, checkpoints):
     first = checkpoints.save("first", bootstrap=True)
     (source[0] / "agent_results/decisions/new.jsonl").write_text('{}\n')

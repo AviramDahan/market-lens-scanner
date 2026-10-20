@@ -44,6 +44,14 @@ Git copies remain preserved.
   Timeout retains frozen data and cleans only disposable download/restore copies.
 - A 12 GiB reserve and separate freeze/restore headroom checks remain in place.
   No historical results, images or volumes are pruned.
+- Local compressed checkpoint caches keep the latest two generations and any
+  pending-envelope dependencies. Older duplicate ZIP/manifest caches are removed
+  only after hash/size and remote-verification checks. Source history, all remote
+  releases/assets and unknown local evidence remain untouched. Failed cleanup
+  cannot turn a durably persisted event into failure.
+- Full workbook decoding happens on remote-restored content, not twice on source
+  and restored copies. Identical already-verified workbook bytes may inherit that
+  proof; a changed workbook must decode fully again. Proofs record which occurred.
 - Standalone mirror publication is disabled while the active checkpoint backend
   owns the monotonic cursor.
 
