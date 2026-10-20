@@ -24,6 +24,7 @@ pytestmark = pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux 
 if __name__ == "__main__":
     sys.path.insert(0, str(ROOT))
 
+
 class FakeStore:
     repository = "qa/fictional-checkpoint-processes"
 
@@ -152,10 +153,15 @@ def _parent_a(root: Path):
     def offline_child(command, **kwargs):
         assert command[1:4] == ["-m", "deploy.hetzner.archive_checkpoint", "publish-frozen"]
         redirected = [sys.executable, str(THIS_FILE), "--publisher-child", str(root), *command[3:]]
-        return subprocess.run(redirected, **kwargs)
+        try:
+            return subprocess.run(redirected, **kwargs)
+        except subprocess.CalledProcessError as error:
+            print(error.stderr, file=sys.stderr)
+            raise
 
     # Only the transport is redirected; save, pending state, locks and cursor checks are real.
-    checkpoint.subprocess = SimpleNamespace(run=offline_child)
+    checkpoint.subprocess = SimpleNamespace(run=offline_child,
+        TimeoutExpired=subprocess.TimeoutExpired, CalledProcessError=subprocess.CalledProcessError)
     state = root / "state"
     with checkpoint.exclusive(state / "writer.lock"):
         _write_json(state / "outbox/scanner.json", {
