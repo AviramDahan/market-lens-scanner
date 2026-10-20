@@ -77,3 +77,34 @@ def test_waiting_monitor_has_next_turn_before_new_scanner(tmp_path, monkeypatch)
     finally:
         for process in children:
             stop(process)
+
+
+def test_owner_death_releases_kernel_lock_without_trusting_old_metadata(tmp_path):
+    code = """import sys,time
+from pathlib import Path
+from deploy.hetzner import run_runtime as r
+r.STATE=Path(sys.argv[1])
+with r.writer_lock():
+    (r.STATE/'entered').touch()
+    time.sleep(10)
+"""
+    owner = subprocess.Popen([sys.executable, "-c", code, str(tmp_path)], cwd=ROOT,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    waiter = None
+    try:
+        deadline = time.monotonic() + 4
+        while not (tmp_path / "entered").exists():
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        assert (tmp_path / "coordination/writer.json").exists()
+        owner.kill()
+        owner.communicate(timeout=5)
+        waiter = start(tmp_path, "monitor-after-owner-death", True, timeout=2)
+        out, err = waiter.communicate(timeout=5)
+        assert waiter.returncode == 0, out + err
+        assert (tmp_path / "order").read_text().strip() == "monitor-after-owner-death"
+        assert not (tmp_path / "coordination/writer.json").exists()
+    finally:
+        stop(owner)
+        if waiter:
+            stop(waiter)

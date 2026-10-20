@@ -12,9 +12,11 @@ cutover never deletes or restores a live workbook or result directory.
 
 Legacy tracked data may intentionally be dirty after activation. Source
 preflight excludes only `agent_results` and `agent_tracker` from cleanliness.
-Every incoming commit is checked for generated-data changes before merging
-its exact fetched SHA. Unexpected source edits or incoming data changes fail
-closed instead of overwriting the live portfolio.
+Runtime preflight is offline and deployment-pinned: it checks local source
+cleanliness, deployment compatibility and the locally fetched origin/main pin.
+A changed pin requires deployment, not an automatic runtime fetch/merge/push.
+Known incoming generated-data changes fail closed instead of overwriting the
+live portfolio. The deployment path refreshes refs while writers are paused.
 
 The workbook/results on `main` become frozen evidence, not the latest backup.
 New analysis uses archive manifests/assets. Structured decision and measurement
@@ -54,6 +56,21 @@ Git copies remain preserved.
   proof; a changed workbook must decode fully again. Proofs record which occurred.
 - Standalone mirror publication is disabled while the active checkpoint backend
   owns the monotonic cursor.
+
+## Writer Contention
+
+The scanner retains its 60-second acquisition timeout. A waiting monitor keeps
+its priority reservation after that soft threshold (`DEFERRED_LOCK`), with an
+absolute 360-second queue bound shortened by the current owner's declared
+transaction deadline. This allowance covers local promotion/freeze, bounded
+publication, delivery and cleanup, then receipt publication. Phase changes do
+not extend the deadline. An overrun reports failure; it never steals the flock,
+interrupts an atomic portfolio write or invents a successful monitor heartbeat.
+Coordination evidence lives under `runtime-state/coordination`, outside archived
+monitor/outbox inputs. This prevents a dropped evaluation during a legitimate
+long commit, but does not promise subminute TP/SL evaluation while it is queued.
+Repository privacy is checked inside the bounded publisher, not a second
+unbounded parent-side network call.
 
 ## Activation Gate
 
