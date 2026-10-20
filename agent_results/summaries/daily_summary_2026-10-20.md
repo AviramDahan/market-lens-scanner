@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-20
-Total scans: 16
-Tickers scanned: 2876
+Total scans: 17
+Tickers scanned: 3056
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1156
-WATCH_REVIEW unique tickers: 127
+WATCH_REVIEW: 1194
+WATCH_REVIEW unique tickers: 132
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1156
-SKIP: 1720
-NO_TRADE: 997
+WATCH: 1194
+SKIP: 1862
+NO_TRADE: 1129
 Realized PnL: 0.0
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -22,7 +22,7 @@ Daily reference date: 2026-10-19
 Cumulative recorded-equity change (%): 0.5329
 Trade metric source: COMPLETED_TRADE_LIFECYCLE
 Best ticker: SFM
-Worst ticker: HRL
+Worst ticker: RRC
 Best shadow strategy: INSUFFICIENT_OUTCOMES
 Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
