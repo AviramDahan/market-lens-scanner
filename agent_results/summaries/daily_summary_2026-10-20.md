@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-20
-Total scans: 29
-Tickers scanned: 5214
+Total scans: 30
+Tickers scanned: 5394
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 1610
-WATCH_REVIEW unique tickers: 150
+WATCH_REVIEW: 1696
+WATCH_REVIEW unique tickers: 159
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 1610
-SKIP: 3604
-NO_TRADE: 2730
+WATCH: 1696
+SKIP: 3698
+NO_TRADE: 2787
 Realized PnL: 0.0
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -28,16 +28,16 @@ Worst shadow strategy: INSUFFICIENT_OUTCOMES
 Shadow would-buy counts:
 
 Top rejected candidates:
-- MRSH: WATCH score=0.5412 reason=WATCH: Technical setup detected, but weighted risk/reward 1.65 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.17.
+- MRSH: WATCH score=0.5412 reason=WATCH: Technical setup detected, but weighted risk/reward 1.67 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.19.
 - EOG: WATCH score=0.5141 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.08.
 - BALL: WATCH score=0.4833 reason=WATCH: Technical setup detected, but weighted risk/reward 1.45 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 0.96.
+- ELF: WATCH score=0.482 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.18.
 - WSM: WATCH score=0.482 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.12.
 - APA: WATCH score=0.4811 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.16.
 - CTVA: WATCH score=0.4725 reason=WATCH: Technical setup detected, but weighted risk/reward 1.51 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.22.
 - VEEV: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.16.
 - HALO: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.15.
 - RVTY: WATCH score=0.467 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.19.
-- FANG: WATCH score=0.465 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.12.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
