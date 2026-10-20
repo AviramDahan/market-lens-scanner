@@ -17,6 +17,7 @@ from openpyxl import Workbook, load_workbook
 from deploy.hetzner import host_archive as archive
 from deploy.hetzner import host_archive_runner as runner
 from deploy.hetzner.github_archive import ArchiveAPIError, GitHubArchive, SafeRedirect, publish_verified
+from deploy.hetzner import archive_checkpoint as checkpoint
 
 
 @pytest.fixture
@@ -89,6 +90,170 @@ class FakeStore:
             raise ValueError("readback hash failed")
         if expected_bytes is not None and len(body) != expected_bytes:
             raise ValueError("readback size failed")
+
+
+@pytest.fixture
+def checkpoints(source, monkeypatch):
+    monkeypatch.setattr(checkpoint, "exclusive", lambda _path: nullcontext())
+    monkeypatch.setattr(checkpoint, "require_headroom", lambda *_args: None)
+    return checkpoint.Checkpoints(source[0], source[1], store=FakeStore())
+
+
+def test_checkpoint_bootstrap_and_incremental_proof_are_distinct(source, checkpoints):
+    first = checkpoints.save("first", bootstrap=True)
+    assert first["proof"]["all_hashes_verified"] is True
+    for index in range(20):
+        (source[0] / f"agent_results/decisions/history-{index}.jsonl").write_text('{}\n')
+    checkpoints.save("second")
+    (source[0] / "agent_results/decisions/new.jsonl").write_text('{"action":"WATCH"}\n')
+    following = checkpoints.save("third")
+    assert following["proof"]["chain_verified"] is True
+    assert following["proof"]["all_hashes_verified"] is False
+    assert following["proof"]["verified_now_file_count"] < following["proof"]["inventory_file_count"]
+    assert checkpoints.recover()["manifest"]["generation"] == following["manifest"]["generation"]
+    assert (source[0] / "agent_results/decisions/history-0.jsonl").exists()
+
+
+def test_failed_checkpoint_cannot_authorize_another_write_and_recovers_exact_generation(source, checkpoints):
+    first = checkpoints.save("first", bootstrap=True)
+    (source[0] / "agent_results/decisions/new.jsonl").write_text('{}\n')
+    checkpoints.store.fail_once = True
+    with pytest.raises(ArchiveAPIError):
+        checkpoints.save("second")
+    pending = json.loads((checkpoints.root / "pending.json").read_text())
+    assert checkpoints.receipt()["manifest"] == first["manifest"]
+    with pytest.raises(RuntimeError, match="Pending checkpoint"):
+        checkpoints.save("must-not-freeze-new")
+    receipt = checkpoints.recover()
+    assert receipt["manifest"]["generation"] == pending["generation"]
+    assert not (checkpoints.root / "pending.json").exists()
+
+
+def test_bootstrap_upload_failure_is_retryable_without_fake_success(checkpoints):
+    checkpoints.store.fail_once = True
+    with pytest.raises(ArchiveAPIError):
+        checkpoints.save("first", bootstrap=True)
+    assert not (checkpoints.root / "last_verified.json").exists()
+    assert checkpoints.recover(bootstrap=True)["proof"]["all_hashes_verified"] is True
+
+
+def test_unbacked_tracker_change_fails_closed_without_rewriting_workbook(source, checkpoints):
+    checkpoints.save("first", bootstrap=True)
+    tracker = source[0] / checkpoint.TRACKER.removeprefix("repo/")
+    tracker.write_bytes(b"UNBACKED PORTFOLIO")
+    with pytest.raises(RuntimeError, match="differs from checkpoint"):
+        checkpoints.recover()
+    assert tracker.read_bytes() == b"UNBACKED PORTFOLIO"
+
+
+def test_missing_outbox_after_delivery_is_reconciled_before_new_writer(source, checkpoints, monkeypatch):
+    from agent import market_lens_ui_agent as ui_agent
+    from app import telegram_notifications as telegram
+    outbox = source[1] / "outbox/scanner.json"
+    body = json.dumps({"schema_version": 1, "records": [
+        {"ticker": "TEST", "message": "isolated only", "dedupe_key": "already-sent"}]})
+    outbox.write_text(body)
+    first = checkpoints.save("first", bootstrap=True)
+    assert first["proof"]["delivery_state"] == "VERIFIED_PENDING_DELIVERY"
+    outbox.unlink()  # Simulate consumer success immediately before receipt backup.
+    receipts = source[0] / checkpoint.RECEIPTS.removeprefix("repo/")
+    receipts.write_text(receipts.read_text() + '{"key":"already-sent","sent_at":"2026-10-20T00:00:00Z"}\n')
+    recovered = checkpoints.recover()
+    assert outbox.read_text() == body
+    assert checkpoints.receipts_changed(recovered) is True
+    assert "already-sent" in receipts.read_text()  # Recovery never rolls receipts backward.
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_DEDUP_LOG", str(receipts))
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_DEDUP_DAYS", "0")
+    monkeypatch.setenv("MARKET_LENS_TELEGRAM_DEDUP_ENABLED", "true")
+    settings = telegram.TelegramSettings("isolated-only-token", "isolated-only-destination")
+    def notification(text, **kwargs):
+        return telegram.send_telegram_notification(text, **kwargs, settings=settings,
+            opener=lambda *_args, **_kwargs: pytest.fail("Already-delivered envelope attempted a real send"))
+    monkeypatch.setattr(ui_agent, "send_telegram_notification", notification)
+    assert [result.status for result in ui_agent.send_buy_notification_outbox(outbox)] == ["duplicate"]
+    checkpoints.save("receipt-reconciled")
+    outbox.unlink()  # Existing fake consumer checks durable keys; no real send.
+    final = checkpoints.save("delivery-complete")
+    assert final["proof"]["delivery_state"] == "COMPLETE"
+    checkpoints.recover()
+    assert not outbox.exists()
+
+
+def test_unverified_new_outbox_never_overwrites_verified_envelope(source, checkpoints):
+    outbox = source[1] / "outbox/scanner.json"
+    outbox.write_text('{"schema_version":1,"records":[]}')
+    checkpoints.save("first", bootstrap=True)
+    outbox.write_text('{"schema_version":1,"records":[],"newer":true}')
+    with pytest.raises(RuntimeError, match="outbox is not backed"):
+        checkpoints.recover()
+    assert json.loads(outbox.read_text())["newer"] is True
+
+
+def test_corrupt_incremental_asset_keeps_old_verified_receipt(source, checkpoints):
+    first = checkpoints.save("first", bootstrap=True)
+    (source[0] / "agent_results/decisions/new.jsonl").write_text('{}\n')
+    checkpoints.store.corrupt = True
+    with pytest.raises(ValueError):
+        checkpoints.save("second")
+    assert checkpoints.receipt()["manifest"] == first["manifest"]
+    checkpoints.store.corrupt = False
+    assert checkpoints.recover()["proof"]["chain_verified"] is True
+
+
+def test_checkpoint_child_timeout_keeps_frozen_generation_for_retry(source, checkpoints, monkeypatch):
+    first = checkpoints.save("first", bootstrap=True)
+    store = GitHubArchive(FakeStore.repository, "isolated-not-a-real-token")
+    monkeypatch.setattr(store, "require_private", lambda: None)
+    checkpoints.store = store
+    (source[0] / "agent_results/decisions/new.jsonl").write_text('{}\n')
+    calls = []
+    def timeout(args, **kwargs):
+        calls.append((args, kwargs))
+        raise subprocess.TimeoutExpired(args, kwargs["timeout"])
+    monkeypatch.setattr(checkpoint.subprocess, "run", timeout)
+    with pytest.raises(RuntimeError, match="timed out"):
+        checkpoints.save("second")
+    assert calls[0][1]["timeout"] == 30
+    assert "isolated-not-a-real-token" not in str(calls)
+    assert checkpoints.receipt()["manifest"] == first["manifest"]
+    assert (checkpoints.root / "pending.json").exists()
+    assert not list(checkpoints.root.glob("publish-attempt-*"))
+
+
+def test_incremental_proof_rejects_tampered_verified_base(source, checkpoints):
+    from deploy.hetzner.github_archive import incremental_restore_manifest
+    previous = checkpoints.save("first", bootstrap=True)
+    second = freeze(source, base=previous["manifest"])
+    previous["proof"]["manifest_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="verified same-repository"):
+        incremental_restore_manifest(manifest(second), previous, checkpoints.store.repository)
+
+
+def test_upload_only_proof_cannot_roll_authoritative_cursor_backward(source, checkpoints, monkeypatch):
+    from deploy.hetzner.github_archive import install_verified_receipt
+    first = checkpoints.save("first", bootstrap=True)
+    memory_store = checkpoints.store
+    real_store = GitHubArchive(FakeStore.repository, "isolated-not-a-real-token")
+    monkeypatch.setattr(real_store, "require_private", lambda: None)
+    checkpoints.store = real_store
+    advanced = []
+    def stale_child(args, **kwargs):
+        generation = args[args.index("--generation") + 1]
+        scratch = Path(args[args.index("--scratch") + 1])
+        bundle = checkpoints.root / "generations" / generation
+        receipt = publish_verified(bundle, checkpoints.root, memory_store, previous=first, install_cursor=False)
+        assert checkpoints.receipt()["manifest"] == first["manifest"]
+        (scratch / "verified-result.json").write_text(json.dumps(receipt))
+        newer_bundle = archive.freeze(source[0], source[1], checkpoints.root / "generations",
+                                      source_revision="newer-owner", base=receipt["manifest"])
+        newer = publish_verified(newer_bundle, checkpoints.root, memory_store, previous=receipt, install_cursor=False)
+        install_verified_receipt(checkpoints.root, newer)
+        advanced.append(newer)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(checkpoint.subprocess, "run", stale_child)
+    with pytest.raises(RuntimeError, match="refusing stale proof"):
+        checkpoints.save("second")
+    assert checkpoints.receipt()["manifest"] == advanced[0]["manifest"]
 
 
 def test_roundtrip_preserves_workbook_receipts_outbox_and_cursor(source, tmp_path):

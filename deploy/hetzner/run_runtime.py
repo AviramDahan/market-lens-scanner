@@ -14,9 +14,12 @@ from contextlib import contextmanager
 from pathlib import Path
 
 if __package__:
+    from .archive_checkpoint import Checkpoints, enabled as archive_enabled
     from .notify_ops import send_runtime_alert
     from .staged_scanner import ScannerStage, compact_failed_stage, prepare_stage, promote_stage
 else:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from deploy.hetzner.archive_checkpoint import Checkpoints, enabled as archive_enabled
     from notify_ops import send_runtime_alert
     from staged_scanner import ScannerStage, compact_failed_stage, prepare_stage, promote_stage
 
@@ -96,7 +99,9 @@ def require_live_preflight() -> None:
         raise RuntimeError("Legacy scanner/monitor writers have not been disabled")
     if not TRACKER.is_file():
         raise RuntimeError("Paper tracker is missing")
-    status = output("git", "status", "--porcelain")
+    archived = archive_enabled()
+    status_args = ("--", ".", ":(exclude)agent_results", ":(exclude)agent_tracker") if archived else ()
+    status = output("git", "status", "--porcelain", *status_args)
     if any(line[3:] != "agent_results/telegram_notifications.jsonl"
            for line in status.splitlines()):
         raise RuntimeError("Runtime checkout has unpersisted changes")
@@ -106,11 +111,15 @@ def require_live_preflight() -> None:
     if local != remote:
         common = output("git", "merge-base", "HEAD", "origin/main")
         if common == remote:
+            if archived:
+                raise RuntimeError("Source checkout has unpublished commits; checkpoint backend will not push them")
             # The previous run committed data locally but exhausted push retries.
             push_backup()
             run("git", "fetch", "origin", "main", timeout=300)
         elif common == local:
-            run("git", "merge", "--ff-only", "origin/main", timeout=60)
+            if archived and output("git", "log", "--format=%H", f"HEAD..{remote}", "--", *GENERATED):
+                raise RuntimeError("Remote source changed archive-managed data; refusing to overwrite the live portfolio")
+            run("git", "merge", "--ff-only", remote if archived else "origin/main", timeout=60)
         else:
             raise RuntimeError("Runtime and GitHub histories diverged; manual reconciliation required")
     if output("git", "rev-parse", "HEAD") != output("git", "rev-parse", "origin/main"):
@@ -124,12 +133,17 @@ def require_live_preflight() -> None:
     )
     if changed_code:
         raise RuntimeError(f"Code changed since deployed image: {changed_code}")
-    if status:
+    if archived:
+        checkpoints = Checkpoints(REPO, STATE)
+        receipt = checkpoints.recover()
+        if checkpoints.receipts_changed(receipt):
+            persist_notification_receipts()
+    elif status:
         persist_notification_receipts()
     for kind in ("scanner", "monitor"):
         if (STATE / "outbox" / f"{kind}.json").exists():
             deliver(kind)
-    if output("git", "status", "--porcelain"):
+    if output("git", "status", "--porcelain", *status_args):
         raise RuntimeError("Runtime checkout has unpersisted changes after recovery")
     check_disk_capacity()
 
@@ -184,6 +198,10 @@ def push_backup() -> None:
 
 
 def persist(kind: str) -> bool:
+    if archive_enabled():
+        receipt = Checkpoints(REPO, STATE).save(output("git", "rev-parse", "HEAD"))
+        print(f"Archive checkpoint verified: {receipt['manifest']['generation']}", flush=True)
+        return True
     run("git", "add", "--", *GENERATED)
     if subprocess.run(("git", "diff", "--cached", "--quiet"), cwd=REPO).returncode == 0:
         if (STATE / "outbox" / f"{kind}.json").exists():
@@ -209,6 +227,9 @@ def deliver(kind: str) -> None:
 
 
 def persist_notification_receipts() -> None:
+    if archive_enabled():
+        Checkpoints(REPO, STATE).save(output("git", "rev-parse", "HEAD"))
+        return
     receipts = "agent_results/telegram_notifications.jsonl"
     run("git", "add", "--", receipts)
     if subprocess.run(("git", "diff", "--cached", "--quiet"), cwd=REPO).returncode:

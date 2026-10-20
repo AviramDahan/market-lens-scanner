@@ -8,6 +8,50 @@ import pytest
 from deploy.hetzner import run_runtime as runtime
 
 
+def test_archive_persistence_never_adds_or_pushes_generated_git_data(monkeypatch):
+    calls = []
+    class Backend:
+        def __init__(self, *_args):
+            pass
+        def save(self, revision):
+            calls.append(revision)
+            return {"manifest": {"generation": "verified-generation"}}
+    monkeypatch.setattr(runtime, "archive_enabled", lambda: True)
+    monkeypatch.setattr(runtime, "Checkpoints", Backend)
+    monkeypatch.setattr(runtime, "output", lambda *_args: "source-revision")
+    monkeypatch.setattr(runtime, "run", lambda *_args, **_kwargs: pytest.fail("Archive backend used git mutation"))
+    assert runtime.persist("scanner") is True
+    runtime.persist_notification_receipts()
+    assert calls == ["source-revision", "source-revision"]
+
+
+def test_archive_preflight_refuses_remote_generated_data_commits(tmp_path, monkeypatch):
+    monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
+    monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")
+    tracker = tmp_path / "tracker.xlsx"
+    tracker.touch()
+    monkeypatch.setattr(runtime, "TRACKER", tracker)
+    monkeypatch.setattr(runtime, "archive_enabled", lambda: True)
+    calls = []
+    def fake_output(*args):
+        if args[1] == "status":
+            assert ":(exclude)agent_tracker" in args
+            return ""
+        if args[1] == "rev-parse":
+            return "local" if args[2] == "HEAD" else "exact-remote"
+        if args[1] == "merge-base":
+            return "local"
+        if args[1] == "log":
+            assert "HEAD..exact-remote" in args
+            return "incoming-generated-commit"
+        raise AssertionError(args)
+    monkeypatch.setattr(runtime, "output", fake_output)
+    monkeypatch.setattr(runtime, "run", lambda *args, **_kwargs: calls.append(args))
+    with pytest.raises(RuntimeError, match="refusing to overwrite"):
+        runtime.require_live_preflight()
+    assert not any("merge" in args for args in calls)
+
+
 def test_preflight_preserves_actual_porcelain_columns_for_receipt_recovery(tmp_path, monkeypatch):
     monkeypatch.setenv("MARKET_LENS_HETZNER_WRITER_ENABLED", "true")
     monkeypatch.setenv("MARKET_LENS_OLD_WRITERS_DISABLED", "true")

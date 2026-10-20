@@ -1,5 +1,14 @@
 # Market Lens
 
+## Host Backup Backend
+
+`MARKET_LENS_HOST_BACKUP_BACKEND=verified_archive` selects the verified private
+checkpoint backend described in [the cutover guide](docs/hetzner_checkpoint_cutover.md).
+After activation, generated files on GitHub `main` are historical snapshots,
+not current production data. Use the host's live files or verified data-archive
+manifests for new analysis. Existing history is retained, never rewritten.
+The default remains `legacy_git` until full remote bootstrap and release QA.
+
 ## Current Deployment (2026-10-03)
 
 The paper-trading app and agent now run on the existing Hetzner host at

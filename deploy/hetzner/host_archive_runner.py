@@ -132,11 +132,13 @@ def main(argv=None) -> int:
     parser.add_argument("mode", choices=("local-check", "publish", "status", "quarantine-pending"))
     parser.add_argument("--reason", choices=("invalid-source", "operator-review"))
     args = parser.parse_args(argv)
+    if env_value("MARKET_LENS_HOST_BACKUP_BACKEND") == "verified_archive" and args.mode != "status":
+        raise RuntimeError("Active checkpoint backend owns publication; standalone mirror writes are disabled")
     archive = STATE / "archive"
     if args.mode == "status":
         path = archive / "last_verified.json"
         receipt = json.loads(path.read_text()) if path.exists() else {}
-        print(json.dumps({"active_backup_backend": "legacy_git_unchanged",
+        print(json.dumps({"active_backup_backend": env_value("MARKET_LENS_HOST_BACKUP_BACKEND") or "legacy_git_unchanged",
                           "verified_at": receipt.get("verified_at"),
                           "proof": receipt.get("proof"), "pending": (archive / "pending.json").exists()}))
         return 0

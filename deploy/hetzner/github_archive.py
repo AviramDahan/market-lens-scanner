@@ -11,7 +11,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from .host_archive import MAX_ASSET_BYTES, encoded, restore, sha256, validate_manifest
+from .host_archive import MAX_ASSET_BYTES, REQUIRED, encoded, restore, sha256, validate_manifest
+import hashlib
 
 
 class ArchiveAPIError(RuntimeError):
@@ -160,7 +161,41 @@ class GitHubArchive:
             raise ValueError("Recovery asset hash differs")
 
 
-def publish_verified(bundle: Path, state: Path, store) -> dict:
+def incremental_restore_manifest(manifest: dict, previous: dict, repository: str) -> dict:
+    """Verify changed/critical assets now, and inherit only previously proven refs."""
+    base = previous["manifest"]
+    validate_manifest(base)
+    proof = previous.get("proof", {})
+    if (previous.get("repository") != repository or proof.get("repository") != repository
+            or proof.get("manifest_sha256") != hashlib.sha256(encoded(base)).hexdigest()
+            or proof.get("generation") != base["generation"]
+            or not (proof.get("all_hashes_verified") is True or proof.get("chain_verified") is True)):
+        raise ValueError("Incremental checkpoint requires verified same-repository ancestry")
+    prior = {entry["path"]: entry for entry in base["files"]}
+    selected = []
+    for entry in manifest["files"]:
+        if entry["generation"] != "self":
+            expected = dict(prior.get(entry["path"], {}))
+            if expected.get("generation") == "self":
+                expected["generation"] = base["generation"]
+            if entry != expected:
+                raise ValueError("Unverified inherited checkpoint reference")
+        if (entry["generation"] == "self" or entry["path"] in REQUIRED
+                or entry["path"].startswith("runtime/")
+                or Path(entry["path"]).suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}):
+            copied = dict(entry)
+            if copied["generation"] == "self":
+                copied["generation"] = manifest["generation"]
+            selected.append(copied)
+    body = {key: value for key, value in manifest.items() if key != "generation"}
+    body["files"] = selected
+    body["generation"] = hashlib.sha256(encoded(body)).hexdigest()
+    validate_manifest(body)
+    return body
+
+
+def publish_verified(bundle: Path, state: Path, store, *, previous: dict | None = None,
+                     scratch_root: Path | None = None, install_cursor: bool = True) -> dict:
     """Caller serializes publishers. Upload and restore OUTSIDE portfolio writer.lock."""
     manifest_path = bundle / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -171,13 +206,24 @@ def publish_verified(bundle: Path, state: Path, store) -> dict:
     for name in sorted({entry["asset"] for entry in manifest["files"] if entry["generation"] == "self"}):
         store.put(release, name, bundle / name)
     store.put(release, "manifest.json", manifest_path)
-    with tempfile.TemporaryDirectory(prefix="verify-", dir=bundle.parent) as temporary:
+    with tempfile.TemporaryDirectory(prefix="verify-", dir=scratch_root or bundle.parent) as temporary:
         temporary = Path(temporary)
         downloaded = temporary / "manifest.json"
         store.get(generation, "manifest.json", downloaded,
                   expected_sha=sha256(manifest_path), expected_bytes=manifest_path.stat().st_size)
-        restored = restore(json.loads(downloaded.read_text()), temporary / "restored", store.get)
+        downloaded_manifest = json.loads(downloaded.read_text())
+        checked = (incremental_restore_manifest(downloaded_manifest, previous, store.repository)
+                   if previous is not None else downloaded_manifest)
+        restored = restore(checked, temporary / "restored", store.get)
         proof = {**restored, "manifest_sha256": sha256(manifest_path), "repository": store.repository}
+        proof["delivery_state"] = ("VERIFIED_PENDING_DELIVERY" if any(
+            row["path"].startswith("runtime/outbox/") for row in manifest["files"]) else "COMPLETE")
+        if previous is not None:
+            proof.update(generation=manifest["generation"], all_hashes_verified=False,
+                         chain_verified=True, verification_mode="incremental_remote_restore",
+                         previous_generation=previous["manifest"]["generation"],
+                         inventory_file_count=len(manifest["files"]),
+                         verified_now_file_count=len(checked["files"]))
         proof_path = temporary / "verified.json"
         proof_path.write_bytes(encoded(proof))
         store.put(release, "verified.json", proof_path)
@@ -187,6 +233,13 @@ def publish_verified(bundle: Path, state: Path, store) -> dict:
     # A durable success receipt is written only after the remote read-back restore.
     receipt = {"version": "market_lens_host_backup_receipt_v1", "repository": store.repository,
                "verified_at": datetime.now(timezone.utc).isoformat(), "proof": proof, "manifest": manifest}
+    if install_cursor:
+        install_verified_receipt(state, receipt)
+    return receipt
+
+
+def install_verified_receipt(state: Path, receipt: dict) -> None:
+    """Only the process owning the checkpoint locks may install this cursor."""
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     temporary = state / "last_verified.tmp"
     with temporary.open("wb") as target:
@@ -200,4 +253,3 @@ def publish_verified(bundle: Path, state: Path, store) -> dict:
             os.fsync(directory)
         finally:
             os.close(directory)
-    return receipt
