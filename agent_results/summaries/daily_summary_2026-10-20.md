@@ -1,18 +1,18 @@
 Daily Performance Summary
 
 Date: 2026-10-20
-Total scans: 2
-Tickers scanned: 360
+Total scans: 3
+Tickers scanned: 540
 BUY_SIMULATED: 0
 WATCH_READY: 0
 WATCH_READY unique tickers: 0
-WATCH_REVIEW: 131
-WATCH_REVIEW unique tickers: 73
+WATCH_REVIEW: 213
+WATCH_REVIEW unique tickers: 106
 WATCH_READY session split: regular=0, off_hours=0, unknown=0
 WATCH_READY conversion: 0 converted / 0 staged
-WATCH: 131
-SKIP: 229
-NO_TRADE: 144
+WATCH: 213
+SKIP: 327
+NO_TRADE: 187
 Realized PnL: 0.0
 Unrealized PnL: 0
 Portfolio value: 100532.9
@@ -33,11 +33,11 @@ Top rejected candidates:
 - APA: WATCH score=0.4811 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.16.
 - CTVA: WATCH score=0.4725 reason=WATCH: Technical setup detected, but weighted risk/reward 1.51 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.22.
 - MRSH: WATCH score=0.4714 reason=WATCH: Technical setup detected, but weighted risk/reward 1.98 is below minimum 2.00. Market regime BEAR; sector NEUTRAL; net R/R 1.54.
+- VEEV: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.16.
 - HALO: WATCH score=0.4685 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.15.
 - RVTY: WATCH score=0.467 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.19.
 - WSM: SKIP score=0.4651 reason=SKIP: Consumer sector regime is weak (24/100); skip new entry. Market regime BEAR; sector WEAK; net R/R 0.74.
 - FANG: WATCH score=0.465 reason=WATCH: Technical setup detected, but weighted risk/reward 1.70 is below minimum 2.00. Market regime BEAR; sector STRONG; net R/R 1.12.
-- PKG: SKIP score=0.4496 reason=SKIP: WATCH_READY: Setup is staged outside regular market hours; re-scan after the regular session opens for entry confirmation. Also: Position size blocked by cash, exposure, or risk limits.
 
 Recommendations:
 - Keep collecting shadow data; no strategy changes are recommended from this sample alone.
