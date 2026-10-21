@@ -432,7 +432,7 @@ function renderDashboard(data) {
   }
   document.getElementById("latestSnapshot").disabled = !snapshot.selected_date;
   document.getElementById("trackerLink").href = data.tracker_url;
-  document.getElementById("lastRun").textContent = formatDate(data.latest_run.timestamp);
+  document.getElementById("lastRun").textContent = formatScanDate(data.latest_run.timestamp);
   const runStatus = String(data.latest_run.run_status || "FAILED").toUpperCase();
   const runStatusElement = document.getElementById("runStatus");
   runStatusElement.textContent = runStatus;
@@ -2658,6 +2658,14 @@ function formatAxisMoney(value, range) {
     return `$${(number / 1000).toFixed(decimals)}k`;
   }
   return `$${Math.round(number)}`;
+}
+
+function formatScanDate(value) {
+  if (!value) return formatDate(value);
+  const normalized = String(value).replace(" ", "T");
+  // Host scanner timestamps are UTC even when legacy records omit the offset.
+  const naiveTimestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(normalized);
+  return formatDate(naiveTimestamp ? `${normalized}Z` : normalized);
 }
 
 function formatDate(value) {
