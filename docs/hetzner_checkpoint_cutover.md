@@ -42,7 +42,10 @@ Git copies remain preserved.
   Failed send/upload is never success. Telegram acceptance followed by a crash
   before local receipt fsync can still duplicate on retry; exactly-once delivery
   is not claimed.
-- Publication has a bounded child: 30 seconds incremental, 600 for bootstrap.
+- Publication has a bounded child: 120 seconds incremental, 600 for bootstrap.
+  The incremental budget includes full remote workbook decoding. The previous
+  30-second budget repeatedly expired during normal overnight verification;
+  local freeze and remote verification durations are logged separately.
   Timeout retains frozen data and cleans only disposable download/restore copies.
 - A 12 GiB reserve and separate freeze/restore headroom checks remain in place.
   No historical results, images or volumes are pruned.
@@ -71,6 +74,34 @@ monitor/outbox inputs. This prevents a dropped evaluation during a legitimate
 long commit, but does not promise subminute TP/SL evaluation while it is queued.
 Repository privacy is checked inside the bounded publisher, not a second
 unbounded parent-side network call.
+
+## Local Write Fence
+
+Archive capacity is checked before creating a scanner stage, before applying
+its final files, and before starting a monitor write. A durable, fsynced local
+intent binds the base checkpoint, source revision, original workbook, complete
+input inventory and every scanner promotion target's before/after hashes.
+Promoted files and their destination directories are fsynced as well.
+
+If promotion completed but freeze or publication failed before `pending.json`
+was created, recovery may checkpoint only that exact complete recorded state.
+It verifies every planned target and rejects unexpected inventory or content.
+An entirely unapplied intent is retired without changing portfolio data.
+Partial or unknown promotion is not treated as a completed transaction and
+remains fail-closed for review. The fence is cleared only after a matching
+verified checkpoint; its resolution evidence is preserved separately.
+Unapplied and no-financial-write resolutions retain compact inventory/intent
+hashes and counts, not another full inventory on every monitor heartbeat.
+Verified financial writes retain their full intent and checkpoint references.
+
+The direct monitor records a `COMPUTING` intent before its worker starts and
+seals its actual output only after the existing heartbeat, event/outbox and
+postprocessing checks. A sealed write can be recovered through the same
+checkpoint contract. An interrupted unsealed monitor that changed the workbook
+still requires review: the runner cannot infer financial outcomes from a hash
+mismatch. No-event runs with unchanged workbook and no outbox keep the existing
+local-heartbeat behavior. Neither recovery path restores an older workbook or
+changes trading, target, stop, sizing or notification policy.
 
 ## Activation Gate
 

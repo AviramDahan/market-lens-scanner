@@ -11,6 +11,7 @@ import zipfile
 import subprocess
 import sys
 import argparse
+import time
 from pathlib import Path
 
 from .github_archive import GitHubArchive, incremental_restore_manifest, install_verified_receipt, publish_verified
@@ -23,6 +24,7 @@ TRACKER = "repo/agent_tracker/market_lens_agent_portfolio_budget_100k.xlsx"
 RECEIPTS = "repo/agent_results/telegram_notifications.jsonl"
 REPO = Path("/home/trader/market-lens-runtime")
 STATE = Path("/home/trader/market-lens-runtime-state")
+INCREMENTAL_PUBLISH_SECONDS = 120
 
 
 def require_headroom(root: Path, extra_bytes: int) -> None:
@@ -160,9 +162,11 @@ class Checkpoints:
             # Freeze and restore are separate phases: reserve space for the
             # actual changed inputs first, then for the real downloaded parts.
             require_headroom(self.root, changed_bytes)
+            freeze_started = time.monotonic()
             bundle = freeze(self.repo, self.state, self.root / "generations",
                             source_revision=revision, base=(previous or {}).get("manifest"),
                             parse_source_workbook=False)
+            print(f"Checkpoint freeze_seconds={time.monotonic() - freeze_started:.3f} changed_bytes={changed_bytes}", flush=True)
             pending = self.root / "pending.json"
             temporary = pending.with_suffix(".tmp")
             with temporary.open("wb") as target:
@@ -298,6 +302,7 @@ class Checkpoints:
         # The parent owns both locks and preserves the frozen bundle on timeout.
         # Only disposable download/restore copies live in this attempt directory.
         with tempfile.TemporaryDirectory(prefix="publish-attempt-", dir=self.root) as scratch:
+            started = time.monotonic()
             try:
                 subprocess.run([
                     sys.executable, "-m", "deploy.hetzner.archive_checkpoint", "publish-frozen",
@@ -305,11 +310,12 @@ class Checkpoints:
                     previous["manifest"]["generation"] if previous else "bootstrap",
                     "--scratch", scratch,
                 ], cwd=self.repo, check=True, capture_output=True, text=True,
-                   timeout=30 if previous else 600)
+                   timeout=INCREMENTAL_PUBLISH_SECONDS if previous else 600)
             except subprocess.TimeoutExpired:
                 raise RuntimeError("Checkpoint publication timed out; frozen data retained for retry") from None
             except subprocess.CalledProcessError:
                 raise RuntimeError("Checkpoint publication failed; frozen data retained for retry") from None
+            print(f"Checkpoint remote_verify_seconds={time.monotonic() - started:.3f}", flush=True)
             receipt = self.validate_receipt(json.loads((Path(scratch) / "verified-result.json").read_text()))
             if receipt["manifest"]["generation"] != bundle.name:
                 raise RuntimeError("Publisher did not verify the requested checkpoint generation")

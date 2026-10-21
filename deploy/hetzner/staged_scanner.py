@@ -118,7 +118,7 @@ def compact_failed_stage(stage: ScannerStage) -> None:
             path.unlink()
 
 
-def promote_stage(stage: ScannerStage, repo: Path, state: Path) -> None:
+def promotion_targets(stage: ScannerStage, repo: Path, state: Path) -> list[tuple[Path, Path]]:
     regular_results = []
     runtime_results = []
     for source in changed_results(stage):
@@ -133,6 +133,11 @@ def promote_stage(stage: ScannerStage, repo: Path, state: Path) -> None:
     if outbox.exists():
         destinations.append((outbox, state / "outbox/scanner.json"))
     destinations.extend(runtime_results)
+    return destinations
+
+
+def promote_stage(stage: ScannerStage, repo: Path, state: Path) -> None:
+    destinations = promotion_targets(stage, repo, state)
 
     rollback = stage.root / "rollback"
     applied: list[tuple[Path, Path | None]] = []
@@ -146,8 +151,16 @@ def promote_stage(stage: ScannerStage, repo: Path, state: Path) -> None:
                 shutil.copy2(target, previous)
             temporary = stage.root / f"promote-{uuid.uuid4().hex}"
             shutil.copy2(source, temporary)
+            with temporary.open("r+b") as copied:
+                os.fsync(copied.fileno())
             os.replace(temporary, target)
             applied.append((target, previous))
+            if hasattr(os, "O_DIRECTORY"):
+                descriptor = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
     except Exception:
         for target, previous in reversed(applied):
             if previous is None:

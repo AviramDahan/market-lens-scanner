@@ -14,12 +14,16 @@ from contextlib import contextmanager
 from pathlib import Path
 
 if __package__:
-    from .archive_checkpoint import Checkpoints, enabled as archive_enabled
+    from .archive_checkpoint import Checkpoints, enabled as archive_enabled, require_headroom
+    from .local_write_fence import (begin_monitor, begin_scanner, cancel_no_event_monitor,
+                                    finish_local_write, recover_local_write, seal_monitor, seal_scanner)
     from .notify_ops import send_runtime_alert
     from .staged_scanner import ScannerStage, compact_failed_stage, prepare_stage, promote_stage
 else:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from deploy.hetzner.archive_checkpoint import Checkpoints, enabled as archive_enabled
+    from deploy.hetzner.archive_checkpoint import Checkpoints, enabled as archive_enabled, require_headroom
+    from deploy.hetzner.local_write_fence import (begin_monitor, begin_scanner, cancel_no_event_monitor,
+                                               finish_local_write, recover_local_write, seal_monitor, seal_scanner)
     from notify_ops import send_runtime_alert
     from staged_scanner import ScannerStage, compact_failed_stage, prepare_stage, promote_stage
 
@@ -146,6 +150,7 @@ def require_live_preflight() -> None:
         raise RuntimeError(f"Code changed since deployed image: {changed_code}")
     if archived:
         checkpoints = Checkpoints(REPO, STATE)
+        recover_local_write(checkpoints, output("git", "rev-parse", "HEAD"))
         receipt = checkpoints.recover()
         if checkpoints.receipts_changed(receipt):
             persist_notification_receipts()
@@ -211,7 +216,9 @@ def push_backup() -> None:
 def persist(kind: str) -> bool:
     writer_phase("CHECKPOINT")
     if archive_enabled():
-        receipt = Checkpoints(REPO, STATE).save(output("git", "rev-parse", "HEAD"))
+        checkpoints = Checkpoints(REPO, STATE)
+        receipt = checkpoints.save(output("git", "rev-parse", "HEAD"))
+        finish_local_write(checkpoints)
         print(f"Archive checkpoint verified: {receipt['manifest']['generation']}", flush=True)
         return True
     run("git", "add", "--", *GENERATED)
@@ -260,6 +267,9 @@ def execute(kind: str) -> None:
     tracker_before = file_hash(TRACKER)
     heartbeat_path = STATE / "monitor/latest_status.json"
     heartbeat_before = (heartbeat_path.stat().st_mtime_ns, file_hash(heartbeat_path)) if heartbeat_path.exists() else None
+    checkpoints = Checkpoints(REPO, STATE) if kind == "monitor" and archive_enabled() else None
+    if checkpoints is not None:
+        begin_monitor(checkpoints, output("git", "rev-parse", "HEAD"))
     script = "agent/market_lens_ui_agent.py" if kind == "scanner" else "agent/position_monitor.py"
     writer_phase("POSITION_EVALUATION" if kind == "monitor" else "SCANNER")
     worker(["python", script], timeout=1500 if kind == "scanner" else 840)
@@ -280,11 +290,15 @@ def execute(kind: str) -> None:
         if file_hash(TRACKER) == tracker_before:
             if heartbeat.get("event_count"):
                 raise RuntimeError("Monitor reported an event without a saved portfolio change")
+            if checkpoints is not None:
+                cancel_no_event_monitor(checkpoints, tracker_before)
             print("Monitor evaluated positions with no portfolio event; heartbeat kept local")
             return
         if heartbeat.get("event_count") and not (STATE / "outbox/monitor.json").is_file():
             raise RuntimeError("Monitor event has no notification outbox; delivery cannot be confirmed")
     worker(["python", "deploy/hetzner/postprocess.py"], timeout=180)
+    if checkpoints is not None:
+        seal_monitor(checkpoints)
     persisted = persist(kind)
     if kind == "monitor" and heartbeat.get("event_count") and not persisted:
         raise RuntimeError("Monitor changed the portfolio but no persisted commit was produced")
@@ -395,6 +409,10 @@ def execute_staged_scanner() -> None:
     with writer_lock():
         writer_phase("STAGE_PREPARATION")
         require_live_preflight()
+        if archive_enabled():
+            # Reject capacity before creating another private stage, not after
+            # applying its financial workbook to the live portfolio.
+            require_headroom(STATE, 6 * TRACKER.stat().st_size + 128 * 1024**2)
         stage = prepare_stage(REPO, STATE, file_hash(TRACKER))
         previous = set((stage.results / "runtime").glob("market_lens_agent_*.json"))
     print(f"Scanner stage prepared: {stage.root.name}")
@@ -415,13 +433,18 @@ def execute_staged_scanner() -> None:
                     f"Stage retained at {stage.root}"
                 )
             writer_phase("PROMOTION")
+            checkpoints = Checkpoints(REPO, STATE) if archive_enabled() else None
+            if checkpoints is not None:
+                begin_scanner(checkpoints, stage, output("git", "rev-parse", "HEAD"))
             promote_stage(stage, REPO, STATE)
+            if checkpoints is not None:
+                seal_scanner(checkpoints)
             if persist("scanner"):
                 deliver("scanner")
     except Exception:
         compact_failed_stage(stage)
         raise
-    # The staged copy duplicates data already persisted in Git; failed stages remain for diagnosis.
+    # The stage duplicates durably checkpointed data; failed evidence remains for diagnosis.
     if stage.root.resolve().is_relative_to((STATE / "scanner-staging").resolve()):
         shutil.rmtree(stage.root)
     print("scanner completed and persisted")

@@ -68,6 +68,30 @@ def file_signature(path: Path) -> tuple[int, int, int]:
     return info.st_size, info.st_mtime_ns, info.st_ino
 
 
+def notification_media_names(value) -> set[str]:
+    """Extract only recovery-scoped media references; never fetch an external URL."""
+    if isinstance(value, dict):
+        return set().union(*(notification_media_names(child) for child in value.values()))
+    if isinstance(value, list):
+        return set().union(*(notification_media_names(child) for child in value))
+    if not isinstance(value, str):
+        return set()
+    normalized = value.replace("\\", "/")
+    if normalized.startswith(("http://", "https://")):
+        parsed = urlsplit(normalized)
+        if parsed.hostname not in {"web", "127.0.0.1", "localhost", "market-lens.2.28.100.77.sslip.io"}:
+            return set()
+        normalized = unquote(parsed.path)
+    if normalized.startswith("/agent-results/"):
+        normalized = "agent_results/" + normalized[len("/agent-results/"):]
+    elif "agent_results/" in normalized:
+        normalized = "agent_results/" + normalized.split("agent_results/", 1)[1]
+    else:
+        return set()
+    name = safe_name("repo/" + normalized)
+    return {name} if Path(name).suffix.lower() in MEDIA else set()
+
+
 def recovery_files(repo: Path, state: Path) -> dict[str, Path]:
     selected = {}
     for prefix, root in (("repo/agent_results", repo / "agent_results"),
@@ -92,36 +116,13 @@ def recovery_files(repo: Path, state: Path) -> dict[str, Path]:
         selected["runtime/deployed_revision"] = deployed
 
     # Pending notifications must retain their referenced image even on a new host.
-    def referenced(value):
-        if isinstance(value, dict):
-            for child in value.values():
-                referenced(child)
-        elif isinstance(value, list):
-            for child in value:
-                referenced(child)
-        elif isinstance(value, str):
-            normalized = value.replace("\\", "/")
-            if normalized.startswith(("http://", "https://")):
-                parsed = urlsplit(normalized)
-                if parsed.hostname not in {"web", "127.0.0.1", "localhost", "market-lens.2.28.100.77.sslip.io"}:
-                    return  # External images remain external; never fetch arbitrary URLs.
-                normalized = unquote(parsed.path)
-            if normalized.startswith("/agent-results/"):
-                normalized = "agent_results/" + normalized[len("/agent-results/"):]
-            elif "agent_results/" in normalized:
-                normalized = "agent_results/" + normalized.split("agent_results/", 1)[1]
-            else:
-                return
-            name = safe_name("repo/" + normalized)
-            path = repo / name[len("repo/"):]
-            if path.suffix.lower() in MEDIA:
-                if not path.is_file() or path.is_symlink() or repo.resolve() not in path.resolve().parents:
-                    raise ValueError("Pending notification image is missing or unsafe")
-                selected[name] = path
-
     for name, path in list(selected.items()):
         if name.startswith("runtime/outbox/") and path.suffix == ".json":
-            referenced(json.loads(path.read_text(encoding="utf-8")))
+            for media in notification_media_names(json.loads(path.read_text(encoding="utf-8"))):
+                image = repo / media[len("repo/"):]
+                if not image.is_file() or image.is_symlink() or repo.resolve() not in image.resolve().parents:
+                    raise ValueError("Pending notification image is missing or unsafe")
+                selected[media] = image
     if REQUIRED - selected.keys():
         raise ValueError("Required recovery files missing")
     return dict(sorted(selected.items()))

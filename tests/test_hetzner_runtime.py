@@ -8,11 +8,11 @@ import pytest
 from deploy.hetzner import run_runtime as runtime
 
 
-def test_archive_persistence_never_adds_or_pushes_generated_git_data(monkeypatch):
+def test_archive_persistence_never_adds_or_pushes_generated_git_data(tmp_path, monkeypatch):
     calls = []
     class Backend:
         def __init__(self, *_args):
-            pass
+            self.root = tmp_path / "checkpoints"
         def save(self, revision):
             calls.append(revision)
             return {"manifest": {"generation": "verified-generation"}}
@@ -67,7 +67,7 @@ def test_archive_preflight_is_offline_when_source_pin_is_unchanged(tmp_path, mon
 
     class Backend:
         def __init__(self, *_args):
-            pass
+            self.root = tmp_path / "checkpoints"
 
         def recover(self):
             return {"verified": True}
