@@ -11,6 +11,23 @@ const deferred = () => {
   return { promise, resolve };
 };
 
+test('legacy scan UTC timestamps display in the viewer timezone without a three-hour shift', () => {
+  const h = harness();
+  for (const value of ['2026-10-21T19:06:08', '2026-10-21 19:06:08', '2026-10-21T19:06:08.123']) {
+    h.context.value = value;
+    h.context.zoned = value.replace(' ', 'T') + 'Z';
+    assert.equal(h.run('formatScanDate(value)'), h.run('formatDate(zoned)'));
+  }
+});
+
+test('scan dates preserve explicit offsets and missing or invalid values', () => {
+  const h = harness();
+  for (const value of ['2026-10-21T19:06:08Z', '2026-10-21T22:06:08+03:00', '', null, 'unavailable']) {
+    h.context.value = value;
+    assert.equal(h.run('formatScanDate(value)'), h.run('formatDate(value)'));
+  }
+});
+
 test('unknown correlation is never rendered as OK or a passed checklist', () => {
   const h = harness();
   for (const status of ['UNKNOWN', 'PARTIAL', 'LEGACY_UNRECORDED']) {

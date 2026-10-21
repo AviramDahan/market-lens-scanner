@@ -133,6 +133,6 @@ def test_chart_modal_fits_its_padded_track_and_covers_mobile_navigation() -> Non
 
 def test_log_layout_release_refreshes_both_static_assets() -> None:
     assert '/static/agent.css?v=20261014-log-modal-qa' in HTML
-    assert '/static/agent.js?v=20261019-risk-evidence' in HTML
+    assert '/static/agent.js?v=20261021-scan-time-utc' in HTML
     assert 'Target 1 must pass the active minimum net R/R and ATR-distance gates.' in HTML
     assert 'A close Target 1 is a warning, not an automatic block' not in HTML
