@@ -317,7 +317,7 @@ def test_checkpoint_child_timeout_keeps_frozen_generation_for_retry(source, chec
     monkeypatch.setattr(checkpoint.subprocess, "run", timeout)
     with pytest.raises(RuntimeError, match="timed out"):
         checkpoints.save("second")
-    assert calls[0][1]["timeout"] == 30
+    assert calls[0][1]["timeout"] == 120
     assert "isolated-not-a-real-token" not in str(calls)
     assert checkpoints.receipt()["manifest"] == first["manifest"]
     assert (checkpoints.root / "pending.json").exists()
