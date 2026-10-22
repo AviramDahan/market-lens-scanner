@@ -196,11 +196,11 @@ def archive_once(*, state=STATE, now=None, **kwargs) -> dict:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {'status': 'SKIPPED_BUSY', 'archived_bytes': 0}
-        return _archive_once(now=now, **kwargs)
+        return _archive_once(now=now, retention_cache=state/'cold-retained.json', **kwargs)
 
 
 def _archive_once(*, root=BACKUPS, store=None, now=None, target_free=20*1024**3,
-                 max_bytes=2*1024**3, free_bytes=None) -> dict:
+                 max_bytes=2*1024**3, free_bytes=None, retention_cache=None) -> dict:
     if env_value('MARKET_LENS_COLD_BACKUP_ARCHIVE_ENABLED').lower() != 'true':
         return {'status': 'DISABLED', 'archived_bytes': 0}
     if not root.is_dir() or root.is_symlink():
@@ -217,6 +217,7 @@ def _archive_once(*, root=BACKUPS, store=None, now=None, target_free=20*1024**3,
     if not candidates or free_bytes() >= target_free:
         return {'status': 'NO_OFFLOAD_NEEDED', 'archived_bytes': 0}
     store = store or GitHubArchive(env_value('MARKET_LENS_ARCHIVE_REPOSITORY'), env_value('MARKET_LENS_ARCHIVE_TOKEN'))
+    cached = json.loads(retention_cache.read_text()) if retention_cache and retention_cache.exists() else {}
     receipts, skipped, moved = [], [], 0
     deadline = time.monotonic()+600
     for path in candidates:
@@ -224,10 +225,18 @@ def _archive_once(*, root=BACKUPS, store=None, now=None, target_free=20*1024**3,
             break
         if moved+path.stat().st_size > max_bytes:
             continue
+        name = path.relative_to(root).as_posix()
+        known = cached.get(name, {})
+        if known.get('version') == 'cold_portfolio_v1' and known.get('signature') == list(signature(path)):
+            skipped.append(name)
+            continue
         try:
             receipt = offload_file(root, path, store, now=now)
         except (UnsafeBackup, tarfile.TarError):
-            skipped.append(path.relative_to(root).as_posix())
+            skipped.append(name)
+            cached[name] = {'version': 'cold_portfolio_v1', 'signature': list(signature(path))}
+            if retention_cache:
+                atomic_json(retention_cache, cached)
             continue  # Sensitive/unknown formats stay local, never partially uploaded/deleted.
         moved += receipt['bytes']; receipts.append(receipt)
     return {'status': 'ARCHIVED' if receipts else 'RETAINED_NO_SAFE_CANDIDATES',

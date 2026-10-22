@@ -104,6 +104,10 @@ archive repository/token, with separate `cold-backup-v1-*` Releases that are NOT
 financial checkpoint generations. No live data, Git history, images, volumes or
 AI Trader directories are selected.
 
+Unchanged rejected archives are recorded by file signature and validator version
+so every half-hour check does not repeatedly decompress the same unsafe backup.
+They stay local; a changed file is inspected again before any transfer.
+
 The half-hourly idle maintenance check offloads at most 2 GiB per invocation when
 free space is below 20 GiB. The newest two archives and every archive younger
 than seven days stay local. Cold transfers are deferred between 09:00 and 16:30

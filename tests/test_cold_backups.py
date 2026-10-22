@@ -129,6 +129,25 @@ def test_recent_files_and_sufficient_capacity_remain_local(tmp_path):
     assert len(list(tmp_path.glob('*.tar.gz'))) == 3
 
 
+def test_unchanged_unsafe_backup_is_retained_without_repeated_expensive_validation(tmp_path, monkeypatch):
+    path = backup(tmp_path, 'old.tar.gz', member='market-lens-runtime/.env')
+    backup(tmp_path, 'recent-a.tar.gz'); backup(tmp_path, 'recent-b.tar.gz')
+    old = (NOW-timedelta(days=10)).timestamp(); os.utime(path, (old, old))
+    calls = []
+    validate = cold.validate_backup
+    def counted(p):
+        calls.append(p)
+        return validate(p)
+    monkeypatch.setattr(cold, 'validate_backup', counted)
+    kwargs = dict(root=tmp_path, store=Store(), now=NOW, free_bytes=lambda: 0,
+                  retention_cache=tmp_path/'rejections.json')
+    cold._archive_once(**kwargs); cold._archive_once(**kwargs)
+    assert len(calls) == 1 and path.exists()
+    stat = path.stat(); os.utime(path, ns=(stat.st_atime_ns,stat.st_mtime_ns+1))
+    cold._archive_once(**kwargs)
+    assert len(calls) == 2 and path.exists()
+
+
 def test_restore_cannot_overwrite_or_target_live_portfolio(tmp_path, monkeypatch):
     original = backup(tmp_path); store = Store()
     receipt = cold.offload_file(tmp_path, original, store, now=NOW)
