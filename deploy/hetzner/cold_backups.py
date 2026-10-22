@@ -65,7 +65,8 @@ def validate_backup(path: Path) -> None:
                 raise UnsafeBackup('Backup contains sensitive paths; retaining it locally')
             if member.isdir():
                 continue
-            state = lower.index('market-lens-runtime-state') + 1 if 'market-lens-runtime-state' in lower else -1
+            state = (lower.index('market-lens-runtime-state') + 1 if 'market-lens-runtime-state' in lower
+                     else 1 if lower and lower[0] == 'state' else -1)
             allowed_state = state >= 0 and state < len(lower) and lower[state] in {
                 'monitor', 'outbox', 'deployed_revision', 'checkpoints'}
             if not ({'agent_tracker', 'agent_results'} & set(lower) or allowed_state):

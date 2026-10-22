@@ -74,6 +74,14 @@ def test_private_round_trip_keeps_complete_remote_original_and_durable_pointer(t
     assert destination.read_bytes() == data
 
 
+def test_old_backup_state_prefix_remains_supported_without_allowing_config(tmp_path):
+    path = backup(tmp_path, member='state/monitor/latest_status.json', body=b'{"status":"MONITOR_OK"}')
+    cold.validate_backup(path)
+    forbidden = backup(tmp_path, 'forbidden.tar.gz', member='state/runtime.env', body=b'secret')
+    with pytest.raises(cold.UnsafeBackup):
+        cold.validate_backup(forbidden)
+
+
 @pytest.mark.parametrize('private,corrupt', [(False, False), (True, True)])
 def test_failed_verification_never_retires_original(tmp_path, private, corrupt):
     original = backup(tmp_path); before = original.read_bytes()
