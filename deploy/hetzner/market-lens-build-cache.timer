@@ -1,9 +1,10 @@
 [Unit]
-Description=Check shared Docker build cache after Thursday trading
+Description=Check unused build-cache capacity regularly and after Thursday trading
 
 [Timer]
 OnCalendar=Thu *-*-* 16:45:00 America/New_York
 OnCalendar=Thu *-*-* 16:55:00 America/New_York
+OnCalendar=*-*-* *:12,42:00 UTC
 Persistent=true
 Unit=market-lens-build-cache.service
 

@@ -783,6 +783,8 @@ def evaluate_agent_candidate(
         },
         "entry_cost_per_share": round(net_rr_info["net_entry"] - result.current_price, 4),
         "timestamp": timestamp,
+        "detector_diagnostics": list(getattr(result, "detector_diagnostics", None) or []),
+        "setup_detection_status": "PARTIAL" if getattr(result, "detector_diagnostics", None) else "COMPLETE",
         "ticker": ticker,
         "company_name": company_name_for(ticker),
         "price": round(float(result.current_price or 0), 4),

@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -464,16 +465,30 @@ def main() -> None:
 
 
 def cli() -> int:
+    from app.runtime_health import record_attempt
+
+    kind = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in {"scanner", "monitor"} else "scanner"
+    started = datetime.now(timezone.utc).isoformat()
+
+    def observed(status: str, code: str = "") -> None:
+        try:
+            record_attempt(STATE / "health", kind, status, started_at=started, failure_code=code)
+        except OSError:
+            print("Runtime attempt status could not be persisted", file=sys.stderr)
+
+    observed("RUNNING")
     try:
         main()
     except Exception as exc:
-        kind = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in {"scanner", "monitor"} else "scanner"
         event = ("TRADE_ALERT_DELIVERY_FAILED" if isinstance(exc, RuntimeDeliveryFailure)
                  else "SCANNER_SNAPSHOT_STALE" if isinstance(exc, ScannerSnapshotStale)
                  else "RUN_FAILED")
+        code = "CHECKPOINT_HEADROOM_INSUFFICIENT" if str(exc).startswith("Insufficient checkpoint headroom") else event
+        observed("FAILED", code)
         report_runtime_alert(kind, event)
         print(f"Market Lens runtime failed: {exc}", file=sys.stderr)
         return 1
+    observed("SUCCEEDED")
     return 0
 
 

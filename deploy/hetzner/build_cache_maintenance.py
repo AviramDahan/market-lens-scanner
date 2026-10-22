@@ -23,12 +23,12 @@ except ImportError:
 
 STATE = Path("/home/trader/market-lens-runtime-state/maintenance")
 ACTIVE_UNITS = ("market-lens-scanner.service", "market-lens.service")
-TRIGGER_CACHE_GB = 30.0
+TRIGGER_CACHE_GB = 8.0
 TRIGGER_FREE_GB = 20.0
 MIN_FREE_GB = 12.0
-MAX_CACHE = "16gb"
-RESERVED_CACHE = "12gb"
-MIN_AGE = "168h"
+MAX_CACHE = "6gb"
+RESERVED_CACHE = "2gb"
+MIN_AGE = "48h"
 SIZE_UNITS = {"B": 1, "KB": 1000, "MB": 1000**2, "GB": 1000**3,
               "TB": 1000**4, "KIB": 1024, "MIB": 1024**2, "GIB": 1024**3}
 

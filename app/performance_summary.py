@@ -728,6 +728,7 @@ def shadow_outcome_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 def setup_candidate_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     candidate_counts: Counter[str] = Counter()
+    policies = Counter(str(record.get("active_setup_selection_policy") or "UNKNOWN") for record in records)
     records_with_candidates = 0
     records_with_multiple = 0
     alternative_ranked_first = 0
@@ -751,8 +752,16 @@ def setup_candidate_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
         "records_with_multiple_candidates": records_with_multiple,
         "alternative_ranked_first_count": alternative_ranked_first,
         "candidate_count_by_setup_type": dict(sorted(candidate_counts.items())),
-        "active_policy": "FIRST_MATCH_LEGACY",
-        "shadow_only": True,
+        "active_policy": next(iter(policies)) if len(policies) == 1 else "MIXED" if policies else "UNKNOWN",
+        "active_policy_counts": dict(sorted(policies.items())),
+        "shadow_only": (True if set(policies) == {"FIRST_MATCH_LEGACY"} else
+                        False if set(policies) == {"QUALIFIED_PROFESSIONAL_SCORE_V1"} else None),
+        "comparison_shadow_only": True,
+        "comparison_basis": "Per-setup normalized ranking, not the active qualified selection decision.",
+        "partial_detection_count": sum(bool(record.get("detector_diagnostics")) for record in records),
+        "detector_failure_counts": dict(Counter(
+            f"{item.get('detector', 'UNKNOWN')}:{item.get('error_type', 'UNKNOWN')}"
+            for record in records for item in record.get("detector_diagnostics") or [])),
     }
 
 

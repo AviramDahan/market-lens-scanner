@@ -100,7 +100,8 @@ def test_degraded_monitor_reports_issue_without_mutating_portfolio(tmp_path, mon
     (ValueError("malformed monitor heartbeat"), "RUN_FAILED"),
     (run_runtime.RuntimeDeliveryFailure("delivery failed"), "TRADE_ALERT_DELIVERY_FAILED"),
 ])
-def test_runtime_failure_routes_one_operations_alert(monkeypatch, failure, event):
+def test_runtime_failure_routes_one_operations_alert(tmp_path, monkeypatch, failure, event):
+    monkeypatch.setattr(run_runtime, "STATE", tmp_path)
     alerts = []
     monkeypatch.setattr(run_runtime, "main", lambda: (_ for _ in ()).throw(failure))
     monkeypatch.setattr(run_runtime, "report_runtime_alert", lambda kind, code: alerts.append((kind, code)))

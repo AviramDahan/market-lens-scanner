@@ -163,6 +163,7 @@ class ScanResult(BaseModel):
     strategy_reason: str | None = None
     strategy_decision: dict[str, Any] = Field(default_factory=dict)
     setup_candidates: list[dict[str, Any]] = Field(default_factory=list)
+    detector_diagnostics: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ScanRequest(BaseModel):

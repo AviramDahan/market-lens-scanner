@@ -38,6 +38,7 @@ class StrategyCandidate:
     target_2: float | None
     risk_reward: float
     setup_candidates: list[dict[str, Any]] = field(default_factory=list)
+    detector_diagnostics: list[dict[str, str]] = field(default_factory=list)
 
 
 def normalize_strategy_candidate(result: Any) -> StrategyCandidate:
@@ -64,6 +65,7 @@ def normalize_strategy_candidate(result: Any) -> StrategyCandidate:
             for item in getattr(result, "setup_candidates", None) or []
             if isinstance(item, dict)
         ],
+        detector_diagnostics=list(getattr(result, "detector_diagnostics", None) or []),
     )
 
 
