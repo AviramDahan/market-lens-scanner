@@ -105,6 +105,15 @@ def test_sensitive_or_non_portfolio_files_are_never_uploaded(tmp_path, member, b
     assert path.exists() and store.uploads == 0
 
 
+def test_long_sensitive_field_crossing_read_boundary_is_rejected_before_upload(tmp_path):
+    content = b'x'*(1024**2-1000)+b'{"private_key":"'+b'not-a-real-key'*300+b'"}'
+    path = backup(tmp_path, member='market-lens-runtime/agent_results/diagnostic.json', body=content)
+    store = Store()
+    with pytest.raises(cold.UnsafeBackup):
+        cold.offload_file(tmp_path, path, store, now=NOW)
+    assert path.exists() and store.uploads == 0
+
+
 def test_interrupted_retirement_can_retry_without_duplicate_uploads(tmp_path, monkeypatch):
     original = backup(tmp_path); store = Store()
     real_atomic = cold.atomic_json

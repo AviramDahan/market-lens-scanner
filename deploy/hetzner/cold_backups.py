@@ -28,7 +28,7 @@ STATE = Path('/home/trader/market-lens-runtime-state/maintenance')
 LIVE = Path('/home/trader/market-lens-runtime')
 SECRET = re.compile(rb'(?:\bgh[pousr]_[A-Za-z0-9]{30,}|\bgithub_pat_[A-Za-z0-9_]{30,}|'
                     rb'\b[0-9]{7,12}:[A-Za-z0-9_-]{30,50}\b|'
-                    rb'"(?:password|service_role_key|private_key)"\s*:\s*"[^"\s][^"]*")', re.I)
+                    rb'"(?:password|service_role_key|private_key)"\s*:\s*"[^"\s])', re.I)
 
 
 class UnsafeBackup(ValueError):
