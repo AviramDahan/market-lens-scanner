@@ -32,7 +32,7 @@ def test_cache_size_reads_only_build_cache(monkeypatch):
 def test_below_threshold_does_not_prune(tmp_path, monkeypatch):
     monkeypatch.setattr(maintenance, "STATE", tmp_path)
     monkeypatch.setattr(maintenance, "free_bytes", lambda: 21 * 1024**3)
-    monkeypatch.setattr(maintenance, "cache_bytes", lambda: 20 * 1000**3)
+    monkeypatch.setattr(maintenance, "cache_bytes", lambda: 4 * 1000**3)
     monkeypatch.setattr(maintenance, "busy_reason", lambda: None)
     monkeypatch.setattr(maintenance, "prune_cache", lambda: pytest.fail("Unneeded prune"))
     result = maintenance.maintenance_once()
@@ -63,9 +63,9 @@ def test_threshold_prunes_only_build_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(maintenance.subprocess, "run", lambda args, **kwargs: commands.append(args))
     result = maintenance.maintenance_once()
     assert result["status"] == "pruned"
-    assert commands == [["docker", "buildx", "prune", "--filter", "until=168h",
+    assert commands == [["docker", "buildx", "prune", "--filter", "until=48h",
                          "--min-free-space", "21474836480",
-                         "--max-used-space", "16gb", "--reserved-space", "12gb", "--force"]]
+                         "--max-used-space", "6gb", "--reserved-space", "2gb", "--force"]]
 
 
 def test_low_disk_prunes_cache_below_size_ceiling(tmp_path, monkeypatch):
@@ -84,9 +84,9 @@ def test_low_disk_prunes_cache_below_size_ceiling(tmp_path, monkeypatch):
     assert result["status"] == "pruned"
     assert len(commands) == 1
     args, kwargs = commands[0]
-    assert args == ["docker", "buildx", "prune", "--filter", "until=168h",
-                    "--min-free-space", "21474836480", "--max-used-space", "16gb",
-                    "--reserved-space", "12gb", "--force"]
+    assert args == ["docker", "buildx", "prune", "--filter", "until=48h",
+                    "--min-free-space", "21474836480", "--max-used-space", "6gb",
+                    "--reserved-space", "2gb", "--force"]
     assert kwargs == {"check": True, "capture_output": True, "text": True, "timeout": 600}
     assert alerts == []
     assert json.loads((tmp_path / "build-cache-last.json").read_text()) == result
@@ -141,6 +141,7 @@ def test_weekly_timer_is_bounded_and_does_not_touch_trade_timers():
     service = (deploy / "market-lens-build-cache.service").read_text()
     assert "Thu *-*-* 16:45:00 America/New_York" in timer
     assert "Thu *-*-* 16:55:00 America/New_York" in timer
+    assert "*:12,42:00 UTC" in timer
     for month, day in ((1, 8), (7, 9)):
         for minute in (45, 55):
             local = datetime(2026, month, day, 16, minute, tzinfo=NY)

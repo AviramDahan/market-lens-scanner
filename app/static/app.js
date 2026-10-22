@@ -655,7 +655,7 @@ function renderCard(result, chartUrl, analysisPeriod) {
     : "";
 
   return `
-    <article class="result-card" data-testid="result-card" data-ticker="${escapeHtml(result.ticker)}" data-setup-candidates="${escapeHtml(encodeURIComponent(JSON.stringify(result.setup_candidates || [])))}">
+    <article class="result-card" data-testid="result-card" data-ticker="${escapeHtml(result.ticker)}" data-detector-diagnostics="${escapeHtml(encodeURIComponent(JSON.stringify(result.detector_diagnostics || [])))}" data-setup-candidates="${escapeHtml(encodeURIComponent(JSON.stringify(result.setup_candidates || [])))}">
       <header class="result-head">
         <div class="ticker">
           <strong data-testid="result-ticker">${escapeHtml(result.ticker)}</strong>
@@ -682,6 +682,7 @@ function renderCard(result, chartUrl, analysisPeriod) {
           ${renderStrategyBlock(result)}
           ${renderProfessionalBlock(result)}
           <p class="reason" data-testid="result-reason">${escapeHtml(result.reason)}</p>
+          ${(result.detector_diagnostics || []).length ? '<p class="reason">Partial setup analysis: one or more detectors failed. See decision diagnostics.</p>' : ''}
           <div class="levels">
             ${detailLevel("Fib 61.8", result.fibonacci?.fib_618)}
             ${detailLevel("Fib Zone", result.fibonacci ? zone(result.fibonacci.zone) : null)}

@@ -169,6 +169,7 @@ def cached_agent_dashboard(selected_date: str | None = None) -> dict:
 
 
 def current_agent_dashboard() -> dict:
+    from app.runtime_health import merge_runtime_health
     sync_status = sync_dashboard_snapshot_if_enabled(PROJECT_ROOT)
     if DASHBOARD_SNAPSHOT_PATH.exists():
         try:
@@ -181,6 +182,7 @@ def current_agent_dashboard() -> dict:
                     merge_live_monitor_health(dashboard)
                     merge_execution_monitor_health(dashboard)
                 dashboard["results_sync"] = {**sync_status, "asset_sync": asset_sync_status}
+                merge_runtime_health(dashboard)
                 return dashboard
         except Exception:
             pass
@@ -189,6 +191,7 @@ def current_agent_dashboard() -> dict:
     if not merge_host_monitor_health(dashboard):
         merge_live_monitor_health(dashboard)
         merge_execution_monitor_health(dashboard)
+    merge_runtime_health(dashboard)
     return dashboard
 
 

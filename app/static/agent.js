@@ -437,6 +437,7 @@ function renderDashboard(data) {
   const runStatusElement = document.getElementById("runStatus");
   runStatusElement.textContent = runStatus;
   runStatusElement.dataset.status = runStatus;
+  renderRuntimeHealth(data.system_health || {}, data.latest_run);
   const coverage = data.latest_run.scan_coverage || {};
   const received = Number(coverage.received ?? data.latest_run.tickers.length ?? 0);
   const requested = Number(coverage.requested ?? received);
@@ -563,6 +564,7 @@ async function refreshLivePrices() {
     if (live.status !== "ok") throw new Error(live.error || "Live dashboard unavailable");
     state.lastLiveSyncError = false;
     state.data.system_health = live.system_health || state.data.system_health;
+    renderRuntimeHealth(state.data.system_health || {}, state.data.latest_run || {});
     renderPositionExecutionHealth(state.data.system_health || {}, live.open_positions || []);
     if (live.dashboard_refresh_version &&
         live.dashboard_refresh_version !== state.data.dashboard_refresh_version) {
@@ -2057,6 +2059,31 @@ function renderPositionExecutionHealth(health, positions) {
     const tone = goodStatuses.has(normalized) ? "good" : normalized.startsWith("NOT_REQUIRED") ? "neutral" : "attention";
     return `<span class="execution-health-chip ${tone}" title="${escapeHtml(item.detail)}"><b>${escapeHtml(item.label)}</b><small>${escapeHtml(normalized.replaceAll("_", " "))}</small></span>`;
   }).join("");
+}
+
+function renderRuntimeHealth(health, latestRun = {}) {
+  const components = health.runtime_components || {};
+  const scanner = components.scanner || {};
+  const failed = new Set(["FAILED", "MISSED_SCHEDULE", "STALE_RUNNING", "UNREADABLE"]);
+  const statusElement = document.getElementById("runStatus");
+  const meta = document.getElementById("runStatusMeta");
+  const alert = document.getElementById("runtimeHealthAlert");
+  if (statusElement) {
+    const current = scanner.status;
+    statusElement.textContent = failed.has(current) ? `SCANNER ${current.replaceAll("_", " ")}`
+      : current === "RUNNING" ? "SCANNER RUNNING" : String(latestRun.run_status || "FAILED").toUpperCase();
+    statusElement.dataset.status = failed.has(current) ? "FAILED" : current === "RUNNING" ? "RUNNING" : latestRun.run_status || "FAILED";
+  }
+  if (meta) {
+    meta.hidden = !scanner.status || scanner.status === "SUCCEEDED";
+    meta.textContent = `Saved scan: ${latestRun.run_id || "unknown"}`;
+  }
+  if (alert) {
+    const messages = Object.entries(components).filter(([, item]) => failed.has(item.status))
+      .map(([name, item]) => `${name.toUpperCase()}: ${item.status.replaceAll("_", " ")}${item.failure_code ? ` (${item.failure_code.replaceAll("_", " ")})` : ""}`);
+    alert.hidden = messages.length === 0;
+    alert.textContent = messages.join(" · ");
+  }
 }
 
 function renderPositions(positions, liveUpdatedAt = "") {

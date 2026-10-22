@@ -11,6 +11,26 @@ const deferred = () => {
   return { promise, resolve };
 };
 
+test('runtime failures are visible even with an old successful scan and no positions', () => {
+  const h = harness();
+  h.run('renderRuntimeHealth({runtime_components:{scanner:{status:"FAILED",failure_code:"CHECKPOINT_HEADROOM_INSUFFICIENT"}}},{run_status:"COMPLETE",run_id:"old"})');
+  assert.equal(h.elements.get('runStatus').textContent, 'SCANNER FAILED');
+  assert.equal(h.elements.get('runStatus').dataset.status, 'FAILED');
+  assert.match(h.elements.get('runtimeHealthAlert').textContent, /CHECKPOINT HEADROOM/);
+  assert.equal(h.elements.get('runtimeHealthAlert').hidden, false);
+  assert.equal(h.elements.get('runStatusMeta').textContent, 'Saved scan: old');
+});
+
+test('runtime recovery clears the warning only after actual success', () => {
+  const h = harness();
+  h.run('renderRuntimeHealth({runtime_components:{scanner:{status:"FAILED"}}},{run_status:"COMPLETE"})');
+  h.run('renderRuntimeHealth({runtime_components:{scanner:{status:"RUNNING"}}},{run_status:"COMPLETE"})');
+  assert.equal(h.elements.get('runStatus').textContent, 'SCANNER RUNNING');
+  h.run('renderRuntimeHealth({runtime_components:{scanner:{status:"SUCCEEDED"}}},{run_status:"COMPLETE"})');
+  assert.equal(h.elements.get('runStatus').textContent, 'COMPLETE');
+  assert.equal(h.elements.get('runtimeHealthAlert').hidden, true);
+});
+
 test('legacy scan UTC timestamps display in the viewer timezone without a three-hour shift', () => {
   const h = harness();
   for (const value of ['2026-10-21T19:06:08', '2026-10-21 19:06:08', '2026-10-21T19:06:08.123']) {

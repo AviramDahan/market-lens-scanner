@@ -106,6 +106,7 @@ class SetupResult:
     chart_url: str = ""
     selection_context: str = ""
     setup_candidates: list[dict[str, Any]] | None = None
+    detector_diagnostics: list[dict[str, str]] | None = None
 
 
 @dataclass(frozen=True)
@@ -191,6 +192,10 @@ def main() -> None:
             missing_tickers = missing_scan_tickers(scan_tickers, results)
             runtime_metrics["missing_tickers"] = missing_tickers
             runtime_metrics["scan_complete"] = not missing_tickers
+            detector_failures = [f"PARTIAL_SETUP_DETECTION: {result.ticker} {item.get('detector')} ({item.get('error_type')})."
+                                 for result in results for item in result.detector_diagnostics or []]
+            errors.extend(detector_failures)
+            runtime_metrics["detector_failure_count"] = len(detector_failures)
             if missing_tickers:
                 issue = f"PARTIAL_SCAN: No result card for {', '.join(missing_tickers)}."
                 warnings.append(issue)
@@ -799,10 +804,16 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
               return el?.querySelector('strong')?.textContent?.trim() || '';
             };
             let setupCandidates = [];
+            let detectorDiagnostics = [];
             try {
               setupCandidates = JSON.parse(decodeURIComponent(card.dataset.setupCandidates || '%5B%5D'));
             } catch (_error) {
               setupCandidates = [];
+            }
+            try {
+              detectorDiagnostics = JSON.parse(decodeURIComponent(card.dataset.detectorDiagnostics || '%5B%5D'));
+            } catch (_error) {
+              detectorDiagnostics = [{detector: 'UI_PARSER', status: 'FAILED', error_type: 'InvalidDiagnostics'}];
             }
             return {
               ticker: card.querySelector('[data-testid="result-ticker"]')?.textContent?.trim() || '',
@@ -818,6 +829,7 @@ def run_scan(page: Page, deadline: float) -> list[SetupResult]:
                 || card.querySelector('img.chart-preview')?.getAttribute('src')
                 || '').split('?')[0],
               setup_candidates: setupCandidates,
+              detector_diagnostics: detectorDiagnostics,
               raw_text: card.innerText,
             };
           })"""
@@ -1213,6 +1225,7 @@ def parse_result(item: dict[str, Any]) -> SetupResult:
         raw_text=item.get("raw_text", ""),
         chart_url=str(item.get("chart_url", "")),
         setup_candidates=item.get("setup_candidates") if isinstance(item.get("setup_candidates"), list) else [],
+        detector_diagnostics=item.get("detector_diagnostics") if isinstance(item.get("detector_diagnostics"), list) else [],
     )
 
 

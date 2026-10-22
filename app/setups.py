@@ -92,6 +92,7 @@ def detect_setup(
 ) -> ScanResult:
     if not fibonacci_entries_enabled():
         fib_info = None
+    diagnostics: list[dict[str, str]] = []
     candidates = detect_setup_candidates(
         ticker=ticker,
         current_price=current_price,
@@ -110,13 +111,18 @@ def detect_setup(
         vp_scenario=vp_scenario,
         relative_strength=relative_strength,
         daily=daily,
+        diagnostics=diagnostics,
     )
     if candidates:
         active = candidates[0]
         return active.model_copy(
-            update={"setup_candidates": [setup_candidate_payload(candidate) for candidate in candidates]}
+            update={"setup_candidates": [setup_candidate_payload(candidate) for candidate in candidates],
+                    "detector_diagnostics": diagnostics}
         )
-    return _no_trade(ticker, current_price, fib_info, vsl)
+    result = _no_trade(ticker, current_price, fib_info, vsl)
+    return result.model_copy(update={"detector_diagnostics": diagnostics,
+                                    "reason": result.reason + (" Setup detection is incomplete; see detector diagnostics."
+                                                               if diagnostics else "")})
 
 
 def detect_setup_candidates(
@@ -137,6 +143,7 @@ def detect_setup_candidates(
     vp_scenario: str = "price_down_vol_up",
     relative_strength: float = 1.0,
     daily: "pd.DataFrame | None" = None,
+    diagnostics: list[dict[str, str]] | None = None,
 ) -> list[ScanResult]:
     """Evaluate every detector while preserving the legacy first-match winner."""
     if not fibonacci_entries_enabled():
@@ -162,6 +169,7 @@ def detect_setup_candidates(
             hourly_lows, hourly_closes, price_above_ma200, market_structure,
             vp_scenario, relative_strength, sweep_at_val_daily,
             daily=daily,
+            _diagnostics=diagnostics,
         )
         if result:
             candidates.append(result)
@@ -171,6 +179,7 @@ def detect_setup_candidates(
         ticker, current_price, atr, vwap, vp, fib_info, daily,
         in_value_area, price_above_ema, price_above_ma200,
         market_structure, vp_scenario, relative_strength, vsl, min_rr,
+        _diagnostics=diagnostics,
     )
     if result:
         candidates.append(result)
@@ -180,6 +189,7 @@ def detect_setup_candidates(
         ticker, current_price, atr, vwap, vp, fib_info,
         in_value_area, price_above_ema, vsl, min_rr, price_above_ma200,
         market_structure, vp_scenario, relative_strength, sweep_at_val_daily,
+        _diagnostics=diagnostics,
     )
     if result:
         candidates.append(result)
@@ -190,6 +200,7 @@ def detect_setup_candidates(
         hourly_closes, hourly_volume, in_value_area, price_above_ema, sweep_at_val,
         vsl, min_rr, price_above_ma200, market_structure, vp_scenario,
         relative_strength, sweep_at_val_daily,
+        _diagnostics=diagnostics,
     )
     if result:
         candidates.append(result)
@@ -200,6 +211,7 @@ def detect_setup_candidates(
         hourly_closes, hourly_volume, anchored_vwap,
         in_value_area, price_above_ema, sweep_at_val, min_rr, price_above_ma200,
         market_structure, vp_scenario, relative_strength, sweep_at_val_daily,
+        _diagnostics=diagnostics,
     )
     if result:
         candidates.append(result)
@@ -207,11 +219,15 @@ def detect_setup_candidates(
     return candidates
 
 
-def _safe_setup_detector(detector, *args, **kwargs) -> ScanResult | None:
+def _safe_setup_detector(detector, *args, _diagnostics=None, **kwargs) -> ScanResult | None:
     """Keep one optional detector failure from discarding valid candidates."""
     try:
         return detector(*args, **kwargs)
-    except Exception:
+    except Exception as exc:
+        # Preserve independent candidates, but never disguise a detector crash as a clean no-match.
+        if _diagnostics is not None:
+            _diagnostics.append({"detector": detector.__name__, "status": "FAILED",
+                                 "error_type": type(exc).__name__})
         return None
 
 
