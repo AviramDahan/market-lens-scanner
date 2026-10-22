@@ -143,7 +143,7 @@ def test_unchanged_unsafe_backup_is_retained_without_repeated_expensive_validati
                   retention_cache=tmp_path/'rejections.json')
     cold._archive_once(**kwargs); cold._archive_once(**kwargs)
     assert len(calls) == 1 and path.exists()
-    stat = path.stat(); os.utime(path, ns=(stat.st_atime_ns,stat.st_mtime_ns+1))
+    stat = path.stat(); os.utime(path, ns=(stat.st_atime_ns,stat.st_mtime_ns+1_000_000_000))
     cold._archive_once(**kwargs)
     assert len(calls) == 2 and path.exists()
 
