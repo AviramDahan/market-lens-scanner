@@ -103,6 +103,24 @@ def test_prune_free_space_target_uses_same_threshold(monkeypatch):
     assert args[args.index("--min-free-space") + 1] == str(int(21.5 * 1024**3))
 
 
+def test_pressure_prunes_only_old_unused_build_cache_not_images_or_volumes(tmp_path, monkeypatch):
+    monkeypatch.setattr(maintenance, "STATE", tmp_path)
+    free = iter((11 * 1024**3, 16 * 1024**3))
+    monkeypatch.setattr(maintenance, "free_bytes", lambda: next(free))
+    monkeypatch.setattr(maintenance, "cache_bytes", lambda: 5 * 1000**3)
+    monkeypatch.setattr(maintenance, "busy_reason", lambda: None)
+    commands = []
+    monkeypatch.setattr(maintenance.subprocess, "run", lambda args, **kw: commands.append(args))
+    monkeypatch.setattr(maintenance, "send_runtime_alert", lambda *_: None)
+    result = maintenance.maintenance_once()
+    assert result["pressure_policy"] == "UNUSED_CACHE_2H_3GB_1GB_FLOOR"
+    assert len(commands) == 1
+    assert commands[0] == ["docker", "buildx", "prune", "--filter", "until=2h",
+                           "--min-free-space", "21474836480", "--max-used-space", "3gb",
+                           "--reserved-space", "1gb", "--force"]
+    assert maintenance.MIN_FREE_GB == 12.0
+
+
 def test_ineffective_low_disk_prune_alerts(tmp_path, monkeypatch):
     monkeypatch.setattr(maintenance, "STATE", tmp_path)
     monkeypatch.setattr(maintenance, "free_bytes", lambda: 18 * 1024**3)
