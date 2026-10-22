@@ -29,6 +29,7 @@ MIN_FREE_GB = 12.0
 MAX_CACHE = "6gb"
 RESERVED_CACHE = "2gb"
 MIN_AGE = "48h"
+PRESSURE_FREE_GB = 14.0
 SIZE_UNITS = {"B": 1, "KB": 1000, "MB": 1000**2, "GB": 1000**3,
               "TB": 1000**4, "KIB": 1024, "MIB": 1024**2, "GIB": 1024**3}
 
@@ -79,12 +80,13 @@ def free_bytes() -> int:
     return shutil.disk_usage("/").free
 
 
-def prune_cache() -> None:
+def prune_cache(*, pressure: bool = False) -> None:
     # Do not use docker system prune: that also selects images, networks and containers.
     subprocess.run(
-        ["docker", "buildx", "prune", "--filter", f"until={MIN_AGE}",
+        ["docker", "buildx", "prune", "--filter", f"until={'2h' if pressure else MIN_AGE}",
          "--min-free-space", str(int(TRIGGER_FREE_GB * 1024**3)),
-         "--max-used-space", MAX_CACHE, "--reserved-space", RESERVED_CACHE, "--force"],
+         "--max-used-space", "3gb" if pressure else MAX_CACHE,
+         "--reserved-space", "1gb" if pressure else RESERVED_CACHE, "--force"],
         check=True, capture_output=True, text=True, timeout=600,
     )
 
@@ -111,7 +113,13 @@ def maintenance_once() -> dict:
     elif before_cache < TRIGGER_CACHE_GB * 1000**3 and before_free >= TRIGGER_FREE_GB * 1024**3:
         result.update(status="skipped_below_threshold")
     else:
-        prune_cache()
+        if before_free < PRESSURE_FREE_GB * 1024**3:
+            # Docker protects in-use records. Only disposable build cache is
+            # eligible; running images, volumes and unique history are never selected.
+            prune_cache(pressure=True)
+            result["pressure_policy"] = "UNUSED_CACHE_2H_3GB_1GB_FLOOR"
+        else:
+            prune_cache()
         result.update(status="pruned")
     result["free_bytes_after"] = free_bytes()
     result["cache_bytes_after"] = cache_bytes()
