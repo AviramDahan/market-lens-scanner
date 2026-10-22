@@ -16,9 +16,9 @@ except ImportError:  # Unit tests also run on Windows.
     fcntl = None
 
 try:
-    from .notify_ops import send_runtime_alert
+    from .notify_ops import send_runtime_alert, env_value
 except ImportError:
-    from notify_ops import send_runtime_alert
+    from notify_ops import send_runtime_alert, env_value
 
 
 STATE = Path("/home/trader/market-lens-runtime-state/maintenance")
@@ -123,6 +123,12 @@ def maintenance_once() -> dict:
         result.update(status="pruned")
     result["free_bytes_after"] = free_bytes()
     result["cache_bytes_after"] = cache_bytes()
+    if (not busy and result["free_bytes_after"] < TRIGGER_FREE_GB * 1024**3
+            and env_value("MARKET_LENS_COLD_BACKUP_ARCHIVE_ENABLED").lower() == "true"):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+        from deploy.hetzner.cold_backups import archive_once
+        result["cold_backups"] = archive_once()
+        result["free_bytes_after"] = free_bytes()
     record_result(result)
     if result["free_bytes_after"] < MIN_FREE_GB * 1024**3:
         send_runtime_alert("maintenance", "DISK_LOW")

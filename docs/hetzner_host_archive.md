@@ -95,3 +95,41 @@ before these gates pass. A missing token or a public target is a blocked
 activation, not a successful/empty archive. Private storage can affect the
 archive repository's Actions allowance; no billing/visibility change is made
 by this implementation.
+
+## Opt-in Cold Backup Retention
+
+`MARKET_LENS_COLD_BACKUP_ARCHIVE_ENABLED=true` enables capacity maintenance of
+`/home/trader/market-lens-backups` only. It reuses the existing dedicated private
+archive repository/token, with separate `cold-backup-v1-*` Releases that are NOT
+financial checkpoint generations. No live data, Git history, images, volumes or
+AI Trader directories are selected.
+
+Unchanged rejected archives are recorded by file signature and validator version
+so every half-hour check does not repeatedly decompress the same unsafe backup.
+They stay local; a changed file is inspected again before any transfer.
+
+The half-hourly idle maintenance check offloads at most 2 GiB per invocation when
+free space is below 20 GiB. The newest two archives and every archive younger
+than seven days stay local. Cold transfers are deferred between 09:00 and 16:30
+New York on weekdays. Files at or above 1 GiB, unknown/sensitive contents, links,
+and unsafe paths stay local and require separate review. This does not lower the
+12 GiB execution reserve or change any trading rules.
+
+Each eligible tar is inspected without extraction. Its complete original bytes
+and deterministic metadata are uploaded append-only, downloaded by streaming,
+and SHA-256 verified. Only then is a durable `.archive.json` pointer installed
+beside the old path and the redundant local archive removed. Partial uploads,
+verification failures, interrupted cleanup and concurrent invocations cannot
+retire an unverified original. Receipts and remote assets must be retained.
+
+To restore an old archive to a NEW, non-live destination, from the host checkout:
+
+```sh
+python3 -m deploy.hetzner.cold_backups \
+  --restore-receipt /home/trader/market-lens-backups/OLDER_BACKUP.tar.gz.archive.json \
+  --destination /home/trader/recovery/OLDER_BACKUP.tar.gz
+```
+
+This restores an archive only, never applies it to the live portfolio, and refuses
+to overwrite an existing file. Cold backup health and transferred bytes appear
+in the existing maintenance status; financial checkpoint receipts remain separate.
