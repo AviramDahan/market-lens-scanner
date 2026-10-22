@@ -149,6 +149,21 @@ def test_opted_in_cold_backups_restore_headroom_after_cache_prune(tmp_path, monk
     assert result["free_bytes_after"] == 21*1024**3
 
 
+def test_healthy_reserve_with_protected_cold_backups_is_not_a_false_failure(tmp_path, monkeypatch):
+    from deploy.hetzner import cold_backups
+    monkeypatch.setattr(maintenance, "STATE", tmp_path)
+    monkeypatch.setattr(maintenance, "free_bytes", lambda: 18*1024**3)
+    monkeypatch.setattr(maintenance, "cache_bytes", lambda: 2*1000**3)
+    monkeypatch.setattr(maintenance, "busy_reason", lambda: None)
+    monkeypatch.setattr(maintenance, "prune_cache", lambda **kw: None)
+    monkeypatch.setattr(maintenance, "env_value", lambda name: 'true')
+    monkeypatch.setattr(cold_backups, "archive_once", lambda: {"status": "NO_OFFLOAD_NEEDED", "archived_bytes": 0})
+    monkeypatch.setattr(maintenance, "send_runtime_alert", lambda *_: pytest.fail("Not a critical disk failure"))
+    result = maintenance.maintenance_once()
+    assert result["capacity_target_met"] is False
+    assert result["capacity_status"] == "RESERVE_HEALTHY_COLD_POLICY_HELD"
+
+
 def test_failed_prune_records_failure_and_alerts(tmp_path, monkeypatch):
     monkeypatch.setattr(maintenance, "STATE", tmp_path)
     monkeypatch.setattr(maintenance, "fcntl", SimpleNamespace(flock=lambda *args: None,

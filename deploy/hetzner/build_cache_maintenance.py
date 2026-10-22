@@ -129,10 +129,19 @@ def maintenance_once() -> dict:
         from deploy.hetzner.cold_backups import archive_once
         result["cold_backups"] = archive_once()
         result["free_bytes_after"] = free_bytes()
+    result["capacity_target_met"] = result["free_bytes_after"] >= TRIGGER_FREE_GB * 1024**3
+    cold_policy_held = (
+        result["free_bytes_after"] >= PRESSURE_FREE_GB * 1024**3
+        and (result.get("cold_backups") or {}).get("status") in {
+            "NO_OFFLOAD_NEEDED", "RETAINED_NO_SAFE_CANDIDATES", "DEFERRED_MARKET_WINDOW"}
+    )
+    if cold_policy_held and not result["capacity_target_met"]:
+        result["capacity_status"] = "RESERVE_HEALTHY_COLD_POLICY_HELD"
     record_result(result)
     if result["free_bytes_after"] < MIN_FREE_GB * 1024**3:
         send_runtime_alert("maintenance", "DISK_LOW")
     elif (result["status"] == "pruned"
+          and not cold_policy_held
           and result["free_bytes_after"] < TRIGGER_FREE_GB * 1024**3
           and result["free_bytes_after"] - before_free < 512 * 1024**2):
         send_runtime_alert("maintenance", "MAINTENANCE_INEFFECTIVE")
