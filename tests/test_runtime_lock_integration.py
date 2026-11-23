@@ -13,13 +13,15 @@ pytestmark = pytest.mark.skipif(runtime.fcntl is None, reason="Production flock 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def start(state, label, priority, timeout=4):
+def start(state, label, priority, timeout=4, auto=False):
     script = """import sys,time
 from pathlib import Path
 from deploy.hetzner import run_runtime as r
 r.STATE=Path(sys.argv[1])
+r.SCANNER_LOCK_WAIT_SECONDS=.1
+r.SCANNER_QUEUE_WAIT_SECONDS=float(sys.argv[4])
 try:
-    with r.writer_lock(timeout=float(sys.argv[4]), priority=sys.argv[3]=='true'):
+    with r.writer_lock(timeout=None if sys.argv[5]=='auto' else float(sys.argv[4]), priority=sys.argv[3]=='true'):
         with (r.STATE/'order').open('a') as f:
             f.write(sys.argv[2]+'\\n')
         time.sleep(.15)
@@ -27,7 +29,7 @@ except RuntimeError:
     sys.exit(9)
 """
     return subprocess.Popen([sys.executable, "-c", script, str(state), label,
-                             str(priority).lower(), str(timeout)], cwd=ROOT,
+                             str(priority).lower(), str(timeout), 'auto' if auto else 'explicit'], cwd=ROOT,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 
@@ -108,3 +110,30 @@ with r.writer_lock():
         stop(owner)
         if waiter:
             stop(waiter)
+
+
+def test_scanner_waits_past_soft_threshold_for_real_monitor_lock(tmp_path, monkeypatch):
+    import json
+
+    monkeypatch.setattr(runtime, "STATE", tmp_path)
+    child = None
+    try:
+        with runtime.writer_lock(priority=True):
+            child = start(tmp_path, "scanner-after-monitor", False, timeout=4, auto=True)
+            deadline = time.monotonic() + 3
+            wait_path = tmp_path / "coordination/scanner_wait.json"
+            while True:
+                if wait_path.exists() and json.loads(wait_path.read_text())["status"] == "DEFERRED_LOCK":
+                    break
+                assert time.monotonic() < deadline, "Scanner did not report bounded deferral"
+                time.sleep(.02)
+            assert not (tmp_path / "order").exists()
+        out, err = child.communicate(timeout=5)
+        assert child.returncode == 0, out + err
+        assert (tmp_path / "order").read_text().splitlines() == ["scanner-after-monitor"]
+        assert json.loads(wait_path.read_text())["status"] == "ACQUIRED"
+        assert not (tmp_path / "monitor").exists()
+        assert not (tmp_path / "outbox").exists()
+    finally:
+        if child:
+            stop(child)

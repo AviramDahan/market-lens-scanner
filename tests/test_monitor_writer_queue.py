@@ -71,13 +71,63 @@ def test_monitor_unknown_owner_still_has_a_fixed_hard_bound(tmp_path, monkeypatc
     assert clock[0] == 1000 + runtime.MONITOR_LOCK_WAIT_SECONDS
 
 
-def test_scanner_keeps_existing_sixty_second_timeout(tmp_path, monkeypatch):
+def test_scanner_survives_healthy_monitor_longer_than_soft_threshold(tmp_path, monkeypatch, capsys):
     clock = fake_contention(tmp_path, monkeypatch, 1075)
+    with runtime.writer_lock():
+        assert clock[0] == 1075
+    assert "Scanner writer queue status=DEFERRED_LOCK" in capsys.readouterr().out
+    status = json.loads((tmp_path / "coordination/scanner_wait.json").read_text())
+    assert status["status"] == "ACQUIRED"
+    assert status["wait_seconds"] == 75
+    assert not (tmp_path / "coordination/monitor_wait.json").exists()
+    assert not (tmp_path / "monitor").exists()
+    assert not (tmp_path / "outbox").exists()
+
+
+@pytest.mark.parametrize("priority", [False, True])
+def test_queue_handles_reservation_contention_with_a_hard_deadline(tmp_path, monkeypatch, priority):
+    clock = fake_contention(tmp_path, monkeypatch, 1075)
+    original = runtime.fcntl.flock
+
+    def reserve(handle, flags):
+        if handle.name.endswith("monitor-priority.lock") and flags != runtime.fcntl.LOCK_UN:
+            if clock[0] < 1075:
+                raise BlockingIOError
+        return original(handle, flags)
+
+    monkeypatch.setattr(runtime.fcntl, "flock", reserve)
+    with runtime.writer_lock(priority=priority):
+        assert clock[0] == 1075
+    kind = "monitor" if priority else "scanner"
+    assert json.loads((tmp_path / f"coordination/{kind}_wait.json").read_text())["status"] == "ACQUIRED"
+
+
+def test_scanner_unknown_owner_does_not_wait_forever(tmp_path, monkeypatch):
+    clock = fake_contention(tmp_path, monkeypatch, 2000)
     with pytest.raises(RuntimeError, match="writer lock timed out"):
         with runtime.writer_lock():
-            pytest.fail("Scanner must not inherit the monitor queue budget")
-    assert clock[0] == 1060
-    assert not (tmp_path / "coordination/monitor_wait.json").exists()
+            pytest.fail("Queue budget must stay bounded")
+    assert clock[0] == 1000 + runtime.SCANNER_QUEUE_WAIT_SECONDS
+    assert json.loads((tmp_path / "coordination/scanner_wait.json").read_text())["status"] == "LOCK_DEADLINE_EXCEEDED"
+
+
+def test_scanner_preserves_owner_transaction_deadline(tmp_path, monkeypatch):
+    clock = fake_contention(tmp_path, monkeypatch, 2000)
+    runtime.coordination_record(tmp_path / "coordination/writer.json",
+                                {"phase": "CHECKPOINT", "deadline_monotonic": 1010})
+    with pytest.raises(RuntimeError, match="writer lock timed out"):
+        with runtime.writer_lock():
+            pytest.fail("Do not renew the monitor transaction")
+    assert clock[0] == 1010
+
+
+def test_lock_cannot_be_acquired_after_deadline_when_sleep_wakes_late(tmp_path, monkeypatch):
+    clock = fake_contention(tmp_path, monkeypatch, 1001.1)
+    monkeypatch.setattr(runtime.time, "sleep", lambda _: clock.__setitem__(0, 1001.2))
+    with pytest.raises(RuntimeError, match="writer lock timed out"):
+        with runtime.writer_lock(timeout=1):
+            pytest.fail("Late wakeup must not grant an expired writer turn")
+    assert runtime.WRITER_OWNER is None
 
 
 def test_explicit_short_timeout_remains_authoritative(tmp_path, monkeypatch):

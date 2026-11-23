@@ -46,6 +46,9 @@ SUCCESS_STATUSES = {"COMPLETE", "PARTIAL_OK"}
 PUSH_RETRY_DELAYS = (2, 5)
 SCANNER_LOCK_WAIT_SECONDS = 60
 MONITOR_LOCK_WAIT_SECONDS = 360
+# Sixty seconds is a visible soft threshold, not a failure while a valid
+# monitor transaction still owns the kernel lock.
+SCANNER_QUEUE_WAIT_SECONDS = 360
 # Includes local freeze/promotion, two bounded publications, notification work
 # and worker-stop cleanup. An overrun remains a failure, never a lease renewal.
 WRITER_TRANSACTION_SECONDS = 360
@@ -336,6 +339,10 @@ def writer_phase(phase: str) -> None:
 
 def acquire_lock(lock, deadline: float, *, wait=None) -> None:
     while True:
+        if time.monotonic() >= deadline:
+            if wait is not None:
+                wait(deadline)
+            raise RuntimeError("Portfolio writer lock timed out") from None
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return
@@ -344,7 +351,7 @@ def acquire_lock(lock, deadline: float, *, wait=None) -> None:
                 deadline = min(deadline, wait(deadline))
             if time.monotonic() >= deadline:
                 raise RuntimeError("Portfolio writer lock timed out") from None
-            time.sleep(0.25)
+            time.sleep(min(0.25, max(0, deadline - time.monotonic())))
 
 
 @contextmanager
@@ -352,9 +359,10 @@ def writer_lock(timeout: float | None = None, *, priority: bool = False):
     global WRITER_OWNER
     STATE.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    budget = timeout if timeout is not None else (MONITOR_LOCK_WAIT_SECONDS if priority else SCANNER_LOCK_WAIT_SECONDS)
+    budget = timeout if timeout is not None else (MONITOR_LOCK_WAIT_SECONDS if priority else SCANNER_QUEUE_WAIT_SECONDS)
     deadline = started + budget
-    wait_path = STATE / "coordination/monitor_wait.json"
+    kind = "monitor" if priority else "scanner"
+    wait_path = STATE / f"coordination/{kind}_wait.json"
     last_wait_status = None
 
     def wait(current_deadline):
@@ -376,15 +384,15 @@ def writer_lock(timeout: float | None = None, *, priority: bool = False):
             coordination_record(wait_path, {"pid": os.getpid(), "status": status,
                 "wait_seconds": round(elapsed, 3), "owner_phase": phase,
                 "deadline_monotonic": current_deadline})
-            print(f"Monitor writer queue status={status} owner_phase={phase} wait_seconds={elapsed:.3f}", flush=True)
+            print(f"{kind.title()} writer queue status={status} owner_phase={phase} wait_seconds={elapsed:.3f}", flush=True)
             last_wait_status = status
         return current_deadline
     # Reserve the next writer turn for an already-waiting monitor. This lock
     # never permits a second writer and never interrupts an atomic promotion.
     with (STATE / "monitor-priority.lock").open("a") as reservation:
-        acquire_lock(reservation, deadline, wait=wait if priority else None)
+        acquire_lock(reservation, deadline, wait=wait)
         with (STATE / "writer.lock").open("a") as lock:
-            acquire_lock(lock, deadline, wait=wait if priority else None)
+            acquire_lock(lock, deadline, wait=wait)
             if not priority:
                 fcntl.flock(reservation, fcntl.LOCK_UN)
             acquired = time.monotonic()
@@ -393,9 +401,8 @@ def writer_lock(timeout: float | None = None, *, priority: bool = False):
                 "started_monotonic": acquired, "deadline_monotonic": acquired + WRITER_TRANSACTION_SECONDS}
             try:
                 writer_phase("ACQUIRED")
-                if priority:
-                    coordination_record(wait_path, {"pid": os.getpid(), "status": "ACQUIRED",
-                        "wait_seconds": round(acquired - started, 3)})
+                coordination_record(wait_path, {"pid": os.getpid(), "status": "ACQUIRED",
+                    "wait_seconds": round(acquired - started, 3)})
                 yield
             finally:
                 try:
